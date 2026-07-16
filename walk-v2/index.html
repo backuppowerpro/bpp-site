@@ -1,0 +1,1540 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+<meta name="referrer" content="strict-origin-when-cross-origin">
+
+
+
+<meta charset="utf-8" />
+<script>/* flip no-js->js before paint so scroll-reveal hides content only when JS can reveal it; 5s failsafe reveals everything if the reveal script ever fails, so the form is never stuck invisible */(function(){var e=document.documentElement;e.classList.remove('no-js');e.classList.add('js');setTimeout(function(){try{var l=document.querySelectorAll('.rv:not(.in)');for(var i=0;i<l.length;i++)l[i].classList.add('in');}catch(x){}},5000);})();</script>
+<script>/* Entry mode + dynamic hero (Key 2026-07-01 / 2026-07-13 / paid fast lane 2026-07-13):
+   src=home -> lean walk (hide How it works) + home hero
+   src=city_<slug> -> lean walk + city hero (SEO already educated them)
+   src=meta|google|lp OR paid click ids -> PAID fast lane (lean + hide Key note + informative hero)
+   anything else (cold / direct) -> full education header + default hero
+   Mode registers as PostHog walk_entry so every walk_v2_* event carries it. */
+(function(){
+  var mode='direct', src='', ch='direct';
+  try {
+    var p = new URLSearchParams(location.search);
+    src = p.get('src') || '';
+    var us = (p.get('utm_source') || '').toLowerCase();
+    var paidClick = !!(p.get('fbclid') || p.get('gclid') || p.get('gbraid') || p.get('wbraid'));
+    if (src === 'home') mode = 'home';
+    else if (/^city_/.test(src)) mode = 'city';
+    else if (src === 'meta' || src === 'google' || src === 'lp' || paidClick) mode = 'paid';
+    /* Same rules as attribution() below so PostHog channel + CRM lead_channel agree. */
+    if (p.get('fbclid') || us === 'meta' || us === 'facebook' || us === 'instagram' || src === 'meta' || src === 'lp') ch = 'meta';
+    else if (p.get('gclid') || p.get('gbraid') || p.get('wbraid') || (us === 'google' && /cpc|ppc|paid/.test((p.get('utm_medium') || '').toLowerCase())) || src === 'google') ch = 'google';
+    else if (us) ch = (/google|bing|yahoo|duckduckgo/.test(us) ? 'organic' : (/fb|facebook|insta|meta|tiktok|linkedin|youtube|snap/.test(us) ? 'social' : 'referral'));
+    else if (/^city_/.test(src) || src === 'city-hub') ch = 'local';
+    else if (src === 'quote') ch = 'get-quote';
+    else if (src) ch = 'direct';
+  } catch(e){}
+  if (mode === 'home' || mode === 'city' || mode === 'paid') document.documentElement.classList.add('walk-lean');
+  if (mode === 'paid') document.documentElement.classList.add('walk-paid');
+  window.__WALK_ENTRY = mode;
+  window.__WALK_SRC = src;
+  window.__WALK_CHANNEL = ch;
+  window.addEventListener('DOMContentLoaded', function(){
+    try { if (window.posthog) posthog.register({ walk_entry: mode, walk_src: src || 'none', channel: ch }); } catch(e){}
+  });
+})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+<title>Backup Power Pro · Get Your Quote</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Dancing+Script:wght@700&display=swap" media="print" onload="this.media='all'" />
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Dancing+Script:wght@700&display=swap"></noscript>
+<style>
+  :root {
+    --navy: #0b1f3b;
+    --navy-mid: #1a3a5c;
+    --navy-deep: #081730;
+    --gold: #ffba00;
+    --gold-hover: #ffc519;
+    --gold-ink: #8a5a00;
+    --gold-tint: #fff7e0;
+    --bg: #eef1f6;
+    --page: #fafbfc;
+    --card: #ffffff;
+    --sunken: #f4f6fa;
+    --edge: rgba(11, 31, 59, 0.10);
+    --edge-soft: rgba(11, 31, 59, 0.07);
+    --text: #16243a;
+    --muted: #4d5a6e;
+    --faint: #5d6b7e;
+    --green: #059669;
+    --green-tint: #ecfdf3;
+    --red: #dc2626;
+
+    --shadow-sm: 0 2px 6px rgba(11,31,59,0.06), 0 1px 2px rgba(11,31,59,0.04);
+    --shadow-md: 0 10px 28px rgba(11,31,59,0.10), 0 2px 8px rgba(11,31,59,0.05);
+    --shadow-lift: 0 18px 44px rgba(11,31,59,0.14), 0 4px 12px rgba(11,31,59,0.06);
+    --shadow-gold: 0 6px 24px rgba(255,186,0,0.30);
+
+    --r-md: 14px;
+    --r-lg: 20px;
+    --r-pill: 100px;
+
+    --head: 'Outfit', sans-serif;
+    --body: 'Inter', system-ui, -apple-system, sans-serif;
+    --script: 'Dancing Script', cursive;
+
+    --dur: 220ms;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html, body {
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  button {
+    font-family: inherit;
+    border: 0;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  input { font-family: inherit; -webkit-appearance: none; appearance: none; }
+  button:focus-visible, input:focus-visible, a:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+  }
+  svg { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+
+  .stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 48px;
+    padding: 28px 14px 96px;
+  }
+  .state-label {
+    width: 390px;
+    max-width: 100%;
+    font-family: var(--head);
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: -34px;
+    padding-left: 4px;
+  }
+  .state-label.wide { width: 1080px; }
+  .snapshot { pointer-events: none; }
+
+  /* ================= page frame ================= */
+  .page {
+    width: 390px;
+    max-width: 100%;
+    background: var(--page);
+    border-radius: 24px;
+    box-shadow: var(--shadow-md), inset 0 0 0 1px var(--edge-soft);
+    overflow: hidden;
+    container-type: inline-size;
+    container-name: page;
+  }
+  .page.w-desktop { width: 1080px; }
+  /* staging: the comp's own desktop composition activates responsively
+     (the comps showed it via a snapshot clone with .w-desktop) */
+  @media (min-width: 1140px) {
+    .page { width: 1080px; }
+  }
+
+  .page * { text-wrap: pretty; }
+
+  /* ================= scroll reveal ================= */
+  .rv {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 560ms var(--ease), transform 560ms var(--ease);
+    transition-delay: var(--rvd, 0ms);
+  }
+  .rv.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .rv { opacity: 1; transform: none; transition: none; }
+  }
+  /* JS-off / JS-failure safety: without JS the scroll-reveal never runs, so
+     reveal all content (incl. the form) up front instead of a blank page. */
+  .no-js .rv { opacity: 1; transform: none; transition: none; }
+  /* Entry modes (Key 2026-07-01 / 2026-07-13): homepage and city/SEO already educated,
+     so LEAN (How it works hides). Paid ad entry (walk-paid) also hides Key note so the
+     form sits right under the hero. Cold/direct keep the full education header.
+     Classes set pre-paint in <head>. */
+  .walk-lean .hiw-section { display: none; }
+  .walk-paid .note { display: none; }
+  /* Fresh Air (Key 2026-07-13): paid = one calm composition. No review strip under
+     the form, no scroll-reveal homework fade, form title quieter. */
+  .walk-paid .review { display: none; }
+  .walk-paid .rv { opacity: 1; transform: none; transition: none; }
+  .walk-paid .form-card { box-shadow: var(--shadow-md), inset 0 0 0 1px var(--edge-soft); }
+  .walk-paid .addr-help { display: none; }
+  /* Paid informative hero: a bit more room for 1-2 honesty lines, still one breath. */
+  .walk-paid .hero .sub { max-width: 46ch; }
+  .walk-paid .hero .trust { font-size: 14.5px; font-weight: 600; color: #d7e0ec; }
+  /* Quiet field ok: engineered check, not busy chrome. Old-person sized. */
+  .field.ok input { box-shadow: inset 0 0 0 2px rgba(5,150,105,0.45); padding-right: 44px; }
+  .field .ok-mark {
+    display: none; position: absolute; right: 14px; top: 38px;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--green-tint); color: var(--green);
+    align-items: center; justify-content: center; pointer-events: none;
+  }
+  .field.ok .ok-mark { display: flex; }
+  .field .ok-mark svg { width: 12px; height: 12px; stroke-width: 2.6; }
+
+  /* ================= 1. site header ================= */
+  .site-head {
+    height: 56px;
+    background: var(--navy);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+  }
+  .lockup {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 8px 0;
+    box-sizing: border-box;
+  }
+  .lockup .bolt {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--gold);
+    color: var(--navy);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+  }
+  .lockup .bolt svg { width: 14px; height: 14px; fill: var(--navy); stroke: none; }
+  .lockup .wm {
+    font-family: var(--head);
+    font-weight: 800;
+    font-size: 13.5px;
+    line-height: 1;
+    letter-spacing: 0.12em;
+    color: #fff;
+    white-space: nowrap;
+  }
+  .lockup .wm small {
+    display: block;
+    font-size: 7px;
+    font-weight: 600;
+    letter-spacing: 0.34em;
+    color: var(--gold);
+    margin-top: 3px;
+    white-space: nowrap;
+  }
+
+  /* ================= 2. hero (two-zone, Claude Design walk-hero comp, 2026-07-02;
+     mobile fit fixed 2026-07-04) =================
+     Type lives on a solid navy field; the real install photo holds its OWN zone with a hard
+     edge and its caption below. Exactly ONE gold button-shaped element: the Start CTA.
+     Help Door (Text/Call Key) sits under it as text weight only, never a second gold button.
+     Mobile (base rules, <760px container): the hero is min-height:100svh as a flex column
+     with the photo as the ONLY flexing element (a 132px floor so it still reads as a real
+     proof photo), so textzone + photo + ctazone always sum to exactly one viewport and the
+     full CTA lands inside the fold with zero scroll, regardless of content length. Button
+     visibility wins over photo size. Desktop (>=760px) resets min-height and is untouched. */
+  /* min-height accounts for what already sits above the hero on first paint:
+     .stack's 28px top padding + the 56px .site-head, so hero + that preamble
+     sum to exactly one viewport (100svh) instead of hero alone claiming the
+     full viewport on top of space that is already spoken for. */
+  .hero { display: flex; flex-direction: column; width: 100%; min-height: calc(100svh - 84px); background: var(--navy); color: #fff; }
+  .hero .textzone {
+    background: radial-gradient(115% 80% at 0% 0%, #10274a 0%, rgba(16,39,74,0) 60%), var(--navy);
+    padding: 22px 20px 18px;
+  }
+  .hero .eyebrow {
+    display: inline-flex; align-items: center; gap: 9px;
+    font-family: var(--head); font-weight: 700;
+    font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--gold); margin: 0 0 12px;
+  }
+  .hero .eyebrow::before { content: ""; width: 22px; height: 2px; background: var(--gold); border-radius: 2px; }
+  .hero h1 {
+    font-family: var(--head); font-weight: 700;
+    font-size: 27px; line-height: 1.14; letter-spacing: -0.025em;
+    color: #fff; margin: 0 0 11px; text-wrap: balance;
+  }
+  .hero .sub {
+    font-size: 16px; line-height: 1.5; font-weight: 400;
+    color: #cdd8e8; margin: 0 0 14px; max-width: 42ch;
+  }
+  .hero .trust {
+    display: inline-flex; align-items: center; gap: 9px;
+    font-size: 15px; font-weight: 600; color: #e7edf6;
+  }
+  .hero .trust svg { flex: 0 0 auto; width: 17px; height: 17px; fill: none; stroke: var(--gold); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  /* Two photos side by side (Key 2026-07-04): narrower per photo means shorter per
+     photo at the same aspect ratio, so the strip reads as supporting proof rather
+     than one dominant image, and leaves more of the fixed viewport budget for the
+     CTA. Row of 2 equal cells; each keeps the same fill/crop technique as before. */
+  .hero .photozone { background: #0a1830; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: row; gap: 2px; }
+  .hero .photoframe {
+    position: relative; flex: 1 1 0; min-width: 0; aspect-ratio: auto; min-height: 110px;
+    background: var(--navy); overflow: hidden;
+  }
+  .hero .ph-slide {
+    position: absolute; inset: 0;
+    background-size: cover; background-repeat: no-repeat;
+    opacity: 0; transition: opacity 1.2s ease;
+  }
+  .hero .ph-slide.on { opacity: 1; }
+  .hero .ctazone { background: var(--navy); padding: 8px 20px 20px; }
+  .hero .cta {
+    display: flex; align-items: center; justify-content: center; gap: 11px;
+    width: 100%; min-height: 58px; padding: 0 26px;
+    background: var(--gold); color: var(--navy);
+    font-family: var(--head); font-weight: 700; font-size: 19px; letter-spacing: -0.01em;
+    border: 0; border-radius: 100px; cursor: pointer; text-decoration: none;
+    box-shadow: var(--shadow-gold);
+  }
+  .hero .cta svg { width: 19px; height: 19px; fill: none; stroke: var(--navy); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+  /* Help Door: human path without a second gold button. Photo flexes to keep fold. */
+  .hero .help-door {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+    gap: 6px 10px; margin: 12px 0 0;
+    font-size: 15px; line-height: 1.45; font-weight: 500; color: #cdd8e8;
+  }
+  .hero .help-door a {
+    color: #fff; font-weight: 700; text-decoration: none;
+    border-bottom: 1.5px solid rgba(255,186,0,.55);
+    padding: 6px 0; min-height: 44px; display: inline-flex; align-items: center;
+    box-sizing: border-box;
+  }
+  .hero .help-door a:hover { border-bottom-color: var(--gold); color: var(--gold); }
+  .hero .help-door-sep { color: rgba(255,255,255,.35); font-weight: 400; }
+  .hero .help-door-call { font-weight: 600 !important; border-bottom-color: rgba(255,255,255,.28) !important; }
+  @container page (min-width: 760px) {
+    .hero {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      grid-template-areas: "text photo" "cta photo";
+      max-width: 1100px; margin: 0 auto;
+      align-items: stretch;
+      min-height: auto;
+    }
+    .hero .textzone { grid-area: text; padding: 120px 48px 24px; display: flex; flex-direction: column; justify-content: center; }
+    .hero .ctazone { grid-area: cta; padding: 8px 48px 56px; }
+    .hero .photozone { grid-area: photo; display: flex; flex-direction: column; min-height: auto; gap: 0; }
+    .hero .photoframe { flex: 1 1 auto; aspect-ratio: auto; min-height: 0; width: 100%; }
+    .hero .photoframe.ph-b { display: none; }
+    .hero h1 { font-size: 40px; }
+    .hero .sub { font-size: 17px; }
+    .hero .cta { align-self: flex-start; width: auto; min-width: 300px; }
+    .hero .help-door { justify-content: flex-start; }
+  }
+
+  /* ================= body grid ================= */
+  .body-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 22px;
+    padding: 26px 20px 8px;
+  }
+  .col-main { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+  .col-trust { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+  @container page (min-width: 760px) {
+    .site-head { padding: 0 48px; }
+    .body-grid {
+      grid-template-columns: 1fr;
+      max-width: 620px;
+      margin: 0 auto;
+      gap: 22px;
+      padding: 36px 24px 12px;
+    }
+    .foot { padding-left: 48px; padding-right: 48px; }
+  }
+
+  /* ================= 3. Keys note card ================= */
+  .note {
+    background: var(--card);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-sm), inset 0 0 0 1px var(--edge-soft);
+    padding: 22px;
+  }
+  .note .head {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    margin-bottom: 13px;
+  }
+  .avatar {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: var(--navy);
+    color: var(--gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--head);
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+  }
+  .sig {
+    font-family: var(--script);
+    font-size: 29px;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--navy);
+    transform: rotate(-1.5deg);
+  }
+  .sig-sub {
+    font-family: var(--head);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gold-ink);
+    margin-top: 4px;
+  }
+  .note p {
+    font-size: 16px;
+    line-height: 1.62;
+    color: var(--text);
+    margin: 0;
+  }
+
+  /* ================= 4. form card ================= */
+  .form-card {
+    background: var(--card);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-lift), inset 0 0 0 1px var(--edge-soft);
+    padding: 24px 22px 26px;
+  }
+  .form-card .fc-title {
+    font-family: var(--head);
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.015em;
+    color: var(--navy);
+    margin: 0 0 18px;
+  }
+  .fields { display: flex; flex-direction: column; gap: 16px; }
+
+  .field { display: flex; flex-direction: column; gap: 6px; position: relative; }
+  .field label {
+    font-family: var(--head);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--navy);
+  }
+  .field input {
+    height: 52px;
+    padding: 0 16px;
+    font-size: 16px;
+    color: var(--text);
+    background: var(--page);
+    border: 0;
+    border-radius: var(--r-md);
+    box-shadow: inset 0 0 0 1.5px var(--edge);
+    transition: box-shadow var(--dur) var(--ease);
+    width: 100%;
+  }
+  .field input::placeholder { color: var(--faint); }
+  .field input:focus { outline: none; box-shadow: inset 0 0 0 2px var(--gold); }
+  .field.has-error input { box-shadow: inset 0 0 0 2px var(--red); }
+  .field-error {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--red);
+  }
+  .field-error svg { width: 14px; height: 14px; stroke-width: 2; flex: 0 0 auto; }
+  .field.has-error .field-error { display: flex; }
+
+  .addr-drop {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    z-index: 20;
+    background: var(--card);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-lift), inset 0 0 0 1px var(--edge-soft);
+    overflow: hidden;
+    padding: 4px;
+  }
+  .addr-drop.open { display: block; }
+  .addr-opt {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 48px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    text-align: left;
+    font-size: 15px;
+    color: var(--text);
+    transition: background var(--dur) var(--ease);
+  }
+  .addr-opt:hover, .addr-opt:active { background: var(--sunken); }
+  .addr-opt svg { width: 16px; height: 16px; stroke-width: 1.8; color: var(--faint); flex: 0 0 auto; }
+  .addr-opt .a1 { font-weight: 600; }
+  .addr-opt .a2 { color: var(--muted); font-size: 14px; }
+  .addr-opt .lines { display: flex; flex-direction: column; gap: 1px; }
+
+  /* ================= 5. part 2 ================= */
+  .part2 {
+    display: none;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 26px;
+    padding-top: 24px;
+    border-top: 1px solid var(--edge-soft);
+  }
+  .part2.revealed { display: flex; animation: rise 420ms var(--ease) both; }
+  @media (prefers-reduced-motion: reduce) { .part2.revealed { animation: none; } }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .part2 h2 {
+    font-family: var(--head);
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.015em;
+    color: var(--navy);
+    margin: 0;
+  }
+  .part2 .helper {
+    font-size: 16px;
+    line-height: 1.55;
+    color: var(--muted);
+    margin: 0 0 14px;
+  }
+  .outlet-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .outlet-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 18px 12px 16px;
+    background: var(--page);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-sm), inset 0 0 0 1.5px var(--edge);
+    color: var(--navy-mid);
+    transition: box-shadow var(--dur) var(--ease), background var(--dur) var(--ease), color var(--dur) var(--ease), transform var(--dur) var(--ease);
+  }
+  .outlet-card:active { transform: scale(0.98); }
+  .outlet-card .face { width: 96px; height: 96px; }
+  .outlet-card .face svg { width: 96px; height: 96px; }
+  /* The plug art is navy baked into the PNG (no CSS filter, no cache/iOS
+     dependency, so it can never ghost out white-on-white). The card stays
+     light in both states, selection is shown by the gold ring + tint below,
+     so the navy drawing reads the same whether picked or not. */
+  .outlet-card .ol {
+    font-family: var(--head);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--navy);
+  }
+  .outlet-card .os { font-size: 14.5px; color: var(--text2, #475569); margin-top: -6px; }
+  .outlet-card[aria-pressed="true"] {
+    background: #fff8ec;
+    box-shadow: var(--shadow-md), inset 0 0 0 2.5px var(--gold);
+  }
+
+  .quiet-opts { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+  .quiet-opt {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 48px;
+    padding: 10px 16px;
+    border-radius: var(--r-md);
+    background: transparent;
+    box-shadow: inset 0 0 0 1.5px var(--edge);
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--muted);
+    text-align: left;
+    transition: box-shadow var(--dur) var(--ease), background var(--dur) var(--ease);
+  }
+  .quiet-opt .ring {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1.5px var(--edge);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: transparent;
+    transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+  }
+  .quiet-opt .ring svg { width: 9px; height: 9px; stroke-width: 3; }
+  .quiet-opt[aria-pressed="true"] {
+    background: var(--gold-tint);
+    box-shadow: inset 0 0 0 2px var(--gold);
+    color: var(--text);
+  }
+  .quiet-opt[aria-pressed="true"] .ring {
+    background: var(--gold);
+    box-shadow: none;
+    color: var(--navy);
+  }
+
+  /* ================= 6. submit row ================= */
+  .submit-row { display: flex; flex-direction: column; gap: 16px; margin-top: 26px; }
+  .consent {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    cursor: pointer;
+    min-height: 44px;
+    padding: 2px;
+  }
+  .consent input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .consent .box {
+    width: 24px;
+    height: 24px;
+    flex: 0 0 auto;
+    margin-top: 1px;
+    border-radius: 7px;
+    background: var(--page);
+    box-shadow: inset 0 0 0 1.5px var(--edge);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--navy);
+    transition: background var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+  }
+  .consent .box svg { width: 13px; height: 13px; stroke-width: 3; opacity: 0; transition: opacity var(--dur) var(--ease); }
+  .consent input:checked + .box { background: var(--gold); box-shadow: inset 0 0 0 1.5px var(--gold); }
+  .consent input:checked + .box svg { opacity: 1; }
+  .consent input:focus-visible + .box { outline: 2px solid var(--gold); outline-offset: 2px; }
+  .consent .txt { font-size: 16px; line-height: 1.5; color: var(--muted); }
+
+  .cta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    height: 58px;
+    font-family: var(--head);
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.005em;
+    color: var(--navy);
+    background: var(--gold);
+    border-radius: var(--r-pill);
+    box-shadow: var(--shadow-gold);
+    transition: background var(--dur) var(--ease), box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
+  }
+  .cta svg { width: 17px; height: 17px; stroke-width: 2.2; }
+  .cta:not(:disabled):hover { background: var(--gold-hover); }
+  .cta:not(:disabled):active { transform: scale(0.985); }
+  .cta:disabled { background: #e9ecf2; color: var(--faint); box-shadow: none; cursor: not-allowed; }
+  .consent-fine { font-size: 13px; line-height: 1.5; color: var(--faint); margin: 0; text-align: center; }
+
+  /* ================= trust column ================= */
+  .trust-card {
+    background: var(--card);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-sm), inset 0 0 0 1px var(--edge-soft);
+    padding: 20px;
+  }
+  .trust-card .tk {
+    font-family: var(--head);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold-ink);
+    margin: 0 0 12px;
+  }
+  .trust-card ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .trust-card li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text);
+  }
+  .trust-card li .tick {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
+    margin-top: 1px;
+    border-radius: 50%;
+    background: var(--green-tint);
+    color: var(--green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .trust-card li .tick svg { width: 9px; height: 9px; stroke-width: 3; }
+
+  .trust-card.lock-promise {
+    background: var(--navy);
+    box-shadow: var(--shadow-md);
+    color: #fff;
+  }
+  .trust-card.lock-promise .tk { color: var(--gold); }
+  .trust-card.lock-promise .lp-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .trust-card.lock-promise .lp-ic {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 auto;
+    border-radius: 11px;
+    background: rgba(255,186,0,0.16);
+    color: var(--gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .trust-card.lock-promise .lp-ic svg { width: 18px; height: 18px; stroke-width: 2; }
+  .trust-card.lock-promise p {
+    font-size: 14px;
+    line-height: 1.58;
+    color: rgba(255,255,255,0.84);
+    margin: 0;
+  }
+  .trust-card.lock-promise p strong { color: #fff; }
+
+  .review { text-align: center; padding: 12px 24px 2px; }
+  .review .stars { display: flex; justify-content: center; gap: 4px; margin: 0 0 8px; }
+  .review .stars svg { width: 15px; height: 15px; fill: var(--gold); stroke: none; }
+  .review .rq { font-size: 15px; line-height: 1.5; color: var(--muted); margin: 0 0 4px; }
+  .review .ra { font-size: 14px; line-height: 1.4; color: var(--faint); margin: 0; }
+  .review .ra strong { color: var(--muted); font-weight: 600; }
+
+  /* ================= 7. footer ================= */
+  .foot {
+    margin-top: 26px;
+    padding: 20px 20px 28px;
+    border-top: 1px solid var(--edge-soft);
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--faint);
+    text-align: center;
+  }
+  .foot strong { font-family: var(--head); font-weight: 600; color: var(--muted); }
+
+  /* How it works (Claude Design comp, BPP Design System, 2026-06-24; classes
+     scoped hiw- to avoid landing collisions; step number uses gold-ink not gold
+     for AA contrast on white; step cards use the landing's soft-card shadow). */
+  .hiw-section { padding: 6px 0 2px; }
+  .hiw-eyebrow { font-family: var(--body); font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold-ink); margin: 0; }
+  .hiw-eyebrow::before { content: ""; display: inline-block; width: 22px; height: 2px; background: var(--gold); vertical-align: middle; margin-right: 9px; border-radius: 2px; }
+  .hiw-title { font-family: var(--head); font-weight: 700; font-size: 26px; line-height: 1.18; color: var(--navy); margin: 12px 0 0; letter-spacing: -0.01em; }
+  .hiw-steps { margin-top: 22px; display: flex; flex-direction: column; gap: 12px; }
+  .hiw-step { display: flex; align-items: flex-start; gap: 15px; background: var(--card); border-radius: 16px; padding: 16px; box-shadow: var(--shadow-sm), inset 0 0 0 1px var(--edge-soft); }
+  .hiw-ic { flex: 0 0 auto; width: 48px; height: 48px; border-radius: 50%; background: #eef2f8; display: flex; align-items: center; justify-content: center; }
+  .hiw-ic svg { width: 25px; height: 25px; stroke: var(--navy); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+  .hiw-body { padding-top: 2px; }
+  .hiw-head { display: flex; align-items: baseline; gap: 9px; }
+  .hiw-num { font-family: var(--head); font-weight: 800; font-size: 13px; color: var(--gold-ink); line-height: 1; }
+  .hiw-stitle { font-family: var(--head); font-weight: 700; font-size: 16.5px; line-height: 1.25; color: var(--navy); }
+  .hiw-sub { font-size: 14.5px; line-height: 1.5; color: var(--faint); margin: 5px 0 0; }
+
+
+  /* Fresh Air mobile (2026-07-13 design audit): drop the phone-frame gutters.
+     Comp staging used .stack padding + rounded .page; on a real phone that
+     wastes width and looks like a mock. Edge-to-edge under 760px; desktop card stays. */
+  @media (max-width: 759px) {
+    html, body { background: var(--page); }
+    .stack { padding: 0 0 calc(28px + env(safe-area-inset-bottom, 0px)); gap: 0; }
+    .page {
+      width: 100%;
+      max-width: 100%;
+      border-radius: 0;
+      box-shadow: none;
+    }
+    .state-label { display: none; }
+  }
+</style>
+<script>!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+" (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);posthog.init('phc_qoA51lePZqXYtPJYkrIpdA4U8iMDJ79L1kje7r4pD4O',{api_host:'https://us.i.posthog.com',property_denylist:['$current_url','$initial_current_url','$referrer','$initial_referrer'],sanitize_properties:function(p){for(var k in p){var v=p[k];if(typeof v==='string'&&v.indexOf('http')===0&&v.indexOf('?')>-1){try{var u=new URL(v);p[k]=u.origin+u.pathname;}catch(e){p[k]=v.split('?')[0];}}}return p;},person_profiles:'identified_only',capture_pageview:true,capture_pageleave:true,enable_heatmaps:true,capture_dead_clicks:true})</script>
+<!-- Meta Pixel: walk is the lead form. Without init, fbq('track','Lead') on submit is a no-op
+     when ads land on /walk-v2/ (or get-quote /m stubs). CAPI Lead still fires server-side. -->
+<script>
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('init','1389648775800936');
+fbq('track','PageView');
+fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'generator-installation'});
+</script>
+<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1389648775800936&ev=PageView&noscript=1"/></noscript>
+</head>
+<body>
+<div class="stack" id="stack">
+
+  <!-- ============ MAIN PAGE (mobile, interactive) ============ -->
+  <main class="page" id="mainPage" data-screen-label="Landing page (interactive, mobile)">
+
+    <!-- 1. site header -->
+    <header class="site-head">
+      <a class="lockup" href="https://backuppowerpro.com" aria-label="Backup Power Pro" style="text-decoration:none;">
+        <img src="/assets/images/logo-white-v2.png" alt="Backup Power Pro" style="height:28px;display:block;width:auto;" />
+      </a>
+    </header>
+
+    <!-- 2. hero (Claude Design walk-hero comp, 2026-07-02): two zones that never overlap.
+         The card/price A/B variants were DELETED (they over-promised; audit round 1 + the
+         code's own comment agreed). hero_variant super-prop continues as 'photo-v2'. -->
+    <section class="hero" data-hv="photo-v2" aria-labelledby="hero-h1">
+      <div class="textzone">
+        <p class="eyebrow" data-hero-eyebrow="">Portable generator hookups, Upstate SC</p>
+        <h1 id="hero-h1" data-hero-h1="">Price your portable generator hookup in about two minutes.</h1>
+        <p class="sub" data-hero-sub="">We connect the portable generator you already own to your home's breaker panel, safely, in one day. Not a whole-home standby. A few questions and a photo of your breaker box help. You see a ballpark range; I review it and text the firm all-in number. No home visit.</p>
+        <p class="trust">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="11" width="15" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>
+          <span data-hero-trust="">Firm price before any work</span>
+        </p>
+      </div>
+      <div class="photozone" role="img" aria-label="Real Backup Power Pro installs: the weatherproof inlet, the generator connected, and the panel interlock">
+        <div class="photoframe ph-a">
+          <div class="ph-slide on" style="background-image:url('/img/install-inlet-brick-hd.jpg');background-position:center 38%"></div>
+          <div class="ph-slide" data-bg="url('/assets/images/work-generator-plugged.jpg')" style="background-position:center 45%"></div>
+          <div class="ph-slide" data-bg="url('/assets/images/work-panel-interlock.jpg')" style="background-position:center 35%"></div>
+          <div class="ph-slide" data-bg="url('/img/install-inlet-panel.jpg')" style="background-position:center 42%"></div>
+        </div>
+        <div class="photoframe ph-b">
+          <div class="ph-slide on" style="background-image:url('/assets/images/work-inlet-lightbrick.jpg');background-position:center 40%"></div>
+          <div class="ph-slide" data-bg="url('/img/install-inlet-interlock.jpg')" style="background-position:center 45%"></div>
+          <div class="ph-slide" data-bg="url('/assets/images/work-full-install.jpg')" style="background-position:center 40%"></div>
+          <div class="ph-slide" data-bg="url('/img/install-inlet-siding.jpg')" style="background-position:center 45%"></div>
+        </div>
+      </div>
+      <div class="ctazone">
+        <a class="cta" href="#quote-form" id="heroStartCta">
+          <span data-hero-cta="">Start my quote</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13"></path><path d="M13 6l6 6-6 6"></path></svg>
+        </a>
+        <p class="help-door" data-help-door>
+          Prefer to talk?
+          <a href="sms:+18648637800" data-help-door-action="sms" data-help-door-surface="walk-hero">Text Key · (864) 863-7800</a>
+          <span class="help-door-sep" aria-hidden="true">·</span>
+          <a href="tel:+18648637800" class="help-door-call" data-help-door-action="tel" data-help-door-surface="walk-hero">Call</a>
+        </p>
+      </div>
+    </section>
+    <script>
+    (function(){
+      // Dynamic hero by entry src (Key 2026-07-13). Default HTML = cold/direct copy.
+      // home + city + paid lean already applied pre-paint; this swaps eyebrow/h1/sub/cta.
+      function cityLabel(src) {
+        var slug = String(src || '').replace(/^city_/, '');
+        if (!slug) return '';
+        return slug.split('-').map(function (w) {
+          return w ? w.charAt(0).toUpperCase() + w.slice(1) : '';
+        }).filter(Boolean).join(' ');
+      }
+      var mode = window.__WALK_ENTRY || 'direct';
+      var src = window.__WALK_SRC || '';
+      var eyebrow = document.querySelector('[data-hero-eyebrow]');
+      var h1 = document.querySelector('[data-hero-h1]');
+      var sub = document.querySelector('[data-hero-sub]');
+      var cta = document.querySelector('[data-hero-cta]');
+      var trust = document.querySelector('[data-hero-trust]');
+      if (mode === 'home') {
+        if (eyebrow) eyebrow.textContent = 'Ready for your quote';
+        if (h1) h1.textContent = 'A few questions and I\'ll price your install.';
+        if (sub) sub.textContent = 'We connect the portable generator you already own to your home\'s breaker panel, safely, in one day. Not a whole-home standby. About two minutes. A photo of your breaker box helps. You see a ballpark; I text the firm number after I review.';
+        if (cta) cta.textContent = 'Start my quote';
+      } else if (mode === 'city') {
+        var city = cityLabel(src) || 'your town';
+        if (eyebrow) eyebrow.textContent = 'Portable generator hookups in ' + city + ', SC';
+        if (h1) h1.textContent = 'Get your ' + city + ' quote in about two minutes.';
+        if (sub) sub.textContent = 'We connect the portable generator you already own to your home\'s breaker panel, safely, in one day. Not a whole-home standby. A few questions and a photo of your breaker box help. You see a ballpark; I text the firm number after I review. No home visit.';
+        if (cta) cta.textContent = 'Start my ' + city + ' quote';
+      } else if (mode === 'paid') {
+        /* Fresh Air middle ground (Key 2026-07-13): cold FB clicker needs enough
+           context to know what BPP is + what ~2 minutes gets them, without restoring
+           HIW + Key-note lecture. No invented dollars. One trust beat, no pill stack. */
+        if (eyebrow) eyebrow.textContent = 'Portable generator hookups · Greenville area';
+        if (h1) h1.textContent = 'Get your ballpark in about two minutes.';
+        if (sub) sub.textContent = 'We connect the portable generator you already own with a code-safe inlet and interlock. Not whole-home standby. A few taps for a ballpark; I text the firm number after I review. No home visit.';
+        if (trust) trust.textContent = 'Licensed electrician · Google 4.9';
+        if (cta) cta.textContent = 'Start my quote';
+        var fcTitle = document.querySelector('.form-card .fc-title');
+        if (fcTitle) fcTitle.textContent = 'Your details';
+      }
+      // cold/direct keeps the default HTML above
+
+      // hero_variant super-prop continues so the PostHog funnel read stays comparable.
+      try { if (window.posthog) { posthog.register({ hero_variant: 'photo-v2', walk_entry: mode }); posthog.capture('walk_v2_hero_shown', { variant: 'photo-v2', walk_entry: mode, walk_src: src || 'none' }); } } catch(e){}
+      var ctaEl = document.getElementById('heroStartCta');
+      if (ctaEl) ctaEl.addEventListener('click', function(ev){
+        var f = document.getElementById('quote-form');
+        if (f) {
+          ev.preventDefault();
+          // window.scrollTo (not scrollIntoView): #mainPage is overflow:hidden, which can
+          // trap scrollIntoView; the window is the real scroller.
+          var top = f.getBoundingClientRect().top + window.scrollY - 8;
+          window.scrollTo(0, top);
+          try { window.scrollTo({ top: top, behavior: 'smooth' }); } catch(e){}
+          var n = document.getElementById('fName'); if (n) setTimeout(function(){ try { n.focus({ preventScroll: true }); } catch(e){} }, 220);
+        }
+        try { if (window.posthog) posthog.capture('walk_v2_hero_cta', { variant: 'photo-v2', walk_entry: mode, walk_src: src || 'none' }); } catch(e){}
+      });
+      document.querySelectorAll('[data-help-door-action]').forEach(function(el){
+        el.addEventListener('click', function(){
+          try {
+            if (window.posthog) posthog.capture('help_door_click', {
+              action: el.getAttribute('data-help-door-action') || 'unknown',
+              surface: el.getAttribute('data-help-door-surface') || 'walk-hero',
+              page: 'walk-v2',
+              walk_entry: mode,
+              walk_src: src || 'none'
+            });
+          } catch(e){}
+        });
+      });
+
+      /* Hero slide hydrate: only the two .on frames paint with bytes on first load.
+         Remaining slides live on data-bg. Paid defers hydrate to idle (LTE diet);
+         home/city/direct hydrate immediately so the carousel still works. */
+      (function hydrateHeroSlides() {
+        var slides = document.querySelectorAll('.hero .ph-slide[data-bg]');
+        if (!slides.length) return;
+        function apply() {
+          for (var i = 0; i < slides.length; i++) {
+            var el = slides[i];
+            var raw = el.getAttribute('data-bg');
+            if (raw) { el.style.backgroundImage = raw; el.removeAttribute('data-bg'); }
+          }
+        }
+        if (mode === 'paid') {
+          if (window.requestIdleCallback) requestIdleCallback(apply, { timeout: 2500 });
+          else setTimeout(apply, 1800);
+        } else {
+          apply();
+        }
+      })();
+    })();
+    </script>
+
+    <div class="body-grid">
+      <div class="col-main">
+
+        <!-- 2b. How it works (Claude Design comp) -->
+        <section class="hiw-section rv" style="--rvd: 30ms;">
+          <p class="hiw-eyebrow">How it works</p>
+          <h2 class="hiw-title">Outage-ready in three steps</h2>
+          <div class="hiw-steps">
+            <div class="hiw-step">
+              <div class="hiw-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 L5 13 h6 l-2 9 9-13 h-7 z"></path></svg></div>
+              <div class="hiw-body"><div class="hiw-head"><span class="hiw-num">1</span><span class="hiw-stitle">The power goes out.</span></div><p class="hiw-sub">A storm, the grid, whatever knocks it out.</p></div>
+            </div>
+            <div class="hiw-step">
+              <div class="hiw-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7 a5 2 0 0 1 10 0"></path><circle cx="12" cy="6.6" r="1.3"></circle><rect x="3.5" y="9" width="17" height="9" rx="2.5"></rect><circle cx="8" cy="13.5" r="2.2"></circle><path d="M14 12 h4"></path><path d="M14 15 h4"></path><path d="M6.5 18 v1.5"></path><path d="M17.5 18 v1.5"></path></svg></div>
+              <div class="hiw-body"><div class="hiw-head"><span class="hiw-num">2</span><span class="hiw-stitle">Start your generator, flip a few breakers.</span></div><p class="hiw-sub">A simple routine at your panel, no rewiring your house.</p></div>
+            </div>
+            <div class="hiw-step">
+              <div class="hiw-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11 L12 4 l8 7"></path><path d="M6 9.5 V20 h12 V9.5"></path><path d="M12 11 v3"></path><path d="M10.3 15.2 a2 2 0 1 0 3.4 0 c.5-.7 .8-1.3 .8-2.2 a2.5 2.5 0 0 0 -5 0 c0 .9 .3 1.5 .8 2.2 z"></path></svg></div>
+              <div class="hiw-body"><div class="hiw-head"><span class="hiw-num">3</span><span class="hiw-stitle">Your fridge, outlets, and lights come right back.</span></div><p class="hiw-sub">The circuits you pick, powered in minutes.</p></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3. Keys note card -->
+        <section class="note rv" style="--rvd: 0ms;">
+          <div class="head">
+            <span class="avatar" style="background: url('/assets/images/key-headshot.jpg') center 20% / cover no-repeat;" role="img" aria-label="Key Goodson"></span>
+            <div>
+              <div class="sig">Key Goodson</div>
+              <div class="sig-sub">Master Electrician</div>
+            </div>
+          </div>
+          <p>I'm Key. We've connected homes across Greenville, Spartanburg, and Pickens, and I price every job myself. Give me a little info, you'll see a ballpark range, then I text the firm quote after I review. And because you took the time, my outage-prep guide is yours free at the end.</p>
+        </section>
+
+        <!-- 4. form card -->
+        <section class="form-card rv" id="quote-form" style="--rvd: 90ms;">
+          <h2 class="fc-title">Get your free quote</h2>
+          <noscript>
+            <div style="background:#fff8e6;border:1px solid #ffba00;border-radius:12px;padding:16px;margin-bottom:18px;color:#1b2b4b;font-size:16px;line-height:1.55;text-align:center;">
+              This quick form needs JavaScript turned on. No problem, just text your address to
+              <a href="sms:+18648637800" style="color:#0b1f3b;font-weight:800;">(864) 863-7800</a>
+              and I'll text your firm install price after I review. It's me, Key, not a bot.
+            </div>
+          </noscript>
+          <form autocomplete="off">
+            <div class="fields">
+              <div class="field">
+                <label for="fName">Name</label>
+                <input id="fName" name="name" type="text" inputmode="text" autocomplete="name" placeholder="Sarah" data-f="name" />
+              </div>
+              <div class="field" data-phone-field="">
+                <label for="fPhone">Phone</label>
+                <input id="fPhone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(864) 000-0000" data-f="phone" />
+                <span class="field-error"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5"></circle><path d="M8 5v3.5M8 11v.2"></path></svg><span>Enter a 10-digit phone number so I can text your quote</span></span>
+              </div>
+              <div class="field" data-addr-field="">
+                <label for="fAddr">Home address</label>
+                <input id="fAddr" name="address" type="text" inputmode="text" placeholder="Start typing your address" data-f="addr" />
+                <div class="addr-drop" data-addr-drop=""></div>
+                <p class="helper addr-help" style="margin-top:8px">So I can pull your permit and price the install. No in-home visit needed.</p>
+              </div>
+            </div>
+
+            <!-- 5. part 2 -->
+            <div class="part2" data-part2="">
+              <h2>Which outlet does your generator have?</h2>
+              <p class="helper">Look at the outlets on the generator itself. Pick both if it has both.</p>
+              <div class="outlet-grid">
+                <button class="outlet-card" type="button" data-outlet="30a" aria-pressed="false">
+                  <span class="face"><img src="/img/30amp-outlet-navy.png" alt="30 amp generator outlet" style="width:96px;height:96px;object-fit:contain;display:block;" /></span>
+                  <span class="ol">30 Amp</span>
+                  <span class="os">Round twist-lock plug</span>
+                </button>
+                <button class="outlet-card" type="button" data-outlet="50a" aria-pressed="false">
+                  <span class="face"><img src="/img/50amp-outlet-navy.png" alt="50 amp generator outlet" style="width:96px;height:96px;object-fit:contain;display:block;" /></span>
+                  <span class="ol">50 Amp</span>
+                  <span class="os">Four straight prongs</span>
+                </button>
+              </div>
+              <div class="quiet-opts">
+                <button class="quiet-opt" type="button" data-excl="unsure" aria-pressed="false">
+                  <span class="ring"><svg viewBox="0 0 12 12"><path d="M2 6.5l2.6 2.6L10 3.5"></path></svg></span>
+                  Not sure? No problem, I'll point you right at it.
+                </button>
+                <button class="quiet-opt" type="button" data-excl="none" aria-pressed="false">
+                  <span class="ring"><svg viewBox="0 0 12 12"><path d="M2 6.5l2.6 2.6L10 3.5"></path></svg></span>
+                  I don't have a generator yet.
+                </button>
+              </div>
+            </div>
+
+            <!-- 6. submit row: consent is the tap on the gold button, never required -->
+            <div class="submit-row">
+              <button class="cta" type="submit" data-cta="" disabled="">
+                <svg viewBox="0 0 16 16"><path d="M2.5 3.5h11a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H6.5l-3 2.4V11.5h-1a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1z"></path></svg>
+                <span data-cta-label="">Get my quote</span>
+              </button>
+              <p class="cta-hint" data-cta-hint="" aria-live="polite" style="display:none; font-size:14px; line-height:1.5; color:var(--gold-ink, #8a5a00); text-align:center; margin:10px 0 0; font-weight:600;"></p>
+              <p data-submit-error="" role="alert" style="display:none; font-size:15px; line-height:1.5; color:var(--red, #dc2626); text-align:center; margin:10px 0 0; font-weight:600;"></p>
+              <p class="consent-fine">By tapping the button you agree to get texts from Backup Power Pro about your quote and install. Msg and data rates may apply. Reply STOP anytime.</p>
+            </div>
+          </form>
+        </section>
+      </div>
+    </div>
+
+    <!-- social proof: one quiet, verbatim, already-public Google review -->
+    <div class="review">
+      <div class="stars" role="img" aria-label="5 star Google review">
+        <svg viewBox="0 0 16 16"><path d="M8 1.8l1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.6 4.3 13.6l.7-4.3-3.1-3 4.3-.6z"></path></svg>
+        <svg viewBox="0 0 16 16"><path d="M8 1.8l1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.6 4.3 13.6l.7-4.3-3.1-3 4.3-.6z"></path></svg>
+        <svg viewBox="0 0 16 16"><path d="M8 1.8l1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.6 4.3 13.6l.7-4.3-3.1-3 4.3-.6z"></path></svg>
+        <svg viewBox="0 0 16 16"><path d="M8 1.8l1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.6 4.3 13.6l.7-4.3-3.1-3 4.3-.6z"></path></svg>
+        <svg viewBox="0 0 16 16"><path d="M8 1.8l1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.6 4.3 13.6l.7-4.3-3.1-3 4.3-.6z"></path></svg>
+      </div>
+      <p class="rq">"Very professional and no mess left behind."</p>
+      <p class="ra"><strong>Chris</strong>, Google review</p>
+    </div>
+
+    <!-- 7. footer -->
+    <footer class="foot">
+      <strong>Key Goodson, Master Electrician, SC Lic #2942</strong><br />
+      Serving Greenville, Spartanburg, and Pickens counties<br />
+      Questions? Text me at <a href="sms:+18648637800" style="color:inherit;font-weight:700;">(864) 863-7800</a>
+    </footer>
+  </main>
+
+</div>
+
+<script src="/walk-v2/walk.js"></script>
+<script>
+
+(function () {
+  var main = document.getElementById('mainPage');
+  /* resume routing: a saved-walk link lands here with ?t= and skips the form.
+     Hide the fresh form while view() is in flight so a resuming visitor can never
+     see and submit a SECOND lead during the redirect window. On success
+     routeFromState redirects away (the form is never shown); on a bad token we
+     reveal the already-wired form below (the wiring still runs synchronously). */
+  var resumeT = WALK.token();
+  if (resumeT) {
+    main.style.visibility = 'hidden';
+    var resumingMsg = document.createElement('p');
+    resumingMsg.textContent = 'One sec, picking up where you left off...';
+    resumingMsg.setAttribute('style', 'position:fixed;left:0;right:0;top:42%;margin:0;text-align:center;color:var(--faint,#9aa);font-size:15px;padding:0 24px');
+    document.body.appendChild(resumingMsg);
+    WALK.ph('walk_v2_screen_view', { screen: 'landing_resume' });
+    WALK.view(resumeT).then(function (v) { WALK.routeFromState(resumeT, v); })
+      .catch(function () { resumingMsg.remove(); main.style.visibility = ''; WALK.ph('walk_v2_screen_view', { screen: 'landing' }); });
+  } else {
+    WALK.ph('walk_v2_screen_view', { screen: 'landing' });
+  }
+
+  var nameIn = main.querySelector('[data-f="name"]');
+  var phoneIn = main.querySelector('[data-f="phone"]');
+  var addrIn = main.querySelector('[data-f="addr"]');
+  var phoneField = main.querySelector('[data-phone-field]');
+  var nameField = nameIn ? nameIn.closest('.field') : null;
+  var addrField = main.querySelector('[data-addr-field]');
+  var drop = main.querySelector('[data-addr-drop]');
+  var part2 = main.querySelector('[data-part2]');
+  var cta = main.querySelector('[data-cta]');
+  var ctaLabelEl = cta.querySelector('[data-cta-label]');
+  var ctaHint = main.querySelector('[data-cta-hint]');
+  var sel = { '30a': false, '50a': false };
+  var excl = null;
+  var submitting = false;
+  /* Quiet ok-mark: one small check when a field is valid. Reuse DS green, no busy chrome. */
+  var okSvg = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6.5l2.6 2.6L10 3.5"></path></svg>';
+  function ensureOkMark(field) {
+    if (!field || field.querySelector('.ok-mark')) return;
+    var m = document.createElement('span');
+    m.className = 'ok-mark';
+    m.setAttribute('aria-hidden', 'true');
+    m.innerHTML = okSvg;
+    field.appendChild(m);
+  }
+  [nameField, phoneField, addrField].forEach(ensureOkMark);
+  function paintFieldOk() {
+    if (nameField) nameField.classList.toggle('ok', nameIn.value.trim().length > 0);
+    if (phoneField) phoneField.classList.toggle('ok', phoneValid(phoneIn.value));
+    if (addrField) addrField.classList.toggle('ok', addrIn.value.trim().length >= 6);
+  }
+  /* funnel step events, each at most once per visit (drop-off tracking) */
+  var fired = {};
+  function once(event, props) { if (fired[event]) return; fired[event] = true; WALK.ph(event, props); }
+
+  /* Address auto-suggest via the server-side Places proxy. Debounced; a pick
+     fills the field. The field still works as a plain input if Google is down. */
+  var addrTimer = null, addrPicked = false, addrSel = { city: '', state: '', zip: '' }, lastAddrPreds = [], addrSvg =
+    '<svg viewBox="0 0 16 16"><path d="M8 14s4.5-4 4.5-7.5a4.5 4.5 0 0 0-9 0C3.5 10 8 14 8 14z"></path><circle cx="8" cy="6.5" r="1.6"></circle></svg>';
+  function closeDrop() { drop.classList.remove('open'); drop.innerHTML = ''; }
+  function renderDrop(preds) {
+    lastAddrPreds = preds || [];
+    if (!preds.length) { closeDrop(); return; }
+    drop.innerHTML = preds.map(function (p) {
+      var d = String(p.description || '');
+      var i = d.indexOf(',');
+      var a1 = i > -1 ? d.slice(0, i) : d;
+      var a2 = i > -1 ? d.slice(i + 1).trim() : '';
+      return '<button type="button" class="addr-opt" data-addr-pick="' + encodeURIComponent(d) + '">' +
+        addrSvg + '<span class="lines"><span class="a1"></span><span class="a2"></span></span></button>';
+    }).join('');
+    /* set text via textContent (never innerHTML on the address string) */
+    var opts = drop.querySelectorAll('.addr-opt');
+    preds.forEach(function (p, k) {
+      var d = String(p.description || ''); var i = d.indexOf(',');
+      opts[k].querySelector('.a1').textContent = i > -1 ? d.slice(0, i) : d;
+      opts[k].querySelector('.a2').textContent = i > -1 ? d.slice(i + 1).trim() : '';
+    });
+    drop.classList.add('open');
+  }
+  function suggest() {
+    if (addrPicked) { addrPicked = false; return; }
+    addrSel = { city: '', state: '', zip: '' }; // editing after a pick invalidates the structured parts
+    var q = addrIn.value.trim();
+    if (addrTimer) clearTimeout(addrTimer);
+    if (q.length < 3) { closeDrop(); return; }
+    addrTimer = setTimeout(function () {
+      WALK.addrSuggest(q).then(renderDrop);
+    }, 220);
+  }
+  drop.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-addr-pick]'); if (!b) return;
+    addrPicked = true;
+    addrIn.value = decodeURIComponent(b.getAttribute('data-addr-pick'));
+    closeDrop(); refresh();
+  });
+  addrIn.addEventListener('blur', function () { setTimeout(closeDrop, 150); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDrop(); });
+
+  function digits(v) { return (v || '').replace(/\D/g, ''); }
+  /* the 10 national digits. A US number is 10 digits; a leading 1 is the country code
+     (no US area code starts with 1), so strip it BEFORE taking 10. Without this, autofill
+     or a paste of "+1 941 441 7996" kept the 1 and chopped the real last digit, recording
+     (194) 144-1799 instead of (941) 441-7996. */
+  function natDigits(v) { var d = digits(v); if (d.length === 11 && d[0] === '1') d = d.slice(1); return d.slice(0, 10); }
+  function phoneValid(v) { var d = digits(v); return d.length === 10 || (d.length === 11 && d[0] === '1'); }
+  function formatPhone(v) {
+    var d = natDigits(v);
+    if (d.length > 6) return '(' + d.slice(0, 3) + ') ' + d.slice(3, 6) + '-' + d.slice(6);
+    if (d.length > 3) return '(' + d.slice(0, 3) + ') ' + d.slice(3);
+    return d;
+  }
+  function part1Done() {
+    /* address gate relaxed to >=6 (short rural addresses like "5 Oak Rd" are valid and
+       were blocked at >=10 with no error affordance); the autocomplete dropdown guides
+       entry, and the submit-time geocode backfills structured parts. */
+    return nameIn.value.trim().length > 0 && phoneValid(phoneIn.value) && addrIn.value.trim().length >= 6;
+  }
+  function answered() { return sel['30a'] || sel['50a'] || excl !== null; }
+  /* the button says what actually happens next, never "lock in my price"
+     for the no-price branches */
+  function ctaText() {
+    if (excl === 'none') return 'Send me the free guide';
+    if (excl === 'unsure') return 'Send me the outlet guide';
+    return 'Get my quote';
+  }
+  var part2Seen = false;
+  /* names the one thing still missing so the disabled gold button is never a silent dead
+     end. A disabled button cannot be tapped for feedback, so the hint is always-visible once
+     they have begun. Ruth (78) fills her name, stumbles on the phone, and now sees why. */
+  function missingMsg() {
+    if (!nameIn.value.trim()) return 'Add your name to continue.';
+    if (!phoneValid(phoneIn.value)) return 'Add your phone number to continue.';
+    if (addrIn.value.trim().length < 6) return 'Add your address to continue.';
+    if (!answered()) return 'Pick your outlet below to continue.';
+    return '';
+  }
+  function refresh() {
+    // Dismiss any stale "didn't go through" error once the user edits/retries.
+    if (!submitting) { var _se = main.querySelector('[data-submit-error]'); if (_se && _se.style.display !== 'none') _se.style.display = 'none'; }
+    paintFieldOk();
+    if (part1Done()) {
+      part2.classList.add('revealed');
+      if (!part2Seen) { part2Seen = true; WALK.ph('walk_v2_part2_revealed'); }
+    }
+    ctaLabelEl.textContent = ctaText();
+    var ready = part1Done() && answered();
+    cta.disabled = submitting || !ready;
+    if (ctaHint) {
+      var begun = nameIn.value.trim() || phoneIn.value.trim() || addrIn.value.trim();
+      if (!ready && !submitting && begun) { ctaHint.textContent = missingMsg(); ctaHint.style.display = ''; }
+      else { ctaHint.style.display = 'none'; }
+    }
+  }
+
+  nameIn.addEventListener('input', function () { once('walk_v2_form_started'); refresh(); });
+  phoneIn.addEventListener('input', function () {
+    once('walk_v2_form_started');
+    phoneIn.value = formatPhone(phoneIn.value);
+    if (phoneValid(phoneIn.value)) phoneField.classList.remove('has-error');
+    refresh();
+  });
+  phoneIn.addEventListener('blur', function () {
+    if (phoneIn.value.trim() && !phoneValid(phoneIn.value)) phoneField.classList.add('has-error');
+  });
+  addrIn.addEventListener('input', function () { once('walk_v2_form_started'); suggest(); refresh(); });
+
+  function paintChoices() {
+    main.querySelectorAll('[data-outlet]').forEach(function (c) {
+      c.setAttribute('aria-pressed', sel[c.getAttribute('data-outlet')] ? 'true' : 'false');
+    });
+    main.querySelectorAll('[data-excl]').forEach(function (c) {
+      c.setAttribute('aria-pressed', excl === c.getAttribute('data-excl') ? 'true' : 'false');
+    });
+  }
+  main.querySelectorAll('[data-outlet]').forEach(function (card) {
+    card.addEventListener('click', function () {
+      var k = card.getAttribute('data-outlet');
+      sel[k] = !sel[k];
+      if (sel['30a'] || sel['50a']) excl = null;
+      once('walk_v2_outlet_answered', { choice: 'amp' });
+      paintChoices(); refresh();
+    });
+  });
+  main.querySelectorAll('[data-excl]').forEach(function (card) {
+    card.addEventListener('click', function () {
+      var k = card.getAttribute('data-excl');
+      excl = excl === k ? null : k;
+      if (excl) { sel['30a'] = false; sel['50a'] = false; }
+      once('walk_v2_outlet_answered', { choice: k });
+      paintChoices(); refresh();
+    });
+  });
+
+  /* channel attribution for PostHog + payload.leadChannel.
+     Server deriveLeadChannel also reads ?src= / fbclid / gclid from pageUrl
+     (audit 2026-07-13). Keep client labels in the contacts whitelist where
+     possible: meta, google, organic, local, neighbor, get-quote, direct. */
+  function attribution() {
+    var p = new URLSearchParams(window.location.search);
+    var us = (p.get('utm_source') || '').toLowerCase();
+    var ref = (document.referrer || '').toLowerCase();
+    var src = (p.get('src') || '').toLowerCase();
+    var ch = 'direct';
+    if (p.get('fbclid') || us === 'meta' || us === 'facebook' || us === 'instagram' || src === 'meta' || src === 'lp') ch = 'meta';
+    else if (p.get('gclid') || p.get('gbraid') || p.get('wbraid') || (us === 'google' && /cpc|ppc|paid/.test((p.get('utm_medium') || '').toLowerCase())) || src === 'google') ch = 'google';
+    else if (us) ch = (/google|bing|yahoo|duckduckgo/.test(us) ? 'organic' : (/fb|facebook|insta|meta|tiktok|linkedin|youtube|snap/.test(us) ? 'social' : 'referral'));
+    /* src=city_<slug> -> local (matches /city/ path channel on the server).
+       NOTE: never write a glob path containing star-slash inside this comment; that exact
+       sequence closes the comment and killed this whole script block Jul 4-11 2026. */
+    else if (/^city_/.test(src) || src === 'city-hub' || src.indexOf('city') === 0) ch = 'local';
+    else if (src === 'quote') ch = 'get-quote';
+    else if (src === 'neighbor') ch = 'neighbor';
+    /* src=home|guide|learn|service: internal hop; contacts taxonomy = direct
+       (PostHog still gets walk_entry / walk_src super-props separately). */
+    else if (src) ch = 'direct';
+    else if (/google\.|bing\.|duckduckgo\.|yahoo\./.test(ref)) ch = 'organic';
+    else if (ref && ref.indexOf(location.hostname) === -1) ch = 'referral';
+    return { channel: ch, source: p.get('utm_source') || '', medium: p.get('utm_medium') || '', campaign: p.get('utm_campaign') || '' };
+  }
+
+  function noneState(first, token) {
+    var card = main.querySelector('.form-card');
+    /* token-carry so a mis-tap on "no generator" resumes THEIR contact straight into the
+       outlet pick (name/phone/address already saved), never a blank re-type. Falls back to
+       the fresh form only if no token came back. Serves the "no progress loss on accident" rule. */
+    var backLink = token ? '/walk-v2/outlet.html?t=' + encodeURIComponent(token) : '/walk-v2/';
+    card.innerHTML =
+      '<h2 class="fc-title">You\'re one generator away' + (first ? ', ' + first : '') + '.</h2>' +
+      '<p style="font-size:16px;line-height:1.6;color:var(--muted);margin:0 0 14px;">The hookup needs a generator with a 240 volt outlet. Most 6,500 watt and up portables have one. When you\'re shopping, look for the 30 amp or 50 amp outlet on the generator\'s panel.</p>' +
+      '<p style="font-size:16px;line-height:1.6;color:var(--muted);margin:0 0 18px;">I put together a free guide that covers picking the right generator and everything about keeping your home powered through an outage.</p>' +
+      '<a href="/free-guide/" class="cta" style="text-decoration:none;">Get the free guide</a>' +
+      '<p style="font-size:14px;line-height:1.6;color:var(--faint);margin:16px 0 0;">I saved your info. The day you have the generator, text me at (864) 863-7800 and I\'ll lock your exact install price. It\'s me, not a bot.</p>' +
+      /* escape hatch for a mis-tap on "no generator": a fresh form, re-submit dedupes by phone */
+      '<p style="font-size:13px;line-height:1.6;margin:14px 0 0;"><a href="' + backLink + '" style="color:var(--faint);text-decoration:underline;text-underline-offset:2px;">Actually, I do have a generator</a></p>';
+    /* close the funnel for the no-generator branch (an in-place swap fires no pageview) */
+    WALK.ph('walk_v2_screen_view', { screen: 'none_ack' });
+    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  /* outlet-unsure branch: their info is saved and a picture-guide text goes out
+     right away (the reminder engine's immediate-first send, image attached). Its
+     link brings them to outlet.html to pick + continue. If they don't come back
+     and finish, the reminder schedule (this evening, then spaced out) nudges them.
+     This screen is the acknowledgment. smsGiven decides the honest wording: a lead
+     who did not consent gets no text, so the on-screen link is their path. */
+  function unsureState(first, token, smsGiven) {
+    var card = main.querySelector('.form-card');
+    var link = token ? '/walk-v2/outlet.html?t=' + encodeURIComponent(token) : '';
+    var mid;
+    if (smsGiven) {
+      mid =
+        '<p style="font-size:16px;line-height:1.6;color:var(--muted);margin:0 0 14px;">Plenty of folks aren\'t sure offhand. I\'m sending you a quick picture guide right now so you can check the outlet on your generator, then one tap picks it and wraps up your quote walk.</p>' +
+        (link ? '<p style="font-size:14px;line-height:1.6;margin:16px 0 0;"><a href="' + link + '" style="color:var(--navy);text-decoration:underline;text-underline-offset:2px;font-weight:600;">I\'m near it now, let me check</a></p><p style="font-size:14px;line-height:1.6;color:var(--faint);margin:8px 0 0;">Not near it? No rush. The link is in your text, tap it anytime and your spot is saved.</p>' : '');
+    } else {
+      mid =
+        '<p style="font-size:16px;line-height:1.6;color:var(--muted);margin:0 0 18px;">Plenty of folks aren\'t sure offhand. Here\'s a quick guide so you can check the outlet on your generator, then pick yours and wrap up your quote walk.</p>' +
+        (link ? '<a href="' + link + '" class="cta" style="text-decoration:none;">See the guide and pick my outlet</a><p style="font-size:14px;line-height:1.6;color:var(--faint);margin:14px 0 0;">Not near your generator? Your spot is saved, come back anytime.</p>' : '');
+    }
+    card.innerHTML =
+      '<h2 class="fc-title">Got it' + (first ? ', ' + first : '') + '. No problem.</h2>' +
+      mid +
+      '<p style="font-size:14px;line-height:1.6;color:var(--faint);margin:16px 0 0;">I saved your info. It\'s me, Key, not a bot. Text me anytime at (864) 863-7800.</p>';
+    /* close the funnel for the outlet-unsure branch; sms flag tells the two paths apart */
+    WALK.ph('walk_v2_screen_view', { screen: 'unsure_ack', sms: !!smsGiven });
+    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  /* single submit path: tapping the button submits AND grants SMS consent via the
+     disclosure beneath it. The texts are about the customer's own requested quote;
+     the disclosure is explicit and STOP + the by-phone DNC gate are honored on every
+     send. (The prior separate no-consent "Continue without texts" link was removed
+     per Key 2026-06-29; consent posture is confirmed at activation, TCPA.) */
+  main.querySelector('form').addEventListener('submit', function (e) { e.preventDefault(); doSubmit(true); });
+
+  async function doSubmit(smsGiven) {
+    if (submitting || !(part1Done() && answered())) return;
+    if (smsGiven) once('walk_v2_consent_checked');
+    submitting = true;
+    cta.disabled = true;
+    /* Honest network wait only (Fresh Air: no fake beat). Copy names the real work. */
+    ctaLabelEl.textContent = 'Sending';
+
+    var amps = [];
+    if (sel['30a']) amps.push('30');
+    if (sel['50a']) amps.push('50');
+    var unsureSel = excl === 'unsure';
+    var noneSel = excl === 'none';
+    var name = nameIn.value.trim();
+    var attr = attribution();
+    var eventId = 'wv2-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+
+    /* address backfill: if they typed an address but never tapped a suggestion,
+       addrSel is empty and we would ship a hardcoded SC with no city/zip. Run one
+       last geocode on the typed text so the real city/state/zip ride along (the
+       free-text address is still the source of truth Key reads). Best-effort: on
+       any failure we fall back to the existing addrSel/'SC' default below. */
+    if (!addrSel.state && addrIn.value.trim().length >= 6) {
+      try {
+        var bf = await WALK.addrSuggest(addrIn.value.trim());
+        if (bf && bf.length && bf[0].state) {
+          addrSel = { city: bf[0].city || '', state: bf[0].state || '', zip: bf[0].zip || '' };
+        }
+      } catch (_) { /* keep the SC fallback */ }
+    }
+
+    var payload = {
+      firstName: name, lastName: '', phone: natDigits(phoneIn.value), email: '',
+      address: addrIn.value.trim(), addressStreet: '', addressCity: addrSel.city, addressCounty: '', addressState: addrSel.state || 'SC', addressZip: addrSel.zip, addressCountry: 'US',
+      leadChannel: attr.channel, utmSource: attr.source, utmMedium: attr.medium, utmCampaign: attr.campaign,
+      hasCompatibleGenerator: noneSel ? 'No - needs 240V generator (future pool)' : (unsureSel ? 'Unsure - outlet check pending' : ('Yes - 240V ' + amps.join('/') + 'A confirmed')),
+      outletAmps: amps,
+      outletUnsure: unsureSel ? 'true' : '',
+      needsOutlet: noneSel,
+      smsConsent: smsGiven ? 'true' : '',
+      submittedAt: new Date().toISOString(), eventTimestamp: Math.floor(Date.now() / 1000),
+      source: noneSel ? 'walkv2-no-outlet-future' : (unsureSel ? 'walkv2-outlet-unsure' : 'walkv2-landing'),
+      actionSource: 'website', eventName: 'Lead', eventId: eventId,
+      clientUserAgent: navigator.userAgent || '',
+      fbp: (document.cookie.match(/(?:^|;\s*)_fbp=([^;]*)/) || [])[1] || '',
+      fbc: (document.cookie.match(/(?:^|;\s*)_fbc=([^;]*)/) || [])[1] || '',
+      fbclid: new URLSearchParams(window.location.search).get('fbclid') || '',
+      pageUrl: window.location.href, referrer: document.referrer || ''
+    };
+
+    /* resilient delivery: the keepalive fetch below already survives page unload
+       (the beacon's only job) AND returns the pre_read token + delivered status,
+       so a parallel sendBeacon was pure redundancy that double-POSTed the lead
+       (a second contact in the rare concurrent-lookup race). keepalive covers
+       unload; the sync-XHR fallback covers a fetch throw. */
+    var body = JSON.stringify(payload);
+    var url = 'https://reowtzedjflwmlptupbk.supabase.co/functions/v1/quo-ai-new-lead';
+    var delivered = false, tokenOut = null;
+    try {
+      var resp = await fetch(url, { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: body });
+      delivered = resp.ok;
+      if (resp.ok) { try { var j = await resp.json(); tokenOut = j && j.preReadToken || null; } catch (_) {} }
+      if (!delivered) WALK.ph('lead_submit_failed', { status: resp.status, method: 'fetch', form: 'walkv2-landing' });
+    } catch (err) {
+      try {
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', url, false);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.send(body);
+        delivered = xhr.status >= 200 && xhr.status < 300;
+        /* parse the pre_read token from the fallback response too. Without this a
+           lead that delivered via XHR (after the keepalive fetch threw) would
+           dead-end at the "did not go through" alert below, because advancing into
+           the walk needs tokenOut and only the fetch path was reading it. */
+        if (delivered) { try { tokenOut = (JSON.parse(xhr.responseText) || {}).preReadToken || null; } catch (_) {} }
+      } catch (e2) {
+        WALK.ph('lead_submit_failed', { err: String(err).slice(0, 200), method: 'xhr-threw', form: 'walkv2-landing' });
+      }
+    }
+    if (typeof fbq === 'function') { try { fbq('track', 'Lead', { content_name: 'walkv2-landing', content_category: 'generator-installation', value: 1200, currency: 'USD' }, { eventID: eventId }); } catch (_) {} }
+    WALK.ph('walk_v2_submitted', { outlets: amps.join('/'), unsure: unsureSel, none: noneSel, delivered: delivered });
+
+    /* never reassure "I saved your info" on a POST that did not land: the no-gen
+       branch only shows noneState when the lead actually delivered. */
+    if (noneSel) {
+      if (delivered) { noneState(name.split(/\s+/)[0], tokenOut); return; }
+    } else if (unsureSel && delivered) {
+      /* unsure: a picture-guide text goes out right away (reminder engine's
+         immediate-first send), and its link brings them to outlet.html to pick +
+         finish. If they don't come back, the reminder schedule nudges them. This
+         is the acknowledgment, with a quiet "near it now?" escape to the page. */
+      unsureState(name.split(/\s+/)[0], tokenOut, smsGiven); return;
+    } else if (delivered && tokenOut) {
+      WALK.go('location.html', tokenOut); return;
+    }
+
+    /* delivery failed (either branch): honest recovery, never a dead end.
+       In-card red message + tap-to-text, matching photos.html (no jarring
+       native alert). The CTA is re-enabled by refresh() so "try again" works. */
+    submitting = false;
+    refresh();
+    var se = main.querySelector('[data-submit-error]');
+    if (se) {
+      se.innerHTML = 'That did not go through. Tap the button to try again, or text me at <a href="sms:+18648637800" style="color:inherit;font-weight:800;text-decoration:underline">(864) 863-7800</a>.';
+      se.style.display = '';
+      try { se.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (_) {}
+    } else {
+      alert('That did not go through. Please try again, or text me directly at (864) 863-7800.');
+    }
+  }
+
+  /* scroll reveal (comp behavior, unchanged) */
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var rvEls = main.querySelectorAll('.rv');
+  if (reduce || !('IntersectionObserver' in window)) {
+    rvEls.forEach(function (el) { el.classList.add('in'); });
+  } else {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+      });
+    }, { threshold: 0.12 });
+    rvEls.forEach(function (el) { io.observe(el); });
+  }
+})();
+
+</script>
+<script>
+// Hero photo rotator (Key 2026-07-03, two-up 2026-07-04): crossfades through real
+// install shots. Two independent frames (mobile shows both side by side, desktop
+// hides the second via CSS and only ph-a ever renders there), staggered so they
+// do not crossfade in lockstep. Static first frame when prefers-reduced-motion.
+// Paid fast lane defers non-on slide bytes via data-bg; wait for hydrate before
+// preloading / rotating so we do not undo the LTE diet.
+(function(){
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  function startRotator() {
+    var frames = document.querySelectorAll('.hero .photoframe');
+    if (!frames.length) return;
+    frames.forEach(function(frame, frameIndex){
+      var slides = frame.querySelectorAll('.ph-slide');
+      if (slides.length < 2) return;
+      var srcs = [];
+      slides.forEach(function(s){
+        var style = s.getAttribute('style') || '';
+        var m = style.match(/url\(['"]?([^'")]+)['"]?\)/);
+        if (m) srcs.push(m[1]);
+      });
+      var loaded = 0;
+      srcs.forEach(function(u){ var im = new Image(); im.onload = im.onerror = function(){ loaded++; }; im.src = u; });
+      var i = 0;
+      setTimeout(function(){
+        setInterval(function(){
+          if (loaded < srcs.length - 1) return;
+          slides[i].classList.remove('on');
+          i = (i + 1) % slides.length;
+          slides[i].classList.add('on');
+        }, 5000);
+      }, frameIndex * 1500);
+    });
+  }
+  function whenReady(fn) {
+    if (!document.querySelector('.hero .ph-slide[data-bg]')) { fn(); return; }
+    var tries = 0;
+    var t = setInterval(function(){
+      tries++;
+      if (!document.querySelector('.hero .ph-slide[data-bg]') || tries > 50) {
+        clearInterval(t);
+        fn();
+      }
+    }, 100);
+  }
+  whenReady(startRotator);
+})();
+</script>
+</body>
+</html>

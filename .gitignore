@@ -1,0 +1,144 @@
+.claude/
+.DS_Store
+*.PNG
+*.TIFF
+*.tiff
+*.jpg
+*.jpeg
+*.png
+eyJ*.jpeg
+Untitled_Artwork*
+!Untitled_Artwork 46.png
+!Untitled_Artwork 47.png
+!og-image.png
+!logo-white.png
+!logo-main.png
+!logo-alt.png
+!assets/images/logo-white-v2.png
+!assets/images/apple-touch-icon.jpg
+!assets/images/intro-card.jpg
+!assets/images/sample-home.jpg
+!assets/images/home-square.jpg
+!work-*.jpg
+!work-*.png
+!key-headshot.jpg
+!img/v2-hero/*.jpg
+!img/install-*.jpg
+!assets/product-images/*.jpg
+!ads/creative/*.jpg
+!generators/img/*.jpg
+!email-templates/assets/*.jpg
+!email-templates/assets/*.png
+!pdf-guides/assets/*.jpg
+!brand-assets/key-headshot.jpg
+!brand-assets/logo-white.png
+!crm/v3-app/ios/App/App/Assets.xcassets/**/*.png
+!crm/v3-app/src-tauri/icons/**/*.png
+IMG_*
+bpp-claude-code-context.md
+
+# Obsidian second brain, private, not deployed to website
+wiki/
+private-docs/
+
+# Internal growth playbook + its generator: contains margins, sub pay, CPL,
+# close rate, lead backlog. Keep off the public GitHub Pages site.
+BPP-Growth-Action-Playbook.pdf
+scripts/playbooks/build-growth-playbook.py
+
+# PII + financial docs that must not be on the public site (2026-06-01 audit).
+# Marketing lead-magnet PDFs in assets/docs/ and premium-kit/ stay public.
+Invoice-*.pdf
+Receipt-*.pdf
+docs/Form W-9.pdf
+parental_or_guardian_permission_medical_release copy.pdf
+permits/mailing-inserts/pdf/
+docs/Places.csv
+docs/outreach-builders/builder-contact-list.csv
+docs/outreach-hoa/hoa-contact-list.csv
+docs/outreach-hoa/hoa-master-outreach-list.csv
+
+# Local CRM backups, large, not for git
+_backups/
+
+# Brain refresh runtime logs (data snapshots, not source)
+scripts/brain/.last-refresh.log
+scripts/brain/.stdout.log
+scripts/brain/.stderr.log
+supabase/STRIPE-SETUP.md
+supabase/functions/.env
+supabase/.temp/
+
+# Secrets / credentials — NEVER commit these
+.env
+.env.*
+!.env.example
+credentials.md
+secrets.md
+secrets.json
+*.pem
+*.key
+*.p12
+*.pfx
+
+# SQLite runtime state — contains customer PII snapshots
+permit-app/server/*.db
+permit-app/server/*.db-wal
+permit-app/server/*.db-shm
+permit-app/server/*.db-journal
+!nanobanana-output/**/*.jpg
+
+# Large binary assets — keep on disk, NEVER in the deploy repo (GitHub 2GB
+# push-pack limit guard; recurs otherwise). Added 2026-05-30 after a
+# `git add .` swept ~2.9GB of TIFF scans, an archive .mov, and 200+ 4K ad
+# images into one commit and blocked all pushes. These dir-level excludes
+# supersede the older `!nanobanana-output/**/*.jpg` negation above (a file
+# under an excluded directory cannot be re-included).
+brand-assets/
+_archive/
+nanobanana-output/
+998035184-100M-Scaling-Roadmap-combined.pdf
+998035184-100M-Scaling-Roadmap-combined.txt
+
+# Embedded sub-project repo (broke GitHub Pages submodule checkout). Keep on disk, do not track as a gitlink.
+ev-charger-site/site/
+
+# graphify knowledge graph output (regenerated locally, never committed)
+graphify-out/
+
+# Per-session compact-resume handoff (machine-local, ephemeral; survives /compact on
+# disk but should never be committed). Convention: CLAUDE.md "## Session handoff".
+SESSION-HANDOFF.md
+
+# machine-local SSH wrapper for the github EADDRNOTAVAIL workaround
+.gitssh-bind.sh
+
+# Remotion video engine: generated, never source
+video-engine/node_modules/
+video-engine/out/
+
+# --- 2026-07 repo cleanup: separate projects extracted to ~/Desktop/bpp-sideprojects/ ---
+permit-app/
+video-engine/
+ev-charger-site/
+bot-lab/
+# old creative/reference media extracted to ~/Desktop/bpp-archive-2026-07/
+outdoor panel refrences/
+Mar 2026 Meta Creative/
+
+# local visual-asset library (handy for site/design work, kept out of git to avoid bloat)
+media/
+crm/v3-app/macos/dist/
+
+# Customer PII: filled permit applications + addressed envelopes.
+# Real names/addresses. Never publish. Backed up to iCloud BPP-backups.
+permits/
+
+# Never publish. Dead code and internal financials, backed up to iCloud BPP-backups.
+# graveyard/ held a map of every credential, the P&L, and the owner's cell.
+# daily/ held morning briefs at "private" random URLs (public on a public repo).
+# website/ is a stale draft that already caused one live-vs-draft bug.
+graveyard/
+daily/
+website/
+docs/ceo-financial-model.html

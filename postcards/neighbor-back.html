@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 6.25in;
+    height: 4.25in;
+    overflow: hidden;
+    font-family: 'Outfit', sans-serif;
+    background: #ffffff;
+  }
+  body {
+    display: flex;
+  }
+
+  /* Left content column */
+  .left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0.28in 0.25in 0.22in 0.3in;
+    border-right: 1.5px solid #e8edf4;
+  }
+
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5pt;
+    background: #f0f4f8;
+    border-radius: 100pt;
+    padding: 3pt 10pt;
+    font-size: 7.5pt;
+    font-weight: 700;
+    color: #0b1f3b;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.12in;
+    align-self: flex-start;
+  }
+  .tag-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #ffba00;
+  }
+
+  .section-head {
+    font-size: 13pt;
+    font-weight: 800;
+    color: #0b1f3b;
+    margin-bottom: 0.12in;
+    line-height: 1.15;
+  }
+
+  /* Steps */
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0.09in;
+    flex: 1;
+  }
+
+  .step {
+    display: flex;
+    align-items: flex-start;
+    gap: 9pt;
+  }
+  .step-num {
+    width: 18pt;
+    height: 18pt;
+    border-radius: 50%;
+    background: #0b1f3b;
+    color: #ffba00;
+    font-size: 8pt;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 0.5pt;
+  }
+  .step-text {
+    font-family: 'Inter', sans-serif;
+    font-size: 8.5pt;
+    color: #2d3748;
+    line-height: 1.4;
+    font-weight: 500;
+  }
+  .step-text strong {
+    color: #0b1f3b;
+    font-weight: 700;
+    font-family: 'Outfit', sans-serif;
+  }
+
+  /* Price anchor block */
+  .anchor {
+    margin-top: 0.12in;
+    background: linear-gradient(135deg, #0b1f3b 0%, #1a3358 100%);
+    border-radius: 8pt;
+    padding: 9pt 12pt;
+    display: flex;
+    align-items: center;
+    gap: 10pt;
+  }
+  .anchor-vs {
+    font-size: 7pt;
+    font-weight: 700;
+    color: rgba(255,255,255,.5);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    text-align: center;
+  }
+  .anchor-price-bad {
+    font-size: 10pt;
+    font-weight: 700;
+    color: rgba(255,255,255,.4);
+    text-decoration: line-through;
+  }
+  .anchor-arrow {
+    font-size: 14pt;
+    color: #ffba00;
+    font-weight: 900;
+  }
+  .anchor-price-good {
+    font-size: 16pt;
+    font-weight: 900;
+    color: #ffba00;
+    line-height: 1;
+  }
+  .anchor-label {
+    font-size: 7pt;
+    font-weight: 600;
+    color: rgba(255,255,255,.55);
+    line-height: 1.3;
+  }
+
+  /* Right column, address block + contact */
+  .right {
+    width: 2.05in;
+    display: flex;
+    flex-direction: column;
+    padding: 0.25in 0.28in 0.22in 0.22in;
+    gap: 0.1in;
+  }
+
+  .contact-block {
+    flex: 1;
+  }
+
+  .contact-name {
+    font-size: 10pt;
+    font-weight: 800;
+    color: #0b1f3b;
+    margin-bottom: 2pt;
+  }
+  .contact-tagline {
+    font-size: 7.5pt;
+    font-weight: 500;
+    color: #718096;
+    font-family: 'Inter', sans-serif;
+    margin-bottom: 10pt;
+    line-height: 1.4;
+  }
+
+  .contact-line {
+    display: flex;
+    align-items: center;
+    gap: 6pt;
+    margin-bottom: 5pt;
+  }
+  .contact-icon {
+    font-size: 9pt;
+    width: 14pt;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .contact-val {
+    font-family: 'Inter', sans-serif;
+    font-size: 8.5pt;
+    font-weight: 600;
+    color: #2d3748;
+  }
+
+  .scarcity {
+    background: #fff8e6;
+    border-left: 2.5px solid #ffba00;
+    border-radius: 0 5pt 5pt 0;
+    padding: 6pt 9pt;
+    font-size: 7.5pt;
+    font-weight: 600;
+    color: #744210;
+    line-height: 1.4;
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* USPS indicia placeholder area */
+  .indicia {
+    width: 100%;
+    min-height: 0.55in;
+    border: 1.5px dashed #e2e8f0;
+    border-radius: 5pt;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .indicia-text {
+    font-size: 7pt;
+    color: #cbd5e0;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  /* Recipient address area */
+  .address-area {
+    min-height: 0.7in;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 4pt 0;
+  }
+  .address-to {
+    font-size: 7pt;
+    font-weight: 700;
+    color: #a0aec0;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 4pt;
+  }
+  .address-lines {
+    font-family: 'Inter', sans-serif;
+    font-size: 9pt;
+    font-weight: 500;
+    color: #2d3748;
+    line-height: 1.5;
+  }
+
+  /* Return address */
+  .return-address {
+    font-family: 'Inter', sans-serif;
+    font-size: 7pt;
+    color: #718096;
+    line-height: 1.45;
+    font-weight: 400;
+  }
+</style>
+</head>
+<body>
+
+  <!-- LEFT: How it works + price anchor -->
+  <div class="left">
+    <div class="tag"><div class="tag-dot"></div>Generator Inlet Installation</div>
+
+    <div class="section-head">What your neighbor just got done:</div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text"><strong>Inlet box installed</strong> on the exterior of your home, weatherproof, code-compliant</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text"><strong>Interlock kit fitted</strong> to your panel, safely switches between utility and generator power</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text"><strong>Permit pulled + inspection passed</strong>, we handle all paperwork, you sign nothing</div>
+      </div>
+    </div>
+
+    <div class="anchor">
+      <div>
+        <div class="anchor-vs">Standby generator</div>
+        <div class="anchor-price-bad">A major undertaking</div>
+      </div>
+      <div class="anchor-arrow">→</div>
+      <div>
+        <div class="anchor-price-good">One all-in price</div>
+        <div class="anchor-label">Connect what<br>you already own</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Contact + address -->
+  <div class="right">
+    <div class="contact-block">
+      <div class="contact-name">Backup Power Pro</div>
+      <div class="contact-tagline">Generator inlet installation · Greenville, Spartanburg + Pickens counties</div>
+      <div class="contact-line">
+        <div class="contact-icon">📞</div>
+        <div class="contact-val">(864) 863-7800</div>
+      </div>
+      <div class="contact-line">
+        <div class="contact-icon">🌐</div>
+        <div class="contact-val">backuppowerpro.com</div>
+      </div>
+    </div>
+
+    <div class="scarcity">We install 5 jobs per week. Book before the next storm.</div>
+
+    <div class="indicia">
+      <div class="indicia-text">Postage here</div>
+    </div>
+
+    <div class="address-area">
+      <div class="address-to">Delivered to</div>
+      <div class="address-lines">
+        Current Resident<br>
+        {{recipient_address}}<br>
+        {{recipient_city}}, {{recipient_state}} {{recipient_zip}}
+      </div>
+    </div>
+
+    <div class="return-address">
+      Backup Power Pro · Key Goodson<br>
+      22 Kimbell CT · Greenville SC 29617
+    </div>
+  </div>
+
+</body>
+</html>

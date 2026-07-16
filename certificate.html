@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta name="robots" content="noindex,nofollow">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light only">
+<meta name="supported-color-schemes" content="light only">
+<!-- connect-src so the live completion-packet fetch is allowed; img-src includes
+     supabase for the signed job-photo URLs. VIEW page only: no checkout, no money. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; img-src 'self' data: https://reowtzedjflwmlptupbk.supabase.co; connect-src 'self' https://*.supabase.co;">
+<base href="https://backuppowerpro.com/">
+<title>Your Completion Certificate | Backup Power Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<!--
+  BPP COMPLETION CERTIFICATE, customer-facing VIEW page (the Completion Packet,
+  docs/qa/COMPLETION-PACKET-PLAN.md). Mapped from the approved Claude Design comp
+  crm/v3/comps/completion-certificate-diploma.html; visual design preserved, the
+  comp's state-switcher harness removed (the live page renders ONE state from data).
+  Fetches a frozen completion_packets snapshot by ?token= via the completion-packet
+  edge function (publishable key, whitelisted response, signed photo URLs).
+  The diploma text plays one or two winks; the county record below stays straight,
+  it is a real government record.
+-->
+<style>
+  :root{
+    --navy:#0b1f3b;
+    --gold:#ffba00;
+    --ink:#0b1f3b;
+    --muted:#51607e;
+    --faint:#6b7794;
+    --line:rgba(11,31,59,.14);
+    --line-soft:rgba(11,31,59,.08);
+    --paper:#f6f7f9;
+    --sheet:#ffffff;
+    --font:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+    --serif:'Cormorant Garamond',Georgia,'Times New Roman',serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--font);
+    font-size:17px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    font-feature-settings:"ss01";
+  }
+  a{color:var(--navy)}
+  a:hover{color:#1a3a5c}
+
+  .stage{min-height:100vh;display:flex;justify-content:center;padding:28px 18px 60px}
+  .sheet{
+    width:100%;max-width:440px;background:var(--sheet);
+    border-radius:18px;box-shadow:0 1px 2px rgba(11,31,59,.04),0 18px 50px rgba(11,31,59,.09);
+    padding:40px 32px 36px;position:relative;overflow:hidden;
+  }
+  /* ===== Issued state: diploma composition ===== */
+  .diploma{border:2px solid var(--navy);padding:36px 26px 30px;position:relative;text-align:center}
+  .diploma::before{content:"";position:absolute;inset:6px;border:1px solid var(--navy);pointer-events:none}
+  .dip-wordmark{font-size:13px;font-weight:600;letter-spacing:.34em;text-transform:uppercase;color:var(--navy);margin:0 0 5px}
+  .dip-sub{font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin:0 0 22px}
+  h1.dip-title{font-family:var(--serif);font-weight:600;font-size:31px;line-height:1.1;letter-spacing:.005em;color:var(--navy);margin:0;text-wrap:balance}
+  .flourish{display:flex;align-items:center;justify-content:center;gap:12px;margin:16px 0 26px}
+  .flourish span{height:1px;width:44px;background:var(--navy);opacity:.5}
+  .flourish i{width:7px;height:7px;background:var(--navy);transform:rotate(45deg)}
+  .dip-confer{font-family:var(--serif);font-variant:all-small-caps;font-weight:600;font-size:20px;letter-spacing:.16em;color:var(--muted);margin:0 0 8px}
+  .dip-name{font-family:var(--serif);font-weight:700;font-size:40px;line-height:1.05;letter-spacing:.005em;color:var(--navy);margin:0 0 12px;text-wrap:balance}
+  .dip-addr{font-size:16px;color:var(--muted);margin:0 auto;max-width:300px}
+  .dip-decree{font-family:var(--serif);font-weight:500;font-size:20px;line-height:1.45;color:var(--navy);margin:22px auto 0;max-width:340px;text-wrap:pretty}
+  .dip-block{max-width:320px;margin:0 auto;text-align:left}
+  .diploma hr.rule{margin:28px 0}
+  .dip-privileges{font-family:var(--serif);font-style:italic;font-weight:500;font-size:18px;line-height:1.4;color:var(--muted);margin:0 auto 22px;max-width:320px;text-wrap:pretty}
+  .seal-wrap{display:flex;justify-content:center;margin:0 0 20px}
+  .seal{width:150px;height:150px}
+  .seal .ring{fill:none;stroke:var(--gold);stroke-width:1.75}
+  .seal .ring.thin{stroke-width:1}
+  .seal text{text-anchor:middle;stroke:none}
+  .seal .arc{font-family:var(--font);font-size:12.5px;font-weight:600;letter-spacing:.24em;fill:var(--navy)}
+  .seal .dot{fill:var(--navy);stroke:none}
+  .seal .seal-sub{font-family:var(--font);font-size:9px;font-weight:600;letter-spacing:.2em;fill:var(--faint)}
+  .seal .seal-no{font-family:var(--serif);font-weight:700;font-size:22px;letter-spacing:.1em;fill:var(--navy)}
+  .dip-installer{font-size:15px;font-weight:500;color:var(--navy);margin:0 auto 7px;max-width:320px;line-height:1.4}
+  .dip-issued{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin:0}
+  .diploma .actions{margin-top:30px}
+
+  /* ---- Masthead (void / loading / not-found states) ---- */
+  .mast{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:34px}
+  .wordmark{font-weight:700;font-size:16px;letter-spacing:-0.01em;color:var(--navy)}
+  .wordmark span{color:var(--gold)}
+  .rec-tag{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+
+  hr.rule{border:0;border-top:1px solid var(--line);margin:30px 0}
+
+  /* ---- Fact list ---- */
+  .facts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:16px}
+  .facts li{display:flex;gap:14px;align-items:baseline}
+  .facts .k{flex:0 0 92px;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);padding-top:2px}
+  .facts .v{flex:1;font-size:17px;font-weight:500;color:var(--navy)}
+
+  /* ---- Provenance timeline ---- */
+  .prov{margin:0}
+  .prov .cap{font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin:0 0 4px}
+  .prov .prov-head{font-size:16px;font-weight:600;color:var(--navy);margin:0 0 22px}
+  .timeline{list-style:none;margin:0;padding:0;position:relative}
+  .timeline li{position:relative;padding:0 0 22px 28px}
+  .timeline li:last-child{padding-bottom:0}
+  .timeline li::before{content:"";position:absolute;left:5px;top:14px;bottom:-4px;width:1.5px;background:var(--line)}
+  .timeline li:last-child::before{display:none}
+  .timeline li::after{content:"";position:absolute;left:0;top:5px;width:12px;height:12px;border-radius:50%;background:var(--sheet);box-shadow:inset 0 0 0 2px var(--navy)}
+  .timeline li.pass::after{background:var(--gold);box-shadow:inset 0 0 0 2px var(--navy)}
+  .timeline .ev{font-size:16px;font-weight:600;color:var(--navy);line-height:1.3}
+  .timeline .dt{font-size:14px;color:var(--muted);margin-top:2px}
+  .no-permit{font-size:17px;color:var(--muted);margin:0;line-height:1.5}
+
+  /* ---- Photos (real images from short-lived signed URLs) ---- */
+  .photos{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0}
+  .photos .tile{position:relative;aspect-ratio:4/3;border-radius:12px;overflow:hidden;background:var(--line-soft)}
+  .photos .tile img{width:100%;height:100%;object-fit:cover;display:block}
+  .photos.count-1{grid-template-columns:1fr}
+  .photos.count-1 .tile,.photos.count-3 .tile:first-child{aspect-ratio:16/9}
+  .photos.count-3{grid-template-columns:1fr 1fr}
+  .photos.count-3 .tile:first-child{grid-column:1 / -1}
+
+  /* ---- Actions ---- */
+  .actions{display:flex;flex-direction:column;gap:12px;margin-top:34px}
+  .btn{display:flex;align-items:center;justify-content:center;gap:9px;min-height:54px;padding:0 24px;
+    font-family:var(--font);font-size:17px;font-weight:600;border-radius:100px;cursor:pointer;
+    transition:background .18s ease,box-shadow .18s ease,transform .12s ease;text-decoration:none;width:100%}
+  .btn:active{transform:scale(.985)}
+  .btn-primary{background:var(--navy);color:#fff;box-shadow:0 4px 18px rgba(11,31,59,.22)}
+  .btn-primary:hover{background:#142a52;box-shadow:0 6px 22px rgba(11,31,59,.28)}
+  .btn-secondary{background:transparent;color:var(--navy);box-shadow:inset 0 0 0 1.5px rgba(11,31,59,.22)}
+  .btn-secondary:hover{box-shadow:inset 0 0 0 1.5px var(--navy)}
+
+  /* ---- VOID state ---- */
+  .void-wrap{text-align:left}
+  .void-badge{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);border:1.5px solid var(--line);border-radius:100px;padding:7px 16px;margin-bottom:24px}
+  .void-wrap h1{font-size:24px;font-weight:700;letter-spacing:-0.02em;color:var(--navy);margin:0 0 14px;line-height:1.2}
+  .void-wrap p{font-size:17px;color:var(--muted);margin:0 0 26px;line-height:1.55}
+  .void-wrap .voided-no{font-size:15px;color:var(--faint);margin:22px 0 0;font-variant-numeric:tabular-nums;letter-spacing:.04em}
+  .void-link{display:inline-flex;align-items:center;gap:8px;min-height:44px;font-size:17px;font-weight:600;color:var(--navy);text-decoration:none;border-bottom:2px solid var(--gold);padding-bottom:1px}
+  .void-link:hover{color:var(--navy);border-color:var(--navy)}
+  :where(a[href], button):focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+  .btn:focus-visible{outline:2px solid var(--navy);outline-offset:3px}
+
+  /* ---- Loading skeleton ---- */
+  .sk{background:linear-gradient(100deg,var(--line-soft) 30%,rgba(11,31,59,.03) 50%,var(--line-soft) 70%);background-size:400px 100%;border-radius:7px;animation:shimmer 1.4s infinite linear}
+  @keyframes shimmer{0%{background-position:-200px 0}100%{background-position:200px 0}}
+  @media (prefers-reduced-motion: reduce){ .sk{animation:none} }
+  .sk-line{height:16px;margin-bottom:14px}
+  .load-note{font-size:14px;color:var(--faint);text-align:center;margin:30px 0 0}
+
+  /* ---- Not found / load error ---- */
+  .nf{text-align:left}
+  .nf h1{font-size:24px;font-weight:700;letter-spacing:-0.02em;color:var(--navy);margin:0 0 14px;line-height:1.2}
+  .nf p{font-size:17px;color:var(--muted);margin:0 0 12px;line-height:1.55}
+  .nf .contact{font-size:16px;color:var(--faint);margin-top:24px}
+  .nf .contact a{color:var(--navy);font-weight:600}
+
+  [hidden]{display:none !important}
+
+  @media(max-width:420px){
+    .sheet{padding:20px}
+    .diploma{padding:30px 18px 26px}
+    .dip-title{font-size:26px}
+    .dip-name{font-size:34px}
+    .dip-decree{font-size:19px}
+  }
+
+  /* ============ PRINT, clean black & white ============ */
+  @media print{
+    @page{margin:0.7in}
+    body{background:#fff;font-size:12pt;color:#000}
+    .stage{display:block;padding:0;min-height:0}
+    .sheet{max-width:none;width:100%;box-shadow:none;border-radius:0;padding:0}
+    .actions{display:none !important}
+    .wordmark,.wordmark span,.facts .v,.prov .prov-head,
+    .timeline .ev,.void-wrap h1,.nf h1{color:#000 !important}
+    .rec-tag,.facts .k,.prov .cap,.timeline .dt,
+    .no-permit,.void-wrap p,.nf p{color:#333 !important}
+    .timeline li::after{background:#fff !important;box-shadow:inset 0 0 0 2px #000 !important}
+    .timeline li.pass::after{background:#000 !important;box-shadow:inset 0 0 0 2px #000 !important}
+    .timeline li::before{background:#999 !important}
+    hr.rule{border-color:#bbb !important}
+    .void-link{border-color:#000 !important;color:#000 !important}
+    .diploma{border-color:#000 !important}
+    .diploma::before{border-color:#000 !important}
+    .dip-title,.dip-name,.dip-decree,.dip-installer,.dip-wordmark{color:#000 !important}
+    .dip-confer,.dip-addr,.dip-privileges,.dip-sub,.dip-issued{color:#333 !important}
+    .flourish span,.flourish i{background:#000 !important;opacity:1 !important}
+    .seal .ring{stroke:#000 !important}
+    .seal .arc,.seal .seal-no{fill:#000 !important}
+    .seal .seal-sub,.seal .dot{fill:#333 !important}
+  }
+</style>
+</head>
+<body>
+
+<main class="stage">
+  <div class="sheet" id="sheet" role="document">
+
+    <!-- ============ ISSUED (diploma) ============ -->
+    <section class="state diploma" data-state="issued" hidden>
+      <p class="dip-wordmark">Backup Power Pro</p>
+      <p class="dip-sub">Certificate of Completion</p>
+      <h1 class="dip-title">Certificate of Completed Installation</h1>
+      <div class="flourish"><span></span><i></i><span></span></div>
+
+      <p class="dip-confer">Be it known that</p>
+      <p class="dip-name" id="c-name"></p>
+      <p class="dip-addr" id="c-addr"></p>
+      <p class="dip-decree">having equipped their home with a code-compliant portable generator inlet, shall never again sit powerless in the dark.</p>
+
+      <hr class="rule">
+
+      <div class="dip-block">
+        <ul class="facts" id="c-facts"></ul>
+      </div>
+
+      <hr class="rule">
+
+      <div class="dip-block">
+        <div class="prov" id="c-prov"></div>
+      </div>
+
+      <div id="c-photos-wrap" hidden>
+        <hr class="rule">
+        <div class="photos" id="c-photos"></div>
+      </div>
+
+      <hr class="rule">
+
+      <p class="dip-privileges">Awarded with all the rights and privileges of the outage-ready.</p>
+
+      <div class="seal-wrap">
+        <svg class="seal" viewBox="0 0 200 200" role="img" aria-label="Backup Power Pro seal, SC LIC 2942">
+          <defs>
+            <path id="arcTop" d="M30,100 A70,70 0 0 1 170,100"></path>
+            <path id="arcBot" d="M38,103 A62,62 0 0 0 162,103"></path>
+          </defs>
+          <circle class="ring" cx="100" cy="100" r="90"></circle>
+          <circle class="ring" cx="100" cy="100" r="74"></circle>
+          <circle class="ring thin" cx="100" cy="100" r="57"></circle>
+          <text class="arc"><textPath href="#arcTop" startOffset="50%">BACKUP POWER PRO</textPath></text>
+          <text class="arc"><textPath href="#arcBot" startOffset="50%">SC LIC 2942</textPath></text>
+          <circle class="dot" cx="26" cy="100" r="2.6"></circle>
+          <circle class="dot" cx="174" cy="100" r="2.6"></circle>
+          <text class="seal-sub" x="100" y="90">No.</text>
+          <text class="seal-no" id="c-sealno" x="100" y="116"></text>
+        </svg>
+      </div>
+
+      <p class="dip-installer" id="c-installer"></p>
+      <p class="dip-issued" id="c-issued"></p>
+
+      <div class="actions">
+        <a class="btn btn-primary" href="#" id="save-pdf">Save as PDF</a>
+        <a class="btn btn-secondary" href="#" id="owner-guide" hidden>Open your owner's guide</a>
+      </div>
+    </section>
+
+    <!-- ============ VOID ============ -->
+    <section class="state void-wrap" data-state="void" hidden>
+      <header class="mast">
+        <div class="wordmark">Backup Power <span>Pro</span></div>
+        <div class="rec-tag">Completion record</div>
+      </header>
+      <span class="void-badge">Void</span>
+      <h1>This certificate was replaced</h1>
+      <p>A newer certificate was issued for this installation. The one you're looking at is no longer the current record.</p>
+      <a class="void-link" href="#" id="void-current" hidden>View the current certificate</a>
+      <p class="voided-no" id="void-no" hidden>If you need the current record, reach Key Electric at <a href="tel:+18648637800">(864) 863-7800</a>.</p>
+    </section>
+
+    <!-- ============ LOADING (shown first) ============ -->
+    <section class="state" data-state="loading" aria-busy="true">
+      <header class="mast">
+        <div class="wordmark">Backup Power <span>Pro</span></div>
+        <div class="rec-tag">Completion record</div>
+      </header>
+      <div class="sk sk-line" style="width:52%;height:12px;margin-bottom:22px"></div>
+      <div class="sk sk-line" style="width:88%;height:22px"></div>
+      <div class="sk sk-line" style="width:70%;height:22px;margin-bottom:34px"></div>
+      <div class="sk sk-line" style="width:64%;height:26px"></div>
+      <div class="sk sk-line" style="width:80%;margin-bottom:34px"></div>
+      <div class="sk sk-line" style="width:100%"></div>
+      <div class="sk sk-line" style="width:100%"></div>
+      <div class="sk sk-line" style="width:46%;margin-bottom:34px"></div>
+      <div class="sk sk-line" style="width:100%;height:44px;border-radius:100px"></div>
+      <p class="load-note">Loading your certificate&hellip;</p>
+    </section>
+
+    <!-- ============ NOT FOUND / LOAD ERROR ============ -->
+    <section class="state nf" data-state="notfound" hidden>
+      <header class="mast">
+        <div class="wordmark">Backup Power <span>Pro</span></div>
+        <div class="rec-tag">Completion record</div>
+      </header>
+      <h1 id="nf-title">We couldn't find that certificate</h1>
+      <p id="nf-body">The link may be mistyped or out of date. Check the link in your completion email and try again.</p>
+      <p class="contact">Still stuck? Reach Key Electric at <a href="tel:+18648637800">(864)&nbsp;863-7800</a>.</p>
+    </section>
+
+  </div>
+</main>
+
+<script>
+(function(){
+  "use strict";
+
+  var SUPABASE_URL = 'https://reowtzedjflwmlptupbk.supabase.co';
+  
+  var FN_URL = SUPABASE_URL + '/functions/v1/completion-packet';
+
+  var el = function(id){ return document.getElementById(id); };
+  var esc = function(s){ return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); };
+
+  // Date-only strings ('2026-07-01') must NOT go through new Date(iso), which
+  // parses them as UTC midnight and can render the previous day in local time.
+  function fmtDateOnly(s){
+    if(!s) return '';
+    var m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if(!m) return '';
+    var d = new Date(Number(m[1]), Number(m[2])-1, Number(m[3]));
+    return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  }
+  function fmtStamp(iso){
+    if(!iso) return '';
+    try{
+      var d = new Date(iso);
+      if(isNaN(d.getTime())) return '';
+      return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    }catch(e){ return ''; }
+  }
+
+  function show(state){
+    document.querySelectorAll('.state').forEach(function(s){
+      s.hidden = (s.getAttribute('data-state') !== state);
+    });
+  }
+
+  function row(label, value){
+    if(value == null || value === '') return '';
+    return '<li><span class="k">'+esc(label)+'</span><span class="v">'+esc(value)+'</span></li>';
+  }
+
+  function tlNode(event, date, isPass){
+    if(!date) return '';
+    return '<li'+(isPass?' class="pass"':'')+'><div class="ev">'+esc(event)+'</div>'+
+           '<div class="dt">'+esc(date)+'</div></li>';
+  }
+
+  function renderProvenance(p){
+    var host = el('c-prov');
+    if(!p.permit_required){
+      host.innerHTML = '<p class="no-permit">No county permit was required for this installation.</p>';
+      return;
+    }
+    var head = '';
+    if(p.jurisdiction_name) head += esc(p.jurisdiction_name);
+    if(p.permit_number) head += (head? ' &middot; ':'') + 'Permit ' + esc(p.permit_number);
+    var nodes =
+      tlNode('Submitted for review', fmtDateOnly(p.permit_submitted_at), false) +
+      tlNode('Permit approved', fmtDateOnly(p.permit_approved_at), false) +
+      tlNode('Passed county inspection', fmtStamp(p.inspection_passed_at), true);
+    host.innerHTML =
+      '<p class="cap">County record</p>' +
+      (head? '<p class="prov-head">'+head+'</p>':'') +
+      (nodes? '<ul class="timeline">'+nodes+'</ul>':'');
+  }
+
+  function renderPhotos(p){
+    var wrap = el('c-photos-wrap');
+    var grid = el('c-photos');
+    var list = (p.photos || []).filter(function(ph){
+      // signed URLs only, from our own storage; anything else never renders
+      return ph && typeof ph.url === 'string' && ph.url.indexOf(SUPABASE_URL + '/') === 0;
+    }).slice(0,4);
+    if(list.length === 0){ wrap.hidden = true; return; }
+    wrap.hidden = false;
+    grid.className = 'photos count-' + list.length;
+    grid.textContent = '';
+    list.forEach(function(ph){
+      var tile = document.createElement('div');
+      tile.className = 'tile';
+      var img = document.createElement('img');
+      img.src = ph.url;
+      img.alt = 'Job photo from your installation';
+      img.loading = 'lazy';
+      tile.appendChild(img);
+      grid.appendChild(tile);
+    });
+  }
+
+  function renderIssued(p){
+    el('c-name').textContent = p.customer_name || '';
+    el('c-addr').textContent = p.address || '';
+    el('c-facts').innerHTML =
+      row('Installed', fmtDateOnly(p.install_date)) +
+      row('System', 'Portable generator inlet + interlock') +
+      row('Inlet', p.amp_type ? (p.amp_type + '-amp inlet') : null);
+    renderProvenance(p);
+    renderPhotos(p);
+    el('c-sealno').textContent = p.certificate_number || '';
+    var instParts = [];
+    if(p.license_number) instParts.push('Installed under ' + p.license_number);
+    if(p.installer_name) instParts.push(p.installer_name);
+    var inst = el('c-installer');
+    inst.textContent = instParts.join(' · ');
+    inst.hidden = instParts.length === 0;
+    var iss = el('c-issued');
+    var issued = fmtStamp(p.issued_at);
+    iss.textContent = issued ? ('Issued ' + issued) : '';
+    iss.hidden = !issued;
+    // The owner's guide is live (owner-guide.html); same token personalizes it.
+    var guide = el('owner-guide');
+    guide.href = 'owner-guide.html?token=' + encodeURIComponent(token);
+    guide.hidden = false;
+    show('issued');
+  }
+
+  function renderVoid(p){
+    var link = el('void-current');
+    var fallback = el('void-no');
+    if(p.replacement_token && /^[0-9a-f]{64}$/.test(p.replacement_token)){
+      link.href = 'certificate.html?token=' + encodeURIComponent(p.replacement_token);
+      link.hidden = false;
+      fallback.hidden = true;
+    } else {
+      link.hidden = true;
+      fallback.hidden = false;
+    }
+    show('void');
+  }
+
+  function renderNotFound(loadError){
+    if(loadError){
+      el('nf-title').textContent = "We couldn't load your certificate";
+      el('nf-body').textContent = 'Something interrupted the connection. Give it a minute and reload this page.';
+    }
+    show('notfound');
+  }
+
+  el('save-pdf').addEventListener('click', function(e){ e.preventDefault(); window.print(); });
+
+  var token = new URLSearchParams(window.location.search).get('token') || '';
+  if(!/^[0-9a-f]{64}$/.test(token)){ renderNotFound(false); return; }
+
+  // Header-free simple GET: no CORS preflight. The endpoint is public
+  // (verify_jwt off, token-gated + rate-limited server-side).
+  fetch(FN_URL + '?token=' + encodeURIComponent(token)).then(function(r){
+    if(r.status === 404){ renderNotFound(false); return null; }
+    if(!r.ok) throw new Error('http ' + r.status);
+    return r.json();
+  }).then(function(data){
+    if(!data) return;
+    var p = data.packet;
+    if(!p){ renderNotFound(false); return; }
+    if(p.status === 'void'){ renderVoid(p); return; }
+    if(p.status === 'issued'){ renderIssued(p); return; }
+    renderNotFound(false);
+  }).catch(function(){
+    renderNotFound(true);
+  });
+})();
+</script>
+
+</body>
+</html>

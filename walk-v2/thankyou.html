@@ -1,0 +1,887 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="referrer" content="strict-origin-when-cross-origin">
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+<title>Backup Power Pro · Thank You</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --navy: #0b1f3b;
+    --navy-mid: #1a3a5c;
+    --gold: #ffba00;
+    --gold-hover: #ffc519;
+    --gold-ink: #8a5a00;
+    --gold-tint: #fff7e0;
+    --bg: #eef1f6;
+    --page: #fafbfc;
+    --card: #ffffff;
+    --sunken: #f4f6fa;
+    --edge: rgba(11, 31, 59, 0.10);
+    --edge-soft: rgba(11, 31, 59, 0.07);
+    --text: #16243a;
+    --muted: #4d5a6e;
+    --faint: #5d6b7e;
+
+    --shadow-sm: 0 2px 6px rgba(11,31,59,0.06), 0 1px 2px rgba(11,31,59,0.04);
+    --shadow-md: 0 10px 28px rgba(11,31,59,0.10), 0 2px 8px rgba(11,31,59,0.05);
+    --shadow-lift: 0 18px 44px rgba(11,31,59,0.14), 0 4px 12px rgba(11,31,59,0.06);
+    --shadow-gold: 0 6px 24px rgba(255,186,0,0.30);
+
+    --r-md: 14px;
+    --r-lg: 20px;
+    --r-pill: 100px;
+
+    --head: 'Outfit', sans-serif;
+    --body: 'Inter', system-ui, -apple-system, sans-serif;
+    --script: 'Dancing Script', cursive;
+
+    --dur: 220ms;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html, body {
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  button {
+    font-family: inherit;
+    border: 0;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  input { font-family: inherit; -webkit-appearance: none; appearance: none; }
+  button:focus-visible, input:focus-visible, a:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+  }
+  svg { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+
+  .stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 48px;
+    padding: 28px 14px 96px;
+  }
+  .state-label {
+    width: 390px;
+    max-width: 100%;
+    font-family: var(--head);
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: -34px;
+    padding-left: 4px;
+  }
+  .state-label.wide { width: 1080px; }
+  .snapshot { pointer-events: none; }
+
+  /* ================= page frame ================= */
+  .page {
+    width: 390px;
+    max-width: 100%;
+    background: var(--page);
+    border-radius: 24px;
+    box-shadow: var(--shadow-md), inset 0 0 0 1px var(--edge-soft);
+    overflow: hidden;
+    container-type: inline-size;
+    container-name: page;
+  }
+  .page.w-desktop { width: 1080px; }
+  /* staging: the comp's own desktop composition activates responsively
+     (the comps showed it via a snapshot clone with .w-desktop) */
+  @media (min-width: 1140px) {
+    .page { width: 1080px; }
+  }
+
+  .page * { text-wrap: pretty; }
+
+  /* ================= scroll reveal ================= */
+  .rv {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 560ms var(--ease), transform 560ms var(--ease);
+    transition-delay: var(--rvd, 0ms);
+  }
+  .rv.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .rv { opacity: 1; transform: none; transition: none; }
+  }
+
+  /* ================= 1. site header ================= */
+  .site-head {
+    height: 56px;
+    background: var(--navy);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+  }
+  .lockup {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 8px 0;
+    box-sizing: border-box;
+  }
+  .lockup .bolt {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--gold);
+    color: var(--navy);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+  }
+  .lockup .bolt svg { width: 14px; height: 14px; fill: var(--navy); stroke: none; }
+  .lockup .wm {
+    font-family: var(--head);
+    font-weight: 800;
+    font-size: 13.5px;
+    line-height: 1;
+    letter-spacing: 0.12em;
+    color: #fff;
+    white-space: nowrap;
+  }
+  .lockup .wm small {
+    display: block;
+    font-size: 7px;
+    font-weight: 600;
+    letter-spacing: 0.34em;
+    color: var(--gold);
+    margin-top: 3px;
+    white-space: nowrap;
+  }
+
+  /* ================= body grid ================= */
+  .body-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 22px;
+    padding: 32px 20px 8px;
+  }
+  .col-main { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+  .col-side { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+
+  @container page (min-width: 760px) {
+    .site-head { padding: 0 48px; }
+    .body-grid {
+      grid-template-columns: 1fr;
+      max-width: 620px;
+      margin: 0 auto;
+      gap: 22px;
+      padding: 48px 24px 12px;
+    }
+    .celebrate h1 { font-size: 44px; }
+    .price .pn { font-size: 64px; }
+    .foot { padding-left: 48px; padding-right: 48px; }
+  }
+
+  /* ================= 2. calm ownership (not celebration theater) ================= */
+  .celebrate {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
+  .celebrate .big-check {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--gold);
+    color: var(--navy);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: none;
+    margin-bottom: 16px;
+  }
+  .celebrate .big-check svg { width: 20px; height: 20px; stroke-width: 2.6; }
+  .celebrate h1 {
+    font-family: var(--head);
+    font-weight: 800;
+    font-size: 32px;
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+    color: var(--navy);
+    margin: 0 0 10px;
+  }
+  .celebrate .sub {
+    font-size: 16px;
+    line-height: 1.55;
+    color: var(--muted);
+    margin: 0;
+    max-width: 34em;
+  }
+
+  /* ================= 2b. reviewing beat (calm inevitability) ================= */
+  .reviewing {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    padding: 14px 16px;
+    background: var(--card);
+    border-radius: var(--r-lg);
+    box-shadow: inset 0 0 0 1px var(--edge-soft);
+  }
+  .reviewing .ravatar {
+    position: relative;
+    width: 48px;
+    height: 48px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1.5px rgba(11,31,59,0.08);
+  }
+  .reviewing .pulse {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--gold);
+    box-shadow: 0 0 0 2px #fff;
+  }
+  .reviewing .pulse::after { content: none; }
+  .reviewing .rcopy { min-width: 0; flex: 1; }
+  .reviewing .rline {
+    font-family: var(--head);
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--navy);
+    margin: 0 0 3px;
+  }
+  .reviewing .rsub {
+    font-size: 15px;
+    line-height: 1.45;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  /* ================= 3. recap card ================= */
+  .recap {
+    background: var(--card);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-sm), inset 0 0 0 1px var(--edge-soft);
+    padding: 20px 22px;
+  }
+  .recap .tk {
+    font-family: var(--head);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold-ink);
+    margin: 0 0 12px;
+  }
+  .recap ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .recap li {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .recap li .ric {
+    width: 28px;
+    height: 28px;
+    flex: 0 0 auto;
+    border-radius: 8px;
+    background: var(--sunken);
+    color: var(--navy-mid);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .recap li .ric svg { width: 15px; height: 15px; stroke-width: 1.8; }
+
+  /* ================= 4. price card (hero) ================= */
+  .price {
+    position: relative;
+    background: var(--navy);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-lift);
+    padding: 26px 24px 24px;
+    color: #fff;
+    overflow: hidden;
+  }
+  .price::before {
+    content: "";
+    position: absolute;
+    top: -60px;
+    right: -60px;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,186,0,0.14), transparent 70%);
+    pointer-events: none;
+  }
+  .price .pk {
+    font-family: var(--head);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin: 0 0 12px;
+  }
+  .price .pl {
+    font-size: 14.5px;
+    line-height: 1.5;
+    color: rgba(255,255,255,0.78);
+    margin: 0 0 6px;
+  }
+  .price .pn {
+    font-family: var(--head);
+    font-weight: 800;
+    font-size: 31px;
+    line-height: 1.04;
+    letter-spacing: -0.02em;
+    color: #fff;
+    margin: 0 0 20px;
+    white-space: nowrap;
+  }
+  .price .pn .d { color: var(--gold); }
+  .price .pn .and {
+    font-size: 0.46em;
+    font-weight: 700;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.04em;
+    padding: 0 0.55em;
+  }
+  .price .pf {
+    font-size: 14.5px;
+    line-height: 1.55;
+    color: rgba(255,255,255,0.78);
+    margin: -8px 0 18px;
+  }
+  .price ul {
+    list-style: none;
+    margin: 0;
+    padding: 18px 0 0;
+    border-top: 1px solid rgba(255,255,255,0.14);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .price li {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    font-size: 15px;
+    line-height: 1.5;
+    color: rgba(255,255,255,0.88);
+  }
+  .price li .tick {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
+    margin-top: 1px;
+    border-radius: 50%;
+    background: rgba(255,186,0,0.16);
+    color: var(--gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .price li .tick svg { width: 9px; height: 9px; stroke-width: 3; }
+
+  /* ================= 5. gift card ================= */
+  .gift {
+    background: var(--gold-tint);
+    border-radius: var(--r-lg);
+    box-shadow: inset 0 0 0 1.5px rgba(255,186,0,0.4);
+    padding: 22px;
+  }
+  .gift .gh {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .gift .gi {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: var(--gold);
+    color: var(--navy);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-gold);
+  }
+  .gift .gi svg { width: 19px; height: 19px; stroke-width: 1.8; }
+  .gift h2 {
+    font-family: var(--head);
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: -0.015em;
+    color: var(--navy);
+    margin: 0;
+  }
+  .gift .gs {
+    font-size: 16px;
+    line-height: 1.55;
+    color: var(--muted);
+    margin: 0 0 16px;
+  }
+  .gift input {
+    width: 100%;
+    height: 52px;
+    padding: 0 16px;
+    font-size: 16px;
+    color: var(--text);
+    background: var(--card);
+    border: 0;
+    border-radius: var(--r-md);
+    box-shadow: inset 0 0 0 1.5px var(--edge);
+    transition: box-shadow var(--dur) var(--ease);
+    margin-bottom: 10px;
+  }
+  .gift input::placeholder { color: var(--faint); }
+  .gift input:focus { outline: none; box-shadow: inset 0 0 0 2px var(--gold); }
+  .gift .send {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    height: 52px;
+    font-family: var(--head);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--navy);
+    background: var(--gold);
+    border-radius: var(--r-pill);
+    box-shadow: var(--shadow-gold);
+    transition: background var(--dur) var(--ease), transform var(--dur) var(--ease);
+  }
+  .gift .send svg { width: 17px; height: 17px; stroke-width: 2; }
+  .gift .send:not(:disabled):hover { background: var(--gold-hover); }
+  .gift .send:not(:disabled):active { transform: scale(0.98); }
+  .gift .send:disabled {
+    background: #eddfae;
+    color: rgba(11,31,59,0.45);
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+
+  /* sent confirmation */
+  .sent {
+    display: none;
+    background: var(--navy);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-md);
+    padding: 22px;
+    color: #fff;
+  }
+  .sent.show { display: block; animation: rise 360ms var(--ease) both; }
+  @media (prefers-reduced-motion: reduce) { .sent.show { animation: none; } }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .sent .sh {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 10px;
+  }
+  .sent .si {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: var(--gold);
+    color: var(--navy);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .sent .si svg { width: 16px; height: 16px; stroke-width: 2.6; }
+  .sent h2 {
+    font-family: var(--head);
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: #fff;
+    margin: 0;
+  }
+  .sent p {
+    font-size: 14px;
+    line-height: 1.6;
+    color: rgba(255,255,255,0.82);
+    margin: 0 0 10px;
+  }
+  .sent .ksig {
+    font-family: var(--script);
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--gold);
+    transform: rotate(-1.5deg);
+    display: inline-block;
+    margin: 0;
+  }
+
+  /* ================= 6. closing line ================= */
+  .closing {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-align: center;
+    padding: 4px 8px 0;
+  }
+  .closing .cl {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--faint);
+    margin: 0;
+    max-width: 30ch;
+  }
+  .closing .cavatar {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    margin: 12px 0 3px;
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.92), 0 4px 12px rgba(11,31,59,0.14);
+  }
+  .closing .csig {
+    font-family: var(--script);
+    font-size: 27px;
+    font-weight: 600;
+    color: var(--navy);
+    transform: rotate(-1.5deg);
+    line-height: 1;
+  }
+  .closing .csub {
+    font-family: var(--head);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gold-ink);
+  }
+
+  /* ================= 7. footer ================= */
+  .foot {
+    margin-top: 26px;
+    padding: 20px 20px 28px;
+    border-top: 1px solid var(--edge-soft);
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--faint);
+    text-align: center;
+  }
+  .foot strong { font-family: var(--head); font-weight: 600; color: var(--muted); }
+
+  /* Fresh Air mobile (2026-07-13 design audit): drop the phone-frame gutters.
+     Comp staging used .stack padding + rounded .page; on a real phone that
+     wastes width and looks like a mock. Edge-to-edge under 760px; desktop card stays. */
+  @media (max-width: 759px) {
+    html, body { background: var(--page); }
+    .stack { padding: 0 0 calc(28px + env(safe-area-inset-bottom, 0px)); gap: 0; }
+    .page {
+      width: 100%;
+      max-width: 100%;
+      border-radius: 0;
+      box-shadow: none;
+    }
+    .state-label { display: none; }
+  }
+</style>
+<script>!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+" (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);posthog.init('phc_qoA51lePZqXYtPJYkrIpdA4U8iMDJ79L1kje7r4pD4O',{api_host:'https://us.i.posthog.com',property_denylist:['$current_url','$initial_current_url','$referrer','$initial_referrer'],sanitize_properties:function(p){for(var k in p){var v=p[k];if(typeof v==='string'&&v.indexOf('http')===0&&v.indexOf('?')>-1){try{var u=new URL(v);p[k]=u.origin+u.pathname;}catch(e){p[k]=v.split('?')[0];}}}return p;},person_profiles:'identified_only',capture_pageview:true,capture_pageleave:true,enable_heatmaps:true,capture_dead_clicks:true})</script>
+</head>
+<body>
+<div class="stack" id="stack">
+
+  <!-- ============ MAIN PAGE (mobile, interactive) ============ -->
+  <main class="page" id="mainPage" data-screen-label="Quote walk thank you (interactive, mobile)">
+
+    <!-- 1. site header -->
+    <header class="site-head">
+      <a class="lockup" href="https://backuppowerpro.com" aria-label="Backup Power Pro" style="text-decoration:none;">
+        <img src="/assets/images/logo-white-v2.png" alt="Backup Power Pro" style="height:28px;display:block;width:auto;" />
+      </a>
+    </header>
+
+    <div class="body-grid">
+      <div class="col-main">
+
+        <!-- 2. ownership: baton caught, calm inevitability -->
+        <section class="celebrate rv" style="--rvd: 0ms;">
+          <div class="big-check"><svg viewBox="0 0 30 30"><path d="M7 16l5.5 5.5L23 9.5"></path></svg></div>
+          <h1 data-thanks-head="">I've got your setup.</h1>
+          <p class="sub" data-thanks-sub="">I'm reviewing it now. You'll hear from me by text.</p>
+        </section>
+
+        <!-- 2b. reviewing beat: Key has it (static presence, not pulse theater) -->
+        <section class="reviewing rv" style="--rvd: 40ms;" data-reviewing="" aria-live="polite">
+          <span class="ravatar" style="background: url('/assets/images/key-headshot.jpg') center 20% / cover no-repeat;" role="img" aria-label="Key Goodson">
+            <span class="pulse" aria-hidden="true"></span>
+          </span>
+          <div class="rcopy">
+            <p class="rline" data-review-line="">On my desk now</p>
+            <p class="rsub" data-review-sub="">Firm all-in number comes by text after I look it over</p>
+          </div>
+        </section>
+
+        <!-- 3. recap card -->
+        <section class="recap rv" style="--rvd: 90ms;">
+          <p class="tk">Already on my desk</p>
+          <ul>
+            <li><span class="ric"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"></circle><path d="M5.5 6.2l1.6 1.2M10.5 6.2L8.9 7.4M8 11.5V9.8"></path></svg></span><span data-recap="outlet">Outlet: I'll confirm it on site</span></li>
+            <li><span class="ric"><svg viewBox="0 0 16 16"><path d="M2 13V6.5L8 2.5l6 4V13"></path><path d="M4.5 13V8h7v5M4.5 10h7"></path></svg></span><span data-recap="room">Panel location noted</span></li>
+            <li><span class="ric"><svg viewBox="0 0 16 16"><path d="M2.5 8h11M2.5 8l2-2M2.5 8l2 2M13.5 8l-2-2M13.5 8l-2 2"></path></svg></span><span data-recap="distance">Distance noted</span></li>
+            <li><span class="ric"><svg viewBox="0 0 16 16"><path d="M8 14s4.5-4 4.5-7.5a4.5 4.5 0 0 0-9 0C3.5 10 8 14 8 14z"></path><circle cx="8" cy="6.5" r="1.6"></circle></svg></span><span data-recap="address">Your address</span></li>
+          </ul>
+        </section>
+
+        <!-- 4. price card, the hero. Range is a ballpark from amp + distance;
+             Key texts the firm number after he reviews (honest framing, Key 2026-07-13). -->
+        <section class="price rv" style="--rvd: 180ms;">
+          <p class="pk">Your ballpark</p>
+          <p class="pl" data-price-line="">Installs like yours usually land between</p>
+          <p class="pn" data-price-num="" style="display:none;"></p>
+          <p class="pf" data-price-follow="" style="display:none;">That's a ballpark from what you told me, not your final number. I'm reviewing your setup now; I'll text you the firm quote myself.</p>
+          <ul>
+            <li><span class="tick"><svg viewBox="0 0 12 12"><path d="M2 6.5l2.6 2.6L10 3.5"></path></svg></span>Permits and inspection handled, start to finish</li>
+            <li><span class="tick"><svg viewBox="0 0 12 12"><path d="M2 6.5l2.6 2.6L10 3.5"></path></svg></span>Generator cord included, 20 ft or longer</li>
+            <li><span class="tick"><svg viewBox="0 0 12 12"><path d="M2 6.5l2.6 2.6L10 3.5"></path></svg></span>Licensed, insured, and inspected by the county</li>
+            <li><span class="tick"><svg viewBox="0 0 12 12"><path d="M2 6.5l2.6 2.6L10 3.5"></path></svg></span>Done in one day</li>
+          </ul>
+        </section>
+
+        <!-- quiet forward action: reach Key the moment the price lands (secondary, not the gold primary) -->
+        <p class="ask-key" style="margin:14px 2px 0;font-size:15px;line-height:1.55;color:var(--faint);text-align:center">Questions before then? Text me anytime, <a href="sms:+18648637800" style="color:var(--navy);font-weight:600;text-decoration:none;border-bottom:1px solid var(--gold);padding-bottom:1px;min-height:44px;display:inline-flex;align-items:center">(864) 863-7800</a>.</p>
+      </div>
+
+      <div class="col-side">
+
+        <!-- 5. gift card -->
+        <section class="gift rv" style="--rvd: 260ms;" data-gift="">
+          <div class="gh">
+            <span class="gi"><svg viewBox="0 0 18 18"><rect x="2.5" y="7" width="13" height="8.5" rx="1.2"></rect><path d="M2 4.5h14V7H2zM9 4.5v11M9 4.5S7 1.5 5.2 2.2 5.5 4.9 9 4.5zM9 4.5s2-3 3.8-2.3-.3 2.7-3.8 2.3z"></path></svg></span>
+            <h2>Your outage-prep guide is ready.</h2>
+          </div>
+          <p class="gs">The checklist I wish every generator owner had before the lights go out. Where should I send it?</p>
+          <input type="email" inputmode="email" autocomplete="email" placeholder="Your email" data-email="" aria-label="Your email" />
+          <button class="send" type="button" data-send="" disabled="">
+            Send my free guide
+            <svg viewBox="0 0 18 18"><path d="M2.5 9L15 3.5 11.5 15l-3-4.5z"></path><path d="M15 3.5L8.5 10.5"></path></svg>
+          </button>
+          <p style="font-size:13px;color:var(--faint);margin-top:10px;line-height:1.5;text-align:center">Just for your guide and quote. No spam, unsubscribe anytime.</p>
+        </section>
+
+        <!-- sent confirmation, replaces gift card -->
+        <section class="sent" data-sent="" aria-live="polite">
+          <div class="sh">
+            <span class="si"><svg viewBox="0 0 14 14"><path d="M2.5 7.5l3 3 6-7"></path></svg></span>
+            <h2>Got it. Guide comes by email shortly.</h2>
+          </div>
+          <p>I'm reviewing your panel now. Firm quote comes by text from me after I look it over.</p>
+          <p class="ksig">Key</p>
+        </section>
+
+        <!-- 6. closing line -->
+        <div class="closing rv" style="--rvd: 320ms;">
+          <p class="cl">I'm on it. Your firm quote comes by text from me, not a robot.</p>
+          <span class="cavatar" style="background: url('/assets/images/key-headshot.jpg') center 20% / cover no-repeat;" role="img" aria-label="Key Goodson"></span>
+          <span class="csig">Key Goodson</span>
+          <span class="csub">Master Electrician</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. footer -->
+    <footer class="foot">
+      <strong>Key Goodson, Master Electrician, SC Lic #2942</strong><br />
+      Serving Greenville, Spartanburg, and Pickens counties<br />
+      Questions? Text me at (864) 863-7800
+    </footer>
+  </main>
+
+</div>
+
+<script src="/walk-v2/walk.js"></script>
+<script>
+
+(function () {
+  var t = WALK.requireToken(); if (!t) return;
+  WALK.ph('walk_v2_screen_view', { screen: 'thankyou' });
+  /* Key 2026-07-13: completers get the opener SMS (not mid-walk). Fire-and-forget;
+     a network blip must never bounce them off thank-you. */
+  if (typeof WALK.markThankyou === 'function') {
+    WALK.markThankyou(t).catch(function () {});
+  }
+
+  var main = document.getElementById('mainPage');
+  var gift = main.querySelector('[data-gift]');
+  var sent = main.querySelector('[data-sent]');
+  var email = main.querySelector('[data-email]');
+  var send = main.querySelector('[data-send]');
+
+  var ROOM_LABEL = { garage: 'Panel in the garage', basement: 'Panel in the basement', outside: 'Panel outside with the meter', closet: 'Panel in a closet', laundry: 'Panel in the laundry room', other: 'Panel location noted', not_sure: "Panel location: I'll find it on site" };
+  var BAND_LABEL = { about_5: 'About 5 ft run', '5_10': 'About 5-10 ft run', '10_20': 'About 10-20 ft run', '20_40': 'About 20-40 ft run', over_40: 'Over 40 ft run', not_sure: "Run distance: I'll measure it on site" };
+
+  function dollars(cents) { return '$' + Math.round(cents / 100).toLocaleString('en-US'); }
+
+  /* declared in the outer scope so the .catch can reach them too (a read failure must
+     still be able to set the honest no-number line, not throw a ReferenceError). */
+  var num = main.querySelector('[data-price-num]');
+  var line = main.querySelector('[data-price-line]');
+  var follow = main.querySelector('[data-price-follow]');
+  var kick = main.querySelector('.price .pk');
+  var celebrateSub = main.querySelector('[data-thanks-sub]');
+  var reviewLine = main.querySelector('[data-review-line]');
+  var reviewSub = main.querySelector('[data-review-sub]');
+
+  function hideFollow() { if (follow) follow.style.display = 'none'; }
+
+  /* Fresh Air (2026-07-13): no timed copy swap. Static desk line stays honest. */
+
+  WALK.view(t).then(function (v) {
+    if (v.first_name) main.querySelector('[data-thanks-head]').textContent = "I've got your setup, " + v.first_name + '.';
+    if (v.amperage) main.querySelector('[data-recap="outlet"]').textContent = v.amperage + ' Amp outlet';
+    if (v.confirmed_panel_room) main.querySelector('[data-recap="room"]').textContent = ROOM_LABEL[v.confirmed_panel_room] || 'Panel location noted';
+    if (v.distance_band) main.querySelector('[data-recap="distance"]').textContent = BAND_LABEL[v.distance_band] || 'Distance noted';
+    if (v.address) main.querySelector('[data-recap="address"]').textContent = String(v.address).split(',')[0];
+
+    /* Deferred the panel photo? Acknowledge it's still outstanding so the recap
+       tells the whole truth (and sets expectation for the photo reminder). */
+    if (!v.photo_count && !v.photo_received) {
+      var _ul = main.querySelector('[data-recap="address"]').closest('ul');
+      if (_ul) {
+        var _li = document.createElement('li');
+        _li.innerHTML = '<span class="ric"><svg viewBox="0 0 16 16"><rect x="2.5" y="5" width="11" height="8" rx="1.5"></rect><path d="M5.5 5l1-1.5h3l1 1.5"></path><circle cx="8" cy="9" r="2"></circle></svg></span><span>Panel photo: I\'ll grab it from you by text</span>';
+        _ul.appendChild(_li);
+      }
+      if (reviewLine) reviewLine.textContent = 'Key is ready for your panel photo';
+      if (reviewSub) reviewSub.textContent = 'Text me the breaker-box photo when you can. Firm quote follows after I review it.';
+      if (celebrateSub) celebrateSub.textContent = "I've got your location and run. I'll text you, then the panel photo whenever it's easy.";
+    }
+
+    /* Honesty gate (Key): if they answered "not sure" to any pricing question, we do NOT
+       show a range, because we genuinely can't price it yet. We name the reason and promise
+       a text. (A "not sure" distance is bucketed server-side as "far", so it would otherwise
+       still produce a range; this client check is what actually suppresses it.) */
+    var unsure = [];
+    if (!v.amperage) unsure.push('your outlet type');
+    if (v.confirmed_panel_room === 'not_sure') unsure.push('your panel location');
+    if (v.distance_band === 'not_sure') unsure.push('the cord run distance');
+
+    if (unsure.length) {
+      var reason = unsure.length === 1
+        ? unsure[0]
+        : unsure.slice(0, -1).join(', ') + ' and ' + unsure[unsure.length - 1];
+      if (kick) kick.textContent = 'Your quote';
+      num.style.display = 'none';
+      hideFollow();
+      line.textContent = "I can't give you an honest estimate yet, because we're not sure about " + reason + ". No problem, you'll get a text from me shortly so we can nail that down, then I'll send a firm quote.";
+      if (celebrateSub) celebrateSub.textContent = "I'm on it. I'll text you so we can lock the missing pieces.";
+      /* the single biggest drop signal: did they land on a number or the honest
+         no-number state, and which unanswered question caused it. */
+      WALK.ph('walk_v2_price_shown', { state: 'unsure', has_range: false, unsure_count: unsure.length });
+    } else if (v.walk_range) {
+      /* Computed range from amp + distance (walk_price_ranges, Key-approved rows only).
+         Show the range AND say clearly it is not the locked final price. Opener SMS
+         fires on walk complete (Key 2026-07-13); firm quote still comes from Key. */
+      if (kick) kick.textContent = 'Your ballpark';
+      line.textContent = 'Installs like yours usually land between';
+      num.innerHTML = '<span class="d">$</span>' + Math.round(v.walk_range.low_cents / 100).toLocaleString('en-US') +
+        '<span class="and">and</span><span class="d">$</span>' + Math.round(v.walk_range.high_cents / 100).toLocaleString('en-US');
+      num.style.display = '';
+      if (follow) {
+        follow.textContent = "That's a ballpark from what you told me, not your final number. I'm reviewing your setup now; I'll text you the firm quote myself.";
+        follow.style.display = '';
+      }
+      if (celebrateSub && (v.photo_count || v.photo_received)) {
+        celebrateSub.textContent = "I'm reviewing your panel now. You'll hear from me by text, then your firm quote after I look it over.";
+      }
+      WALK.ph('walk_v2_price_shown', {
+        state: 'range',
+        has_range: true,
+        low_cents: v.walk_range.low_cents,
+        high_cents: v.walk_range.high_cents,
+        amperage: v.amperage || null,
+        distance_band: v.distance_band || null,
+      });
+    } else {
+      /* graceful no-price state: the promise, not a number. Re-label the kicker too so
+         "Your ballpark" never sits above a no-number message (looks designed, not broken). */
+      if (kick) kick.textContent = 'Your quote';
+      num.style.display = 'none';
+      hideFollow();
+      line.textContent = "I'm reviewing your setup now. You'll get a text from me shortly, then your firm quote after I look it over.";
+      WALK.ph('walk_v2_price_shown', { state: 'working', has_range: false });
+    }
+
+    /* already asked for the gift on a revisit: show the sent state */
+    if (v.gift_requested) { gift.style.display = 'none'; sent.classList.add('show'); }
+  }).catch(function () { /* a read failure must NOT bounce them off the thank-you page; keep the honest no-number state */ if (kick) kick.textContent = 'Your quote'; num.style.display = 'none'; hideFollow(); line.textContent = "I'm reviewing your setup now. You'll get a text from me shortly, then your firm quote after I look it over."; });
+
+  function emailValid(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test((v || '').trim()); }
+  email.addEventListener('input', function () { send.disabled = !emailValid(email.value); });
+  send.addEventListener('click', function () {
+    if (send.disabled) return;
+    send.disabled = true;
+    WALK.emailCapture(t, email.value.trim()).then(function () {
+      WALK.ph('walk_v2_email_captured');
+      gift.style.display = 'none';
+      sent.classList.add('show');
+    }).catch(function () {
+      send.disabled = false;
+      alert('That did not go through, mind trying once more?');
+    });
+  });
+
+  /* scroll reveal (comp behavior, unchanged) */
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var rvEls = main.querySelectorAll('.rv');
+  if (reduce || !('IntersectionObserver' in window)) {
+    rvEls.forEach(function (el) { el.classList.add('in'); });
+  } else {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+      });
+    }, { threshold: 0.12 });
+    rvEls.forEach(function (el) { io.observe(el); });
+  }
+})();
+
+</script>
+</body>
+</html>

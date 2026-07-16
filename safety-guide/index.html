@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Generator Safety Guide, Backup Power Pro</title>
+<meta name="description" content="Generator safety guide covering backfeeding, carbon monoxide, overloading, and proper operation. From Backup Power Pro in Upstate SC.">
+<link rel="icon" href="/assets/images/apple-touch-icon.jpg">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script>!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+" (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);posthog.init('phc_qoA51lePZqXYtPJYkrIpdA4U8iMDJ79L1kje7r4pD4O',{api_host:'https://us.i.posthog.com',person_profiles:'identified_only',capture_pageview:true,capture_pageleave:true,enable_heatmaps:true,capture_dead_clicks:true})</script>
+<style>
+:root{--navy:#0b1f3b;--gold:#ffba00;--red:#dc2626;--green:#059669;--text:#1a2a42;--text2:#4a5568;--text3:#8a9ab5;--bg:#f5f7fa;--light-blue:#e8f1f8;--light-red:#fef2f2;--border:#e4e8f0}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-family:'Inter',system-ui,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased;background:var(--bg)}
+body{margin:0}
+
+/* ── ACTION BAR ─────────────────────────────────────── */
+.action-bar{position:sticky;top:0;z-index:100;background:var(--navy);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.action-bar-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.action-bar-logo{height:24px}
+.action-bar-name{font-family:'Outfit',sans-serif;font-weight:800;font-size:13px;color:#fff;letter-spacing:-.01em}
+.action-bar-btns{display:flex;gap:8px}
+.action-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 14px;border-radius:8px;border:none;font-family:'Outfit',sans-serif;font-weight:700;font-size:12px;cursor:pointer;transition:all .15s;white-space:nowrap}
+@media(max-width:420px){.action-bar{padding:10px 14px;gap:8px}.action-bar-logo{height:20px}.action-bar-btns{gap:6px}.action-btn{padding:0;width:40px;height:40px;gap:0}.action-btn .btn-label{display:none}}
+.btn-print{background:var(--gold);color:var(--navy)}
+.btn-print:hover{background:#e6a800;transform:translateY(-1px)}
+.btn-email{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.2)}
+.btn-email:hover{background:rgba(255,255,255,.2)}
+
+/* ── HERO ───────────────────────────────────────────── */
+.hero{background:var(--navy);color:#fff;text-align:center;padding:48px 20px 40px}
+.hero-title{font-family:'Outfit',sans-serif;font-weight:900;font-size:32px;line-height:1.15;margin-bottom:10px}
+.hero-title span{color:var(--gold)}
+.hero-sub{font-size:15px;color:rgba(255,255,255,.55);max-width:500px;margin:0 auto;line-height:1.6}
+
+/* ── CONTENT ────────────────────────────────────────── */
+.content{max-width:680px;margin:0 auto;padding:32px 20px 60px}
+h2{font-family:'Outfit',sans-serif;font-weight:800;font-size:20px;color:var(--navy);margin:32px 0 12px;display:flex;align-items:center;gap:10px}
+h2 .icon{font-size:24px}
+h3{font-family:'Outfit',sans-serif;font-weight:700;font-size:14px;color:var(--gold);margin:20px 0 8px;text-transform:uppercase;letter-spacing:.05em}
+p{margin-bottom:14px;line-height:1.75;font-size:15px}
+
+/* ── BOXES ──────────────────────────────────────────── */
+.warning{background:var(--light-red);border-left:4px solid var(--red);border-radius:0 10px 10px 0;padding:16px 18px;margin:18px 0;font-size:14px;line-height:1.6}
+.warning strong{color:var(--red)}
+.info{background:var(--light-blue);border-left:4px solid var(--navy);border-radius:0 10px 10px 0;padding:16px 18px;margin:18px 0;font-size:14px;line-height:1.6}
+.info strong{color:var(--navy)}
+.gold-box{background:#fffbeb;border-left:4px solid var(--gold);border-radius:0 10px 10px 0;padding:16px 18px;margin:18px 0;font-size:14px;line-height:1.6}
+
+/* ── CTA ────────────────────────────────────────────── */
+.cta{background:var(--navy);border-radius:16px;padding:36px;text-align:center;color:#fff;margin:36px 0}
+.cta-title{font-family:'Outfit',sans-serif;font-weight:900;font-size:24px;margin-bottom:8px}
+.cta-sub{font-size:14px;color:rgba(255,255,255,.55);margin-bottom:20px}
+.cta-button{display:inline-block;background:var(--gold);color:var(--navy);font-family:'Outfit',sans-serif;font-weight:800;font-size:16px;padding:15px 34px;border-radius:100px;text-decoration:none;margin-bottom:8px}
+.cta-button:hover{background:#e6a800}
+.cta-phone{font-family:'Outfit',sans-serif;font-weight:900;font-size:22px;color:var(--gold);margin-bottom:4px}
+.cta-phone a{color:var(--gold);text-decoration:none}
+.cta-note{font-size:11px;color:rgba(255,255,255,.65);margin-top:6px}
+
+/* ── CHECKLIST ──────────────────────────────────────── */
+.checklist{list-style:none;padding:0;display:flex;flex-direction:column;gap:8px;margin:16px 0}
+.checklist li{display:flex;align-items:flex-start;gap:12px;font-size:14px;line-height:1.6;padding:12px 16px;background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.check-icon{width:22px;height:22px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;font-size:12px;font-weight:700}
+
+/* ── FOOTER ─────────────────────────────────────────── */
+.footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padding:32px 20px;font-size:12px;line-height:1.8}
+.footer a{color:var(--gold);text-decoration:none}
+
+/* ── EMAIL MODAL ────────────────────────────────────── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(11,31,59,.5);z-index:200;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:16px;padding:28px;max-width:400px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal h3{color:var(--navy);margin:0 0 16px;text-transform:none;letter-spacing:normal;font-size:18px}
+.modal input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:15px;font-family:inherit;outline:none;margin-bottom:12px}
+.modal input:focus{border-color:var(--gold)}
+.modal-btns{display:flex;gap:8px}
+.modal-btns button{flex:1;padding:12px;border-radius:8px;font-family:'Outfit',sans-serif;font-weight:700;font-size:14px;cursor:pointer;border:none}
+.modal-send{background:var(--navy);color:#fff}
+.modal-cancel{background:var(--bg);color:var(--text2)}
+
+@media print{
+  .action-bar,.modal-overlay{display:none!important}
+  body{background:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .hero{background:#0b1f3b!important;padding:28px 20px!important;-webkit-print-color-adjust:exact}
+  .hero-title,.hero-title span,.hero-sub{-webkit-print-color-adjust:exact}
+  .content{padding:20px!important;max-width:100%!important}
+  .warning{background:#fef2f2!important;border-left:4px solid #dc2626!important;-webkit-print-color-adjust:exact}
+  .info{background:#e8f1f8!important;border-left:4px solid #0b1f3b!important;-webkit-print-color-adjust:exact}
+  .gold-box{background:#fffbeb!important;border-left:4px solid #ffba00!important;-webkit-print-color-adjust:exact}
+  .checklist li{background:#f8fafc!important;box-shadow:none!important;-webkit-print-color-adjust:exact}
+  .check-icon{background:#059669!important;color:#fff!important;-webkit-print-color-adjust:exact}
+  .cta{background:#0b1f3b!important;-webkit-print-color-adjust:exact}
+  .cta-title,.cta-phone a,.cta-button{-webkit-print-color-adjust:exact}
+  h2{color:#0b1f3b!important}
+  a{color:#0b1f3b!important}
+}
+</style>
+</head>
+<body>
+
+<div class="action-bar">
+  <a href="/" class="action-bar-brand">
+    <img src="/assets/images/logo-white-v2.png" alt="BPP" class="action-bar-logo">
+    
+  </a>
+  <div class="action-bar-btns">
+    <button class="action-btn btn-print" onclick="window.location.href='BPP-Generator-Safety-Guide.pdf'" aria-label="Save PDF">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      <span class="btn-label">Save PDF</span>
+    </button>
+    <button class="action-btn btn-email" onclick="document.getElementById('email-modal').classList.add('open')" aria-label="Email">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      <span class="btn-label">Email</span>
+    </button>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="hero-title">Generator Safety &<br><span>Proper Use Guide</span></div>
+  <div class="hero-sub">Important safety information for operating your backup power system. Read before your first use.</div>
+</div>
+
+<div class="content">
+  <h2><span class="icon">⚡</span> Backfeeding</h2>
+  <p>When a generator is connected to your panel without a proper interlock, electricity can flow backwards through the meter and onto utility lines. Lineworkers restoring power won't expect those wires to be live. This is called <strong>backfeeding</strong> and it can be fatal.</p>
+  <div class="warning">
+    <strong>Never connect a generator to your panel without an interlock kit.</strong> The interlock mechanically prevents your main breaker and generator breaker from being on at the same time.
+  </div>
+
+  <h2><span class="icon">💨</span> Carbon Monoxide</h2>
+  <p>Generators produce carbon monoxide (CO), an odorless, colorless gas. Running a generator indoors, in a garage, or too close to windows can fill your home with lethal levels of CO in minutes.</p>
+  <div class="info">
+    <strong>Always run your generator outdoors, at least 20 feet from any door, window, or vent.</strong> Point the exhaust away from the house. Install CO detectors on every level of your home.
+  </div>
+
+  <h2><span class="icon">🔋</span> Overloading</h2>
+  <p>Every generator has a maximum wattage rating. Running more appliances than your generator can handle will trip breakers, damage the generator, or damage your appliances. Know your capacity and stay within it.</p>
+
+  <h2><span class="icon">🔌</span> Neutral Bonding</h2>
+  <p>Your generator has an internal configuration called a neutral-to-ground bond. There are two types:</p>
+  <div class="gold-box">
+    <strong>Bonded neutral:</strong> Neutral and ground are connected inside the generator. Most newer portables use this.<br><br>
+    <strong>Floating neutral:</strong> Neutral and ground are separate. Some older or industrial generators use this.<br><br>
+    When connected through an inlet, the bonding must match your panel. Your installer verifies this. <strong>If you ever change generators, contact a licensed electrician before using the new one with your inlet.</strong>
+  </div>
+
+  <h2><span class="icon">✅</span> Safe Operation Checklist</h2>
+  <ul class="checklist">
+    <li><span class="check-icon">✓</span><span class="check-text">Run the generator <strong>outdoors only</strong>, at least 20 feet from doors, windows, and vents.</span></li>
+    <li><span class="check-icon">✓</span><span class="check-text">Use only the power cord rated for your inlet (<strong>30A or 50A</strong>). Never substitute extension cords.</span></li>
+    <li><span class="check-icon">✓</span><span class="check-text">Turn <strong>OFF the generator breaker</strong> before starting the generator.</span></li>
+    <li><span class="check-icon">✓</span><span class="check-text">Start the generator and let it stabilize for <strong>30 seconds</strong> before engaging the interlock.</span></li>
+    <li><span class="check-icon">✓</span><span class="check-text">Engage the interlock: <strong>main breaker OFF, generator breaker ON.</strong></span></li>
+    <li><span class="check-icon">✓</span><span class="check-text">Turn on circuits <strong>one at a time</strong>, heaviest loads first.</span></li>
+    <li><span class="check-icon">✓</span><span class="check-text">Don't exceed your generator's <strong>wattage capacity</strong>.</span></li>
+    <li><span class="check-icon">✓</span><span class="check-text">Point exhaust <strong>away from your home</strong>.</span></li>
+    <li><span class="check-icon">✓</span><span class="check-text">Never refuel while <strong>running or hot</strong>.</span></li>
+    <li><span class="check-icon">✓</span><span class="check-text">Test <strong>CO detectors</strong> monthly.</span></li>
+    <li><span class="check-icon">✓</span><span class="check-text">Run generator <strong>15-20 minutes monthly</strong> to keep it ready.</span></li>
+  </ul>
+
+  <div class="warning" style="margin-top:24px">
+    <strong>If anything feels wrong</strong>, unusual smells, sparks, vibrations, or tripped breakers, shut down the generator immediately and call a licensed electrician.
+  </div>
+
+  <div class="cta">
+    <div class="cta-title">Ready to Get Connected Safely?</div>
+    <div class="cta-sub">Licensed install, permit and inspection included.</div>
+    <a href="https://backuppowerpro.com/walk-v2/?src=safety-guide" class="cta-button">Get My Ballpark Price</a>
+    <p style="font-size:13px;color:rgba(255,255,255,.55);margin:2px 0 4px">or call</p>
+    <div class="cta-phone"><a href="tel:8648637800">(864) 863-7800</a></div>
+    <div class="cta-note">Greenville · Spartanburg · Pickens County</div>
+  </div>
+</div>
+
+<div class="footer">
+  <strong style="color:#fff">Backup Power Pro</strong> · Licensed SC Electrical Contractor · License #2942<br>
+  <a href="tel:8648637800">(864) 863-7800</a> · <a href="https://backuppowerpro.com">backuppowerpro.com</a><br>
+  Greenville · Spartanburg · Pickens County, SC
+</div>
+
+<!-- Email Modal -->
+<div class="modal-overlay" id="email-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal">
+    <h3>Email this guide to yourself</h3>
+    <input type="email" id="email-input" placeholder="your@email.com" autofocus>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="document.getElementById('email-modal').classList.remove('open')">Cancel</button>
+      <button class="modal-send" onclick="sendEmail()">Send</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function sendEmail() {
+  var email = document.getElementById('email-input').value.trim();
+  if (!email || !email.includes('@')) { alert('Please enter a valid email'); return; }
+  // Open mailto with the page link
+  var subject = encodeURIComponent('Generator Safety Guide, Backup Power Pro');
+  var body = encodeURIComponent('Here is the Generator Safety Guide from Backup Power Pro:\n\nhttps://backuppowerpro.com/safety-guide\n\nBackup Power Pro\n(864) 863-7800');
+  window.location.href = 'mailto:' + email + '?subject=' + subject + '&body=' + body;
+  document.getElementById('email-modal').classList.remove('open');
+}
+</script>
+
+</body>
+</html>

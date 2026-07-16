@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!--
+  YOUR OUTAGE-READY SYSTEM MANUAL (the paid POM deliverable, personalized per customer).
+  Parameterized: ?amp=30|50 (default 30) . ?name=Full Name . ?bw=1 (black-and-white print).
+  The POM auto-generator sets these params from the customer's CRM record (outlet type + name).
+  PRINT TO PDF: Chrome > Cmd/Ctrl+P > Save as PDF > Letter > Margins None > Background graphics ON.
+-->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Your Outage-Ready System Manual, Backup Power Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #0b1f3b; --navy-mid: #1a3a5c;
+  --gold: #ffba00; --gold-dark: #b9820a;
+  --light-blue: #e8f1f8; --white: #ffffff; --paper: #ffffff;
+  --text-primary: #1a1a2e; --text-secondary: #43434f; --text-light: #6f6f7d;
+  --border: rgba(11,31,59,.10);
+  --green: #15784f; --green-bg: #edf7f1; --red: #b3392b; --red-bg: #fdf0ee;
+  --radius: 12px;
+  --header-bg: var(--navy); --header-ink: #ffffff;
+  --accent: var(--gold); --accent-ink: var(--navy);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', system-ui, -apple-system, sans-serif; color: var(--text-primary); -webkit-font-smoothing: antialiased; }
+h1, h2, h3, h4 { font-family: 'Outfit', sans-serif; font-weight: 700; color: var(--navy); }
+
+@page { size: 8.5in 11in; margin: 0; }
+@media print {
+  html, body { width: 8.5in; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; }
+  .page { box-shadow: none !important; border-radius: 0 !important; }
+  .screen-only { display: none !important; }
+}
+@media screen {
+  body { background: #d5d5d5; display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 24px 0; }
+  .page { box-shadow: 0 2px 20px rgba(0,0,0,0.15); border-radius: 2px; }
+}
+.bw-toggle { position: fixed; top: 14px; right: 14px; z-index: 99; font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 700; background: var(--navy); color: #fff; border: none; border-radius: 100px; padding: 0 18px; min-height: 44px; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+
+.page { width: 8.5in; min-height: 11in; max-height: 11in; padding: 0.6in 0.7in; position: relative; overflow: hidden; page-break-after: always; page-break-inside: avoid; break-after: page; break-inside: avoid; background: var(--paper); }
+.page:last-child { page-break-after: auto; break-after: auto; }
+
+.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; padding-bottom: 10px; border-bottom: 2px solid var(--accent); }
+.page-header-brand { font-family: 'Outfit', sans-serif; font-size: 10px; font-weight: 700; color: var(--gold-dark); text-transform: uppercase; }
+.page-num { font-family: 'Inter', sans-serif; font-size: 10px; color: var(--text-light); }
+
+.page h2 { font-size: 23px; font-weight: 800; line-height: 1.18; margin-bottom: 6px; color: var(--navy); }
+.page-subtitle { font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 18px; }
+.page h3 { font-size: 14px; font-weight: 700; line-height: 1.3; margin-bottom: 4px; color: var(--navy); }
+.page p, .page li { font-size: 12px; line-height: 1.6; color: var(--text-secondary); }
+.page ul, .page ol { padding-left: 18px; }
+.page li { margin-bottom: 3px; }
+
+.callout { background: var(--light-blue); border-radius: var(--radius); padding: 14px 18px; margin-top: 16px; border-left: 3px solid var(--accent); }
+.callout p { font-size: 12px; font-weight: 500; color: var(--navy); line-height: 1.55; }
+.callout-label { font-family: 'Outfit', sans-serif; font-size: 10px; font-weight: 700; color: var(--gold-dark); text-transform: uppercase; margin-bottom: 4px; display: block; }
+
+/* spec table (your system documented) */
+.spec-table { width: 100%; border-collapse: collapse; margin: 6px 0 4px; }
+.spec-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); font-size: 12px; vertical-align: top; }
+.spec-table td.k { font-family: 'Outfit', sans-serif; font-weight: 600; color: var(--navy); width: 42%; }
+.spec-table td.v { color: var(--text-secondary); }
+.spec-table tr:nth-child(even) td { background: #f6f8fb; }
+
+/* step items */
+.step-item { display: flex; gap: 14px; margin-bottom: 12px; }
+.step-num { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; margin-top: 2px; }
+.step-item h3 { margin-bottom: 2px; }
+.step-item p { font-size: 11.5px; line-height: 1.5; }
+
+/* inspection grid */
+.insp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 20px; margin: 8px 0; }
+.insp-item { font-size: 10.7px; line-height: 1.4; color: var(--text-secondary); padding-left: 20px; position: relative; margin-bottom: 4px; }
+.insp-item::before { content: "\2713"; position: absolute; left: 0; top: 0; color: var(--green); font-weight: 800; }
+.insp-pass { font-family: 'Outfit', sans-serif; font-weight: 700; color: var(--green); font-size: 10px; }
+.insp-fail { font-family: 'Outfit', sans-serif; font-weight: 700; color: #dc2626; font-size: 10px; }
+.insp-na   { font-family: 'Outfit', sans-serif; font-weight: 700; color: #9ca3af; font-size: 10px; }
+.insp-pending { font-family: 'Outfit', sans-serif; font-weight: 700; color: #9ca3af; font-size: 10px; }
+.insp-item.item-fail::before { content: "\2715"; color: #dc2626; }
+.insp-item.item-na::before   { content: "\25CB"; color: #9ca3af; }
+.insp-item.item-pending::before { content: "\25CB"; color: #9ca3af; }
+
+/* data table for load plan */
+.data-table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 11.5px; }
+.data-table th { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 10px; text-transform: uppercase; color: var(--header-ink); background: var(--header-bg); padding: 6px 10px; text-align: left; }
+.data-table th:first-child { border-radius: 8px 0 0 0; }
+.data-table th:last-child { border-radius: 0 8px 0 0; }
+.data-table td { padding: 5px 10px; border-bottom: 1px solid var(--border); color: var(--text-secondary); font-size: 11px; }
+.data-table tr:nth-child(even) td { background: #f6f8fb; }
+.data-table .td-bold { font-weight: 600; color: var(--text-primary); }
+.data-table tfoot td { font-family: 'Outfit', sans-serif; font-weight: 700; color: var(--navy); border-top: 2px solid var(--navy); background: #fff; }
+
+/* maintenance / tracking */
+.track-table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 11px; }
+.track-table th { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 10px; text-transform: uppercase; color: var(--navy); border-bottom: 2px solid var(--navy); padding: 6px 8px; text-align: left; }
+.track-table td { padding: 8px; border-bottom: 1px solid var(--border); height: 28px; }
+.tip-section { margin-bottom: 12px; }
+.tip-section h3 { font-size: 13px; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid var(--border); }
+.tip-section li { font-size: 11px; line-height: 1.5; margin-bottom: 4px; }
+
+/* quick-reference card */
+.qref-card { border: 2px solid var(--navy); border-radius: 14px; padding: 20px 22px; margin: 8px 0; background: linear-gradient(135deg, #f8fafc, #eef3f9); }
+.qref-card .qref-top { display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid var(--border); padding-bottom: 10px; margin-bottom: 12px; }
+.qref-card .qref-brand { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 14px; color: var(--navy); }
+.qref-card .qref-amp { font-family: 'Outfit', sans-serif; font-weight: 700; font-size: 11px; color: var(--gold-dark); background: rgba(255,186,0,.15); padding: 4px 10px; border-radius: 100px; }
+.qref-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.qref-cols h4 { font-size: 11px; font-weight: 700; color: var(--navy); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em; }
+.qref-cols ol { padding-left: 16px; }
+.qref-cols li { font-size: 11px; line-height: 1.5; margin-bottom: 3px; }
+.qref-foot { margin-top: 14px; padding-top: 10px; border-top: 1.5px solid var(--border); font-size: 11px; color: var(--navy); font-weight: 600; text-align: center; }
+
+/* faq / troubleshooting */
+.faq-box { border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: var(--radius); padding: 12px 16px; margin-bottom: 10px; }
+.faq-box h3 { font-size: 12.5px; margin-bottom: 3px; }
+.faq-box p { font-size: 11.5px; line-height: 1.55; }
+
+.tok { color: var(--navy); font-weight: 600; }
+.fillable { color: var(--text-light); font-style: italic; }
+
+/* cover */
+.page-cover { background: var(--navy); color: #fff; display: flex; flex-direction: column; }
+.cover-logo { height: 34px; width: auto; align-self: flex-start; flex: 0 0 auto; }
+.cover-badge { align-self: flex-start; font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--navy); background: var(--gold); padding: 7px 16px; border-radius: 100px; margin-top: 26px; }
+.page-cover h1 { font-family: 'Outfit', sans-serif; font-size: 44px; font-weight: 900; color: #fff; line-height: 1.08; margin-top: 18px; }
+.page-cover h1 span { color: var(--gold); }
+.cover-divider { width: 60px; height: 3px; background: var(--gold); border-radius: 2px; margin: 22px 0; }
+.cover-prepared { font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.55); margin-bottom: 4px; }
+.cover-name { font-family: 'Outfit', sans-serif; font-size: 30px; font-weight: 800; color: var(--gold); line-height: 1.1; }
+.cover-sub { font-size: 14px; color: rgba(255,255,255,.82); line-height: 1.6; max-width: 430px; margin-top: 26px; }
+.cover-foot { margin-top: auto; }
+.cover-tagline { font-size: 13px; color: rgba(255,255,255,.85); }
+.cover-url { font-size: 12px; color: var(--gold); font-weight: 600; }
+
+/* ===== BLACK-AND-WHITE PRINT VARIANT (?bw=1 or toggle) ===== */
+body.bw {
+  --navy: #000; --navy-mid: #000; --gold: #000; --gold-dark: #000;
+  --light-blue: #ffffff; --green: #000; --green-bg: #ffffff; --red: #000; --red-bg: #ffffff;
+  --border: #000; --text-primary: #000; --text-secondary: #1a1a1a; --text-light: #555;
+  --header-bg: #ffffff; --header-ink: #000; --accent: #000; --accent-ink: #ffffff;
+}
+body.bw .data-table th { border-bottom: 2px solid #000; }
+body.bw .data-table tr:nth-child(even) td, body.bw .spec-table tr:nth-child(even) td { background: #f1f1f1; }
+body.bw .page-cover { background: #fff; color: #000; }
+body.bw .page-cover h1, body.bw .page-cover h1 span { color: #000; }
+body.bw .cover-name { color: #000; }
+body.bw .cover-prepared { color: #333; }
+body.bw .cover-sub, body.bw .cover-tagline, body.bw .cover-url { color: #000; }
+body.bw .cover-logo { filter: invert(1); }
+body.bw .cover-badge { background: #fff; color: #000; border: 1.5px solid #000; }
+body.bw .qref-card { background: #fff; border-color: #000; }
+body.bw .qref-card .qref-amp { background: #fff; color: #000; border: 1px solid #000; }
+body.bw .outlet-photo, body.bw .sys-photo { filter: grayscale(1) contrast(1.06); }
+body.bw .bw-toggle { background: #000; }
+/* Inspection results print crisp in black-and-white: force Fail/N/A to black
+   so they do not print as faint gray. Shape (cross/circle vs check) + the word
+   carry the meaning, color never does. The REVIEW badge color is set inline by
+   the script, so !important overrides it in B&W. */
+body.bw .insp-fail, body.bw .insp-item.item-fail::before { color: #000 !important; }
+body.bw .insp-na,   body.bw .insp-item.item-na::before   { color: #444 !important; }
+body.bw .insp-pending, body.bw .insp-item.item-pending::before { color: #444 !important; }
+body.bw #pomInspBadge { color: #000 !important; }
+</style>
+</head>
+<body>
+<button class="bw-toggle screen-only" style="right:138px" onclick="window.print()">Print / Save PDF</button>
+<button class="bw-toggle screen-only" onclick="document.body.classList.toggle('bw')">Toggle B&amp;W</button>
+
+<!-- ===== COVER ===== -->
+<div class="page page-cover">
+  <img src="../assets/images/logo-white-v2.png" alt="Backup Power Pro" class="cover-logo">
+  <span class="cover-badge t-badge">30-Amp System</span>
+  <h1>Your Outage-Ready<br><span>System Manual</span></h1>
+  <div class="cover-divider"></div>
+  <p class="cover-prepared">Prepared for</p>
+  <p class="cover-name t-name">Sarah Mitchell</p>
+  <p class="cover-sub">Your home's complete backup-power playbook: how your system works, what it powers, and exactly what to do the moment the power goes out.</p>
+  <div class="cover-foot">
+    <p class="cover-tagline">Backup Power Pro &middot; A division of Key Electric</p>
+    <p class="cover-url">backuppowerpro.com &middot; <span data-bpp="phone">(864) 863-7800</span></p>
+  </div>
+</div>
+
+<!-- ===== PAGE 2: YOUR SYSTEM DOCUMENTED ===== -->
+<div class="page">
+  <div class="page-header"><span class="page-header-brand">Backup Power Pro</span><span class="page-num">2</span></div>
+  <h2><span class="t-name">Sarah Mitchell</span>'s System, Documented</h2>
+  <p class="page-subtitle">Everything about your specific installation, in one place. Keep this with your generator.</p>
+
+  <table class="spec-table">
+    <tr><td class="k">Homeowner</td><td class="v t-name">Sarah Mitchell</td></tr>
+    <tr><td class="k">Install completed</td><td class="v fillable t-installdate">[INSTALL DATE]</td></tr>
+    <tr><td class="k">Generator outlet</td><td class="v"><span class="t-amp">30</span>-Amp, 240V</td></tr>
+    <tr><td class="k">Generator make / model</td><td class="v fillable t-gen">[GENERATOR MAKE / MODEL]</td></tr>
+    <tr><td class="k">Inlet box location</td><td class="v fillable t-inlet">[INLET BOX LOCATION, e.g. right exterior wall]</td></tr>
+    <tr><td class="k">Breaker panel location</td><td class="v fillable t-panel">[PANEL LOCATION, e.g. garage]</td></tr>
+    <tr><td class="k">Interlock kit</td><td class="v fillable t-interlock">[INTERLOCK MODEL]</td></tr>
+    <tr><td class="k">Installed by</td><td class="v">Key Goodson, SC Electrical Contractor LIC #2942</td></tr>
+  </table>
+
+  <h3 style="margin-top:14px;margin-bottom:6px">Circuits on your interlock</h3>
+  <p id="pomCircuitsIntro" style="margin-bottom:8px">These are the circuits you can power during an outage by flipping their breakers. You control each one independently. The list below shows a typical set; your own circuits are confirmed at install.</p>
+  <div class="insp-grid" id="pomCircuitsGrid" style="grid-template-columns:1fr 1fr 1fr">
+    <div class="insp-item">Refrigerator</div>
+    <div class="insp-item">Furnace blower</div>
+    <div class="insp-item">Well pump</div>
+    <div class="insp-item">Kitchen outlets</div>
+    <div class="insp-item">Living room lights</div>
+    <div class="insp-item">Sump pump</div>
+    <div class="insp-item">Garage door</div>
+    <div class="insp-item">Master bedroom</div>
+    <div class="insp-item fillable">[your circuits]</div>
+  </div>
+
+  <div class="callout"><span class="callout-label">Why this matters</span><p>When the power goes out at 2 a.m. in a storm, you will not be guessing. This page tells you where your inlet is, where your panel is, and exactly which circuits you can run.</p></div>
+</div>
+
+<!-- ===== PAGE 3: DAY-OF-OUTAGE PLAYBOOK ===== -->
+<div class="page">
+  <div class="page-header"><span class="page-header-brand">Backup Power Pro</span><span class="page-num">3</span></div>
+  <h2>Your Day-of-Outage Playbook</h2>
+  <p class="page-subtitle">The exact sequence for your system, start to finish. About 3 minutes once you have done it once.</p>
+
+  <div class="step-item"><div class="step-num">1</div><div><h3>Get your generator to the inlet</h3><p>Roll or carry your generator to the inlet box at your <span class="fillable t-inlet">[INLET BOX LOCATION]</span>. Keep it at least 20 feet from any window, door, or vent, and never run it in a garage or enclosed space.</p></div></div>
+  <div class="step-item"><div class="step-num">2</div><div><h3>Plug in</h3><p>Connect your generator cord to the weatherproof inlet box. One cord, one connection.</p></div></div>
+  <div class="step-item"><div class="step-num">3</div><div><h3>Start it and let it warm up</h3><p>Start the generator and let it run about 60 seconds with no load before you connect anything.</p></div></div>
+  <div class="step-item"><div class="step-num">4</div><div><h3>Switch the interlock at your panel</h3><p>Go to your panel in the <span class="fillable t-panel">[PANEL LOCATION]</span>. Slide the interlock to the generator position. This automatically disconnects you from the grid, which is the safety mechanism that protects the linemen working to restore your power.</p></div></div>
+  <div class="step-item"><div class="step-num">5</div><div><h3>Turn on your circuits, a few at a time</h3><p>Flip on the circuits you want. Add them one at a time (start with the fridge and furnace) so the generator handles each motor's startup surge. On your <span class="t-amp">30</span>-amp system you can run up to about <span class="t-usable">5,400</span> watts of steady load comfortably (see your load plan on page 5).</p></div></div>
+  <div class="step-item"><div class="step-num">6</div><div><h3>When the power returns</h3><p>Reverse it: flip your circuits off, slide the interlock back to the main position, unplug the cord, then shut the generator down. Done.</p></div></div>
+
+  <div class="callout"><span class="callout-label">Refueling</span><p>Only refuel when the generator is OFF and cooled down. Never refuel a running generator. Check your fuel every 4 to 6 hours during a long outage.</p></div>
+</div>
+
+<!-- ===== PAGE 4: INSPECTION RESULTS ===== -->
+<div class="page">
+  <div class="page-header"><span class="page-header-brand">Backup Power Pro</span><span class="page-num">4</span></div>
+  <h2>Your Panel Safety Inspection</h2>
+  <p class="page-subtitle">Every BPP install includes a full panel safety inspection. Here are your results, documented for your records.</p>
+
+  <div id="pomInspSummary" style="display:flex;justify-content:space-between;align-items:center;background:#fafafa;border-radius:10px;padding:10px 16px;margin-bottom:12px">
+    <div><span id="pomInspCount" style="font-family:'Outfit',sans-serif;font-weight:800;color:var(--text-secondary);font-size:15px">Inspection results pending</span><br><span style="font-size:11px;color:var(--text-secondary)">Inspected by Key Goodson, LIC #2942, on <span class="fillable" id="pomInspDate">[INSPECTION DATE]</span></span></div>
+    <span id="pomInspBadge" style="font-family:'Outfit',sans-serif;font-weight:800;color:var(--text-light);font-size:13px">PENDING</span>
+  </div>
+
+  <div class="insp-grid" id="pomInspGrid">
+    <div class="insp-item">Panel is easily accessible <span class="insp-pending">Pending</span></div>
+    <div class="insp-item">Panel doors open and close easily <span class="insp-pending">Pending</span></div>
+    <div class="insp-item">Free from corrosion or damage <span class="insp-pending">Pending</span></div>
+    <div class="insp-item">Breakers clearly labeled <span class="insp-pending">Pending</span></div>
+    <div class="insp-item">Cable sheathing properly removed <span class="insp-pending">Pending</span></div>
+    <div class="insp-item">Breakers match the panel <span class="insp-pending">Pending</span></div>
+    <div class="insp-item">All breaker spaces properly filled <span class="insp-pending">Pending</span></div>
+    <div class="insp-item">Free from overcrowding <span class="insp-pending">Pending</span></div>
+    <div class="insp-item">All knockouts, bushings, screws present <span class="insp-pending">Pending</span></div>
+    <div class="insp-item">Wires properly colored or marked <span class="insp-pending">Pending</span></div>
+    <div class="insp-item">Neutral wires properly installed <span class="insp-pending">Pending</span></div>
+    <div class="insp-item">Proper grounding inside the panel <span class="insp-pending">Pending</span></div>
+    <div class="insp-item">Smoke alarms under 10 years and working <span class="insp-pending">Pending</span></div>
+    <div class="insp-item">One wire per lug on each breaker <span class="insp-pending">Pending</span></div>
+    <div class="insp-item">GFCI/AFCI breakers trip properly <span class="insp-pending">Pending</span></div>
+    <div class="insp-item">No signs of overheating <span class="insp-pending">Pending</span></div>
+    <div class="insp-item">Wire in good condition <span class="insp-pending">Pending</span></div>
+    <div class="insp-item">Main breaker functioning properly <span class="insp-pending">Pending</span></div>
+    <div class="insp-item">Breakers output correct voltage <span class="insp-pending">Pending</span></div>
+    <div class="insp-item">Wires secure to breakers and lugs <span class="insp-pending">Pending</span></div>
+  </div>
+
+  <div class="callout"><span class="callout-label">On file</span><p>This inspection is part of your permitted, inspected install. If anything ever changes in your panel, this is your baseline. Text us anytime at <span data-bpp="phone">(864) 863-7800</span> with questions.</p></div>
+
+  <div style="margin-top:10px;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;background:#fafafa">
+    <span style="font-family:'Outfit',sans-serif;font-size:9px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.04em;display:block;margin-bottom:3px">Scope and liability</span>
+    <p style="font-size:8.6px;line-height:1.5;color:var(--text-secondary);margin:0">This panel inspection is a visual, point-in-time check by Backup Power Pro (Key Electric LLC, SC LIC #2942). We do our best to verify a safe panel and we tell you plainly about anything we find, and we stand behind the equipment we install. Because we did not install your existing panel, breakers, or wiring, Backup Power Pro and Key Electric LLC are not responsible for that pre-existing equipment or for hidden, latent, or future conditions a visual inspection cannot reveal. A passing result records what we observed on the inspection date. It is not a warranty of the panel's future condition or of equipment we did not install.</p>
+  </div>
+</div>
+
+<!-- ===== PAGE 5: LOAD PLAN (amp-specific) ===== -->
+<div class="page">
+  <div class="page-header"><span class="page-header-brand">Backup Power Pro</span><span class="page-num">5</span></div>
+  <h2>Your Load Plan</h2>
+  <p class="page-subtitle">Your <span class="t-amp">30</span>-amp connection delivers up to <span class="t-ampmax">7,200</span> watts. Plan steady load at about <span class="t-usable">5,400</span> watts (75%) to leave room for motor startups.</p>
+
+  <h3 style="margin-bottom:4px">A comfortable outage setup</h3>
+  <p style="margin-bottom:6px">A typical set of essentials you can run at the same time, well within your limit:</p>
+  <table class="data-table">
+    <thead><tr><th>Circuit</th><th>Running Watts</th></tr></thead>
+    <tbody>
+      <tr><td class="td-bold">Refrigerator</td><td>200 W</td></tr>
+      <tr><td class="td-bold">Furnace blower</td><td>700 W</td></tr>
+      <tr><td class="td-bold">Well pump</td><td>1,000 W</td></tr>
+      <tr><td class="td-bold">Sump pump</td><td>800 W</td></tr>
+      <tr><td class="td-bold">Lights (3 rooms)</td><td>150 W</td></tr>
+      <tr><td class="td-bold">Kitchen + outlets</td><td>400 W</td></tr>
+      <tr><td class="td-bold">WiFi + phones + TV</td><td>150 W</td></tr>
+    </tbody>
+    <tfoot><tr><td>Total steady load</td><td>3,400 W</td></tr></tfoot>
+  </table>
+
+  <div class="amp-30">
+    <p>That leaves room under your <span class="t-usable">5,400</span> watt comfort zone. You can add a microwave or coffee maker for a few minutes at a time, just not while the well pump and sump pump are both cycling. Run the big motor loads one at a time.</p>
+  </div>
+  <div class="amp-50" style="display:none">
+    <p>With your 50-amp connection (up to 12,000 watts, about 9,000 usable), you have plenty of headroom on top of this. You can add a window A/C unit, an electric water heater on a timer, or run the microwave and coffee maker without juggling the big motor loads.</p>
+  </div>
+
+  <div class="callout"><span class="callout-label">The one rule</span><p>Add circuits one at a time, biggest motors first. With your interlock, every circuit has its own breaker, so managing load is just flipping switches. If the generator bogs down, turn one thing off.</p></div>
+
+  <p style="font-size:10px;color:var(--text-light);margin-top:10px">Wattages are common estimates. Your actual appliance draw is on each unit's label. Powers selected circuits through your panel, not the entire home at once.</p>
+</div>
+
+<!-- ===== PAGE 6: MAINTENANCE ===== -->
+<div class="page">
+  <div class="page-header"><span class="page-header-brand">Backup Power Pro</span><span class="page-num">6</span></div>
+  <h2>Your Maintenance Schedule</h2>
+  <p class="page-subtitle">A generator that will not start is not backup power. Fifteen minutes a quarter keeps yours ready.</p>
+
+  <div class="tip-section"><h3>Every quarter</h3><ul>
+    <li>Run the generator for 15 minutes to keep seals lubricated and the carburetor clear</li>
+    <li>Check oil level and condition</li>
+    <li>Plug into your inlet and flip the interlock to confirm the whole system works before you need it</li>
+  </ul></div>
+  <div class="tip-section"><h3>Before storm season</h3><ul>
+    <li>Verify at least 5 gallons of fresh, stabilized fuel on hand</li>
+    <li>Confirm your generator cord is stored with the generator</li>
+    <li>Top off oil, inspect the air filter</li>
+  </ul></div>
+  <div class="tip-section"><h3>Fuel planning</h3><ul>
+    <li>Most portable generators burn 0.5 to 1 gallon per hour at half load</li>
+    <li>Keep 10 to 15 gallons on hand for a multi-day outage, in approved containers away from heat</li>
+    <li>Rotate stored fuel every 6 months or treat it with stabilizer</li>
+  </ul></div>
+
+  <h3 style="margin-top:6px;margin-bottom:6px">Your maintenance log</h3>
+  <table class="track-table">
+    <thead><tr><th style="width:28%">Date</th><th>What you did</th><th style="width:14%">Done</th></tr></thead>
+    <tbody>
+      <tr><td></td><td></td><td></td></tr>
+      <tr><td></td><td></td><td></td></tr>
+      <tr><td></td><td></td><td></td></tr>
+      <tr><td></td><td></td><td></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ===== PAGE 7: WARRANTY + WHO TO CALL ===== -->
+<div class="page">
+  <div class="page-header"><span class="page-header-brand">Backup Power Pro</span><span class="page-num">7</span></div>
+  <h2>Your Guarantee, and Who to Call</h2>
+  <p class="page-subtitle">You are not on your own after the install. Here is what is covered and how to reach us.</p>
+
+  <div class="callout" style="margin-top:4px"><span class="callout-label">The BPP Guarantee</span><p>Every install passes a real county inspection. Passing it is my job, not yours. The connection we built is permitted, inspected, and code-compliant. If anything about the inlet, interlock, or our workmanship is not right, we make it right.</p></div>
+
+  <table class="spec-table" style="margin-top:14px">
+    <tr><td class="k">Workmanship</td><td class="v">Covered by Backup Power Pro / Key Electric</td></tr>
+    <tr><td class="k">Inlet box + interlock kit</td><td class="v">Manufacturer warranty applies, keep this manual with your records</td></tr>
+    <tr><td class="k">Your generator</td><td class="v">Covered by the generator manufacturer, not by the connection</td></tr>
+    <tr><td class="k">Permit + inspection</td><td class="v">Filed and passed as part of your install</td></tr>
+  </table>
+
+  <div style="background:var(--navy);border-radius:14px;padding:20px 22px;margin-top:18px;text-align:center;color:#fff">
+    <p style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Questions? Text Key directly</p>
+    <p style="font-family:'Outfit',sans-serif;font-size:30px;font-weight:800;color:#fff;line-height:1"><span data-bpp="phone">(864) 863-7800</span></p>
+    <p style="font-size:12px;color:rgba(255,255,255,.7);margin-top:8px">Same person who installed your system. No phone tree, no call center.</p>
+  </div>
+</div>
+
+<!-- ===== PAGE 8: QUICK-REFERENCE CARD ===== -->
+<div class="page">
+  <div class="page-header"><span class="page-header-brand">Backup Power Pro</span><span class="page-num">8</span></div>
+  <h2>Your Quick-Reference Card</h2>
+  <p class="page-subtitle">Cut this out (or keep the laminated copy we left you) and tape it inside your panel door or by your generator.</p>
+
+  <div class="qref-card">
+    <div class="qref-top">
+      <span class="qref-brand">Outage-Ready &middot; <span class="t-name">Sarah Mitchell</span></span>
+      <span class="qref-amp"><span class="t-amp">30</span>-Amp System</span>
+    </div>
+    <div class="qref-cols">
+      <div>
+        <h4>When the power goes out</h4>
+        <ol>
+          <li>Generator to the inlet (<span class="fillable t-inlet">[INLET BOX LOCATION]</span>), 20+ ft from the house</li>
+          <li>Plug in the cord</li>
+          <li>Start it, warm up 60 sec</li>
+          <li>Panel: slide interlock to generator</li>
+          <li>Flip circuits on, a few at a time</li>
+        </ol>
+      </div>
+      <div>
+        <h4>When power returns</h4>
+        <ol>
+          <li>Flip your circuits off</li>
+          <li>Slide interlock back to main</li>
+          <li>Unplug the cord</li>
+          <li>Shut the generator down</li>
+        </ol>
+        <h4 style="margin-top:10px">Limits</h4>
+        <p style="font-size:10.5px;line-height:1.4;margin:0">Up to <span class="t-usable">5,400</span> W steady. Big motors one at a time. Refuel only when OFF and cool.</p>
+      </div>
+    </div>
+    <div class="qref-foot">Backup Power Pro &middot; Text Key: <span data-bpp="phone">(864) 863-7800</span></div>
+  </div>
+
+  <div class="callout"><span class="callout-label">Tip</span><p>The best time to read this is before an outage, not during one. Walk the steps once on a calm afternoon so it is muscle memory when it counts.</p></div>
+</div>
+
+<!-- ===== PAGE 9: TROUBLESHOOTING ===== -->
+<div class="page">
+  <div class="page-header"><span class="page-header-brand">Backup Power Pro</span><span class="page-num">9</span></div>
+  <h2>Troubleshooting</h2>
+  <p class="page-subtitle">If something is not working, start here. Still stuck? Text Key at <span data-bpp="phone">(864) 863-7800</span>.</p>
+
+  <div class="faq-box"><h3>The generator runs but nothing in the house has power</h3><p>The interlock is probably still in the main (grid) position. At your panel, slide the interlock plate so the generator breaker can switch on. The main breaker must be off for the interlock to allow it.</p></div>
+  <div class="faq-box"><h3>A breaker will not flip on</h3><p>Confirm the interlock is in the generator position and the main is off. If a single circuit trips when you turn it on, that circuit may be drawing too much, turn off another load first, then try again.</p></div>
+  <div class="faq-box"><h3>The generator bogs down or stalls under load</h3><p>You are likely over your comfort zone. Turn off the largest motor load (well pump, sump pump, or A/C), let the generator recover, then add loads back one at a time.</p></div>
+  <div class="faq-box"><h3>The generator will not start</h3><p>Check fuel level and the fuel valve, the choke, and the run switch. If it has electric start, the battery may be dead, use the pull start. Old fuel is the most common culprit, see your maintenance schedule on page 6.</p></div>
+  <div class="faq-box"><h3>The inlet cord will not seat</h3><p>Line up the cord's twist-lock with the inlet, push in firmly, then twist to lock. It only goes one way. Never force it.</p></div>
+
+  <div class="callout"><span class="callout-label">When in doubt</span><p>If anything feels off, stop and text us a photo at <span data-bpp="phone">(864) 863-7800</span>. We installed your system and we know exactly how it is set up.</p></div>
+</div>
+
+<script src="../assets/js/bpp-config.js"></script>
+<script>
+  // Personalization + amp variant. The POM auto-generator sets these from the CRM record.
+  (function(){
+    var p = new URLSearchParams(location.search);
+    var amp = p.get('amp') === '50' ? '50' : '30';
+    var name = (p.get('name') || 'Sarah Mitchell').trim();
+    var cfg = {
+      '30': { amp: '30', max: '7,200', usable: '5,400', badge: '30-Amp System' },
+      '50': { amp: '50', max: '12,000', usable: '9,000', badge: '50-Amp System' }
+    }[amp];
+    function setAll(cls, val){ document.querySelectorAll('.' + cls).forEach(function(e){ e.textContent = val; }); }
+    setAll('t-name', name);
+    setAll('t-amp', cfg.amp);
+    setAll('t-ampmax', cfg.max);
+    setAll('t-usable', cfg.usable);
+    setAll('t-badge', cfg.badge);
+
+    // Per-customer system details. The CRM inspection form (or the POM
+    // auto-generator) passes panel_loc / inlet_loc / gen / interlock / circuits.
+    // Each fills both the spec table AND the matching day-of-outage playbook
+    // reference via its shared class. No param = the generic [PLACEHOLDER] stays
+    // (back-compat). textContent only, so customer text is never injected as HTML.
+    function fillField(cls, val){ if(!val) return; document.querySelectorAll('.'+cls).forEach(function(e){ e.textContent = val; e.classList.remove('fillable'); }); }
+    fillField('t-panel',      (p.get('panel_loc')||'').trim());
+    fillField('t-inlet',      (p.get('inlet_loc')||'').trim());
+    fillField('t-gen',        (p.get('gen')||'').trim());
+    fillField('t-interlock',  (p.get('interlock')||'').trim());
+    fillField('t-installdate',(p.get('install_date')||p.get('idate')||'').trim());
+    var circuitsParam = (p.get('circuits')||'').trim();
+    if (circuitsParam) {
+      var cgrid = document.getElementById('pomCircuitsGrid');
+      if (cgrid) {
+        cgrid.innerHTML = '';
+        circuitsParam.split(',').map(function(c){ return c.trim(); }).filter(Boolean).forEach(function(c){
+          var d = document.createElement('div'); d.className = 'insp-item'; d.textContent = c; cgrid.appendChild(d);
+        });
+      }
+      // Real circuits supplied: this is the customer's actual list, so the
+      // "typical set" hedge no longer applies.
+      var cintro = document.getElementById('pomCircuitsIntro');
+      if (cintro) cintro.textContent = 'These are the circuits you can power during an outage by flipping their breakers. You control each one independently.';
+    }
+    document.querySelectorAll('.amp-30').forEach(function(e){ e.style.display = amp === '30' ? '' : 'none'; });
+    document.querySelectorAll('.amp-50').forEach(function(e){ e.style.display = amp === '50' ? '' : 'none'; });
+    document.body.setAttribute('data-amp', amp);
+    if (p.get('bw') === '1') document.body.classList.add('bw');
+
+    // POM inspection results, set by the CRM inspection form. Param `insp` is
+    // 20 chars (one per point, in the grid's order): P=Pass, F=Fail, N=N/A.
+    // Param `idate` is the inspection date label. No `insp` param = the default
+    // all-pass template (back-compat). Honest output: if anything fails, the
+    // badge stops claiming PASS and the count reflects reality. Shape + word
+    // carry the result (check vs cross vs circle, Pass/Fail/N/A), so it stays
+    // legible in the black-and-white print variant too.
+    (function(){
+      var raw = (p.get('insp') || '').toUpperCase().replace(/[^PFN]/g, '');
+      var grid = document.getElementById('pomInspGrid');
+      var count = document.getElementById('pomInspCount');
+      var bdg = document.getElementById('pomInspBadge');
+      var summary = document.getElementById('pomInspSummary');
+      if (grid) {
+        var items = grid.querySelectorAll('.insp-item');
+        if (raw) {
+          // Real results provided. Score each point honestly from the param.
+          var pass = 0, fail = 0, na = 0;
+          items.forEach(function(item, i){
+            var code = raw.charAt(i) || 'N';
+            var badge = item.querySelector('span');
+            item.classList.remove('item-fail', 'item-na', 'item-pending');
+            if (code === 'F') { fail++; item.classList.add('item-fail'); if (badge){ badge.className = 'insp-fail'; badge.textContent = 'Fail'; } }
+            else if (code === 'N') { na++; item.classList.add('item-na'); if (badge){ badge.className = 'insp-na'; badge.textContent = 'N/A'; } }
+            else { pass++; if (badge){ badge.className = 'insp-pass'; badge.textContent = 'Pass'; } }
+          });
+          if (count) {
+            count.textContent = pass + ' of ' + items.length + ' points passed' + (na ? ', ' + na + ' not applicable' : '');
+            count.style.color = fail > 0 ? 'var(--text-primary)' : 'var(--green)';
+          }
+          if (bdg) {
+            if (fail > 0) { bdg.textContent = 'REVIEW'; bdg.style.color = '#dc2626'; }
+            else { bdg.textContent = 'PASS'; bdg.style.color = 'var(--green)'; }
+          }
+          if (summary) summary.style.background = fail > 0 ? '#fafafa' : 'var(--green-bg)';
+        } else {
+          // No results yet. Keep an honest pending state, never a fabricated
+          // all-pass. Each row shows a neutral circle + "Pending".
+          items.forEach(function(item){ item.classList.add('item-pending'); });
+        }
+      }
+      var idate = (p.get('idate') || '').trim();
+      if (idate) { var d = document.getElementById('pomInspDate'); if (d) { d.textContent = idate; d.classList.remove('fillable'); } }
+    })();
+  })();
+</script>
+</body>
+</html>

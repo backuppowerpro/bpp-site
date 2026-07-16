@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Outage-Ready Homeowner's Kit, Backup Power Pro</title>
+<meta name="description" content="Interactive generator capacity calculator, storm prep checklist, maintenance schedule, and emergency contact card.">
+<link rel="icon" href="/assets/images/apple-touch-icon.jpg">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0b1f3b;--gold:#ffba00;--red:#dc2626;--green:#059669;--text:#1a2a42;--text2:#4a5568;--text3:#5f6f8a;--bg:#f5f7fa;--light-blue:#e8f1f8;--light-green:#ecfdf5;--border:#e4e8f0}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-family:'Inter',system-ui,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased;background:var(--bg)}
+body{margin:0}
+.action-bar{position:sticky;top:0;z-index:100;background:var(--navy);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.action-bar-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.action-bar-logo{height:24px}
+.action-bar-name{font-family:'Outfit',sans-serif;font-weight:800;font-size:13px;color:#fff}
+.action-bar-btns{display:flex;gap:8px}
+.action-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 14px;border-radius:8px;border:none;font-family:'Outfit',sans-serif;font-weight:700;font-size:12px;cursor:pointer;transition:all .15s;white-space:nowrap}
+@media(max-width:420px){.action-bar{padding:10px 14px;gap:8px}.action-bar-logo{height:20px}.action-bar-btns{gap:6px}.action-btn{padding:0;width:40px;height:40px;gap:0}.action-btn .btn-label{display:none}}
+.btn-print{background:var(--gold);color:var(--navy)}.btn-print:hover{background:#e6a800}
+.btn-email{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.2)}.btn-email:hover{background:rgba(255,255,255,.2)}
+.hero{background:var(--navy);color:#fff;text-align:center;padding:40px 20px 32px}
+.hero-badge{display:inline-block;background:rgba(255,186,0,.15);color:var(--gold);font-family:'Outfit',sans-serif;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:5px 14px;border-radius:20px;margin-bottom:16px}
+.hero-title{font-family:'Outfit',sans-serif;font-weight:900;font-size:30px;line-height:1.15;margin-bottom:10px}.hero-title span{color:var(--gold)}
+.hero-sub{font-size:14px;color:rgba(255,255,255,.55);max-width:440px;margin:0 auto 20px;line-height:1.6}
+.hero-tags{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.hero-tag{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:6px 12px;font-size:11px;color:rgba(255,255,255,.7)}
+.content{max-width:700px;margin:0 auto;padding:32px 20px 60px}
+h2{font-family:'Outfit',sans-serif;font-weight:800;font-size:22px;color:var(--navy);margin:36px 0 8px;display:flex;align-items:center;gap:10px}
+h2 .icon{font-size:24px}
+h3{font-family:'Outfit',sans-serif;font-weight:700;font-size:13px;color:#0b1f3b;margin:20px 0 8px;text-transform:uppercase;letter-spacing:.05em}
+p{margin-bottom:14px;line-height:1.75;font-size:15px}
+.tip{background:#fffbeb;border-left:4px solid var(--gold);border-radius:0 10px 10px 0;padding:16px 18px;margin:18px 0;font-size:14px;line-height:1.6}
+.tip strong{color:#92400e}
+
+/* ═══ INTERACTIVE CALCULATOR ═══ */
+.calc-card{background:#fff;border-radius:14px;box-shadow:0 2px 12px rgba(0,0,0,.06);overflow:hidden;margin:18px 0}
+.calc-header{background:var(--navy);color:#fff;padding:14px 18px;font-family:'Outfit',sans-serif;font-weight:800;font-size:14px;display:flex;justify-content:space-between;align-items:center}
+.calc-total{color:var(--gold);font-size:18px}
+.calc-body{padding:0}
+.calc-row{display:flex;align-items:center;padding:10px 18px;border-bottom:1px solid var(--border);gap:12px;transition:background .1s}
+.calc-row:hover{background:#f8fafc}
+.calc-row:last-child{border-bottom:none}
+.calc-name{flex:1;font-size:14px;font-weight:500}
+.calc-watts{font-size:12px;color:var(--text3);width:80px;text-align:right}
+.calc-toggle{position:relative;width:44px;height:24px;border-radius:12px;background:var(--border);cursor:pointer;transition:background .2s;flex-shrink:0}
+.calc-toggle.on{background:var(--green)}
+.calc-toggle::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.calc-toggle.on::after{transform:translateX(20px)}
+.calc-result{padding:16px 18px;background:var(--light-blue);display:flex;justify-content:space-between;align-items:center;border-top:2px solid var(--navy)}
+.calc-result-label{font-family:'Outfit',sans-serif;font-weight:700;font-size:13px;color:var(--navy)}
+.calc-result-bar{flex:1;margin:0 16px;height:10px;background:var(--border);border-radius:5px;overflow:hidden}
+.calc-result-fill{height:100%;border-radius:5px;transition:width .4s ease,background .3s}
+.calc-result-pct{font-family:'Outfit',sans-serif;font-weight:800;font-size:16px;min-width:50px;text-align:right}
+.calc-gen-input{display:flex;align-items:center;gap:8px;padding:12px 18px;background:#f8fafc;border-bottom:2px solid var(--gold)}
+.calc-gen-input label{font-size:13px;font-weight:600;color:var(--text2)}
+.calc-gen-input input{width:100px;padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;font-family:'Outfit',sans-serif;font-weight:700;text-align:center;outline:none}
+.calc-gen-input input:focus{border-color:var(--gold)}
+
+/* ═══ INTERACTIVE CHECKLIST ═══ */
+.icheck{list-style:none;padding:0;display:flex;flex-direction:column;gap:4px}
+.icheck li{display:flex;align-items:flex-start;gap:12px;font-size:14px;line-height:1.6;padding:10px 14px;background:#fff;border-radius:10px;cursor:pointer;transition:all .15s;user-select:none;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.icheck li:hover{background:#f8fafc}
+.icheck li.done{opacity:.5;text-decoration:line-through}
+.icheck li.done .ibox{background:var(--green);border-color:var(--green);color:#fff}
+.ibox{width:22px;height:22px;border-radius:6px;border:2px solid var(--border);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;transition:all .15s;color:transparent}
+.icheck li.done .ibox::after{content:'✓'}
+.progress-bar{height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin:8px 0 16px}
+.progress-fill{height:100%;background:var(--green);border-radius:4px;transition:width .3s}
+.progress-label{font-size:12px;color:var(--text3);font-weight:600;margin-bottom:4px}
+
+/* ═══ MAINTENANCE TABLE ═══ */
+.maint{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.maint th{background:var(--navy);color:#fff;font-family:'Outfit',sans-serif;font-weight:700;padding:10px 12px;text-align:center;font-size:11px}
+.maint th:first-child{text-align:left}
+.maint td{padding:9px 12px;border-bottom:1px solid var(--border);text-align:center;background:#fff}
+.maint td:first-child{text-align:left;font-weight:500}
+.maint tr:last-child td{border-bottom:none}
+.dot{width:12px;height:12px;border-radius:50%;background:var(--gold);display:inline-block}
+
+/* ═══ EMERGENCY CARD ═══ */
+.ecard{border:2px dashed var(--text3);border-radius:14px;padding:24px;margin:20px 0;background:#fff}
+.ecard-header{background:var(--navy);color:#fff;font-family:'Outfit',sans-serif;font-weight:800;font-size:16px;text-align:center;padding:12px;border-radius:10px;margin:-24px -24px 18px;letter-spacing:.04em}
+.ecard-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:14px}
+.ecard-row:last-of-type{border-bottom:none}
+.ecard-row strong{color:var(--navy)}
+.ecard-row a{color:var(--navy);text-decoration:none;font-weight:600}
+.ecard-section{margin-top:16px;padding-top:16px;border-top:2px solid var(--gold)}
+.ecard-field{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13px}
+.ecard-field label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);width:100px;flex-shrink:0}
+.ecard-field input{flex:1;border:none;border-bottom:1px solid var(--border);padding:4px 0;font-size:14px;font-family:inherit;outline:none;background:transparent}
+.ecard-field input:focus{border-bottom-color:var(--gold)}
+.ecard-breakers{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px}
+
+.footer{background:var(--navy);color:rgba(255,255,255,.5);text-align:center;padding:32px 20px;font-size:12px;line-height:1.8}
+.footer a{color:var(--gold);text-decoration:none}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(11,31,59,.5);z-index:200;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:16px;padding:28px;max-width:400px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal h3{color:var(--navy);margin:0 0 16px;text-transform:none;letter-spacing:normal;font-size:18px;font-family:'Outfit',sans-serif}
+.modal input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:15px;outline:none;margin-bottom:12px;font-family:inherit}
+.modal input:focus{border-color:var(--gold)}
+.modal-btns{display:flex;gap:8px}
+.modal-btns button{flex:1;padding:12px;border-radius:8px;font-family:'Outfit',sans-serif;font-weight:700;font-size:14px;cursor:pointer;border:none}
+.modal-send{background:var(--navy);color:#fff}.modal-cancel{background:var(--bg);color:var(--text2)}
+@media(max-width:600px){.hero-tags{gap:6px}.ecard-breakers{grid-template-columns:1fr}}
+@media print{
+  .action-bar,.footer,.modal-overlay{display:none!important}
+  body{background:#fff!important;color:#000!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .hero{background:var(--navy)!important;padding:28px 20px!important;-webkit-print-color-adjust:exact}
+  .hero-title,.hero-title span,.hero-badge,.hero-sub,.hero-tag{-webkit-print-color-adjust:exact}
+  .content{padding:20px!important;max-width:100%!important}
+  /* Calculator: convert toggles to empty checkboxes */
+  .calc-toggle{width:16px!important;height:16px!important;border-radius:3px!important;background:#fff!important;border:2px solid #333!important}
+  .calc-toggle::after{display:none!important}
+  .calc-toggle.on{background:#333!important}
+  .calc-toggle.on::after{display:flex!important;content:'✓'!important;color:#fff!important;font-size:10px!important;width:16px!important;height:16px!important;align-items:center!important;justify-content:center!important;position:static!important;transform:none!important;border-radius:0!important;box-shadow:none!important}
+  .calc-gen-input input{border:1px solid #333!important;background:#fff!important}
+  .calc-header{background:#1a2a42!important;-webkit-print-color-adjust:exact}
+  .calc-result{background:#e8f1f8!important;-webkit-print-color-adjust:exact}
+  .calc-result-fill{-webkit-print-color-adjust:exact}
+  /* Checklist: convert to print checkboxes */
+  .ibox{width:14px!important;height:14px!important;border:2px solid #333!important;border-radius:2px!important;background:#fff!important}
+  .icheck li{background:#fff!important;box-shadow:none!important;padding:6px 10px!important;cursor:default!important}
+  .icheck li.done .ibox{background:#333!important}
+  .progress-bar,.progress-fill{-webkit-print-color-adjust:exact}
+  /* Maintenance dots */
+  .dot{-webkit-print-color-adjust:exact!important;background:var(--gold)!important}
+  .maint th{-webkit-print-color-adjust:exact!important;background:#1a2a42!important}
+  /* Emergency card */
+  .ecard{border:2px dashed #666!important}
+  .ecard-header{background:#1a2a42!important;-webkit-print-color-adjust:exact}
+  .ecard-field input{border-bottom:1px solid #333!important}
+  /* Callout boxes */
+  .tip{background:#fffbeb!important;border-left:4px solid #ffba00!important;-webkit-print-color-adjust:exact}
+  /* General text */
+  h2{color:#1a2a42!important}
+  h3{color:#92400e!important}
+  a{color:#1a2a42!important}
+  .page-break{page-break-before:always}
+}
+</style>
+</head>
+<body>
+
+<div class="action-bar">
+  <a href="/" class="action-bar-brand"><img src="/assets/images/logo-white-v2.png" alt="BPP" class="action-bar-logo"></a>
+  <div class="action-bar-btns">
+    <button class="action-btn btn-print" onclick="window.location.href='BPP-Premium-Bundle.pdf'" aria-label="Save PDF"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg><span class="btn-label">Save PDF</span></button>
+    <button class="action-btn btn-email" onclick="document.getElementById('email-modal').classList.add('open')" aria-label="Email"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span class="btn-label">Email</span></button>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="hero-badge">Premium Interactive Kit</div>
+  <div class="hero-title">The Complete<br><span>Outage-Ready Homeowner's Kit</span></div>
+  <div class="hero-sub">Interactive tools to plan, prepare, and maintain your backup power system.</div>
+  <div class="hero-tags">
+    <div class="hero-tag">Live Wattage Calculator</div>
+    <div class="hero-tag">Interactive Checklist</div>
+    <div class="hero-tag">Maintenance Schedule</div>
+    <div class="hero-tag">Emergency Card</div>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- ═══ WATTAGE CALCULATOR ═══ -->
+  <h2><span class="icon">⚡</span> Generator Capacity Calculator</h2>
+  <p>Toggle the appliances you want to power. The calculator shows your total load vs your generator's capacity in real time.</p>
+
+  <div class="calc-card">
+    <div class="calc-gen-input">
+      <label>My generator rated watts:</label>
+      <input type="number" id="gen-watts" value="7500" min="1000" max="20000" step="500" oninput="calcUpdate()">
+      <span style="font-size:12px;color:var(--text3)">watts</span>
+    </div>
+    <div class="calc-header">
+      <span>Your Load</span>
+      <span class="calc-total" id="calc-total">0 W</span>
+    </div>
+    <div class="calc-body" id="calc-body"></div>
+    <div class="calc-result">
+      <div class="calc-result-label">Capacity Used</div>
+      <div class="calc-result-bar"><div class="calc-result-fill" id="calc-fill"></div></div>
+      <div class="calc-result-pct" id="calc-pct">0%</div>
+    </div>
+  </div>
+
+  <div class="tip"><strong>Stay under 80%.</strong> If your generator is 7,500W, keep your load under 6,000W. Gives headroom for starting surges.</div>
+
+  <!-- ═══ STORM PREP CHECKLIST ═══ -->
+  <h2><span class="icon">🌪️</span> 72-Hour Storm Prep Checklist</h2>
+  <p>Tap each item as you complete it. Your progress saves automatically.</p>
+
+  <div class="progress-label">Progress: <span id="check-progress">0 / 0</span></div>
+  <div class="progress-bar"><div class="progress-fill" id="check-fill"></div></div>
+
+  <h3>Fuel</h3>
+  <ul class="icheck" id="check-fuel"></ul>
+  <h3>Generator</h3>
+  <ul class="icheck" id="check-gen"></ul>
+  <h3>Inside the House</h3>
+  <ul class="icheck" id="check-house"></ul>
+  <h3>When Power Goes Out</h3>
+  <ul class="icheck" id="check-steps"></ul>
+
+  <!-- ═══ MAINTENANCE SCHEDULE ═══ -->
+  <h2><span class="icon">🗓️</span> Maintenance Schedule</h2>
+  <p>Your generator cost $800 to $2,000. 30 minutes a quarter protects that investment.</p>
+
+  <table class="maint">
+    <thead><tr><th>Task</th><th>Monthly</th><th>Quarterly</th><th>Annual</th></tr></thead>
+    <tbody>
+      <tr><td>Run 15-20 min</td><td><span class="dot"></span></td><td></td><td></td></tr>
+      <tr><td>Check oil level</td><td><span class="dot"></span></td><td></td><td></td></tr>
+      <tr><td>Change oil</td><td></td><td><span class="dot"></span></td><td></td></tr>
+      <tr><td>Clean/replace air filter</td><td></td><td><span class="dot"></span></td><td></td></tr>
+      <tr><td>Check spark plug</td><td></td><td><span class="dot"></span></td><td></td></tr>
+      <tr><td>Add fuel stabilizer</td><td></td><td><span class="dot"></span></td><td></td></tr>
+      <tr><td>Inspect power cord</td><td></td><td><span class="dot"></span></td><td></td></tr>
+      <tr><td>Inspect inlet box</td><td></td><td></td><td><span class="dot"></span></td></tr>
+      <tr><td>Test interlock</td><td></td><td></td><td><span class="dot"></span></td></tr>
+      <tr><td>Replace spark plug</td><td></td><td></td><td><span class="dot"></span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="tip"><strong>#1 failure cause:</strong> stale fuel. Run it 15 minutes monthly. That alone prevents most problems.</div>
+
+  <!-- ═══ EMERGENCY CARD ═══ -->
+  <h2><span class="icon">🆘</span> Emergency Contact Card</h2>
+  <p>Fill this in and bookmark this page, or print it and tape to your breaker panel.</p>
+
+  <div class="ecard">
+    <div class="ecard-header">EMERGENCY POWER CARD</div>
+    <div class="ecard-row"><strong>Backup Power Pro</strong><a href="tel:8648637800">(864) 863-7800</a></div>
+    <div class="ecard-row"><span>Duke Energy (Upstate SC)</span><a href="tel:18007693766">1-800-769-3766</a></div>
+    <div class="ecard-row"><span>Laurens Electric Co-op</span><a href="tel:18009423141">1-800-942-3141</a></div>
+    <div class="ecard-row"><span>Blue Ridge Electric</span><a href="tel:18002403400">1-800-240-3400</a></div>
+
+    <div class="ecard-section">
+      <div class="ecard-field"><label>Generator</label><input type="text" placeholder="Brand & model" id="ec-gen"></div>
+      <div class="ecard-field"><label>Serial #</label><input type="text" placeholder="Serial number" id="ec-serial"></div>
+      <div class="ecard-field"><label>Inlet Amp</label>
+        <label style="width:auto;display:flex;align-items:center;gap:4px;cursor:pointer"><input type="radio" name="amp" value="30" checked> 30A</label>
+        <label style="width:auto;display:flex;align-items:center;gap:4px;cursor:pointer"><input type="radio" name="amp" value="50"> 50A</label>
+      </div>
+    </div>
+
+    <div class="ecard-section">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:8px">My Critical Breakers</div>
+      <div class="ecard-breakers">
+        <div class="ecard-field"><label>Breaker #</label><input type="text" placeholder="e.g. Fridge"></div>
+        <div class="ecard-field"><label>Breaker #</label><input type="text" placeholder="e.g. Well pump"></div>
+        <div class="ecard-field"><label>Breaker #</label><input type="text" placeholder="e.g. Lights"></div>
+        <div class="ecard-field"><label>Breaker #</label><input type="text" placeholder="e.g. HVAC"></div>
+        <div class="ecard-field"><label>Breaker #</label><input type="text" placeholder="e.g. Kitchen"></div>
+        <div class="ecard-field"><label>Breaker #</label><input type="text" placeholder="e.g. Garage"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer"><strong style="color:#fff">Backup Power Pro</strong> · Licensed SC Electrical Contractor · License #2942<br><a href="tel:8648637800">(864) 863-7800</a> · <a href="https://backuppowerpro.com">backuppowerpro.com</a></div>
+
+<div class="modal-overlay" id="email-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal"><h3>Email this kit to yourself</h3><input type="email" id="email-input" placeholder="your@email.com"><div class="modal-btns"><button class="modal-cancel" onclick="document.getElementById('email-modal').classList.remove('open')">Cancel</button><button class="modal-send" onclick="var e=document.getElementById('email-input').value;if(!e||!e.includes('@')){alert('Enter a valid email');return}window.location.href='mailto:'+e+'?subject='+encodeURIComponent('Outage-Ready Kit, Backup Power Pro')+'&body='+encodeURIComponent('Here is your Outage-Ready Kit:\n\nhttps://backuppowerpro.com/premium-kit\n\n(864) 863-7800');document.getElementById('email-modal').classList.remove('open')">Send</button></div></div>
+</div>
+
+<script>
+// ═══ WATTAGE CALCULATOR ═══
+var appliances = [
+  {name:'Refrigerator',watts:150,on:false},
+  {name:'Well Pump (1/2 HP)',watts:1000,on:false},
+  {name:'Central AC (3-ton)',watts:3500,on:false},
+  {name:'Window AC Unit',watts:1200,on:false},
+  {name:'Sump Pump',watts:800,on:false},
+  {name:'Lights (10 LEDs)',watts:100,on:true},
+  {name:'Phone / Router / TV',watts:250,on:true},
+  {name:'Space Heater',watts:1500,on:false},
+  {name:'Microwave',watts:1000,on:false},
+  {name:'Electric Water Heater',watts:4500,on:false},
+];
+
+function renderCalc(){
+  var body=document.getElementById('calc-body');
+  body.innerHTML='';
+  appliances.forEach(function(a,i){
+    var row=document.createElement('div');
+    row.className='calc-row';
+    row.innerHTML='<span class="calc-name">'+a.name+'</span><span class="calc-watts">'+a.watts.toLocaleString()+' W</span><div class="calc-toggle'+(a.on?' on':'')+'" onclick="toggleAppliance('+i+')"></div>';
+    body.appendChild(row);
+  });
+  calcUpdate();
+}
+
+function toggleAppliance(i){
+  appliances[i].on=!appliances[i].on;
+  renderCalc();
+}
+
+function calcUpdate(){
+  var total=0;
+  appliances.forEach(function(a){if(a.on)total+=a.watts;});
+  var gen=parseInt(document.getElementById('gen-watts').value)||7500;
+  var pct=Math.round((total/gen)*100);
+  document.getElementById('calc-total').textContent=total.toLocaleString()+' W';
+  document.getElementById('calc-pct').textContent=pct+'%';
+  var fill=document.getElementById('calc-fill');
+  fill.style.width=Math.min(100,pct)+'%';
+  fill.style.background=pct>100?'var(--red)':pct>80?'var(--gold)':'var(--green)';
+  document.getElementById('calc-pct').style.color=pct>100?'var(--red)':pct>80?'#92400e':'var(--green)';
+}
+
+renderCalc();
+
+// ═══ INTERACTIVE CHECKLIST ═══
+var checkData={
+  fuel:['Fill generator tank completely','Have 5-10 extra gallons in approved containers','Add fuel stabilizer if gas is 30+ days old','Store fuel away from house and generator'],
+  gen:['Check oil level, add if low','Start it up for 10 minutes. Confirm clean and steady','Inspect power cord. No cuts, exposed wire, or melted prongs','Check inlet box cover closes and latches'],
+  house:['Test CO detectors. Replace batteries if needed','Know which breakers to turn on first','Charge all phones, laptops, battery packs to 100%','Fill bathtubs with water (if on well pump)','Have flashlights accessible'],
+  steps:['Turn OFF the main breaker','Roll generator outside, 20+ feet from house','Connect power cord from generator to inlet','Start generator, let stabilize 30 seconds','Engage interlock. Turn ON generator breaker','Turn on circuits one at a time, heaviest first']
+};
+
+var checked=JSON.parse(localStorage.getItem('bpp-checklist')||'{}');
+
+function renderChecks(){
+  var totalItems=0,doneItems=0;
+  Object.keys(checkData).forEach(function(section){
+    var ul=document.getElementById('check-'+section);
+    ul.innerHTML='';
+    checkData[section].forEach(function(item,i){
+      var key=section+'-'+i;
+      var isDone=!!checked[key];
+      totalItems++;
+      if(isDone)doneItems++;
+      var li=document.createElement('li');
+      li.className=isDone?'done':'';
+      li.innerHTML='<span class="ibox"></span><span>'+item+'</span>';
+      li.onclick=function(){checked[key]=!checked[key];localStorage.setItem('bpp-checklist',JSON.stringify(checked));renderChecks()};
+      ul.appendChild(li);
+    });
+  });
+  document.getElementById('check-progress').textContent=doneItems+' / '+totalItems;
+  document.getElementById('check-fill').style.width=Math.round((doneItems/totalItems)*100)+'%';
+}
+
+renderChecks();
+</script>
+
+</body>
+</html>

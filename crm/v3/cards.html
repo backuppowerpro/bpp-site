@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>BPP CRM, Card Library</title>
+<!--
+  /crm/v3/cards.html , the isolated card design + QA harness (no login).
+
+  Every CRM element is a self-contained rectangle ("card"). This page renders
+  each registered card (window.CRM_CARDS) across its real states, plus the
+  global tools (window.CRM_TOOLS), with mock data. It loads every CRM component
+  file EXCEPT crm-app.jsx, so the components are defined as globals but the
+  login app never boots. Use it to design a new card in isolation and to walk
+  every state before the card ever touches the live CRM.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2.39.0/dist/umd/supabase.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+
+<!-- Data layer (classic). Seeds CRM.jurisdictions, STAGE_STR_TO_NUM, predictJurisdiction. -->
+<script src="crm-data.js?v=216"></script>
+<!-- Component files (babel). crm-app.jsx is deliberately NOT loaded so nothing boots.
+     crm-left.jsx defines shared globals (TODAY etc.) that crm-right.jsx reads. -->
+<script type="text/babel" src="crm-shared.jsx?v=216"></script>
+<script type="text/babel" src="crm-left.jsx?v=216"></script>
+<script type="text/babel" src="crm-right.jsx?v=216"></script>
+<script type="text/babel" src="crm-permit-portals.jsx?v=216"></script>
+<!-- The registry, last so bare component references resolve. -->
+<script type="text/babel" src="crm-cards.js?v=216"></script>
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: #f4f6f9;
+    color: #1b2b4b;
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .hwrap { max-width: 1100px; margin: 0 auto; padding: 24px 20px 80px; }
+  .hhead {
+    display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+    padding: 16px 18px; background: #0b1f3b; color: #fff;
+    border-radius: 14px; margin-bottom: 8px;
+  }
+  .hhead h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+  .hhead .badge {
+    font-size: 11px; font-weight: 600; color: #0b1f3b;
+    background: #ffba00; padding: 3px 9px; border-radius: 999px;
+  }
+  .hhead p { width: 100%; font-size: 12.5px; color: #c7d2e8; margin-top: 4px; }
+  .hsec { margin-top: 28px; }
+  .hsec > .htitle {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    margin: 0 2px 12px;
+  }
+  .hsec > .htitle h2 { font-size: 15px; font-weight: 700; }
+  .hsec > .htitle code {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: #5b21b6; background: #f5f3ff; padding: 2px 7px; border-radius: 5px;
+  }
+  .hsec > .htitle .span {
+    font-size: 10px; font-weight: 600; color: #6b7280;
+    background: #eef0f3; padding: 2px 7px; border-radius: 5px; text-transform: uppercase;
+  }
+  .hgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 18px; }
+  .frame {
+    background: transparent;
+  }
+  .frame > .flabel {
+    font-size: 11px; font-weight: 600; color: #6b7280; margin: 0 0 7px 2px;
+  }
+  /* The panel-sim mimics the contact detail panel width + surface so each card
+     renders at realistic fidelity. */
+  .panel-sim {
+    background: #f8f8f6; border: 1px solid #e8e8e6; border-radius: 14px;
+    padding: 14px; overflow: visible;
+  }
+  .errbox {
+    background: #fef2f2; color: #991b1b; border: 1px solid #fecaca;
+    border-radius: 10px; padding: 12px; font-size: 12.5px;
+    font-family: 'JetBrains Mono', monospace; white-space: pre-wrap; word-break: break-word;
+  }
+  .booting { padding: 60px 0; text-align: center; color: #9ca3af; font-size: 14px; }
+</style>
+</head>
+<body>
+  <div id="harness"><div class="booting">Compiling components…</div></div>
+
+  <script type="text/babel" data-presets="react">
+  /* global React, ReactDOM, CRM_CARDS, CRM_TOOLS */
+  (function () {
+    var CRM = (window.CRM = window.CRM || {});
+
+    // ---- Benign globals so mount-time effects can't crash the harness -------
+    window.bumpData = window.bumpData || function () {};
+    if (!CRM.__db) {
+      // A chainable, thenable Proxy: any query chain resolves to empty data,
+      // any realtime/channel call is a no-op. Render-time DB reads stay safe.
+      var resolved = Promise.resolve({ data: [], error: null });
+      var chain = new Proxy(function () {}, {
+        get: function (_, prop) {
+          if (prop === 'then') return resolved.then.bind(resolved);
+          if (prop === 'catch') return resolved.catch.bind(resolved);
+          if (prop === 'finally') return resolved.finally.bind(resolved);
+          return function () { return chain; };
+        },
+        apply: function () { return chain; },
+      });
+      CRM.__db = {
+        from: function () { return chain; },
+        rpc: function () { return chain; },
+        auth: { getUser: function () { return resolved; } },
+        channel: function () { return { on: function () { return this; }, subscribe: function () {} }; },
+        removeChannel: function () {},
+        storage: { from: function () { return chain; } },
+      };
+    }
+
+    // ---- Per-frame error boundary (a bad card can't blank the page) ---------
+    class Boundary extends React.Component {
+      constructor(p) { super(p); this.state = { err: null }; }
+      static getDerivedStateFromError(err) { return { err: err }; }
+      render() {
+        if (this.state.err) {
+          return React.createElement('div', { className: 'errbox' },
+            (this.props.id || 'card') + ' failed to render:\n' + String(this.state.err && this.state.err.message || this.state.err));
+        }
+        return this.props.children;
+      }
+    }
+
+    function Frame(props) {
+      return React.createElement('div', { className: 'frame' },
+        React.createElement('div', { className: 'flabel' }, props.label),
+        React.createElement('div', { className: 'panel-sim' },
+          React.createElement(Boundary, { id: props.id }, props.children)
+        )
+      );
+    }
+
+    // ---- Fixtures: real states each card should be walked through ----------
+    // Stage strings match crm-data STAGE_STR_TO_NUM:
+    // new/quoted/booked/permit_submit/permit_waiting/permit_approved/install/done
+    var FIXTURES = {
+      'advance-job': [
+        { label: 'Booked, no permit (submit_permit -> insert)', ctx: { contact: { id:'aj1', name:'Test Booked', stage:'booked', address:'100 Main St, Greer SC 29650' }, data: { permits:[], events:[], invoices:[] } } },
+        { label: 'Booked, permit not_started (submit_permit -> advance existing)', ctx: { contact: { id:'aj1b', name:'Test Booked NS', stage:'booked', address:'100 Main St, Greer SC 29650' }, data: { permits:[{ id:'pns', status:'not_started' }], events:[], invoices:[] } } },
+        { label: 'Waiting on county (mark_approved)', ctx: { contact: { id:'aj2', name:'Test Waiting', stage:'permit_waiting', address:'12 Oak Dr, Greenville SC 29601' }, data: { permits:[{ id:'p', status:'submitted', submitted_at:'2026-06-05' }], events:[], invoices:[] } } },
+        { label: 'Permit blocked (county kicked it back, no misleading action)', ctx: { contact: { id:'aj2b', name:'Test Blocked', stage:'permit_waiting', address:'12 Oak Dr, Greenville SC 29601' }, data: { permits:[{ id:'pb', status:'blocked', submitted_at:'2026-06-05', blocker_note:'County needs a revised load calc' }], events:[], invoices:[] } } },
+        { label: 'Permit approved (schedule_install)', ctx: { contact: { id:'aj3', name:'Test Approved', stage:'permit_approved' }, data: { permits:[{ id:'p', status:'approved', approved_at:'2026-06-06' }], events:[], invoices:[] } } },
+        { label: 'Install upcoming (countdown + early)', ctx: { contact: { id:'aj4', name:'Test Upcoming', stage:'install' }, data: { permits:[{ status:'approved' }], events:[{ kind:'install', start_at:'2026-06-13T13:00:00Z', status:'scheduled' }], invoices:[] } } },
+        { label: 'Installed, unpaid (record_payment)', ctx: { contact: { id:'aj5', name:'Test Installed', stage:'done', install_date:'2026-06-07' }, data: { permits:[{ status:'approved' }], events:[{ kind:'install', start_at:'2026-06-07T13:00:00Z', status:'completed' }], invoices:[{ status:'unpaid' }] } } },
+        { label: 'Complete (installed + paid)', ctx: { contact: { id:'aj6', name:'Test Complete', stage:'done', install_date:'2026-06-07' }, data: { permits:[{ status:'approved' }], events:[{ kind:'install', start_at:'2026-06-07T13:00:00Z', status:'completed' }], invoices:[{ status:'paid' }] } } },
+      ],
+      photos: [
+        {
+          // PhotosSection reads window.CRM.jobPhotos (empty in the harness
+          // stub) + message-media, so this exercises the empty state + the
+          // upload affordance. Live photos render on the authed CRM.
+          label: 'Empty (no job photos yet) + upload affordance',
+          ctx: { contact: { id: 'fx-ph', name: 'Test Photos', stage: 'booked' }, data: {} },
+        },
+      ],
+      'stage-history': [
+        {
+          // CRM.__db stub resolves the stage_history fetch to [], so this
+          // exercises the empty state. Live data renders on the authed CRM.
+          label: 'Empty (no recorded transitions yet)',
+          ctx: { contact: { id: 'fx-sh', name: 'Test Booked', stage: 'booked' }, data: {} },
+        },
+      ],
+      activity: [
+        {
+          label: 'Mixed activity (message + proposal + event)',
+          ctx: {
+            contact: { id: 'fx-act', name: 'Test Active', stage: 'booked' },
+            data: {
+              messages: [{ id: 'm1', contact_id: 'fx-act', direction: 'in', body: 'Sounds good, when can you come out?', created_at: '2026-06-08T15:04:00Z' }],
+              calls: [],
+              proposals: [{ id: 'pr1', contact_id: 'fx-act', status: 'Sent', amount_cents: 119700, created_at: '2026-06-07T13:00:00Z', sent_at: '2026-06-07T13:05:00Z' }],
+              invoices: [],
+              events: [{ id: 'ev1', contact_id: 'fx-act', kind: 'install', title: 'Install', start_at: '2026-06-12T13:00:00Z' }],
+            },
+            onOpenTab: function () {},
+          },
+        },
+        {
+          label: 'Empty (brand-new contact)',
+          ctx: {
+            contact: { id: 'fx-act2', name: 'Test New', stage: 'new' },
+            data: { messages: [], calls: [], proposals: [], invoices: [], events: [] },
+            onOpenTab: function () {},
+          },
+        },
+      ],
+      permits: [
+        {
+          label: 'Empty , booked, no permit yet',
+          ctx: {
+            contact: { id: 'fx-empty', name: 'Test Booked', stage: 'booked', address: '100 Main St, Greer SC 29650' },
+            data: { permits: [] },
+          },
+        },
+        {
+          label: 'Submitted , waiting on the county',
+          ctx: {
+            contact: { id: 'fx-wait', name: 'Test Waiting', stage: 'permit_waiting', address: '12 Oak Dr, Greenville SC 29601' },
+            data: { permits: [{ id: 'p1', contact_id: 'fx-wait', jurisdiction: 'Greenville County', status: 'submitted', submitted_at: '2026-06-02' }] },
+          },
+        },
+        {
+          label: 'Approved',
+          ctx: {
+            contact: { id: 'fx-appr', name: 'Test Approved', stage: 'install', address: '88 Pine Ln, Pickens SC 29671' },
+            data: { permits: [{ id: 'p2', contact_id: 'fx-appr', jurisdiction: 'Pickens County', status: 'approved', submitted_at: '2026-05-20', approved_at: '2026-05-28' }] },
+          },
+        },
+        {
+          // Address predicts a self-permitting city (Greer) that differs from the
+          // permit's current jurisdiction, so the editor should surface the
+          // "Suggested from address" pick. Open the pencil to see it.
+          label: 'Address suggests a different jurisdiction',
+          ctx: {
+            contact: { id: 'fx-pred', name: 'Test Greer', stage: 'permit_submit', address: '450 Trade St, Greer SC 29651' },
+            data: { permits: [{ id: 'p3', contact_id: 'fx-pred', jurisdiction: 'Greenville County', status: 'submitted', submitted_at: '2026-06-05' }] },
+          },
+        },
+      ],
+    };
+
+    function Harness() {
+      var cards = window.CRM_CARDS || [];
+      var tools = window.CRM_TOOLS || [];
+      return React.createElement('div', { className: 'hwrap' },
+        React.createElement('div', { className: 'hhead' },
+          React.createElement('h1', null, 'BPP CRM , Card Library'),
+          React.createElement('span', { className: 'badge' }, 'isolated · no login'),
+          React.createElement('p', null, 'Every CRM element is a self-contained rectangle. Design each one alone in Claude Design, register it, walk every state here, then drop it into the CRM. Loads all components except crm-app.jsx, so nothing boots.')
+        ),
+        cards.map(function (card) {
+          var fx = FIXTURES[card.id] || [{ label: 'default', ctx: { contact: null, data: {} } }];
+          return React.createElement('div', { className: 'hsec', key: card.id },
+            React.createElement('div', { className: 'htitle' },
+              React.createElement('h2', null, card.title),
+              React.createElement('code', null, '#' + card.id),
+              React.createElement('span', { className: 'span' }, card.span || 'full')
+            ),
+            React.createElement('div', { className: 'hgrid' },
+              fx.map(function (f, i) {
+                var ctx = Object.assign({ bumpData: function () {} }, f.ctx);
+                return React.createElement(Frame, { key: i, id: card.id, label: f.label },
+                  card.render(ctx)
+                );
+              })
+            )
+          );
+        }),
+        tools.length ? React.createElement('div', { className: 'hsec' },
+          React.createElement('div', { className: 'htitle' },
+            React.createElement('h2', null, 'Tools'),
+            React.createElement('span', { className: 'span' }, 'global')
+          ),
+          React.createElement('div', { className: 'hgrid' },
+            tools.map(function (t) {
+              return React.createElement(Frame, { key: t.id, id: t.id, label: t.title }, t.render());
+            })
+          )
+        ) : null
+      );
+    }
+
+    // Babel compiles src babel scripts before this inline one, so the
+    // components + registry are already defined. Mount.
+    function mount() {
+      if (!window.CRM_CARDS || typeof PermitsCard === 'undefined') {
+        return setTimeout(mount, 40);
+      }
+      ReactDOM.createRoot(document.getElementById('harness')).render(React.createElement(Harness));
+    }
+    mount();
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /quote-calculator.html
+Disallow: /daily/
+Disallow: /crm/
+Disallow: /permit-app/
+# Design comps + the comps index are internal artifacts, never production pages.
+Disallow: /*-comp.html
+Disallow: /creations.html
+# Quarantined / abandoned projects, kept in git for reversibility but never indexed.
+Disallow: /graveyard/
+
+Sitemap: https://backuppowerpro.com/sitemap.xml

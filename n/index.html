@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://*.i.posthog.com https://us-assets.i.posthog.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co https://*.i.posthog.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'">
+<title>A note for the neighborhood | Backup Power Pro, Upstate SC</title>
+
+<!-- Neighbor-mailer channel landing page. Reached only by the QR code or
+     typed link on a physical card mailed to neighbors of a recent install.
+     Canonical points to / so Google merges signals there; noindex,follow
+     keeps /n/ out of the index while preserving internal linking. -->
+<link rel="canonical" href="https://backuppowerpro.com/">
+<meta name="robots" content="noindex,follow">
+<meta name="description" content="We just connected a neighbor's portable generator to their home, permitted and inspected, in one day. If you own a generator too, get a free quick quote. Licensed SC electrician.">
+<meta name="theme-color" content="#0b1f3b">
+<meta property="og:title" content="A note for the neighborhood | Backup Power Pro">
+<meta property="og:description" content="We connected a neighbor's generator to their panel, permit and inspection included, in a day. Own a generator? Get a free quick quote.">
+<meta property="og:type" content="website">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --navy:#0b1f3b;
+    --navy-2:#0a1a30;
+    --gold:#ffba00;
+    --ink:#0b1f3b;
+    --line:rgba(255,255,255,.12);
+    --r:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:'Inter',system-ui,sans-serif;
+    background:var(--navy);
+    color:#fff;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    overflow-x:hidden;
+  }
+  .wrap{max-width:560px;margin:0 auto;padding:0 20px}
+  .eyebrow{font-family:'Outfit',sans-serif;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+  h1{font-family:'Outfit',sans-serif;font-weight:800;letter-spacing:-1.5px;line-height:1.08;font-size:clamp(32px,7vw,50px);margin:14px 0 18px}
+  h2{font-family:'Outfit',sans-serif;font-weight:800;letter-spacing:-.8px;line-height:1.15;font-size:clamp(24px,5vw,32px);margin:0 0 14px}
+  .lede{font-size:clamp(16px,2.6vw,18px);line-height:1.6;color:rgba(255,255,255,.82)}
+  .gold{color:var(--gold)}
+
+  /* HERO */
+  .hero{
+    padding:calc(env(safe-area-inset-top) + 40px) 0 44px;
+    background:
+      radial-gradient(120% 80% at 50% -10%, rgba(255,186,0,.10), transparent 60%),
+      linear-gradient(180deg, var(--navy) 0%, var(--navy-2) 100%);
+    text-align:center;
+  }
+
+  /* FORM CARD */
+  .card{
+    background:rgba(255,255,255,.05);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:22px 18px;
+    margin-top:28px;
+    text-align:left;
+    box-shadow:0 18px 50px rgba(0,0,0,.35);
+  }
+  label.fld{display:block;font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.72);margin-bottom:6px}
+  .inp{
+    width:100%;padding:14px 16px;border-radius:12px;
+    border:1.5px solid rgba(255,255,255,.16);
+    background:rgba(255,255,255,.10);color:#fff;
+    font-family:'Outfit',sans-serif;font-size:16px;outline:none;
+  }
+  .inp:focus,.inp:focus-visible{
+    border-color:var(--gold);
+    box-shadow:0 0 0 3px rgba(255,186,0,.35);
+  }
+  .inp::placeholder{color:rgba(255,255,255,.65)}
+  .err{display:none;color:#f87171;font-size:13px;margin-top:5px;font-weight:600}
+  .gen{
+    display:block;padding:15px 16px;border-radius:12px;
+    border:1.5px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);
+    cursor:pointer;transition:border-color .2s,background .2s,box-shadow .2s;
+  }
+  .gen:focus-within{
+    border-color:var(--gold);
+    box-shadow:0 0 0 3px rgba(255,186,0,.35);
+  }
+  .genbox{flex-shrink:0;width:24px;height:24px;border:2px solid rgba(255,255,255,.32);border-radius:7px;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+  .btn{
+    width:100%;padding:18px;border-radius:100px;border:none;
+    background:var(--gold);color:var(--navy);
+    font-family:'Outfit',sans-serif;font-size:17px;font-weight:700;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;
+    transition:transform .2s,box-shadow .2s,opacity .2s;margin-top:6px;
+    min-height:56px;
+  }
+  .btn:focus-visible{outline:3px solid #fff;outline-offset:3px;box-shadow:0 0 0 6px rgba(255,186,0,.55)}
+  .btn.ready:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(255,186,0,.42)}
+  .fineprint{font-size:12px;color:rgba(255,255,255,.72);text-align:center;line-height:1.5;margin:10px 2px 0}
+  .fineprint a{color:rgba(255,255,255,.9);text-decoration:underline;text-underline-offset:2px}
+  a:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+
+  /* TRUST STRIP */
+  .trust{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}
+  .tcard{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:11px 12px;text-align:center}
+  .tcard .t-h{font-family:'Outfit',sans-serif;font-size:12.5px;font-weight:700;color:#fff;line-height:1.25}
+  .tcard .t-s{font-size:12px;color:rgba(255,255,255,.72);margin-top:2px;line-height:1.3}
+
+  /* BANDS */
+  .band{padding:44px 0;border-top:1px solid rgba(255,255,255,.07)}
+  .band.alt{background:rgba(255,255,255,.025)}
+  .note{background:rgba(255,186,0,.08);border:1px solid rgba(255,186,0,.22);border-radius:16px;padding:20px 18px}
+  .step{display:flex;gap:14px;align-items:flex-start;margin:0 0 18px}
+  .step .num{flex-shrink:0;width:34px;height:34px;border-radius:50%;background:var(--gold);color:var(--navy);font-family:'Outfit',sans-serif;font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center}
+  .step .s-h{font-family:'Outfit',sans-serif;font-weight:700;font-size:16px;margin:4px 0 4px}
+  .step .s-b{font-size:14.5px;line-height:1.55;color:rgba(255,255,255,.72)}
+  .incl{list-style:none;padding:0;margin:14px 0 0}
+  .incl li{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:15px;color:rgba(255,255,255,.85)}
+  .incl li:last-child{border-bottom:none}
+  .check{flex-shrink:0;color:var(--gold);font-weight:800}
+  .anchor{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-top:18px}
+  .anchor .old{font-family:'Outfit',sans-serif;font-size:20px;color:rgba(255,255,255,.45);text-decoration:line-through}
+  .anchor .new{font-family:'Outfit',sans-serif;font-size:clamp(26px,6vw,34px);font-weight:800;color:var(--gold)}
+
+  footer{padding:30px 0 calc(env(safe-area-inset-bottom) + 34px);text-align:center;border-top:1px solid rgba(255,255,255,.07)}
+  .foot-s{font-size:13px;color:rgba(255,255,255,.72);line-height:1.7}
+
+  /* SUCCESS */
+  #nbSuccess{display:none;text-align:center;padding:14px 6px}
+  .spin{width:22px;height:22px;border:2.5px solid rgba(11,31,59,.2);border-top-color:var(--navy);border-radius:50%;animation:spin .6s linear infinite;display:inline-block;vertical-align:middle}
+  .spin-light{border-color:rgba(255,255,255,.3);border-top-color:#fff}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+    .btn.ready:hover{transform:none}
+  }
+
+  @media (max-width:380px){.trust{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- PostHog -->
+<script>!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+" (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);posthog.init('phc_qoA51lePZqXYtPJYkrIpdA4U8iMDJ79L1kje7r4pD4O',{api_host:'https://us.i.posthog.com',person_profiles:'identified_only',session_recording:{recordCrossOriginIframes:false,maskAllInputs:true},capture_pageview:true,capture_pageleave:true,enable_heatmaps:true})</script>
+<script>
+  // Neighbor channel marker. mailer_src splits QR scans from typed visits so
+  // we can see which one drives the channel. street is the recent-install
+  // street if the card carried ?st= (lets us measure personalized cards).
+  (function(){
+    try{
+      var qp = new URLSearchParams(window.location.search);
+      var src = (qp.get('src')||'typed').toLowerCase().replace(/[^a-z0-9_-]/g,'').slice(0,24) || 'typed';
+      window.__NB_SRC = src;
+      if (typeof posthog !== 'undefined') {
+        posthog.register({ channel: 'neighbor', landing_page: '/n/', mailer_src: src });
+      }
+    }catch(e){}
+  })();
+</script>
+
+<main id="main">
+<!-- ===================== HERO ===================== -->
+<section class="hero">
+  <div class="wrap">
+    <p class="eyebrow">A note for the neighborhood</p>
+    <h1><span id="nbHook">Your neighbor just made<br>the next outage</span> <span class="gold">a non-event.</span></h1>
+    <p class="lede">We recently connected a neighbor's portable generator straight to their home's electrical panel. Permitted, inspected, done in a single day. No extension cords run through a cracked window, no guesswork in the dark. If you own a generator too, you are closer to backup power than you think.</p>
+
+    <!-- FORM -->
+    <div id="nbFormWrap" class="card">
+      <p style="font-family:'Outfit',sans-serif;font-weight:700;font-size:18px;margin:0 0 4px">Get your free quick quote</p>
+      <p style="font-size:13.5px;color:rgba(255,255,255,.6);margin:0 0 16px">Two quick things and we will text you. No call required.</p>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label class="fld" for="varName">First Name</label>
+          <input class="inp" type="text" id="varName" placeholder="John" autocomplete="given-name" autocapitalize="words" aria-describedby="varNameErr">
+          <div id="varNameErr" class="err" role="alert" aria-live="polite">Required</div>
+        </div>
+        <div>
+          <label class="fld" for="varPhone">Phone</label>
+          <input class="inp" type="tel" id="varPhone" placeholder="(864) 555-0100" autocomplete="tel" inputmode="tel" aria-describedby="varPhoneErr">
+          <div id="varPhoneErr" class="err" role="alert" aria-live="polite">Valid phone required</div>
+        </div>
+      </div>
+
+      <label id="varGenLabel" class="gen" for="varGenCheck" style="margin-top:12px">
+        <div style="display:flex;align-items:flex-start;gap:12px">
+          <div id="varGenBox" class="genbox" aria-hidden="true">
+            <svg id="varGenIcon" viewBox="0 0 12 12" fill="none" stroke="#0b1f3b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:none;width:13px;height:13px"><polyline points="2,6 5,9 10,3"/></svg>
+          </div>
+          <input type="checkbox" id="varGenCheck" aria-describedby="varGenErr" style="position:absolute;opacity:0;width:0;height:0">
+          <span style="font-size:13.5px;color:rgba(255,255,255,.85);line-height:1.5">My generator has at least one <strong style="color:#fff">240-volt, 30-amp or 50-amp outlet.</strong></span>
+        </div>
+        <p style="font-size:13px;color:rgba(255,255,255,.72);line-height:1.55;margin:11px 0 0">If it does, you qualify for a quote now. Still shopping or not sure? Submit anyway, I will save your spot and send you a free outage-prep guide.</p>
+      </label>
+      <div id="varGenErr" class="err" role="alert" aria-live="polite" style="margin-top:-2px">Please confirm your generator has a 240V outlet to continue</div>
+
+      <!-- SMS consent optional, unchecked by default. Never a condition of submitting (TCPA + A2P). -->
+      <label id="nbSmsLabel" for="nbSmsConsent" style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:12px;border:1.5px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07);cursor:pointer;margin-top:12px;text-align:left">
+        <input type="checkbox" id="nbSmsConsent" style="flex-shrink:0;width:20px;height:20px;margin-top:1px;accent-color:var(--gold);cursor:pointer">
+        <span style="font-size:12px;color:rgba(255,255,255,.8);line-height:1.5">I agree to receive automated text messages from Backup Power Pro (Key Electric, LLC) about my quote and installation. Consent is not a condition of purchase. Message frequency varies. Msg and data rates may apply. Reply STOP to opt out, HELP for help. See our <a href="/privacy.html" target="_blank" rel="noopener noreferrer" style="color:rgba(255,255,255,.9);text-decoration:underline">Privacy Policy</a>.</span>
+      </label>
+
+      <button id="varSubmitBtn" class="btn" type="button">
+        Get my quick quote
+        <svg fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="width:17px;height:17px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </button>
+      <p class="fineprint">Key reaches out with your quote. No spam. Texts only if you opt in above.</p>
+    </div>
+
+    <!-- SUCCESS -->
+    <div id="nbSuccess" class="card">
+      <div id="nbSuccessSending" style="display:none">
+        <p style="font-family:'Outfit',sans-serif;font-weight:700;font-size:18px;margin:0 0 8px">Sending it over <span class="spin spin-light"></span></p>
+        <p style="font-size:14px;color:rgba(255,255,255,.65);margin:0">One second, <span id="varSuccessName">neighbor</span>.</p>
+      </div>
+      <div id="nbSuccessDone" style="display:none">
+        <div style="font-size:34px;line-height:1;margin-bottom:10px">&#9889;</div>
+        <p style="font-family:'Outfit',sans-serif;font-weight:800;font-size:22px;margin:0 0 8px">You are on the list, <span id="varSuccessNameDone">neighbor</span>.</p>
+        <p style="font-size:14.5px;color:rgba(255,255,255,.72);line-height:1.55;margin:0">Watch your phone if you opted in to texts. Key reviews every submission and follows up from <strong style="color:#fff">(864) 863-7800</strong>.</p>
+      </div>
+      <div id="nbSuccessFuture" style="display:none">
+        <div style="font-size:34px;line-height:1;margin-bottom:10px">&#128161;</div>
+        <p style="font-family:'Outfit',sans-serif;font-weight:800;font-size:22px;margin:0 0 8px">You are one generator away, <span id="varSuccessNameFuture">neighbor</span>.</p>
+        <p style="font-size:14.5px;color:rgba(255,255,255,.72);line-height:1.55;margin:0 0 14px">A portable generator with a 240-volt outlet is all you need to connect to your home. The day you have one, text me at <strong style="color:#fff">(864) 863-7800</strong> and I will get you on the schedule. It is me, Key, not a bot.</p>
+        <a href="/free-guide/" style="display:inline-block;padding:12px 18px;min-height:44px;background:var(--gold);color:#0b1f3b;border-radius:10px;font-weight:800;text-decoration:none;font-size:14.5px">Get the free outage-prep guide</a>
+      </div>
+      <div id="nbSuccessFail" role="alert" style="display:none">
+        <div style="font-size:34px;line-height:1;margin-bottom:10px">&#128242;</div>
+        <p style="font-family:'Outfit',sans-serif;font-weight:800;font-size:22px;margin:0 0 8px">Almost there.</p>
+        <p style="font-size:14.5px;color:rgba(255,255,255,.78);line-height:1.55;margin:0 0 14px">That did not go through. Text me directly and I will get you taken care of.</p>
+        <a href="sms:+18648637800" style="display:inline-block;padding:12px 18px;min-height:44px;background:var(--gold);color:#0b1f3b;border-radius:10px;font-weight:800;text-decoration:none;font-size:14.5px">Text (864) 863-7800</a>
+      </div>
+    </div>
+
+    <!-- TRUST STRIP -->
+    <div class="trust">
+      <div class="tcard"><div class="t-h">Licensed SC #2942</div><div class="t-s">Real electrician, not a handyman</div></div>
+      <div class="tcard"><div class="t-h">One-day install</div><div class="t-s">Permit and inspection included</div></div>
+      <div class="tcard"><div class="t-h">Right here in the area</div><div class="t-s">Greenville, Spartanburg, Pickens</div></div>
+      <div class="tcard"><div class="t-h">Price-lock guarantee</div><div class="t-s">The price we text is what you pay</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== WHY YOU GOT THIS ===================== -->
+<section class="band">
+  <div class="wrap">
+    <div class="note">
+      <p style="font-family:'Outfit',sans-serif;font-weight:700;font-size:16px;margin:0 0 8px">Why you got this in your mailbox</p>
+      <p style="font-size:14.5px;line-height:1.6;color:rgba(255,255,255,.82);margin:0">When we finish an install, we let a handful of close neighbors know, because the next storm hits your street the same time it hits theirs. The magnet is yours to keep. Stick it on the fridge. It has a power-outage kit checklist, and it means you will know exactly who to call if you ever decide to get connected too.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== HOW IT WORKS ===================== -->
+<section class="band alt">
+  <div class="wrap">
+    <h2>How it works</h2>
+    <div class="step">
+      <div class="num">1</div>
+      <div><div class="s-h">You already own the generator</div><div class="s-b">A portable generator with a 240V, 30-amp or 50-amp outlet is all it takes. You do not need a whole-home standby unit bolted to the side of the house.</div></div>
+    </div>
+    <div class="step">
+      <div class="num">2</div>
+      <div><div class="s-h">We connect it to your panel, the right way</div><div class="s-b">A permitted inlet and an interlock at your breaker panel. Inspected and code-compliant. We pull the permit, do the work in a day, and clean up after ourselves.</div></div>
+    </div>
+    <div class="step">
+      <div class="num">3</div>
+      <div><div class="s-h">Next outage, you plug in and flip a switch</div><div class="s-b">Power flows to the circuits that matter through your own panel. Fridge, heat, well pump, internet, the things that make an outage a non-event instead of an emergency.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== THE OFFER ===================== -->
+<section class="band">
+  <div class="wrap">
+    <h2>What a neighbor just paid for</h2>
+    <p class="lede" style="font-size:16px">A standby generator is a major, expensive undertaking to install. One permitted inlet and interlock turns the generator you already own into reliable backup for a fraction of that.</p>
+    <div class="anchor">
+      <span class="old">Whole-home standby</span>
+      <span class="new">One all-in price</span>
+    </div>
+    <ul class="incl">
+      <li><span class="check">&#10003;</span> Generator power cord, inlet box, and interlock kit matched to your panel</li>
+      <li><span class="check">&#10003;</span> New breaker and all materials</li>
+      <li><span class="check">&#10003;</span> Permit pulled and inspection scheduled, both included</li>
+      <li><span class="check">&#10003;</span> Full install in one day, cleanup, and a walkthrough so you know how to use it</li>
+      <li><span class="check">&#10003;</span> Price locked before we start. No surprises.</li>
+    </ul>
+    <div style="text-align:center;margin-top:26px">
+      <a href="#nbFormWrap" id="nbScrollTop" style="display:inline-flex;align-items:center;gap:10px;background:var(--gold);color:var(--navy);font-family:'Outfit',sans-serif;font-weight:700;font-size:16px;text-decoration:none;padding:16px 26px;border-radius:100px">Get my free quick quote</a>
+      <p style="font-size:13px;color:rgba(255,255,255,.72);margin-top:10px">Takes about 20 seconds. We text you, no call required.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p style="font-family:'Outfit',sans-serif;font-weight:800;font-size:17px;letter-spacing:-.3px;margin:0 0 6px">Backup Power Pro</p>
+    <p class="foot-s">Key Electric LLC &middot; SC License #2942<br>Serving Greenville, Spartanburg, and Pickens counties<br><a href="/privacy.html" style="color:rgba(255,255,255,.85)">Privacy Policy</a></p>
+  </div>
+</footer>
+</main>
+
+<a id="top"></a>
+
+<!-- ===================== PERSONALIZATION ===================== -->
+<script>
+  (function(){
+    try{
+      var qp = new URLSearchParams(window.location.search);
+      var st = qp.get('st');
+      if (st){
+        st = st.replace(/[<>]/g,'').trim().slice(0,40);
+        if (st){
+          var el = document.getElementById('nbHook');
+          if (el){ el.textContent = 'Someone near ' + st + ' just made the next outage'; }
+        }
+      }
+    }catch(e){}
+  })();
+  // Smooth-scroll the two in-page CTAs back up to the form.
+  ['nbScrollTop'].forEach(function(id){
+    var a = document.getElementById(id);
+    if(a){ a.addEventListener('click', function(ev){ ev.preventDefault(); document.getElementById('nbFormWrap').scrollIntoView({behavior:'smooth',block:'center'}); }); }
+  });
+</script>
+
+<!-- ===================== LEAD SUBMIT (same pipe as the ad landing pages) ===================== -->
+<script>
+(function(){
+  const BPP_NEW_LEAD_URL = 'https://reowtzedjflwmlptupbk.supabase.co/functions/v1/quo-ai-new-lead';
+
+  var varNameInput  = document.getElementById('varName');
+  var varPhoneInput = document.getElementById('varPhone');
+  if(!varNameInput) return;
+
+  document.getElementById('varGenCheck').addEventListener('change', function(){
+    var box=document.getElementById('varGenBox');
+    var icon=document.getElementById('varGenIcon');
+    var lbl=document.getElementById('varGenLabel');
+    if(this.checked){
+      box.style.background='var(--gold)'; box.style.borderColor='var(--gold)';
+      icon.style.display='block';
+      lbl.style.borderColor='var(--gold)';
+      lbl.style.background='rgba(255,186,0,.14)';
+      lbl.style.boxShadow='0 0 0 3px rgba(255,186,0,.22)';
+      document.getElementById('varGenErr').style.display='none';
+    } else {
+      box.style.background='transparent'; box.style.borderColor='rgba(255,255,255,.32)';
+      icon.style.display='none';
+      lbl.style.borderColor='rgba(255,255,255,.16)';
+      lbl.style.background='rgba(255,255,255,.06)';
+      lbl.style.boxShadow='none';
+    }
+    varCheckReady();
+  });
+
+  function varCheckReady(){
+    var name=varNameInput.value.trim();
+    var phone=varPhoneInput.value.replace(/\D/g,'');
+    var genOk=document.getElementById('varGenCheck').checked;
+    var btn=document.getElementById('varSubmitBtn');
+    if(name&&phone.length===10&&genOk){ btn.classList.add('ready'); }
+    else { btn.classList.remove('ready'); }
+  }
+
+  var formStartedFired = false;
+  function fireFormStarted(field){
+    if (formStartedFired) return;
+    formStartedFired = true;
+    if (typeof posthog !== 'undefined') {
+      posthog.capture('lead_form_started', { field: field, channel: 'neighbor', mailer_src: window.__NB_SRC || 'typed' });
+    }
+  }
+
+  varNameInput.addEventListener('input', function(){
+    fireFormStarted('name');
+    this.value=this.value.replace(/^\s+/,'').replace(/\s{2,}/g,' ').replace(/(^|\s)[a-z]/g,function(m){return m.toUpperCase();});
+    if(this.value.length>0) this.value=this.value.charAt(0).toUpperCase()+this.value.slice(1);
+    varCheckReady();
+  });
+
+  varPhoneInput.addEventListener('input', function(e){
+    fireFormStarted('phone');
+    var v=e.target.value.replace(/\D/g,'');
+    if(v.startsWith('1')&&v.length>10) v=v.slice(1);
+    if(v.length>10) v=v.slice(0,10);
+    if(v.length>=7) v='('+v.slice(0,3)+') '+v.slice(3,6)+'-'+v.slice(6);
+    else if(v.length>=4) v='('+v.slice(0,3)+') '+v.slice(3);
+    else if(v.length>=1) v='('+v;
+    e.target.value=v;
+    varCheckReady();
+  });
+
+  var scrollMilestones = { 25:false, 50:false, 75:false, 100:false };
+  window.addEventListener('scroll', function(){
+    var h=document.documentElement;
+    var scrolled=(h.scrollTop/Math.max(1,h.scrollHeight-h.clientHeight))*100;
+    for (var mark of [25,50,75,100]){
+      if(!scrollMilestones[mark] && scrolled>=mark){
+        scrollMilestones[mark]=true;
+        if (typeof posthog !== 'undefined'){
+          posthog.capture('lead_scroll_depth', { depth:mark, channel:'neighbor', mailer_src: window.__NB_SRC || 'typed' });
+        }
+      }
+    }
+  }, { passive:true });
+
+  async function sha256(str){
+    if(!str) return '';
+    var buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str.trim().toLowerCase()));
+    return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0')}).join('');
+  }
+
+  document.getElementById('varSubmitBtn').addEventListener('click', async function(){
+    var ok=true;
+    var name     = varNameInput.value.trim();
+    var phone    = varPhoneInput.value.replace(/\D/g,'');
+    var genCheck = document.getElementById('varGenCheck').checked;
+
+    if(!name){document.getElementById('varNameErr').style.display='block';varNameInput.setAttribute('aria-invalid','true');ok=false;}
+    else{document.getElementById('varNameErr').style.display='none';varNameInput.removeAttribute('aria-invalid');}
+
+    var phoneEl=document.getElementById('varPhoneErr');
+    if(phone.length!==10){phoneEl.textContent='Enter a valid 10-digit phone number';phoneEl.style.display='block';varPhoneInput.setAttribute('aria-invalid','true');ok=false;}
+    else{phoneEl.style.display='none';varPhoneInput.removeAttribute('aria-invalid');}
+
+    // The 240V checkbox is NO LONGER a gate. Unchecked = a "future pool" lead
+    // (still shopping / not sure), captured with dignity instead of turned away.
+    document.getElementById('varGenErr').style.display='none';
+
+    if(!ok){
+      if (typeof posthog !== 'undefined'){
+        posthog.capture('lead_form_blocked', { reasons:[!name?'name':null, phone.length!==10?'phone':null].filter(Boolean), channel:'neighbor', mailer_src: window.__NB_SRC || 'typed' });
+      }
+      return;
+    }
+
+    var btn=this;
+    btn.disabled=true;
+    btn.innerHTML='<div class="spin"></div> Sending...';
+
+    var eventId='bpp_nb_'+Date.now()+'_'+Math.random().toString(36).slice(2,9);
+    var rawPhone=varPhoneInput.value.trim();
+    var [phH,fnH,countryH]=await Promise.all([sha256(rawPhone.replace(/\D/g,'')),sha256(name),sha256('us')]);
+
+    var smsConsent = !!(document.getElementById('nbSmsConsent') && document.getElementById('nbSmsConsent').checked);
+    var payload={
+      firstName:name.split(/\s+/)[0], lastName:name.split(/\s+/).slice(1).join(' '), phone:rawPhone, email:'',
+      address:'', addressStreet:'', addressCity:'', addressCounty:'', addressState:'SC', addressZip:'', addressCountry:'US',
+      hasCompatibleGenerator: genCheck ? 'Yes - 240V 30A/50A confirmed' : 'No - needs 240V generator (future pool)',
+      needsOutlet: !genCheck,
+      submittedAt:new Date().toISOString(), eventTimestamp:Math.floor(Date.now()/1000),
+      source: genCheck ? 'neighbor-mailer' : 'neighbor-no-outlet-future', actionSource:'website',
+      smsConsent: smsConsent,
+      eventName:'Lead', eventId:eventId,
+      clientUserAgent:navigator.userAgent||'',
+      fbp:'', fbc:'', fbclid:'',
+      pageUrl:window.location.href, referrer:document.referrer||'',
+      hashedPhone:phH, hashedFirstName:fnH, hashedCountry:countryH
+    };
+
+    document.getElementById('nbFormWrap').style.display='none';
+    document.getElementById('varSuccessName').textContent=name;
+    document.getElementById('varSuccessNameDone').textContent=name;
+    document.getElementById('nbSuccess').style.display='block';
+    document.getElementById('nbSuccessSending').style.display='block';
+
+    var submitUrl=BPP_NEW_LEAD_URL;
+    var submitBody=JSON.stringify(payload);
+    var delivered=false, deliveryMethod='none', submitStartMs=Date.now(), createdContactId=null;
+
+    /* Resilient submit (walk pattern): awaited keepalive fetch + sync XHR.
+       No parallel sendBeacon (double-POST race on concurrent phone lookup). */
+    try{
+      var resp=await fetch(submitUrl,{ method:'POST', keepalive:true, headers:{'Content-Type':'application/json'}, body:submitBody });
+      delivered=resp.ok; deliveryMethod='fetch';
+      if(resp.ok){ try{ var json=await resp.json(); createdContactId=json&&json.contactId||null; }catch(_){} }
+      else if(typeof posthog!=='undefined'){ posthog.capture('lead_submit_failed',{status:resp.status,method:'fetch',channel:'neighbor',form:'neighbor'}); }
+    }catch(fetchErr){
+      try{
+        var xhr=new XMLHttpRequest();
+        xhr.open('POST',submitUrl,false);
+        xhr.setRequestHeader('Content-Type','application/json');
+        xhr.send(submitBody);
+        delivered=xhr.status>=200&&xhr.status<300; deliveryMethod='xhr';
+        if(delivered){ try{ var j2=JSON.parse(xhr.responseText); createdContactId=j2&&j2.contactId||null; }catch(_){} }
+        else if(typeof posthog!=='undefined'){ posthog.capture('lead_submit_failed',{status:xhr.status,method:'xhr',channel:'neighbor',form:'neighbor',fetchErr:String(fetchErr).slice(0,200)}); }
+      }catch(xhrErr){
+        if(typeof posthog!=='undefined'){ posthog.capture('lead_submit_failed',{err:String(xhrErr).slice(0,200),method:'xhr-threw',channel:'neighbor',form:'neighbor',fetchErr:String(fetchErr).slice(0,200)}); }
+      }
+    }
+    var submitLatencyMs=Date.now()-submitStartMs;
+
+    if(typeof posthog!=='undefined'){
+      posthog.capture('lead_captured',{
+        source:'neighbor_mailer', channel:'neighbor',
+        mailer_src: window.__NB_SRC || 'typed',
+        page:window.location.pathname,
+        delivery:deliveryMethod, delivered:delivered, latency_ms:submitLatencyMs
+      });
+      if(createdContactId){
+        try{ posthog.identify(createdContactId,{ channel:'neighbor', landed_via:'/n/' }); }catch(_){}
+      }
+    }
+
+    document.getElementById('nbSuccessSending').style.display='none';
+    if (!delivered) {
+      // Never show a celebratory state on a failed POST.
+      document.getElementById('nbSuccessFail').style.display='block';
+    } else if (genCheck) {
+      document.getElementById('nbSuccessDone').style.display='block';
+    } else {
+      // Future-pool lead: dignified "one generator away", not a turn-away.
+      var fn=document.getElementById('varSuccessNameFuture'); if(fn) fn.textContent=name;
+      document.getElementById('nbSuccessFuture').style.display='block';
+    }
+  });
+})();
+</script>
+</body>
+</html>

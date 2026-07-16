@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Key CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="crm-data.js?v=7"></script>
+<script type="text/babel" src="crm-shared.jsx"></script>
+<script type="text/babel" src="crm-left.jsx?v=8"></script>
+<script type="text/babel" src="crm-right.jsx?v=8"></script>
+<script type="text/babel" src="crm-permit-portals.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="crm-app.jsx?v=7"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { height: 100%; overflow: hidden; }
+  body { height: 100%; overflow: hidden; font-family: 'DM Sans', sans-serif; background: #f4f6f9; }
+  #root { height: 100%; overflow: hidden; }
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 4px; }
+
+  /* Hide scrollbars on filter chip rows */
+  .hide-scrollbar::-webkit-scrollbar { display: none; }
+
+  /* Filter chip rail flush-edge polish */
+  .chip-row {
+    padding-inline: 16px !important;
+    scroll-padding-inline-start: 16px;
+    -webkit-mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 24px), transparent 100%);
+    mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 24px), transparent 100%);
+  }
+
+  /* Hide scrollbars inside mobile frame */
+  .mobile-panel *::-webkit-scrollbar { display: none; }
+  .mobile-panel * { scrollbar-width: none; }
+  button { font-family: 'DM Sans', sans-serif; }
+  textarea { font-family: 'DM Sans', sans-serif; }
+  input { font-family: 'DM Sans', sans-serif; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+// mounted by crm-app.jsx
+void 0;
+</script>
+</body>
+</html>

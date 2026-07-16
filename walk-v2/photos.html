@@ -1,0 +1,937 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="referrer" content="strict-origin-when-cross-origin">
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+<title>Backup Power Pro · Quote Walk · Step 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'" />
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"></noscript>
+<style>
+  :root {
+    --navy: #0b1f3b;
+    --navy-mid: #1a3a5c;
+    --gold: #ffba00;
+    --gold-hover: #ffc519;
+    --gold-ink: #8a5a00;
+    --gold-tint: #fff7e0;
+    --bg: #eef1f6;
+    --page: #fafbfc;
+    --card: #ffffff;
+    --sunken: #f4f6fa;
+    --edge: rgba(11, 31, 59, 0.10);
+    --edge-soft: rgba(11, 31, 59, 0.07);
+    --text: #16243a;
+    --muted: #4d5a6e;
+    --faint: #5d6b7e;
+    --green: #16a34a;
+    --green-tint: #ecfdf3;
+    --red: #dc2626;
+    --red-tint: #fef2f2;
+
+    --shadow-sm: 0 2px 6px rgba(11,31,59,0.06), 0 1px 2px rgba(11,31,59,0.04);
+    --shadow-md: 0 10px 28px rgba(11,31,59,0.10), 0 2px 8px rgba(11,31,59,0.05);
+    --shadow-lift: 0 18px 44px rgba(11,31,59,0.14), 0 4px 12px rgba(11,31,59,0.06);
+    --shadow-gold: 0 6px 24px rgba(255,186,0,0.30);
+
+    --r-md: 14px;
+    --r-lg: 20px;
+    --r-pill: 100px;
+
+    --head: 'Outfit', sans-serif;
+    --body: 'Inter', system-ui, -apple-system, sans-serif;
+
+    --dur: 220ms;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html, body {
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  button {
+    font-family: inherit;
+    border: 0;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button:focus-visible, a:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+  }
+  svg { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+
+  .stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 48px;
+    padding: 28px 14px 96px;
+  }
+  .state-label {
+    width: 390px;
+    max-width: 100%;
+    font-family: var(--head);
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: -34px;
+    padding-left: 4px;
+  }
+  .state-label.wide { width: 1080px; }
+  .snapshot { pointer-events: none; }
+
+  /* ================= page frame ================= */
+  .page {
+    width: 390px;
+    max-width: 100%;
+    background: var(--page);
+    border-radius: 24px;
+    box-shadow: var(--shadow-md), inset 0 0 0 1px var(--edge-soft);
+    overflow: hidden;
+    container-type: inline-size;
+    container-name: page;
+  }
+  .page.w-desktop { width: 1080px; }
+  /* staging: the comp's own desktop composition activates responsively
+     (the comps showed it via a snapshot clone with .w-desktop) */
+  @media (min-width: 1140px) {
+    .page { width: 1080px; }
+  }
+
+  .page * { text-wrap: pretty; }
+
+  /* ================= scroll reveal ================= */
+  .rv {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 560ms var(--ease), transform 560ms var(--ease);
+    transition-delay: var(--rvd, 0ms);
+  }
+  .rv.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .rv { opacity: 1; transform: none; transition: none; }
+  }
+
+  /* ================= 1. site header ================= */
+  .site-head {
+    height: 56px;
+    background: var(--navy);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+  }
+  .lockup {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 8px 0;
+    box-sizing: border-box;
+  }
+  .lockup .bolt {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--gold);
+    color: var(--navy);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+  }
+  .lockup .bolt svg { width: 14px; height: 14px; fill: var(--navy); stroke: none; }
+  .lockup .wm {
+    font-family: var(--head);
+    font-weight: 800;
+    font-size: 13.5px;
+    line-height: 1;
+    letter-spacing: 0.12em;
+    color: #fff;
+    white-space: nowrap;
+  }
+  .lockup .wm small {
+    display: block;
+    font-size: 7px;
+    font-weight: 600;
+    letter-spacing: 0.34em;
+    color: var(--gold);
+    margin-top: 3px;
+    white-space: nowrap;
+  }
+
+  /* back-a-step control */
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 44px;
+    margin: 12px 0 0 14px;
+    padding: 6px 10px 6px 6px;
+    background: none;
+    font-family: var(--head);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  .back-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .back-btn:active { color: var(--navy); }
+
+  /* ================= 2. progress band ================= */
+  .prog {
+    background: var(--card);
+    border-bottom: 1px solid var(--edge-soft);
+    padding: 16px 20px 14px;
+  }
+  .prog .rail {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    position: relative;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+  .prog .rail::before {
+    content: "";
+    position: absolute;
+    top: 5px;
+    left: calc(100% / 6);
+    right: calc(100% / 6);
+    height: 2px;
+    background: var(--edge);
+  }
+  .prog .rail::after {
+    content: "";
+    position: absolute;
+    top: 5px;
+    left: calc(100% / 6);
+    width: calc(100% / 3 * 2);
+    height: 2px;
+    background: var(--gold);
+  }
+  .pstep {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+  }
+  .pstep .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--page);
+    box-shadow: inset 0 0 0 2px var(--edge);
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--navy);
+  }
+  .pstep .dot svg { width: 7px; height: 7px; stroke-width: 3.4; display: none; }
+  .pstep.done .dot {
+    width: 14px;
+    height: 14px;
+    margin: -1px 0;
+    background: var(--gold);
+    box-shadow: none;
+  }
+  .pstep.done .dot svg { display: block; }
+  .pstep.on .dot {
+    background: var(--gold);
+    box-shadow: 0 0 0 4px rgba(255,186,0,0.22);
+  }
+  .pstep .pl {
+    font-family: var(--head);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+  .pstep.on .pl, .pstep.done .pl { color: var(--gold-ink); }
+
+  /* ================= body grid ================= */
+  .body-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 22px;
+    padding: 28px 20px 8px;
+  }
+  .col-main { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+  .col-side { display: none; min-width: 0; }
+
+  @container page (min-width: 760px) {
+    .site-head { padding: 0 48px; }
+    .prog { padding: 18px 48px 16px; }
+    .body-grid {
+      grid-template-columns: 1fr;
+      max-width: 620px;
+      margin: 0 auto;
+      gap: 22px;
+      padding: 40px 24px 12px;
+    }
+    .ask h2 { font-size: 36px; }
+    .foot { padding-left: 48px; padding-right: 48px; }
+  }
+
+  /* ================= 3. ask ================= */
+  .ask .kicker {
+    font-family: var(--head);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold-ink);
+    margin: 0 0 10px;
+  }
+  .ask h2 {
+    font-family: var(--head);
+    font-weight: 800;
+    font-size: 28px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--navy);
+    margin: 0 0 8px;
+  }
+  .ask .helper {
+    font-size: 16px;
+    line-height: 1.55;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  /* ================= 4. photo strip ================= */
+  .slots {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+  .slot { position: relative; aspect-ratio: 3 / 4; border-radius: var(--r-md); }
+  .slot .thumb {
+    width: 100%;
+    height: 100%;
+    border-radius: var(--r-md);
+    background: linear-gradient(160deg, #2c3e58 0%, #1a2a42 55%, #11203a 100%);
+    box-shadow: var(--shadow-sm), inset 0 0 0 1px var(--edge);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.55);
+    overflow: hidden;
+  }
+  .slot .thumb svg { width: 26px; height: 26px; stroke-width: 1.6; }
+  .slot .thumb .tag {
+    position: absolute;
+    left: 7px;
+    bottom: 7px;
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    color: #fff;
+    background: rgba(11,32,58,0.78);
+    padding: 2px 6px;
+    border-radius: 6px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.7);
+  }
+  .slot .remove {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--navy);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-sm);
+  }
+  /* Hit area is the 44px control itself (old-person floor). No inset hack. */
+  .slot .remove::before { content: none; }
+  .slot .remove svg { width: 11px; height: 11px; stroke-width: 2.6; }
+  .slot.add-tile button.add {
+    width: 100%;
+    height: 100%;
+    border-radius: var(--r-md);
+    background: var(--card);
+    box-shadow: var(--shadow-sm), inset 0 0 0 1.5px var(--edge);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--navy);
+    font-family: var(--head);
+    font-size: 12.5px;
+    font-weight: 600;
+    transition: background var(--dur) var(--ease), transform var(--dur) var(--ease);
+  }
+  .slot.add-tile button.add:hover { background: var(--gold-tint); }
+  .slot.add-tile button.add:active { transform: scale(0.97); }
+  .slot.add-tile .cam {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--gold);
+    color: var(--navy);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-gold);
+  }
+  .slot.add-tile .cam svg { width: 19px; height: 19px; stroke-width: 2; }
+  .slot.empty .ph {
+    width: 100%;
+    height: 100%;
+    border-radius: var(--r-md);
+    box-shadow: inset 0 0 0 1.5px var(--edge-soft);
+    background: repeating-linear-gradient(
+      45deg,
+      #eef1f6 0px, #eef1f6 6px,
+      #f6f8fb 6px, #f6f8fb 12px
+    );
+  }
+  .slots-hint {
+    margin: 8px 0 0;
+    font-size: 14px;
+    color: var(--faint);
+  }
+
+  /* ================= 5. gift banner ================= */
+  .gift {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--gold-tint);
+    border-radius: var(--r-md);
+    box-shadow: inset 0 0 0 1.5px rgba(255,186,0,0.4);
+  }
+  .gift .gi {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: var(--gold);
+    color: var(--navy);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .gift .gi svg { width: 17px; height: 17px; stroke-width: 1.8; }
+  .gift .gt {
+    font-family: var(--head);
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1.35;
+  }
+
+  /* ================= 6. primary cta ================= */
+  .cta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    height: 58px;
+    font-family: var(--head);
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.005em;
+    color: var(--navy);
+    background: var(--gold);
+    border-radius: var(--r-pill);
+    box-shadow: var(--shadow-gold);
+    transition: background var(--dur) var(--ease), box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
+  }
+  .cta svg { width: 17px; height: 17px; stroke-width: 2.2; }
+  .cta:not(:disabled):hover { background: var(--gold-hover); }
+  .cta:not(:disabled):active { transform: scale(0.985); }
+  .cta:disabled { background: #e9ecf2; color: var(--faint); box-shadow: none; cursor: not-allowed; }
+  .cta .spinner {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2.5px solid rgba(11,31,59,0.25);
+    border-top-color: var(--navy);
+    animation: spin 700ms linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .cta .spinner { animation: none; } }
+  .cta.sending { cursor: progress; }
+
+  /* ================= 7. examples ================= */
+  .examples {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .ex { display: flex; flex-direction: column; gap: 7px; }
+  .ex .ph {
+    aspect-ratio: 4 / 5;
+    border-radius: 12px;
+    overflow: hidden;
+    background: repeating-linear-gradient(
+      45deg,
+      #e8ecf3 0px, #e8ecf3 6px,
+      #f3f5fa 6px, #f3f5fa 12px
+    );
+    box-shadow: inset 0 0 0 1px var(--edge);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--faint);
+  }
+  .ex .ph svg { width: 28px; height: 28px; stroke-width: 1.6; }
+  .ex .ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .ex.disc .ph img { object-position: 60% center; }
+  .ex .cap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-family: var(--head);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    line-height: 1.35;
+    text-align: center;
+  }
+  .ex .cap .dot {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .ex .cap .dot svg { width: 10px; height: 10px; stroke-width: 3; }
+  .ex.good .cap .dot { background: var(--green-tint); color: var(--green); }
+  .ex.bad .cap .dot { background: var(--red-tint); color: var(--red); }
+
+  /* save confirmation card */
+  .save-card {
+    display: none;
+    align-items: flex-start;
+    gap: 12px;
+    background: var(--navy);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-md);
+    padding: 18px;
+    color: #fff;
+  }
+  .save-card.show { display: flex; animation: rise 360ms var(--ease) both; }
+  @media (prefers-reduced-motion: reduce) { .save-card.show { animation: none; } }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .save-card .ring {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: var(--gold);
+    color: var(--navy);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .save-card .ring svg { width: 17px; height: 17px; stroke-width: 2; }
+  .save-card .t {
+    font-family: var(--head);
+    font-size: 15.5px;
+    font-weight: 700;
+    margin: 0 0 3px;
+  }
+  .save-card .s {
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: rgba(255,255,255,0.78);
+    margin: 0;
+  }
+
+  /* ================= side summary (desktop) ================= */
+  .side-card {
+    background: var(--card);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-sm), inset 0 0 0 1px var(--edge-soft);
+    padding: 20px;
+  }
+  .side-card .tk {
+    font-family: var(--head);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold-ink);
+    margin: 0 0 14px;
+  }
+  .side-card ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .side-card li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 8px 0;
+  }
+  .side-card li .n {
+    width: 24px;
+    height: 24px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: var(--sunken);
+    box-shadow: inset 0 0 0 1.5px var(--edge);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--head);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--faint);
+  }
+  .side-card li .n svg { width: 10px; height: 10px; stroke-width: 3; }
+  .side-card li.done .n { background: var(--gold); box-shadow: none; color: var(--navy); }
+  .side-card li.cur .n {
+    background: var(--gold);
+    box-shadow: 0 0 0 4px rgba(255,186,0,0.22);
+    color: var(--navy);
+  }
+  .side-card li .lt {
+    font-family: var(--head);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--navy);
+    padding-top: 2px;
+  }
+  .side-card li .ls {
+    font-size: 14px;
+    color: var(--faint);
+    margin-top: 2px;
+    line-height: 1.45;
+  }
+  .side-note {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+    padding: 4px 6px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--faint);
+  }
+  .side-note svg { width: 16px; height: 16px; stroke-width: 1.8; color: var(--gold-ink); flex: 0 0 auto; }
+  .side-note strong { color: var(--muted); font-weight: 600; }
+
+  /* ================= 9. footer ================= */
+  .foot {
+    margin-top: 26px;
+    padding: 20px 20px 28px;
+    border-top: 1px solid var(--edge-soft);
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--faint);
+    text-align: center;
+  }
+  .foot strong { font-family: var(--head); font-weight: 600; color: var(--muted); }
+
+  /* Fresh Air mobile (2026-07-13 design audit): drop the phone-frame gutters.
+     Comp staging used .stack padding + rounded .page; on a real phone that
+     wastes width and looks like a mock. Edge-to-edge under 760px; desktop card stays. */
+  @media (max-width: 759px) {
+    html, body { background: var(--page); }
+    .stack { padding: 0 0 calc(28px + env(safe-area-inset-bottom, 0px)); gap: 0; }
+    .page {
+      width: 100%;
+      max-width: 100%;
+      border-radius: 0;
+      box-shadow: none;
+    }
+    .state-label { display: none; }
+  }
+</style>
+<script>!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+" (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);posthog.init('phc_qoA51lePZqXYtPJYkrIpdA4U8iMDJ79L1kje7r4pD4O',{api_host:'https://us.i.posthog.com',property_denylist:['$current_url','$initial_current_url','$referrer','$initial_referrer'],sanitize_properties:function(p){for(var k in p){var v=p[k];if(typeof v==='string'&&v.indexOf('http')===0&&v.indexOf('?')>-1){try{var u=new URL(v);p[k]=u.origin+u.pathname;}catch(e){p[k]=v.split('?')[0];}}}return p;},person_profiles:'identified_only',capture_pageview:true,capture_pageleave:true,enable_heatmaps:true,capture_dead_clicks:true})</script>
+</head>
+<body>
+<div class="stack" id="stack">
+
+  <!-- ============ MAIN PAGE (mobile, interactive) ============ -->
+  <main class="page" id="mainPage" data-screen-label="Quote walk step 3 (interactive, mobile)">
+
+    <!-- 1. site header -->
+    <header class="site-head">
+      <a class="lockup" href="https://backuppowerpro.com" aria-label="Backup Power Pro" style="text-decoration:none;">
+        <img src="/assets/images/logo-white-v2.png" alt="Backup Power Pro" style="height:28px;display:block;width:auto;" />
+      </a>
+    </header>
+
+    <!-- 2. progress band -->
+    <div class="prog">
+      <div class="rail" role="img" aria-label="Step 3 of 3: Photo. Location and Distance complete.">
+        <div class="pstep done"><span class="dot"><svg viewBox="0 0 8 8"><path d="M1.5 4.2l1.8 1.8 3.2-4"></path></svg></span><span class="pl">Location</span></div>
+        <div class="pstep done"><span class="dot"><svg viewBox="0 0 8 8"><path d="M1.5 4.2l1.8 1.8 3.2-4"></path></svg></span><span class="pl">Distance</span></div>
+        <div class="pstep on"><span class="dot"></span><span class="pl">Photo</span></div>
+      </div>
+    </div>
+
+    <button class="back-btn" type="button" data-back="">
+      <svg viewBox="0 0 16 16"><path d="M10 3.5L5.5 8l4.5 4.5"></path></svg>Back
+    </button>
+
+    <div class="body-grid">
+      <div class="col-main">
+
+        <!-- 3. ask -->
+        <section class="ask rv" style="--rvd: 0ms;">
+          <h2>A photo or two and you're done.</h2>
+          <p class="helper">Main panel with the door open. Separate disconnect by the meter? Snap that too. Not sure? Shoot a couple and I'll sort it.</p>
+        </section>
+
+        <!-- 4. photo strip -->
+        <section class="rv" style="--rvd: 90ms;">
+          <div class="slots" data-slots=""></div>
+          <p class="slots-hint" data-hint="" aria-live="polite">Add one photo of your panel to see your estimate.</p>
+        </section>
+
+        <!-- Fresh Air (2026-07-13): gift lives on thank-you. No unlock-pressure banner here. -->
+
+        <!-- 6. primary actions: photo optional-feeling for shaky-hand / not-home path -->
+        <div class="photo-actions rv" style="--rvd: 160ms; display:flex; flex-direction:column; gap:10px; margin-top:4px;">
+          <button class="cta" type="button" data-cta="" disabled="" style="margin:0;">
+            <span data-cta-inner="">Add a panel photo first</span>
+            <svg data-cta-arrow="" viewBox="0 0 18 18"><path d="M3 9h11M10 4.5L14.5 9 10 13.5"></path></svg>
+          </button>
+          <button class="cta-secondary" type="button" data-defer="" style="width:100%; min-height:48px; margin:0; padding:12px 16px; border-radius:12px; border:1.5px solid rgba(11,31,59,0.18); background:#fff; color:var(--navy, #0b1f3b); font-size:16px; font-weight:700; font-family:inherit; cursor:pointer; line-height:1.3;">
+            Continue without a photo, Key will text you for it
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 9. footer -->
+    <footer class="foot">
+      <strong>Key Goodson, Master Electrician, SC Lic #2942</strong><br />
+      Serving Greenville, Spartanburg, and Pickens counties<br />
+      Questions? Text me at (864) 863-7800
+    </footer>
+  </main>
+
+</div>
+
+<script src="/walk-v2/walk.js"></script>
+<script>
+
+(function () {
+  var t = WALK.requireToken(); if (!t) return;
+  WALK.ph('walk_v2_screen_view', { screen: 'photos' });
+
+  /* Self-correcting entry guard (best-effort): if a forwarded / hand-edited deep
+     link lands here with a PRIOR step unanswered (panel location or distance),
+     bounce to the first unanswered step so an incomplete walk can't finalize and
+     skip Key's "ready to price" ping. Only fires when a prior is missing, so the
+     normal forward flow and Back-nav stay untouched. A read failure is ignored:
+     the step works without it and must never strand a customer mid-walk. */
+  WALK.view(t).then(function (v) {
+    if (!v.confirmed_panel_room || !v.distance_band) WALK.routeFromState(t, v);
+  }).catch(function () {});
+
+  var MAX = 3;
+  var main = document.getElementById('mainPage');
+  var slots = main.querySelector('[data-slots]');
+  var cta = main.querySelector('[data-cta]');
+  var ctaInner = main.querySelector('[data-cta-inner]');
+  var ctaArrow = main.querySelector('[data-cta-arrow]');
+  var hintEl = main.querySelector('[data-hint]');
+  /* photos[i] = { idx, dataUrl, status: 'uploading'|'done'|'failed' } */
+  var photos = [];
+  var sending = false;
+
+  var file = document.createElement('input');
+  file.type = 'file';
+  file.accept = 'image/*';
+  // No capture="environment": forcing the camera hid the Photo Library, which
+  // blocked the older customer who already took the panel photo (and is now
+  // filling this out on the couch, not standing at the panel) from picking it.
+  // Dropping it shows the native Take Photo / Photo Library sheet, so they can
+  // shoot fresh OR choose an existing one. Matches the "shoot a couple and I'll
+  // sort it out" copy. Per-slot one-at-a-time upload is unchanged.
+  file.style.display = 'none';
+  document.body.appendChild(file);
+
+  function freeIdx() {
+    for (var i = 1; i <= MAX; i++) {
+      if (!photos.some(function (p) { return p.idx === i; })) return i;
+    }
+    return null;
+  }
+  function render() {
+    var html = '';
+    photos.forEach(function (p) {
+      html += '<div class="slot" data-photo="' + p.idx + '">' +
+        '<div class="thumb" style="background-image:url(' + p.dataUrl + ');background-size:cover;background-position:center;">' +
+        (p.status === 'uploading' ? '<span class="tag">Uploading</span>' : (p.status === 'failed' ? '<span class="tag">Tap X, retry</span>' : '')) +
+        '</div>' +
+        '<button class="remove" type="button" data-remove="' + p.idx + '" aria-label="Remove photo ' + p.idx + '">' +
+        '<svg viewBox="0 0 12 12"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"></path></svg></button></div>';
+    });
+    if (photos.length < MAX) {
+      html += '<div class="slot add-tile"><button class="add" type="button" data-add="">' +
+        '<span class="cam"><svg viewBox="0 0 18 18"><path d="M2.5 6.2A1.7 1.7 0 0 1 4.2 4.5h1.4l1-1.5h4.8l1 1.5h1.4a1.7 1.7 0 0 1 1.7 1.7v6.1a1.7 1.7 0 0 1-1.7 1.7H4.2a1.7 1.7 0 0 1-1.7-1.7z"></path><circle cx="9" cy="9.2" r="2.6"></circle></svg></span>' +
+        'Add photo</button></div>';
+    }
+    for (var j = photos.length + (photos.length < MAX ? 1 : 0); j < MAX; j++) {
+      html += '<div class="slot empty"><div class="ph"></div></div>';
+    }
+    slots.innerHTML = html;
+    var failedCount = photos.filter(function (p) { return p.status === 'failed'; }).length;
+    var uploadingCount = photos.filter(function (p) { return p.status === 'uploading'; }).length;
+    // Block finalize on a FAILED upload too, not just an in-flight one. Otherwise
+    // the customer advances to thank-you with a photo the server never received,
+    // and Key gets primed to price off fewer photos than the customer thinks.
+    cta.disabled = sending || photos.length === 0 || uploadingCount > 0 || failedCount > 0;
+    if (ctaInner) {
+      if (photos.length === 0) ctaInner.textContent = 'Add a panel photo first';
+      else if (uploadingCount > 0) ctaInner.textContent = 'Sending photo...';
+      else if (failedCount > 0) ctaInner.textContent = 'Fix photos to continue';
+      else ctaInner.textContent = 'See my estimate';
+    }
+    if (hintEl) {
+      if (failedCount > 0) {
+        hintEl.textContent = failedCount === 1
+          ? "1 photo didn't upload. Retry or remove it to continue."
+          : failedCount + " photos didn't upload. Retry or remove them to continue.";
+        hintEl.style.color = 'var(--red, #dc2626)';
+      } else if (uploadingCount > 0) {
+        // Explain the disabled CTA during an in-flight upload (don't leave it
+        // reading "Tap to see your estimate" while greyed out on a slow connection).
+        hintEl.textContent = 'Sending your photo. On a slow connection this can take a moment...';
+        hintEl.style.color = '';
+      } else if (photos.length === 0) {
+        hintEl.textContent = 'Add one photo of your panel to see your estimate.';
+        hintEl.style.color = '';
+      } else {
+        hintEl.textContent = 'Up to 3 photos. Tap to see your estimate.';
+        hintEl.style.color = '';
+      }
+    }
+  }
+
+  slots.addEventListener('click', function (e) {
+    if (sending) return;
+    if (e.target.closest('[data-add]')) { file.click(); return; }
+    var rem = e.target.closest('[data-remove]');
+    if (rem) {
+      var idx = parseInt(rem.getAttribute('data-remove'), 10);
+      photos = photos.filter(function (p) { return p.idx !== idx; });
+      render();
+    }
+  });
+
+  /* a non-blocking note in the existing hint line (cleared on the next render) */
+  function photoNote(msg) { if (hintEl) { hintEl.textContent = msg; hintEl.style.color = 'var(--red, #dc2626)'; } }
+
+  file.addEventListener('change', function () {
+    var f = file.files && file.files[0];
+    file.value = '';
+    if (!f) return;
+    /* friendly guards so a bad pick never silently vanishes (the old .catch ignored it).
+       Only reject an explicitly non-image type (empty type, e.g. iOS HEIC, falls through
+       to the decoder). The size guard catches an absurd file before a slow resize. */
+    if (f.type && f.type.indexOf('image/') !== 0) { photoNote("That file isn't a photo. Please pick a picture of your panel."); return; }
+    if (f.size > 40 * 1024 * 1024) { photoNote('That photo is unusually large. Try a fresh photo of your panel instead.'); return; }
+    var idx = freeIdx();
+    if (!idx) return;
+    WALK.resizeImage(f, 1600).then(function (dataUrl) {
+      var entry = { idx: idx, dataUrl: dataUrl, status: 'uploading' };
+      photos.push(entry);
+      photos.sort(function (a, b) { return a.idx - b.idx; });
+      render();
+      WALK.photo(t, dataUrl, idx).then(function () {
+        entry.status = 'done';
+        WALK.ph('walk_v2_photo_uploaded', { idx: idx });
+        render();
+      }).catch(function () {
+        entry.status = 'failed';
+        WALK.ph('walk_v2_photo_upload_failed', { idx: idx });
+        render();
+      });
+    }).catch(function () { photoNote("That photo wouldn't open. Try another, or take a fresh one of your panel."); WALK.ph('walk_v2_photo_unreadable', {}); });
+  });
+
+  cta.addEventListener('click', function () {
+    if (cta.disabled || sending) return;
+    // Defense-in-depth: re-read photo states at click time so a photo that
+    // flipped to failed/uploading between enable and click can never advance.
+    if (photos.length === 0 || photos.some(function (p) { return p.status === 'uploading' || p.status === 'failed'; })) {
+      render();
+      return;
+    }
+    sending = true;
+    cta.classList.add('sending');
+    ctaArrow.style.display = 'none';
+    ctaInner.textContent = 'Your estimate';
+    WALK.ph('walk_v2_photos_finalized', { count: photos.length });
+    WALK.go('thankyou.html', t);
+  });
+
+  var backBtn = main.querySelector('[data-back]');
+  if (backBtn) backBtn.addEventListener('click', function () { WALK.ph('walk_v2_back_tap', { from: 'photos' }); WALK.back('distance.html', t); });
+
+  /* never dead-end: a customer who can't photograph the panel now advances to the estimate.
+     Their spot is saved (the pre_read is in Key's Price Desk); the reminder routes them back
+     here for the photo. We do NOT block on sending state, this is the always-available escape. */
+  var deferBtn = main.querySelector('[data-defer]');
+  if (deferBtn) deferBtn.addEventListener('click', function () {
+    if (sending) return;
+    WALK.ph('walk_v2_photo_deferred', { had_photos: photos.length });
+    WALK.go('thankyou.html', t);
+  });
+
+  render();
+
+  /* scroll reveal (comp behavior, unchanged) */
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var rvEls = main.querySelectorAll('.rv');
+  if (reduce || !('IntersectionObserver' in window)) {
+    rvEls.forEach(function (el) { el.classList.add('in'); });
+  } else {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+      });
+    }, { threshold: 0.12 });
+    rvEls.forEach(function (el) { io.observe(el); });
+  }
+
+})();
+</script>
+</body>
+</html>

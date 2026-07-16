@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+<title>Backup Power Pro · Quote Walk · Your Outlet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'" />
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"></noscript>
+<style>
+  :root {
+    --navy: #0b1f3b;
+    --navy-mid: #1a3a5c;
+    --gold: #ffba00;
+    --gold-hover: #ffc519;
+    --gold-ink: #8a5a00;
+    --gold-tint: #fff7e0;
+    --bg: #eef1f6;
+    --page: #fafbfc;
+    --card: #ffffff;
+    --sunken: #f4f6fa;
+    --edge: rgba(11, 31, 59, 0.10);
+    --edge-soft: rgba(11, 31, 59, 0.07);
+    --text: #16243a;
+    --muted: #4d5a6e;
+    --faint: #5d6b7e;
+
+    --shadow-sm: 0 2px 6px rgba(11,31,59,0.06), 0 1px 2px rgba(11,31,59,0.04);
+    --shadow-md: 0 10px 28px rgba(11,31,59,0.10), 0 2px 8px rgba(11,31,59,0.05);
+    --shadow-lift: 0 18px 44px rgba(11,31,59,0.14), 0 4px 12px rgba(11,31,59,0.06);
+    --shadow-gold: 0 6px 24px rgba(255,186,0,0.30);
+
+    --r-md: 14px;
+    --r-lg: 20px;
+    --r-pill: 100px;
+
+    --head: 'Outfit', sans-serif;
+    --body: 'Inter', system-ui, -apple-system, sans-serif;
+
+    --dur: 220ms;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html, body {
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  button {
+    font-family: inherit;
+    border: 0;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button:focus-visible, a:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+  }
+  svg { fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+
+  .stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 48px;
+    padding: 28px 14px 96px;
+  }
+
+  /* ================= page frame ================= */
+  .page {
+    width: 390px;
+    max-width: 100%;
+    background: var(--page);
+    border-radius: 24px;
+    box-shadow: var(--shadow-md), inset 0 0 0 1px var(--edge-soft);
+    overflow: hidden;
+    container-type: inline-size;
+    container-name: page;
+  }
+  @media (min-width: 1140px) {
+    .page { width: 1080px; }
+  }
+  .page * { text-wrap: pretty; }
+
+  /* ================= scroll reveal ================= */
+  .rv {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 560ms var(--ease), transform 560ms var(--ease);
+    transition-delay: var(--rvd, 0ms);
+  }
+  .rv.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .rv { opacity: 1; transform: none; transition: none; }
+  }
+
+  /* ================= 1. site header ================= */
+  .site-head {
+    height: 56px;
+    background: var(--navy);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+  }
+  .lockup {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 8px 0;
+    box-sizing: border-box;
+  }
+
+  /* ================= body grid ================= */
+  .body-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 22px;
+    padding: 28px 20px 8px;
+  }
+  .col-main { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+
+  @container page (min-width: 760px) {
+    .site-head { padding: 0 48px; }
+    .body-grid {
+      grid-template-columns: 1fr;
+      max-width: 620px;
+      margin: 0 auto;
+      gap: 22px;
+      padding: 40px 24px 12px;
+    }
+    .ask h2 { font-size: 36px; }
+    .foot { padding-left: 48px; padding-right: 48px; }
+  }
+
+  /* ================= 2. ask ================= */
+  .ask .kicker {
+    font-family: var(--head);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold-ink);
+    margin: 0 0 10px;
+  }
+  .ask h2 {
+    font-family: var(--head);
+    font-weight: 800;
+    font-size: 28px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--navy);
+    margin: 0 0 8px;
+  }
+  .ask .helper {
+    font-size: 16px;
+    line-height: 1.55;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  /* ============ guide reference (the teaching happened in the text) ============ */
+  .guide { text-align: center; }
+  .guide-label {
+    font-family: var(--head);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin: 0 0 10px;
+  }
+  .guide img {
+    width: 100%;
+    max-width: 248px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-sm), inset 0 0 0 1px var(--edge-soft);
+  }
+
+  /* ================= 4. outlet picker (reused from the landing form) ================= */
+  .pick-title {
+    font-family: var(--head);
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--navy);
+    margin: 4px 0 0;
+  }
+  .outlet-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .outlet-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 18px 12px 16px;
+    min-height: 44px;
+    background: var(--page);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-sm), inset 0 0 0 1.5px var(--edge);
+    color: var(--navy-mid);
+    transition: box-shadow var(--dur) var(--ease), background var(--dur) var(--ease), color var(--dur) var(--ease), transform var(--dur) var(--ease);
+  }
+  .outlet-card:active { transform: scale(0.98); }
+  .outlet-card .face { width: 96px; height: 96px; }
+  .outlet-card .ol {
+    font-family: var(--head);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--navy);
+  }
+  .outlet-card .os { font-size: 14px; color: var(--faint); margin-top: -6px; }
+  .outlet-card[aria-pressed="true"] {
+    background: #fff8ec;
+    box-shadow: var(--shadow-md), inset 0 0 0 2.5px var(--gold);
+  }
+
+  /* ================= 5. echo line (save ack) ================= */
+  .echo {
+    display: none;
+    align-items: center;
+    gap: 9px;
+    font-family: var(--head);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--gold-ink);
+  }
+  .echo.show { display: flex; animation: rise 360ms var(--ease) both; }
+  @media (prefers-reduced-motion: reduce) { .echo.show { animation: none; } }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .echo .ring {
+    width: 22px;
+    height: 22px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: var(--gold);
+    color: var(--navy);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-gold);
+  }
+  .echo .ring svg { width: 11px; height: 11px; stroke-width: 3; }
+
+  /* ================= 6. quiet note (not near it now) ================= */
+  .note {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px 16px;
+    background: var(--sunken);
+    border-radius: var(--r-md);
+    box-shadow: inset 0 0 0 1px var(--edge-soft);
+    font-size: 14.5px;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+  .note svg { width: 18px; height: 18px; stroke-width: 1.9; color: var(--gold-ink); flex: 0 0 auto; margin-top: 1px; }
+  .note strong { font-family: var(--head); font-weight: 600; color: var(--navy); }
+
+  /* ================= 7. footer ================= */
+  .foot {
+    margin-top: 26px;
+    padding: 20px 20px 28px;
+    border-top: 1px solid var(--edge-soft);
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--faint);
+    text-align: center;
+  }
+  .foot strong { font-family: var(--head); font-weight: 600; color: var(--muted); }
+
+  /* Fresh Air mobile (2026-07-13 design audit): drop the phone-frame gutters.
+     Comp staging used .stack padding + rounded .page; on a real phone that
+     wastes width and looks like a mock. Edge-to-edge under 760px; desktop card stays. */
+  @media (max-width: 759px) {
+    html, body { background: var(--page); }
+    .stack { padding: 0 0 calc(28px + env(safe-area-inset-bottom, 0px)); gap: 0; }
+    .page {
+      width: 100%;
+      max-width: 100%;
+      border-radius: 0;
+      box-shadow: none;
+    }
+    .state-label { display: none; }
+  }
+</style>
+<script>!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+" (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);posthog.init('phc_qoA51lePZqXYtPJYkrIpdA4U8iMDJ79L1kje7r4pD4O',{api_host:'https://us.i.posthog.com',property_denylist:['$current_url','$initial_current_url','$referrer','$initial_referrer'],sanitize_properties:function(p){for(var k in p){var v=p[k];if(typeof v==='string'&&v.indexOf('http')===0&&v.indexOf('?')>-1){try{var u=new URL(v);p[k]=u.origin+u.pathname;}catch(e){p[k]=v.split('?')[0];}}}return p;},person_profiles:'identified_only',capture_pageview:true,capture_pageleave:true,enable_heatmaps:true,capture_dead_clicks:true})</script>
+</head>
+<body>
+<div class="stack" id="stack">
+
+  <!-- ============ MAIN PAGE (mobile, interactive) ============ -->
+  <main class="page" id="mainPage" data-screen-label="Quote walk: which outlet (interactive, mobile)">
+
+    <!-- 1. site header -->
+    <header class="site-head">
+      <a class="lockup" href="https://backuppowerpro.com" aria-label="Backup Power Pro" style="text-decoration:none;">
+        <img src="/assets/images/logo-white-v2.png" alt="Backup Power Pro" style="height:28px;display:block;width:auto;" />
+      </a>
+    </header>
+
+    <div class="body-grid">
+      <div class="col-main">
+
+        <!-- ask (selection-led; the guide already came by text) -->
+        <section class="ask rv" style="--rvd: 0ms;">
+          <p class="kicker">Last quick thing</p>
+          <h2>Which outlet does your generator have?</h2>
+          <p class="helper">Tap the one that matches your generator. Not sure which? The picture guide is just below.</p>
+        </section>
+
+        <!-- picker: the selection comes first -->
+        <section class="outlet-grid rv" style="--rvd: 90ms;" data-pick="">
+          <button class="outlet-card" type="button" data-amp="30" aria-pressed="false">
+            <span class="face"><img src="/img/30amp-outlet-navy.png" alt="30 amp generator outlet" style="width:96px;height:96px;object-fit:contain;display:block;" /></span>
+            <span class="ol">30 Amp</span>
+            <span class="os">Round twist-lock plug</span>
+          </button>
+          <button class="outlet-card" type="button" data-amp="50" aria-pressed="false">
+            <span class="face"><img src="/img/50amp-outlet-navy.png" alt="50 amp generator outlet" style="width:96px;height:96px;object-fit:contain;display:block;" /></span>
+            <span class="ol">50 Amp</span>
+            <span class="os">Four straight prongs</span>
+          </button>
+        </section>
+
+        <!-- echo line (save ack) -->
+        <div class="echo" data-echo="" aria-live="polite">
+          <span class="ring"><svg viewBox="0 0 14 14"><path d="M2.5 7.5l3 3 6-7"></path></svg></span>
+          <span data-echo-text="">Got it.</span>
+        </div>
+
+        <!-- guide reference (smaller; the teaching happened in the text) -->
+        <section class="guide rv" style="--rvd: 150ms;">
+          <p class="guide-label">Your outlet guide</p>
+          <img src="/img/outlet-guide.jpg" alt="Generator outlet guide: 30 amp and 50 amp outlets work for a home hookup, the two 120 volt outlets do not." />
+        </section>
+
+        <!-- quiet note: not in front of the generator now -->
+        <section class="note rv" style="--rvd: 210ms;">
+          <svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7.5"></circle><path d="M10 6.5v4l2.5 1.5"></path></svg>
+          <span><strong>Not in front of your generator?</strong> No problem. Your spot is saved, come back anytime and pick up right here.</span>
+        </section>
+      </div>
+    </div>
+
+    <!-- 6. footer -->
+    <footer class="foot">
+      <strong>Key Goodson, Master Electrician, SC Lic #2942</strong><br />
+      Serving Greenville, Spartanburg, and Pickens counties<br />
+      Questions? Text me at (864) 863-7800
+    </footer>
+  </main>
+
+</div>
+
+<script src="/walk-v2/walk.js"></script>
+<script>
+
+(function () {
+  var t = WALK.requireToken(); if (!t) return;
+  WALK.ph('walk_v2_screen_view', { screen: 'outlet' });
+
+  var main = document.getElementById('mainPage');
+  var echo = main.querySelector('[data-echo]');
+  var echoText = main.querySelector('[data-echo-text]');
+  var settleTimer = null, navigated = false;
+
+  function paint(amp, ack) {
+    main.querySelectorAll('[data-amp]').forEach(function (c) {
+      c.setAttribute('aria-pressed', c.getAttribute('data-amp') === amp ? 'true' : 'false');
+    });
+    if (ack) {
+      echoText.textContent = 'Got it, ' + amp + ' amp.';
+      echo.classList.remove('show'); void echo.offsetWidth; echo.classList.add('show');
+    }
+  }
+
+  /* welcome back: if they already have an amp on file (e.g. they returned via the
+     evening text after picking), preselect it. Best-effort; a transient read
+     failure must never strip the token and bounce a mid-walk customer. */
+  WALK.view(t).then(function (v) {
+    var a = v && v.amperage != null ? String(v.amperage) : '';
+    if (a === '30' || a === '50') paint(a, false);
+  }).catch(function () { /* the page works without the preselect */ });
+
+  main.querySelectorAll('[data-amp]').forEach(function (card) {
+    card.addEventListener('click', function () {
+      if (navigated) return;                 /* already leaving; ignore late taps */
+      var amp = card.getAttribute('data-amp');
+      paint(amp, true);
+      WALK.ph('walk_v2_confirm_tap', { field: 'outlet_amp', value: amp });
+      /* Fresh Air: keep 280ms mis-tap settle; no "Saving…" waiting theater. */
+      if (settleTimer) { clearTimeout(settleTimer); settleTimer = null; }
+      settleTimer = setTimeout(function () {
+        WALK.confirm(t, { outlet_amp: amp })
+          .then(function () { navigated = true; WALK.go('location.html', t); })
+          .catch(function () { settleTimer = null; paint(amp, true); /* restore the ack; let them tap again, never strand */ });
+      }, 280);
+    });
+  });
+
+  /* scroll reveal (comp behavior, unchanged) */
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var rvEls = main.querySelectorAll('.rv');
+  if (reduce || !('IntersectionObserver' in window)) {
+    rvEls.forEach(function (el) { el.classList.add('in'); });
+  } else {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+      });
+    }, { threshold: 0.12 });
+    rvEls.forEach(function (el) { io.observe(el); });
+  }
+
+})();
+</script>
+</body>
+</html>
