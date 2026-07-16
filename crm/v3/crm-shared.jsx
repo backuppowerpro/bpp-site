@@ -711,7 +711,7 @@ function SegmentedControl({ value, onChange, options, ariaLabel }) {
 // public browser use; not a secret and not a CLAUDE.md "AIza" violation.
 // Audits that grep for AIza will re-flag this, leave the comment.
 const SV_KEY = 'AIzaSyB0xWm71ZDzS7ei5-vFx15rNP_lR1ZKbJs';
-const MAPBOX_TOKEN = 'pk.eyJ1Ijoia2V5ZWxlY3RyaWN1cHN0YXRlIiwiYSI6ImNtbWsyYzlybzFpbWwycW9pc2R2eW1wZ3UifQ.Y2nGIeYV6l57CMbf3sqbqw';
+const MAPBOX_TOKEN = 'pk.eyJ1Ijoia2V5ZWxlY3RyaWN1cHN0YXRlIiwiYSI6ImNtcm8zZ3NkeTFodmgyeG9hY284Z3F4YXcifQ.3mLKvFGpDEdkjEMQNVQhmg';
 
 // Satellite fallback: geocode via Mapbox (not Nominatim, avoids the shared
 // rate-limit queue and bad cache entries) then fetch mapbox/satellite-v9.
