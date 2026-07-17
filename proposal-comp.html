@@ -999,17 +999,22 @@ function bindData(row){
       // computes a bearing from the pano to the best rooftop coordinate we hold
       // (the walk geocode, or Google Geocoding once enabled) and we pass it as
       // an explicit heading. Any failure falls back to today's default aim.
+      // No sample-house flash while we fetch (Key 2026-07-17: "this test
+      // image of a house appears" - a stranger's home under 'PREPARED FOR
+      // <name>' breaks the your-home trust frame). Navy + gradient + the
+      // name hold the frame until the real photo is ready.
+      sv.style.setProperty('--sv-img','none');
       (async function(){
-        var aim='&fov=80';
+        var aim='&fov=80&pitch=5';
         try{
           var tok=new URLSearchParams(window.location.search).get('token');
           if(tok){
             var ar=await fetch(SUPABASE_URL+'/functions/v1/streetview-hero?t='+encodeURIComponent(tok),{headers:{'Authorization':'Bearer '+SUPABASE_KEY}});
             var a=await ar.json();
-            if(a&&a.ok&&typeof a.heading==='number') aim='&heading='+a.heading+'&fov='+(a.fov||70);
+            if(a&&a.ok&&typeof a.heading==='number') aim='&heading='+a.heading+'&fov='+(a.fov||70)+'&pitch='+(typeof a.pitch==='number'?a.pitch:0);
           }
         }catch(_){/* default aim */}
-        var url='https://maps.googleapis.com/maps/api/streetview?size=640x430&scale=2&location='+encodeURIComponent(addr)+aim+'&pitch=5&source=outdoor&key=AIzaSyB0xWm71ZDzS7ei5-vFx15rNP_lR1ZKbJs';
+        var url='https://maps.googleapis.com/maps/api/streetview?size=640x430&scale=2&location='+encodeURIComponent(addr)+aim+'&source=outdoor&key=AIzaSyB0xWm71ZDzS7ei5-vFx15rNP_lR1ZKbJs';
         var img=new Image();
         img.onload=function(){ sv.style.setProperty('--sv-img',"url('"+url+"')"); };
         img.src=url;

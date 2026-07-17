@@ -615,19 +615,21 @@ async function renderPropertyBanner() {
     // Camera aiming (Key 2026-07-17, "my house was out of view"): aim at the
     // best rooftop coordinate we hold via streetview-hero (walk geocode, or
     // Google Geocoding once enabled). Any failure keeps Google's default aim.
-    let aim = '&fov=80';
+    let aim = '&fov=80&pitch=5';
     try {
       const tok = new URLSearchParams(window.location.search).get('token');
       if (tok) {
         const ar = await fetch(`${SUPABASE_URL}/functions/v1/streetview-hero?t=${encodeURIComponent(tok)}`, { headers: { Authorization: `Bearer ${SUPABASE_KEY}` } });
         const a = await ar.json();
-        if (a && a.ok && typeof a.heading === 'number') aim = `&heading=${a.heading}&fov=${a.fov || 70}`;
+        // Aimed shots also go pitch 0 (level): the old +5 tilt rendered
+        // below-grade houses as trees + sky.
+        if (a && a.ok && typeof a.heading === 'number') aim = `&heading=${a.heading}&fov=${a.fov || 70}&pitch=${typeof a.pitch === 'number' ? a.pitch : 0}`;
       }
     } catch (_) { /* default aim */ }
     const img = document.createElement('img');
     img.alt = 'Your home';
     img.id = 'banner-photo';
-    img.src = `https://maps.googleapis.com/maps/api/streetview?size=640x480&scale=2&location=${encodeURIComponent(addr)}${aim}&pitch=5&source=outdoor&key=${_SV_KEY}`;
+    img.src = `https://maps.googleapis.com/maps/api/streetview?size=640x480&scale=2&location=${encodeURIComponent(addr)}${aim}&source=outdoor&key=${_SV_KEY}`;
     const titleCase = s => (s||'').replace(/\w\S*/g, t => t.charAt(0).toUpperCase()+t.substr(1).toLowerCase());
     const displayName = titleCase(P.contact_name || '');
     const gradHtml = `<div class="property-banner-grad"></div>`;
