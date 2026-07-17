@@ -1000,6 +1000,9 @@ const _draftGenInFlight = new Set();
 // Read-only via the operator policy; returns null when none exists, so
 // callers render nothing for pre-Flow-C contacts.
 async function fetchPreRead(contactId) {
+  // TEST_MODE serves the synthetic fixture for this contact (the detail page's
+  // walk verdict + quote-desk read); production falls through to the real query.
+  if (TEST_MODE) return (window.CRM && window.CRM.__testPreReads && window.CRM.__testPreReads[contactId]) || null;
   if (!window.CRM?.__db || !contactId) return null;
   try {
     var q = await window.CRM.__db
@@ -1012,6 +1015,34 @@ async function fetchPreRead(contactId) {
     if (q.error) return null;
     return q.data || null;
   } catch (_) { return null; }
+}
+
+// Bulk funnel-state read for the native MVP contact list (walkVerdict in
+// ionic-data.js). Returns a plain object keyed by contact_id -> the latest
+// pre-read's walk-progress fields, so the list can render each lead's walk
+// verdict and filter finished/unfinished without an N+1 per-row fetch. Only
+// the native Ionic list calls this; the bespoke CRM boot path is untouched.
+// Read-only via the operator policy; any failure yields {} (rows just show no
+// walk verdict). Latest-per-contact wins via the created_at desc order.
+async function fetchPreReadsBulk() {
+  // TEST_MODE serves synthetic fixtures (the real per-contact query is stubbed
+  // to [] by __makeStubDb); production always falls through to the real query.
+  if (TEST_MODE) return (window.CRM && window.CRM.__testPreReads) || {};
+  if (!window.CRM?.__db) return {};
+  try {
+    var q = await window.CRM.__db
+      .from('property_pre_reads')
+      .select('contact_id, confirmed_panel_room, confirmed_generator_spot, customer_run_ft_estimate, distance_band, photo_received_at, gift_requested_at, completion_notified_at, created_at')
+      .order('created_at', { ascending: false })
+      .limit(1000);
+    if (q.error || !q.data) return {};
+    var byContact = {};
+    for (var i = 0; i < q.data.length; i++) {
+      var r = q.data[i];
+      if (r && r.contact_id && !(r.contact_id in byContact)) byContact[r.contact_id] = r;
+    }
+    return byContact;
+  } catch (_) { return {}; }
 }
 
 // ── Quote Desk (lead → firm quote speed, 2026-07-13) ───────────────────
@@ -2267,6 +2298,7 @@ window.CRM = {
   readDeskClearQueue,
   isQuoteDeskReady,
   fetchPreRead,
+  fetchPreReadsBulk,
   now: new Date(),
   loaded: false,
   authed: false,
@@ -2322,7 +2354,7 @@ function __loadTestFixtures() {
     { id:'t-eric',   name:'Eric Lutz',      phone:'+18645550101', email:'eric@example.test',  address:'107 Arlen Ave Simpsonville SC 29681', stage:'install', amperage:'50', assigned_installer:'You',     do_not_contact:false, archived:false, channel:'meta',      created_at: ago(60*24*9), pinned:true },
     { id:'t-dana',   name:'Dana Whitfield', phone:'+18645550102', email:'dana@example.test',  address:'412 Oakmont Dr Greenville SC 29615',  stage:'booked',  amperage:'30', assigned_installer:'Eric T.', do_not_contact:false, archived:false, channel:'direct',    created_at: ago(60*24*5) },
     { id:'t-marcus', name:'Marcus Reyes',   phone:'+18645550103', email:'',                   address:'88 Cedar Ln Greer SC 29651',          stage:'quoted',  amperage:'',   assigned_installer:'',         do_not_contact:false, archived:false, channel:'get-quote', created_at: ago(60*24*2) },
-    { id:'t-priya',  name:'Priya Shah',     phone:'+18645550104', email:'priya@example.test', address:'',                                    stage:'new',     amperage:'',   assigned_installer:'',         do_not_contact:false, archived:false, channel:'neighbor',  created_at: ago(60*6) },
+    { id:'t-priya',  name:'Priya Shah',     phone:'+18645550104', email:'priya@example.test', address:'',                                    stage:'new',     amperage:'',   assigned_installer:'',         do_not_contact:false, archived:false, channel:'neighbor',  created_at: ago(60*6), notes:'__review_asked: 2026-07-10\nCalled twice, no answer. Wants to compare against a whole-home unit before deciding. Follow up after the next storm.' },
     // Ionic S1 (critic fix): Hank is the DEDICATED verify_permit fixture, so
     // Glenn keeps his purpose-built single-submitted-permit story (the
     // Permits-lens chip-count-1 invariant, CRM-TAP-OPT-EXECUTION-PLAN).
@@ -2334,6 +2366,21 @@ function __loadTestFixtures() {
     { id:'t-wanda',  name:'Wanda Ellis',    phone:'+18645550106', email:'wanda@example.test', address:'21 Birchwood Ct Taylors SC 29687',    stage:'booked',  amperage:'30', assigned_installer:'',         do_not_contact:false, archived:true,  channel:'direct',    created_at: ago(60*24*30) },
     { id:'t-carl',   name:'Carl Rhodes',    phone:'+18645550107', email:'carl@example.test',  address:'14 Pineview Rd Duncan SC 29334',      stage:'quoted',  amperage:'',   assigned_installer:'',         do_not_contact:true,  archived:false, channel:'meta',      created_at: ago(60*24*12) },
   ];
+  // Synthetic property_pre_reads (TEST_MODE only) so the walk-verdict badges +
+  // the Active-lens walk filter are visually exercisable without real walk
+  // data. One per verdict-ladder rung; the other contacts have NO pre-read so
+  // their rows show no badge (non-walk leads). fetchPreReadsBulk returns this
+  // map under TEST_MODE (the real per-contact query is stubbed to []).
+  CRM.__testPreReads = {
+    // stage 5 completed: room + distance + photo + the server completion stamp
+    't-marcus': { contact_id:'t-marcus', confirmed_panel_room:'Garage, right of the door', confirmed_generator_spot:null, customer_run_ft_estimate:null, distance_band:'25_50', photo_received_at: ago(60*24*2), gift_requested_at: ago(60*24*2), completion_notified_at: ago(60*24*2) },
+    // stage 4 stopped at the photo step: room + distance, no photo, did not finish
+    't-priya':  { contact_id:'t-priya', confirmed_panel_room:'Basement, north wall', confirmed_generator_spot:null, customer_run_ft_estimate:null, distance_band:'under_25', photo_received_at:null, gift_requested_at:null, completion_notified_at:null },
+    // stage 3 stopped at the distance step: room only
+    't-glenn':  { contact_id:'t-glenn', confirmed_panel_room:'Exterior east wall', confirmed_generator_spot:null, customer_run_ft_estimate:null, distance_band:null, photo_received_at:null, gift_requested_at:null, completion_notified_at:null },
+    // stage 1 only started (landing): a row exists, nothing answered past the form
+    't-hank':   { contact_id:'t-hank', confirmed_panel_room:null, confirmed_generator_spot:null, customer_run_ft_estimate:null, distance_band:null, photo_received_at:null, gift_requested_at:null, completion_notified_at:null },
+  };
   CRM.events = [
     { id:'t-ev1', contact_id:'t-eric',   kind:'install',    status:'scheduled', start_at: iso(0,11),    end_at: iso(0,14), title:null, notes:'200A panel, garage right wall.', assigned_installer:null, installer_notified_at:null, installer_confirmed_at:null },
     { id:'t-ev2', contact_id:'t-dana',   kind:'install',    status:'scheduled', start_at: iso(2,9),     end_at: iso(2,12), title:'Panel swap + inlet', notes:null, assigned_installer:'Eric T.', installer_notified_at: ago(60*20), installer_confirmed_at:null },
