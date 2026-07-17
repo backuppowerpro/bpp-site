@@ -1007,7 +1007,7 @@ async function fetchPreRead(contactId) {
   try {
     var q = await window.CRM.__db
       .from('property_pre_reads')
-      .select('token, confidence, subdivision, predicted_panel_room, clone_contact_id, confirmed_panel_room, confirmed_generator_spot, customer_run_ft_estimate, distance_band, photo_received_at, photo_read, save_later_requested_at, first_viewed_at, view_count, range_low_cents, range_high_cents')
+      .select('token, confidence, subdivision, predicted_panel_room, clone_contact_id, confirmed_panel_room, confirmed_generator_spot, customer_run_ft_estimate, distance_band, photo_received_at, photo_read, save_later_requested_at, first_viewed_at, view_count, range_low_cents, range_high_cents, gift_requested_at, thankyou_at, completion_notified_at')
       .eq('contact_id', contactId)
       .order('created_at', { ascending: false })
       .limit(1)
@@ -1032,7 +1032,7 @@ async function fetchPreReadsBulk() {
   try {
     var q = await window.CRM.__db
       .from('property_pre_reads')
-      .select('contact_id, confirmed_panel_room, confirmed_generator_spot, customer_run_ft_estimate, distance_band, photo_received_at, gift_requested_at, completion_notified_at, created_at')
+      .select('contact_id, confirmed_panel_room, confirmed_generator_spot, customer_run_ft_estimate, distance_band, photo_received_at, gift_requested_at, thankyou_at, completion_notified_at, created_at')
       .order('created_at', { ascending: false })
       .limit(1000);
     if (q.error || !q.data) return {};

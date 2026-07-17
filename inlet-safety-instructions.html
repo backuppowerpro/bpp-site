@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- Fixed-width print document (8.5in pages): width=816 makes phones zoom
+     the whole page to fit instead of crushing the toolbar + panning
+     (Key-reported squish, 2026-07-17). Pinch-zoom still works. -->
+<meta name="viewport" content="width=816">
 <title>Generator Inlet, Operating Instructions & Safety Notice</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -47,19 +50,34 @@ body {
   padding: var(--P);
 }
 
+/* Toolbars: full-bleed past the body padding, and never squish (the gold
+   button wrapped to four lines on phones, Key-reported 2026-07-17). */
+.back-bar { flex-wrap: wrap; }
+.back-bar:first-of-type { margin: -24px -24px 24px; }
+.back-bar:last-of-type { margin: 24px -24px -24px; }
+.back-bar button { white-space: nowrap; flex-shrink: 0; }
+.back-bar span { flex: 1 1 auto; min-width: 0; }
+
 @media print {
-  .back-bar, .back-bar + * { display: none !important; }
+  /* Hide ONLY the toolbars. This rule used to be `.back-bar, .back-bar + *`,
+     and the top toolbar's next element sibling is PAGE 1, so printing
+     silently dropped the entire first page (Key-reported 2026-07-17). */
+  .back-bar { display: none !important; }
   body { background: white; padding: 0; }
   .page {
     margin: 0;
     box-shadow: none;
-    page-break-after: always;
     page-break-inside: avoid;
     height: 11in !important;
     min-height: 0 !important;
     overflow: hidden;
   }
-  .page:last-child { page-break-after: auto; }
+  /* Break BEFORE pages 2+ instead of AFTER every page: break-after on an
+     exactly-11in page forces a blank sheet at each boundary, and the old
+     `.page:last-child` opt-out never matched (the bottom toolbar + script
+     follow page 3), which added a trailing blank too. Net effect was
+     "4 pages, 2 blank". This yields exactly one sheet per .page. */
+  .page + .page { page-break-before: always; }
   @page { size: letter portrait; margin: 0; }
 }
 
