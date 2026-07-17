@@ -545,6 +545,10 @@ var SUPABASE_KEY='sb_publishable_4tYd9eFAYCTjnoKl1hbBBg_yyO9-vMB';
 // Single source of truth for the deposit fraction. The server
 // (proposal-deposit-checkout) charges round(signed_total*deposit_rate); we
 // display the SAME math so what the customer sees equals what Stripe charges.
+// Bound from P.deposit_rate at load (see "P=row" below), NOT hardcoded: the
+// old fixed 0.20 only matched because every -comp proposal happens to be 20%
+// today; any non-20% -comp proposal would have shown 20% while Stripe charged
+// the stored rate (audit S3, 2026-07-17). 0.20 is only the pre-load default.
 var DEPOSIT_RATE=0.20;
 var MANDATE_VERSION='mandate-v1-2026-06-08';
 
@@ -1191,6 +1195,10 @@ function bootProposal(row){
         return;
       }
       P=row; P.token=row.token||token;
+      // Deposit fraction = the SAME value the server charges on
+      // (proposal-deposit-checkout: deposit_rate ?? 0.20), so the displayed
+      // deposit always equals the Stripe charge (audit S3, 2026-07-17).
+      DEPOSIT_RATE=Number(row.deposit_rate!=null?row.deposit_rate:0.20)||0.20;
       // SCOPE BINDING (2026-07-02, Key): SCOPE was hardcoded all-true, so every
       // proposal showed "Extended wire run" even at the 5ft STANDARD minimum.
       // 5ft is the included baseline, never an "extra": the wire-run line (and
