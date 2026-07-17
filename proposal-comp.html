@@ -147,6 +147,19 @@ html:not(.js) .boot-spin{display:none}
 .js .card.in .cmp-row:nth-child(6) .cmp-ok{transition-delay:.24s}
 .js .card.in .cmp-row:nth-child(7) .cmp-ok{transition-delay:.30s}
 @media (prefers-reduced-motion:reduce){.js .hero,.js .card,.js .card .tl-bar,.js .card .cmp-ok{opacity:1!important;transform:none!important;transition:none!important}}
+/* PRINT / Save-as-PDF (audit S4, 2026-07-17): a customer saving their proposal
+   got a near-blank PDF, the scroll-reveal cards stay opacity:0 with no scroll,
+   and the fixed sticky CTA overprinted every page. Force ALL reveal-gated
+   content visible, drop the on-screen-only chrome (sticky CTA, boot spinner,
+   modals), and let cards break across pages. Everything animated elsewhere is
+   covered by the same all-visible reset the reduced-motion rule uses. */
+@media print{
+  .js .hero,.js .card,.js .card *{opacity:1!important;transform:none!important;transition:none!important}
+  .sticky,.boot-spin,.modal-overlay{display:none!important}
+  .page{padding-bottom:0!important}
+  .card{break-inside:avoid;page-break-inside:avoid}
+  body,.booting .page{visibility:visible!important}
+}
 /* element-specific accents: headshot pop, typewriter title, stars fill, deposit pop */
 .js .card .note .av{transform:scale(.85);opacity:0;transition:transform .55s cubic-bezier(.22,.61,.36,1) .05s,opacity .5s ease .05s}
 .js .card.in .note .av{transform:scale(1);opacity:1}
