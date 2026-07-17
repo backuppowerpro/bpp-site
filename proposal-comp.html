@@ -45,13 +45,18 @@ html:not(.js) .boot-spin{display:none}
 /* House stays clearly visible up top (gradient is fully clear through ~35%), then fades to SOLID
    navy by 82% so the bright driveway/foreground is covered before the navy hero body, no seam.
    position 40% keeps the house body (not the sky) framed. */
-.streetview{position:relative;height:215px;background-color:var(--navy);
-  background-image:
-    linear-gradient(to bottom,rgba(11,31,59,.10) 0%,rgba(11,31,59,0) 35%,rgba(11,31,59,.42) 62%,#0b1f3b 82%,#0b1f3b 100%),
-    url('assets/images/sample-home.jpg');
-  background-size:cover,cover;background-position:center,center 40%;background-repeat:no-repeat,no-repeat;
-  overflow:hidden}
-.sv-addr{position:absolute;left:18px;bottom:12px;right:18px}
+.streetview{position:relative;height:215px;background-color:var(--navy);overflow:hidden;
+  --sv-img:url('assets/images/sample-home.jpg')}
+/* Photo on its own layer so the professional-polish filter (Key 2026-07-17,
+   "brighter, more professional") brightens ONLY the photo, never the navy
+   gradient above it (filtering both lightened the navy and left a seam
+   against the hero body). ::before = photo, ::after = gradient, labels z:2. */
+.streetview::before{content:'';position:absolute;inset:0;background-image:var(--sv-img);
+  background-size:cover;background-position:center 40%;background-repeat:no-repeat;
+  filter:saturate(1.14) brightness(1.08) contrast(1.03)}
+.streetview::after{content:'';position:absolute;inset:0;
+  background:linear-gradient(to bottom,rgba(11,31,59,.10) 0%,rgba(11,31,59,0) 35%,rgba(11,31,59,.42) 62%,#0b1f3b 82%,#0b1f3b 100%)}
+.sv-addr{position:absolute;left:18px;bottom:12px;right:18px;z-index:2}
 .sv-addr .lbl{font-family:var(--font-display);font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.7);margin-bottom:2px}
 .sv-name{font-family:var(--font-display);font-size:29px;font-weight:900;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.6);line-height:1.05;letter-spacing:-.01em}
 .sv-addr-line{font-family:var(--font-body);font-size:12px;font-weight:600;color:rgba(255,255,255,.82);text-shadow:0 1px 6px rgba(0,0,0,.55);margin-top:4px}
@@ -987,10 +992,28 @@ function bindData(row){
       // gray "no imagery" tile. But that endpoint sends no CORS headers (browser fetch
       // fails with "TypeError: Failed to fetch", verified 2026-06-13), so the check must
       // run server-side. Tracked in the Claude Design hero brief (item B) + a server proxy.
-      var url='https://maps.googleapis.com/maps/api/streetview?size=640x430&scale=2&location='+encodeURIComponent(addr)+'&fov=80&pitch=5&source=outdoor&key=AIzaSyB0xWm71ZDzS7ei5-vFx15rNP_lR1ZKbJs';
-      var img=new Image();
-      img.onload=function(){ sv.style.backgroundImage="linear-gradient(to bottom,rgba(11,31,59,.10) 0%,rgba(11,31,59,0) 35%,rgba(11,31,59,.42) 62%,#0b1f3b 82%,#0b1f3b 100%),url('"+url+"')"; };
-      img.src=url;
+      //
+      // Camera aiming (Key 2026-07-17, "my house was out of view"): with only
+      // location=<address>, Google aims at its geocode of the address, which on
+      // street-interpolated geocodes points past the house. streetview-hero
+      // computes a bearing from the pano to the best rooftop coordinate we hold
+      // (the walk geocode, or Google Geocoding once enabled) and we pass it as
+      // an explicit heading. Any failure falls back to today's default aim.
+      (async function(){
+        var aim='&fov=80';
+        try{
+          var tok=new URLSearchParams(window.location.search).get('token');
+          if(tok){
+            var ar=await fetch(SUPABASE_URL+'/functions/v1/streetview-hero?t='+encodeURIComponent(tok),{headers:{'Authorization':'Bearer '+SUPABASE_KEY}});
+            var a=await ar.json();
+            if(a&&a.ok&&typeof a.heading==='number') aim='&heading='+a.heading+'&fov='+(a.fov||70);
+          }
+        }catch(_){/* default aim */}
+        var url='https://maps.googleapis.com/maps/api/streetview?size=640x430&scale=2&location='+encodeURIComponent(addr)+aim+'&pitch=5&source=outdoor&key=AIzaSyB0xWm71ZDzS7ei5-vFx15rNP_lR1ZKbJs';
+        var img=new Image();
+        img.onload=function(){ sv.style.setProperty('--sv-img',"url('"+url+"')"); };
+        img.src=url;
+      })();
     }
   }
 }

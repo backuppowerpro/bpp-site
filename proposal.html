@@ -38,7 +38,10 @@ html,body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:va
 /* Inside hero-card, restore bleed design (overrides standalone rules above) */
 .hero-card #property-banner-wrap .property-banner{margin:-28px -28px 0;width:calc(100% + 56px);border-radius:16px 16px 0 0}
 .hero-card #property-banner-wrap{margin-bottom:0}
-.property-banner img{width:100%;height:auto;display:block;filter:saturate(1.5) contrast(1.08) brightness(0.95)}
+/* Professional-polish filter (Key 2026-07-17): bright, not oversaturated.
+   Matches proposal-comp's treatment; the old saturate(1.5)+brightness(.95)
+   read dark and heavy. */
+.property-banner img{width:100%;height:auto;display:block;filter:saturate(1.14) contrast(1.03) brightness(1.08)}
 .property-banner-grad{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(11,31,59,.5) 0%,transparent 30%,rgba(11,31,59,.35) 60%,#0b1f3b 100%);pointer-events:none}
 .property-banner-for-tag{position:absolute;top:18px;left:18px;background:rgba(255,255,255,.18);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:30px;padding:10px 22px;pointer-events:none}
 .property-banner-for-text{font-family:'Outfit',sans-serif;font-size:18px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.3)}
@@ -609,10 +612,22 @@ async function renderPropertyBanner() {
     const r = await fetch(`https://maps.googleapis.com/maps/api/streetview/metadata?location=${encodeURIComponent(addr)}&key=${_SV_KEY}`);
     const d = await r.json();
     if (d.status !== 'OK') return; // no coverage, skip entirely, show nothing
+    // Camera aiming (Key 2026-07-17, "my house was out of view"): aim at the
+    // best rooftop coordinate we hold via streetview-hero (walk geocode, or
+    // Google Geocoding once enabled). Any failure keeps Google's default aim.
+    let aim = '&fov=80';
+    try {
+      const tok = new URLSearchParams(window.location.search).get('token');
+      if (tok) {
+        const ar = await fetch(`${SUPABASE_URL}/functions/v1/streetview-hero?t=${encodeURIComponent(tok)}`, { headers: { Authorization: `Bearer ${SUPABASE_KEY}` } });
+        const a = await ar.json();
+        if (a && a.ok && typeof a.heading === 'number') aim = `&heading=${a.heading}&fov=${a.fov || 70}`;
+      }
+    } catch (_) { /* default aim */ }
     const img = document.createElement('img');
     img.alt = 'Your home';
     img.id = 'banner-photo';
-    img.src = `https://maps.googleapis.com/maps/api/streetview?size=640x480&scale=2&location=${encodeURIComponent(addr)}&fov=80&pitch=5&source=outdoor&key=${_SV_KEY}`;
+    img.src = `https://maps.googleapis.com/maps/api/streetview?size=640x480&scale=2&location=${encodeURIComponent(addr)}${aim}&pitch=5&source=outdoor&key=${_SV_KEY}`;
     const titleCase = s => (s||'').replace(/\w\S*/g, t => t.charAt(0).toUpperCase()+t.substr(1).toLowerCase());
     const displayName = titleCase(P.contact_name || '');
     const gradHtml = `<div class="property-banner-grad"></div>`;
