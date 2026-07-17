@@ -418,12 +418,16 @@ html:not(.js) .boot-spin{display:none}
 
     <div class="sign-divider"></div>
 
-    <div class="ack" id="ack" role="checkbox" aria-checked="false" tabindex="0" onclick="toggleAck()" onkeydown="if(event.key===' '||event.key==='Enter'){event.preventDefault();toggleAck()}">
+    <!-- Lead-in FIRST, then both boxes as one tight group (Key 2026-07-17:
+         the "these two boxes" line sat after box 1 with the money chip
+         wedged between, reading scattered). The money line stays directly
+         above the charge box it explains. -->
+    <div class="tl-note" style="margin:0 0 10px">These two boxes keep us both protected. Standard for every install.</div>
+
+    <div class="ack" id="ack" style="margin-bottom:10px" role="checkbox" aria-checked="false" tabindex="0" onclick="toggleAck()" onkeydown="if(event.key===' '||event.key==='Enter'){event.preventDefault();toggleAck()}">
       <div class="ack-box"><svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,6 5,9 10,3"/></svg></div>
       <div class="ack-txt">I've read and understood the <a href="/inlet-safety-instructions.html" target="_blank" rel="noopener" onclick="event.stopPropagation();openSafety(event);return false">Generator Safety Instructions</a> for a portable generator inlet install.</div>
     </div>
-
-    <div class="tl-note" style="margin:12px 0 0">These two boxes keep us both protected. Standard for every install.</div>
 
     <!-- Card-on-file authorization (required). Amount line + variant text bound from server numbers in JS. -->
     <div class="charge-amount-line" id="chargeAmountLine"></div>
