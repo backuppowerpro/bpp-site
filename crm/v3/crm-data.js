@@ -2373,9 +2373,9 @@ function __loadTestFixtures() {
   // map under TEST_MODE (the real per-contact query is stubbed to []).
   CRM.__testPreReads = {
     // stage 5 completed: room + distance + photo + the server completion stamp
-    't-marcus': { contact_id:'t-marcus', confirmed_panel_room:'Garage, right of the door', confirmed_generator_spot:null, customer_run_ft_estimate:null, distance_band:'25_50', photo_received_at: ago(60*24*2), gift_requested_at: ago(60*24*2), completion_notified_at: ago(60*24*2) },
+    't-marcus': { contact_id:'t-marcus', confirmed_panel_room:'Garage, right of the door', confirmed_generator_spot:null, customer_run_ft_estimate:null, distance_band:'20_40', photo_received_at: ago(60*24*2), gift_requested_at: ago(60*24*2), completion_notified_at: ago(60*24*2) },
     // stage 4 stopped at the photo step: room + distance, no photo, did not finish
-    't-priya':  { contact_id:'t-priya', confirmed_panel_room:'Basement, north wall', confirmed_generator_spot:null, customer_run_ft_estimate:null, distance_band:'under_25', photo_received_at:null, gift_requested_at:null, completion_notified_at:null },
+    't-priya':  { contact_id:'t-priya', confirmed_panel_room:'Basement, north wall', confirmed_generator_spot:null, customer_run_ft_estimate:null, distance_band:'10_20', photo_received_at:null, gift_requested_at:null, completion_notified_at:null },
     // stage 3 stopped at the distance step: room only
     't-glenn':  { contact_id:'t-glenn', confirmed_panel_room:'Exterior east wall', confirmed_generator_spot:null, customer_run_ft_estimate:null, distance_band:null, photo_received_at:null, gift_requested_at:null, completion_notified_at:null },
     // stage 1 only started (landing): a row exists, nothing answered past the form
