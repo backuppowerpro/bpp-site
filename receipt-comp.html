@@ -108,7 +108,7 @@
                   <img src="assets/images/logo-white-v2.png" width="150" alt="Backup Power Pro" style="display:block;border:0;height:auto;width:150px;max-width:150px;">
                 </td>
                 <td align="right" valign="middle">
-                  <span class="display" style="font-family:'Outfit',Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:.03em;color:#9be7c4;background:#16352b;border-radius:20px;padding:6px 12px;white-space:nowrap;">&#10003; Paid in full</span>
+                  <span class="display" id="paid-pill" style="font-family:'Outfit',Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:.03em;color:#9be7c4;background:#16352b;border-radius:20px;padding:6px 12px;white-space:nowrap;">&#10003; Paid in full</span>
                 </td>
               </tr>
             </table>
@@ -123,7 +123,7 @@
               <tr><td width="64" height="64" align="center" valign="middle" bgcolor="#f0fdf6" class="dm-okbg" style="width:64px;height:64px;border-radius:50%;color:#067a52;font-family:Arial,sans-serif;font-size:30px;font-weight:bold;line-height:64px;text-align:center;">&#10003;</td></tr>
             </table>
             <h1 class="display h1 dm-ink" id="hero-title" style="margin:0 0 8px;font-family:'Outfit',Arial,sans-serif;font-size:28px;line-height:1.16;font-weight:800;color:#0b1f3b;letter-spacing:-.01em;">You're all set. Paid in full.</h1>
-            <p class="body-font dm-ink2" style="margin:0 0 4px;font-family:'Inter',Arial,sans-serif;font-size:15px;line-height:1.55;color:#4a5568;max-width:32em;">
+            <p class="body-font dm-ink2" id="hero-sub" style="margin:0 0 4px;font-family:'Inter',Arial,sans-serif;font-size:15px;line-height:1.55;color:#4a5568;max-width:32em;">
               Your generator inlet install is done and now paid in full. Nothing else is owed. I handle the permit and the county inspection from here, so there is nothing left on your plate.
             </p>
           </td>
@@ -464,6 +464,30 @@ function renderReceipt(){
     var preParts=['Payment of '+fmt(cashPaid)+' received'];
     if(paid) preParts.push('on '+ (function(){ try{ return new Date(INV.paid_at).toLocaleDateString('en-US',{month:'long',day:'numeric'}); }catch(e){ return ''; } })());
     pre.textContent = preParts.join(' ')+'. Generator inlet install, done and paid in full. Nothing else is owed.';
+  }
+
+  // ── REFUND OVERRIDES (S6): applied last so they win over the paid copy.
+  // The charge.refunded webhook records payments.refunded_amount while the
+  // invoice stays status=paid, so the payments array is the refund truth. A
+  // refunded customer must never see "you're all set" celebration copy.
+  var refunded=(Array.isArray(PAYMENTS)?PAYMENTS:[]).reduce(function(s,p){ return s + (Number(p.refunded_amount)||0); }, 0);
+  refunded=Math.round(refunded*100)/100;
+  var isRefund = refunded > 0 && refunded >= cashPaid - 0.005;
+  var isPartialRefund = refunded > 0 && !isRefund;
+  var netPaid = Math.max(0, Math.round((cashPaid - refunded)*100)/100);
+  if(isRefund){
+    document.title='Refund issued, your receipt | Backup Power Pro';
+    if(hero) hero.textContent = firstName ? (firstName+', your refund has been issued.') : 'Your refund has been issued.';
+    var pill=document.getElementById('paid-pill');
+    if(pill) pill.innerHTML='Refund issued';
+    if(signoff) signoff.textContent = firstName ? ('Take care, '+firstName+'. If plans change down the road, you know where to find me.') : 'Take care. If plans change down the road, you know where to find me.';
+    if(meta) meta.innerHTML = 'Refunded '+fmt(refunded)+' &middot; Depending on your bank, it can take 5 to 10 business days to appear back on your statement';
+    if(summary) summary.innerHTML = 'Your payment of '+fmt(refunded)+' was refunded in full. Questions on this refund? Text Key at <a href="sms:+18648637800" class="dm-ink" style="color:#0b1f3b;font-weight:600;text-decoration:none;">(864) 863-7800</a>.';
+    if(pre) pre.textContent = 'Refund of '+fmt(refunded)+' issued. Depending on your bank, it can take 5 to 10 business days to appear.';
+    var heroSub=document.getElementById('hero-sub');
+    if(heroSub) heroSub.textContent = 'Your payment of '+fmt(refunded)+' was refunded. Depending on your bank, it can take 5 to 10 business days to appear back on your statement. If it has not shown up by then, text Key at (864) 863-7800.';
+  } else if(isPartialRefund){
+    if(summary) summary.innerHTML = summary.innerHTML + ' Note: '+fmt(refunded)+' of this payment has been refunded, so your net paid is '+fmt(netPaid)+'.';
   }
 
   showReceipt();

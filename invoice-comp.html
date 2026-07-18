@@ -317,20 +317,34 @@ function renderPaid(){
   var _paid = (Array.isArray(PAYMENTS)?PAYMENTS:[]).filter(function(p){ return String(p.status||'').toLowerCase()==='completed'; });
   var bankDiscount = _paid.reduce(function(s,p){ return s + (Number(p.discount_amount)||0); }, 0);
   var cashPaid = _paid.length ? _paid.reduce(function(s,p){ return s + (Number(p.amount)||0); }, 0) : total;
+  // Refund honesty (S6): the charge.refunded webhook records payments.refunded_amount
+  // while the invoice stays status=paid, so the payments array is the refund truth.
+  // A refunded customer must never see celebratory paid copy + forward promises.
+  var refunded = (Array.isArray(PAYMENTS)?PAYMENTS:[]).reduce(function(s,p){ return s + (Number(p.refunded_amount)||0); }, 0);
+  refunded = Math.round(refunded*100)/100;
+  var isRefund = refunded > 0 && refunded >= cashPaid - 0.005;
+  var isPartialRefund = refunded > 0 && !isRefund;
+  var netPaid = Math.max(0, Math.round((cashPaid - refunded)*100)/100);
 
   page.innerHTML =
-    // PAID BANNER
-    '<div class="paid-banner">'+
-      '<div class="paid-check"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>'+
-      '<h2>Thank you for choosing Backup Power Pro</h2>'+
-      '<p>'+(isDeposit?'Your deposit has been received. Key will text you within 24 hours to confirm your installation date.':'Your Outage-Ready Connection System has been professionally installed, permitted, and inspected.')+'</p>'+
-    '</div>'+
+    // PAID / REFUND BANNER
+    (isRefund
+    ? '<div class="paid-banner">'+
+        '<div class="paid-check"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>'+
+        '<h2>Your refund has been issued</h2>'+
+        '<p>Your payment of '+fmt(refunded)+' was refunded. Depending on your bank, it can take 5 to 10 business days to appear back on your statement. Questions? Text Key at (864) 863-7800.</p>'+
+      '</div>'
+    : '<div class="paid-banner">'+
+        '<div class="paid-check"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>'+
+        '<h2>Thank you for choosing Backup Power Pro</h2>'+
+        '<p>'+(isDeposit?'Your deposit has been received. Key will text you within 24 hours to confirm your installation date.':'Your Outage-Ready Connection System has been professionally installed, permitted, and inspected.')+'</p>'+
+      '</div>')+
 
     // HEADER
     '<div class="card pad">'+
       '<div class="inv-top">'+
         '<div class="eyebrow" style="margin-bottom:0">Receipt</div>'+
-        '<span class="status ok">Paid</span>'+
+        (isRefund?'<span class="status">Refunded</span>':(isPartialRefund?'<span class="status ok">Paid, partial refund</span>':'<span class="status ok">Paid</span>'))+
       '</div>'+
       '<div class="inv-meta">'+
         (issued?'<span>Issued <b>'+esc(issued)+'</b></span>':'')+
@@ -349,6 +363,8 @@ function renderPaid(){
       '<h2 class="sec">Payment details</h2>'+
       '<div class="li"><div class="li-name">Amount paid</div><div class="li-amt">'+fmt(cashPaid)+'</div></div>'+
       (bankDiscount>0?'<div class="li"><div class="li-name">Bank transfer discount</div><div class="li-amt" style="font-weight:600;font-size:13px;color:#16a34a">-'+fmt(bankDiscount)+'</div></div>':'')+
+      (refunded>0?'<div class="li"><div class="li-name">Refunded</div><div class="li-amt" style="font-weight:600;font-size:13px;color:#8a5a00">-'+fmt(refunded)+'</div></div>':'')+
+      (refunded>0?'<div class="li"><div class="li-name">Net paid</div><div class="li-amt" style="font-weight:700;font-size:13px">'+fmt(netPaid)+'</div></div>':'')+
       (paid?'<div class="li"><div class="li-name">Date paid</div><div class="li-amt" style="font-weight:600;font-size:13px">'+esc(paid)+'</div></div>':'')+
       (INV.payment_method?'<div class="li"><div class="li-name">Payment method</div><div class="li-amt" style="font-weight:600;font-size:13px">'+esc(INV.payment_method)+'</div></div>':'')+
     '</div>'+
@@ -362,7 +378,7 @@ function renderPaid(){
 
     agreementHtml()+
 
-    '<div class="inv-foot">Keep this receipt for your records'+(isDeposit?'':' and your insurance company')+'.<br>Backup Power Pro by Key Electric &middot; Questions? Text Key at <b>(864) 863-7800</b></div>';
+    '<div class="inv-foot">Keep this '+(isRefund?'for your records':('receipt for your records'+(isDeposit?'':' and your insurance company')))+'.<br>Backup Power Pro by Key Electric &middot; Questions? Text Key at <b>(864) 863-7800</b></div>';
 
   revealCards();
 }

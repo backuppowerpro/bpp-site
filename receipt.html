@@ -266,6 +266,24 @@ var SUPABASE_KEY = 'sb_publishable_4tYd9eFAYCTjnoKl1hbBBg_yyO9-vMB';
 
 var INV = null; // invoice record
 var PROP = null; // linked proposal (for deposit remaining-balance honesty)
+var PAYMENTS = []; // payment rows from invoice-view (amount, refunded_amount) for refund honesty
+
+// Refund math (S6, Key 2026-07-17: a refunded payment must never render the
+// celebratory paid receipt). Stripe's charge.refunded webhook records
+// payments.refunded_amount; the invoice row itself stays status=paid, so the
+// payments array is the source of truth for refunds.
+function refundTotals(){
+  var pays = Array.isArray(PAYMENTS) ? PAYMENTS : [];
+  var refunded = pays.reduce(function(s,p){ return s + (Number(p.refunded_amount)||0); }, 0);
+  var paidSum  = pays.reduce(function(s,p){ return s + (Number(p.amount)||0); }, 0);
+  var base = paidSum > 0 ? paidSum : invoiceTotal();
+  return {
+    refunded: Math.round(refunded*100)/100,
+    paidSum: Math.round(base*100)/100,
+    full: refunded > 0 && refunded >= base - 0.005,
+    partial: refunded > 0 && refunded < base - 0.005,
+  };
+}
 
 // ── HELPERS ─────────────────────────────────────────────────────────
 function esc(s){ if(s===null||s===undefined) return ''; var d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; }
@@ -329,6 +347,7 @@ async function loadReceipt(token){
       var j=await res.json();
       data=(j && j.invoice) || null;
       PROP=(j && j.proposal) || null;
+      if(j && Array.isArray(j.payments)) PAYMENTS=j.payments;
     } else if(res.status===410){
       errorReason='This receipt link was replaced by a newer one. Please use the latest link or contact <a href="sms:+18648637800">(864) 863-7800</a>.';
     } else if(res.status===404 || res.status===400){
@@ -420,6 +439,8 @@ function downloadReceiptPDF(){
   var items=(INV.line_items||[]);
   var total=invoiceTotal();
   var isDeposit = INV.notes==='deposit';
+  var _rf=refundTotals();
+  var isRefund=_rf.full;
   var receiptNum = INV.id ? String(INV.id).slice(0,8).toUpperCase()
     : (new URLSearchParams(window.location.search).get('token')||'').slice(0,8).toUpperCase();
 
@@ -427,7 +448,7 @@ function downloadReceiptPDF(){
   doc.setFillColor(INK[0],INK[1],INK[2]); doc.rect(0,0,210,40,'F');
   doc.setTextColor(255,255,255);
   doc.setFont('helvetica','bold'); doc.setFontSize(18);
-  doc.text(isDeposit ? 'RECEIPT, DEPOSIT RECEIVED' : 'RECEIPT, PAID IN FULL',20,20);
+  doc.text(isRefund ? 'RECEIPT, REFUND ISSUED' : (isDeposit ? 'RECEIPT, DEPOSIT RECEIVED' : 'RECEIPT, PAID IN FULL'),20,20);
   doc.setFont('helvetica','normal'); doc.setFontSize(10);
   doc.text('Key Electric LLC, DBA Backup Power Pro',20,28);
   doc.text('22 Kimbell CT, Greenville SC 29617',20,33);
@@ -437,7 +458,7 @@ function downloadReceiptPDF(){
   // PAID watermark (light gray, faint)
   doc.setTextColor(180,180,180); doc.setFontSize(60); doc.setFont('helvetica','bold');
   try{ doc.setGState(new doc.GState({opacity:0.10})); }catch(e){}
-  doc.text(isDeposit ? 'DEPOSIT' : 'PAID',105,165,{align:'center',angle:35});
+  doc.text(isRefund ? 'REFUNDED' : (isDeposit ? 'DEPOSIT' : 'PAID'),105,165,{align:'center',angle:35});
   try{ doc.setGState(new doc.GState({opacity:1})); }catch(e){}
 
   // Billed to (left)
@@ -494,9 +515,11 @@ function downloadReceiptPDF(){
 
   // Honest footer (no false permit/inspection completion claim)
   doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(MUTE[0],MUTE[1],MUTE[2]);
-  var foot=doc.splitTextToSize(isDeposit
+  var foot=doc.splitTextToSize(isRefund
+    ? 'This receipt confirms your payment was refunded in full. Depending on your bank, the refund can take 5 to 10 business days to appear back on your statement. Questions? Text Key at (864) 863-7800.'
+    : (isDeposit
     ? 'This receipt confirms your deposit was received for your generator inlet install. The permit and county inspection are handled by Backup Power Pro. I will text you to set your install date, and the remaining balance is due once the work is done. Questions? Text Key at (864) 863-7800.'
-    : 'This receipt confirms payment received in full for your generator inlet install. The permit and county inspection are handled by Backup Power Pro; there is nothing for you to file. Questions? Text Key at (864) 863-7800.',170);
+    : 'This receipt confirms payment received in full for your generator inlet install. The permit and county inspection are handled by Backup Power Pro; there is nothing for you to file. Questions? Text Key at (864) 863-7800.'),170);
   doc.text(foot,20,y);
 
   doc.save('BPP-Receipt-'+(receiptNum||'paid')+'.pdf');
@@ -567,6 +590,25 @@ function renderReceipt(){
   if(signoff) signoff.textContent = isDeposit
     ? (firstName ? ('Talk soon, '+firstName+'. I will be in touch to set your install date.') : 'Talk soon. I will be in touch to set your install date.')
     : (firstName ? ('Glad your home is ready, '+firstName+'. Stay warm when the next one hits.') : 'Glad your home is ready. Stay warm when the next one hits.');
+
+  // ── REFUND OVERRIDES (S6): applied last so they win over paid/deposit copy.
+  // A refunded customer must see the truth, never "you're all set" + forward
+  // install promises that no longer apply.
+  var rf=refundTotals();
+  if(rf.full){
+    document.title='Refund issued, your receipt | Backup Power Pro';
+    if(hero) hero.textContent = firstName ? (firstName+', your refund has been issued.') : 'Your refund has been issued.';
+    if(pill) pill.innerHTML = 'Refund issued';
+    if(heroSub) heroSub.textContent = 'Your payment of '+fmt(rf.refunded)+' was refunded. Depending on your bank, it can take 5 to 10 business days to appear back on your statement. If it has not shown up by then, text Key at (864) 863-7800.';
+    if(balanceRow) balanceRow.style.display='none';
+    if(ownRow) ownRow.style.display='none';
+    if(gridRow) gridRow.style.display='none';
+    if(keepNote) keepNote.textContent = 'Save this. It is your record that your payment of '+fmt(rf.refunded)+' was refunded in full.';
+    if(signoff) signoff.textContent = firstName ? ('Take care, '+firstName+'. If plans change down the road, you know where to find me.') : 'Take care. If plans change down the road, you know where to find me.';
+  } else if(rf.partial){
+    if(pill) pill.innerHTML = '&#10003; Paid, partial refund issued';
+    if(heroSub && heroSub.textContent) heroSub.textContent = heroSub.textContent + ' Note: '+fmt(rf.refunded)+' of this payment has been refunded, so your net paid is '+fmt(Math.max(0, rf.paidSum - rf.refunded))+'.';
+  }
 
   // Billed-to block (name / address / phone / email)
   var billed=document.getElementById('billed-to');
