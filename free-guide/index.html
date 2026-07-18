@@ -62,6 +62,11 @@ h1, h2, h3, h4 { font-family: 'Outfit', sans-serif; font-weight: 700; color: var
 }
 @media screen {
   body { background: #d5d5d5; display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 24px 0; }
+  /* The letter sheets live inside <main>; without this the body's gap wraps
+     the whole block and all 9 sheets fuse into one flush column (visual
+     sweep 2026-07-18). display:contents lets the gap separate each sheet.
+     Screen-scoped so print pagination is untouched. */
+  #main { display: contents; }
   .page { box-shadow: 0 2px 20px rgba(0,0,0,0.15); border-radius: 2px; }
 }
 
@@ -253,12 +258,22 @@ body.bw .bw-toggle { background: #000; }
 @media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
 :where(a[href], button):focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 .bw-toggle{min-height:44px;min-width:44px}
+/* White ring (visual sweep 2026-07-18): the fixed navy pill can sit over the
+   navy cover sheet, where its body merged invisibly with the page. The ring
+   keeps it legible on any background it floats across. */
+.bw-toggle{box-shadow:0 0 0 1.5px rgba(255,255,255,.9), 0 2px 10px rgba(0,0,0,.25)}
+/* Wrapper for the two pills: invisible on desktop (children are fixed; a
+   block wrapper would add a phantom flex-gap row), a centered row on mobile. */
+.guide-tools{display:contents}
 
 /* ===== MOBILE (SCREEN ONLY): the .page metaphor is 8.5in print paper, which
    overflows any phone viewport. Print/@page sizing above is untouched; this
    only reflows the on-screen preview so a phone never has to scroll sideways. */
 @media screen and (max-width: 900px) {
-  body { padding: 64px 12px 24px; gap: 14px; }
+  /* Pills are static in-flow on mobile, so the 64px top padding reserved for
+     the desktop fixed position was a dead zone (visual sweep 2026-07-18). */
+  body { padding: 12px 12px 24px; gap: 14px; }
+  .guide-tools { display: flex; gap: 8px; justify-content: center; }
   .page {
     width: 100%; max-width: 8.5in;
     min-height: auto; max-height: none;
@@ -279,8 +294,10 @@ body.bw .bw-toggle { background: #000; }
 </head>
 <body>
 
-<button class="bw-toggle screen-only" style="right:128px" onclick="window.print()">Print / Save PDF</button>
-<button class="bw-toggle screen-only" onclick="document.body.classList.toggle('bw')">Toggle B&amp;W</button>
+<div class="guide-tools screen-only">
+  <button class="bw-toggle screen-only" style="right:128px" onclick="window.print()">Print / Save PDF</button>
+  <button class="bw-toggle screen-only" onclick="document.body.classList.toggle('bw')">Toggle B&amp;W</button>
+</div>
 
 <main id="main">
 <!-- ===== PAGE 1: COVER ===== -->

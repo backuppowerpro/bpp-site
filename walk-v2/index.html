@@ -333,6 +333,7 @@
   }
   .hero .help-door a:hover { border-bottom-color: var(--gold); color: var(--gold); }
   .hero .help-door-sep { color: rgba(255,255,255,.35); font-weight: 400; }
+  .hero .help-door-actions { display: inline-flex; align-items: center; gap: 6px 10px; white-space: nowrap; }
   .hero .help-door-call { font-weight: 600 !important; border-bottom-color: rgba(255,255,255,.28) !important; }
   @container page (min-width: 760px) {
     .hero {
@@ -373,7 +374,8 @@
       gap: 22px;
       padding: 36px 24px 12px;
     }
-    .foot { padding-left: 48px; padding-right: 48px; }
+    /* .page prefix (visual sweep 2026-07-18): dead-rule fix, see outlet.html */
+    .page .foot { padding-left: 48px; padding-right: 48px; }
   }
 
   /* ================= 3. Keys note card ================= */
@@ -775,7 +777,7 @@
   .hiw-eyebrow::before { content: ""; display: inline-block; width: 22px; height: 2px; background: var(--gold); vertical-align: middle; margin-right: 9px; border-radius: 2px; }
   .hiw-title { font-family: var(--head); font-weight: 700; font-size: 26px; line-height: 1.18; color: var(--navy); margin: 12px 0 0; letter-spacing: -0.01em; }
   .hiw-steps { margin-top: 22px; display: flex; flex-direction: column; gap: 12px; }
-  .hiw-step { display: flex; align-items: flex-start; gap: 15px; background: var(--card); border-radius: 16px; padding: 16px; box-shadow: var(--shadow-sm), inset 0 0 0 1px var(--edge-soft); }
+  .hiw-step { display: flex; align-items: flex-start; gap: 15px; background: var(--card); border-radius: var(--r-lg, 20px); padding: 16px; box-shadow: var(--shadow-sm), inset 0 0 0 1px var(--edge-soft); }
   .hiw-ic { flex: 0 0 auto; width: 48px; height: 48px; border-radius: 50%; background: #eef2f8; display: flex; align-items: center; justify-content: center; }
   .hiw-ic svg { width: 25px; height: 25px; stroke: var(--navy); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; fill: none; }
   .hiw-body { padding-top: 2px; }
@@ -862,9 +864,16 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
         </a>
         <p class="help-door" data-help-door>
           Prefer to talk?
-          <a href="sms:+18648637800" data-help-door-action="sms" data-help-door-surface="walk-hero">Text Key · (864) 863-7800</a>
-          <span class="help-door-sep" aria-hidden="true">·</span>
-          <a href="tel:+18648637800" class="help-door-call" data-help-door-action="tel" data-help-door-surface="walk-hero">Call</a>
+          <!-- One non-wrapping action unit (visual sweep 2026-07-18): at 390px
+               the bare flex children wrapped so the middle dot stranded at the
+               end of line 1 and "Call" orphaned alone on line 2. Grouped, a
+               narrow screen breaks after the label and the whole
+               "Text Key · number · Call" row moves down together. -->
+          <span class="help-door-actions">
+            <a href="sms:+18648637800" data-help-door-action="sms" data-help-door-surface="walk-hero">Text Key · (864) 863-7800</a>
+            <span class="help-door-sep" aria-hidden="true">·</span>
+            <a href="tel:+18648637800" class="help-door-call" data-help-door-action="tel" data-help-door-surface="walk-hero">Call</a>
+          </span>
         </p>
       </div>
     </section>
