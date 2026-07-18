@@ -142,7 +142,15 @@ html,body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:va
   .site-header img{filter:invert(0)}
   .paid-banner{background:#fff;color:#059669;border:2px solid #059669;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .paid-icon{background:#059669 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .hero-card{background:#f8f9fb;border:1px solid #e4e8f0}
+  /* Print swaps the hero to a light bg to save ink, so its white text must go
+     dark or the title + Bill-To name/address print white-on-white (audit S7,
+     2026-07-17: near-invisible hero on a saved/printed invoice). */
+  .hero-card{background:#f8f9fb;border:1px solid #e4e8f0;color:#0b1f3b}
+  .hero-title,.hero-meta-value{color:#0b1f3b !important}
+  .hero-sub{color:#5a6b8c !important}
+  .hero-eyebrow{color:#8a6d00 !important}
+  .hero-meta-label{color:#5a6b8c !important}
+  .hero-meta{border-top-color:#e4e8f0}
   .property-banner{display:none}
   .btn-pay,.btn-pay-card,.ach-badge{display:none !important}
   .checkout-overlay{display:none !important}
