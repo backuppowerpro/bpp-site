@@ -187,6 +187,15 @@
   /* success + invalid + loading screens */
   .fullscreen { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:40px 26px; }
   .fullscreen[hidden] { display:none; }
+  /* .primary carries flex:1 1 auto so it fills the step FOOTER (a row). Inside
+     .fullscreen, which is a flex COLUMN, that same grow made the button stretch
+     to the full remaining height (measured 527px on a 390px phone) and render
+     as a giant yellow slab. Stop the grow in column context only; the footer
+     button is untouched. */
+  .fullscreen .primary { flex:0 0 auto; width:100%; max-width:22rem; }
+  /* The .phone wrapper sets navy, but the tel:/sms: anchor inside it fell back
+     to the browser default link blue with an underline. */
+  .fullscreen .phone a { color:inherit; text-decoration:none; }
   .fullscreen .badge { width:74px; height:74px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:22px; }
   .fullscreen .badge.ok { background:var(--green-bg); border:1px solid var(--green-line); }
   .fullscreen .badge.ok svg { width:38px; height:38px; fill:none; stroke:var(--green); stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
