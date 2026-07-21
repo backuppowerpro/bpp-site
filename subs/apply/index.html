@@ -500,10 +500,13 @@
   'use strict';
 
   var FN = 'https://reowtzedjflwmlptupbk.supabase.co/functions/v1';
-  // Publishable anon key (same value used across the sub pages / CRM). The sub
-  // functions are pinned verify_jwt=false, so this key reaches them; the token in
-  // the body/query is the real auth. Sent as apikey + Authorization on every call.
-  var ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJlb3d0emVkamZsd21scHR1cGJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIyNDY3NTUsImV4cCI6MjA1NzgyMjc1NX0.eSl7Vfd2b_wJ1oGWOFhV3aVe7uS9fJ1rN8_zDYsEwveE';
+  // Publishable key (the sb_publishable_ value every other live page + the CRM
+  // use). The OLD legacy HS256 anon JWT here was disabled 2026-04-23 and now 401s
+  // at the gateway, which silently broke this onboarding page (verified 2026-07-21:
+  // sub-onboard 401s the legacy key, passes the publishable key to the token check).
+  // The sub functions are pinned verify_jwt=false; the token in the body/query is
+  // the real auth. Sent as apikey + Authorization on every call.
+  var ANON = 'sb_publishable_4tYd9eFAYCTjnoKl1hbBBg_yyO9-vMB';
 
   var params = new URLSearchParams(location.search);
   var token = params.get('token') || '';
