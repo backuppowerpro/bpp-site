@@ -1637,6 +1637,49 @@
     const useSearchDock = window.useSearchDock, SearchDock = window.SearchDock;
     const { searchOpen, closeSearch, dockVisible } = useSearchDock('bpp-sub-search', { onExit: () => setSearch('') });
 
+    // ── Recruiting applicants (Key 2026-07-21) ────────────────────────
+    // The public /subs/ form writes sub_candidates; surface the OPEN ones
+    // (applied -> screened -> test_install) right here on the Subs toggle so a
+    // posted apply link is never a dead end. Direct authenticated reads/writes
+    // (RLS sub_candidates_authenticated_all); reuses the retired bench's stage
+    // ladder. Terminal stages (active/declined/benched) drop off this list.
+    const [applicants, setApplicants] = R.useState(null);
+    const loadApplicants = R.useCallback(async () => {
+      const db = window.CRM?.__db;
+      if (!db) return;
+      const { data, error } = await db.from('sub_candidates')
+        .select('id, created_at, name, phone, email, business_name, sc_license, years_experience, service_areas, capacity_per_month, source, stage')
+        .in('stage', ['applied', 'screened', 'test_install'])
+        .order('created_at', { ascending: false });
+      if (!error) setApplicants(data || []);
+    }, []);
+    R.useEffect(() => { if (applicants == null) loadApplicants(); }, [applicants, loadApplicants]);
+
+    const CAND_NEXT = { applied: 'screened', screened: 'test_install', test_install: 'active' };
+    const CAND_LABEL = { applied: 'Mark screened', screened: 'Start test install', test_install: 'Make active sub' };
+    const STAGE_TXT = { applied: 'Applied', screened: 'Screened', test_install: 'Test install' };
+    const patchApplicant = async (cand, patch, okMsg) => {
+      const db = window.CRM?.__db;
+      if (!db) return;
+      const { error } = await db.from('sub_candidates').update({ ...patch, updated_at: new Date().toISOString() }).eq('id', cand.id);
+      if (error) { toast('Update did not save'); return; }
+      toast(okMsg);
+      loadApplicants();
+    };
+    const advanceApplicant = (cand) => {
+      const next = CAND_NEXT[cand.stage];
+      if (!next) return;
+      patchApplicant(cand, { stage: next }, next === 'active' ? `${cand.name} is active` : `${cand.name}: ${next.replace('_', ' ')}`);
+      // Graduating to a real sub: open New sub seeded with the name so the
+      // recruiting record hands off to an actual sub without re-typing.
+      if (next === 'active') { setAddingSubSeed(cand.name || ''); setAddingSub(true); }
+    };
+    const declineApplicant = (cand) => patchApplicant(cand, { stage: 'declined' }, `${cand.name} moved to past candidates`);
+    const copyApplyLink = async () => {
+      try { await navigator.clipboard.writeText('https://backuppowerpro.com/subs/'); toast('Apply link copied. Post it to candidates.'); }
+      catch { toast('Apply link: backuppowerpro.com/subs/'); }
+    };
+
     const loadRoster = R.useCallback(async () => {
       setLoading(true);
       const { data: res, error } = await callFn('sub-admin-list', { view: 'roster' });
@@ -1669,6 +1712,53 @@
           // roster rides to the top; dissolve it under the status bar.
           WebkitMaskImage: searchOpen ? 'linear-gradient(to bottom, transparent 0, #000 calc(env(safe-area-inset-top, 0px) + 18px))' : 'none',
           maskImage: searchOpen ? 'linear-gradient(to bottom, transparent 0, #000 calc(env(safe-area-inset-top, 0px) + 18px))' : 'none' }}>
+          {/* Copy the ONE public apply link to post to candidates, + the new
+              applicants that link produced. Both hidden while searching so the
+              roster rides to the top. (Key 2026-07-21) */}
+          {!searchOpen && (
+            <div style={{ padding: '4px 22px 0' }}>
+              <button onClick={copyApplyLink} style={{
+                width: '100%', minHeight: 48, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9,
+                border: `1.5px solid ${NAVY}`, background: '#fff', color: NAVY, borderRadius: 12,
+                fontFamily: 'inherit', fontSize: 14, fontWeight: 700, cursor: 'pointer',
+              }}>
+                <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' }}><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></svg>
+                Copy application link
+              </button>
+              <div style={{ fontSize: 12, color: FAINT, textAlign: 'center', marginTop: 6 }}>backuppowerpro.com/subs/ , the one link you post to candidates</div>
+            </div>
+          )}
+
+          {!searchOpen && applicants && applicants.length > 0 && (
+            <div style={{ padding: '16px 22px 4px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: FAINT, letterSpacing: '0.06em', textTransform: 'uppercase' }}>New applicants</span>
+                <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 700, color: NAVY, background: '#eaecf1', borderRadius: 100, padding: '2px 10px' }}>{applicants.length}</span>
+              </div>
+              <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {applicants.map((a) => (
+                  <div key={a.id} style={{ background: '#fff', borderRadius: 14, boxShadow: 'inset 0 0 0 1px rgba(27,43,75,0.10)', padding: 14 }}>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: 15, fontWeight: 700, color: NAVY }}>{a.name || 'Applicant'}</span>
+                      {a.business_name ? <span style={{ fontSize: 13, color: MUTED }}>{a.business_name}</span> : null}
+                      <span style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color: AMBER, background: AMBER_BG, border: `1px solid ${AMBER_LINE}`, borderRadius: 100, padding: '2px 9px' }}>{STAGE_TXT[a.stage] || a.stage}</span>
+                    </div>
+                    <div style={{ fontSize: 13, color: MUTED, marginTop: 5, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                      {a.phone ? <a href={`tel:${a.phone}`} style={{ color: NAVY, textDecoration: 'none', fontWeight: 600 }}>{a.phone}</a> : null}
+                      {a.service_areas ? <span>{a.service_areas}</span> : null}
+                      {a.sc_license ? <span>Lic {a.sc_license}</span> : null}
+                      {a.capacity_per_month ? <span>wants {a.capacity_per_month}/mo</span> : null}
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                      <button onClick={() => advanceApplicant(a)} style={{ flex: '1 1 auto', minHeight: 44, border: 0, background: NAVY, color: '#fff', borderRadius: 10, fontFamily: 'inherit', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>{CAND_LABEL[a.stage] || 'Advance'}</button>
+                      <button onClick={() => declineApplicant(a)} style={{ flex: '0 0 auto', minHeight: 44, padding: '0 14px', border: `1.5px solid ${LINE_SOFT}`, background: '#fff', color: MUTED, borderRadius: 10, fontFamily: 'inherit', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Decline</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Meta row: count + "New sub" action. Sub-uppercase caps signal
               "list context", not a duplicate title. Hidden while searching. */}
           {!searchOpen && (
