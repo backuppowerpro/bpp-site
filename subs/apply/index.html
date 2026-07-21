@@ -489,7 +489,7 @@
   <!-- INVALID LINK -->
   <div class="fullscreen" id="invalidScreen" hidden>
     <span class="badge bad"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg></span>
-    <h1>This link is not valid.</h1>
+    <h1 id="invalidTitle">This link is not valid.</h1>
     <p>Text Key and he will send you a fresh one.</p>
     <p class="phone"><a href="tel:+18648637800">(864) 863-7800</a></p>
     <a class="primary" href="sms:+18648637800" style="margin-top:18px; max-width:22rem;">Text Key now</a>
@@ -520,7 +520,15 @@
     people: document.getElementById('people'),
   };
 
-  function showInvalid() {
+  // One honest dead-stop screen for both a bad token and an EXPIRED link. The
+  // backend returns 403 {expired:true} past the 7-day window (sub-onboard /
+  // sub-doc-upload / sub-agreement all share it); the front-end used to handle
+  // only 401, so an expired link silently restarted a blank form or showed a
+  // generic retry error (quality arc 2026-07-21, finding 3). Expired swaps the
+  // heading; the "text Key for a fresh one" subtext already fits both.
+  function showInvalid(expired) {
+    var t = document.getElementById('invalidTitle');
+    if (t) t.textContent = expired ? 'This link has expired.' : 'This link is not valid.';
     els.loading.hidden = true;
     els.app.hidden = true;
     els.navbar.hidden = true;
@@ -699,6 +707,7 @@
       method: 'GET', headers: authHeaders(false),
     }).then(function (r) {
       if (r.status === 401) return { __invalid: true };
+      if (r.status === 403) return { __expired: true };
       if (!r.ok) throw new Error('read ' + r.status);
       return r.json();
     });
@@ -713,6 +722,7 @@
       method: 'POST', headers: authHeaders(true), body: JSON.stringify(body),
     }).then(function (r) {
       if (r.status === 401) { showInvalid(); return false; }
+      if (r.status === 403) { showInvalid(true); return false; }
       if (!r.ok) throw new Error('save ' + r.status);
       return r.json();
     }).then(function (j) {
@@ -853,6 +863,7 @@
         drop.classList.remove('busy');
         if (t0) t0.textContent = prev || 'Add file';
         if (res.status === 401) { showInvalid(); return; }
+        if (res.status === 403) { showInvalid(true); return; }
         if (res.status === 404 || (res.j && (res.j.code === 'NOT_FOUND' || /not found/i.test(String(res.j.message || ''))))) {
           showErr('Document upload is not available right now. Text Key at (864) 863-7800.');
           return;
@@ -1143,6 +1154,7 @@
           body: JSON.stringify({ token: token, signer_name: signer }),
         }).then(function (r) {
           return r.json().catch(function () { return {}; }).then(function (j) {
+            if (r.status === 403 || (j && j.expired)) { return { ok: false, error: 'expired' }; }
             if (r.status === 404 || (j && (j.code === 'NOT_FOUND' || /not found/i.test(String(j.message || ''))))) {
               return { ok: false, error: 'NOT_FOUND' };
             }
@@ -1168,6 +1180,7 @@
         method: 'POST', headers: authHeaders(true), body: JSON.stringify(body),
       }).then(function (r) {
         if (r.status === 401) throw new Error('invalid');
+        if (r.status === 403) throw new Error('expired');
         return r.json().catch(function () { return {}; }).then(function (j) {
           if (!r.ok || !j.ok) throw new Error(j.error || 'save failed');
           return { j: j, interim: usedInterim };
@@ -1182,6 +1195,7 @@
       }
     }).catch(function (e) {
       fwdBtn.disabled = false; fwdLabel.textContent = LABELS[6];
+      if (String(e.message) === 'expired') { showInvalid(true); return; }
       if (String(e.message) === 'invalid') { showInvalid(); return; }
       var msg = String(e && e.message || '');
       if (/work vehicle|required document|missing/i.test(msg)) {
@@ -1345,6 +1359,7 @@
   }
 
   readOnboard().then(function (state) {
+    if (state.__expired) { showInvalid(true); return; }
     if (state.__invalid) { showInvalid(); return; }
 
     prefill(state);
