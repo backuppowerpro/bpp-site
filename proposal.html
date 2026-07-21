@@ -547,8 +547,14 @@ window.addEventListener('DOMContentLoaded', async () => {
     const _bar = document.querySelector('.preview-bar');
     document.querySelector('.site-header').style.marginTop = _bar.offsetHeight + 'px';
   }
-  if (P.status === 'Cancelled') {
-    document.getElementById('main').innerHTML = '<div style="text-align:center;padding:60px 20px"><div style="font-size:48px;margin-bottom:16px">🚫</div><div style="font-family:Outfit,sans-serif;font-size:22px;font-weight:800;color:var(--navy);margin-bottom:8px">Proposal Cancelled</div><div style="font-size:14px;color:var(--text3);max-width:360px;margin:0 auto">This proposal has been cancelled. Please contact Backup Power Pro at <a href="tel:8648637800" style="color:var(--blue);font-weight:600">(864) 863-7800</a> if you have questions.</div></div>';
+  // Closed states must never render a signable quote. The exact-match 'Cancelled'
+  // check missed the lowercase 'cancelled' + 'declined' the CRM actually writes,
+  // so a killed proposal invited the customer to sign and then errored at the CTA
+  // (quality arc 2026-07-21, finding 8; mirrors proposal-comp.html's normalized
+  // check). Normalize once and gate on both, before any signable routing.
+  var _pstatus = String(P.status || '').toLowerCase();
+  if (_pstatus === 'cancelled' || _pstatus === 'declined') {
+    document.getElementById('main').innerHTML = '<div style="text-align:center;padding:60px 20px"><div style="font-size:48px;margin-bottom:16px">🚫</div><div style="font-family:Outfit,sans-serif;font-size:22px;font-weight:800;color:var(--navy);margin-bottom:8px">Proposal Closed</div><div style="font-size:14px;color:var(--text3);max-width:360px;margin:0 auto">This proposal is no longer active. Please contact Backup Power Pro at <a href="tel:8648637800" style="color:var(--blue);font-weight:600">(864) 863-7800</a> if you have questions.</div></div>';
     return;
   }
   // A signed-but-deposit-required proposal is NOT approved (the deposit is not in
