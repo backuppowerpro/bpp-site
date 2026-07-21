@@ -314,6 +314,7 @@ function showToast(msg) {
 }
 
 let INV = null; // invoice data
+let PAYMENTS = []; // payment rows from invoice-view (amount, refunded_amount) for refund honesty
 let LINKED_PROPOSAL = null; // linked proposal data (if any)
 
 // ── INIT ────────────────────────────────────────────────────
@@ -344,6 +345,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       const j = await res.json();
       data = j?.invoice || null;
       if (j?.proposal) LINKED_PROPOSAL = j.proposal;
+      if (Array.isArray(j?.payments)) PAYMENTS = j.payments;
     } else if (res.status === 410) {
       errorReason = 'This invoice was replaced by a newer one. Please use the latest link or contact (864) 863-7800.';
     } else if (res.status === 404 || res.status === 400) {
@@ -665,8 +667,48 @@ function renderInvoice() {
   `;
 }
 
+// Refund math (quality arc 2026-07-21, finding 1; mirrors receipt.html + S6).
+// Stripe's charge.refunded records payments.refunded_amount while the invoice
+// row stays status=paid, so the payments array is the source of truth. A
+// refunded legacy invoice used to render the celebratory "paid in full, thank
+// you" receipt, an honesty-floor violation. This computes the refund so the
+// paid renderer can branch to an honest refunded receipt instead.
+function invRefundTotals() {
+  const pays = Array.isArray(PAYMENTS) ? PAYMENTS : [];
+  const refunded = pays.reduce((s, p) => s + (Number(p.refunded_amount) || 0), 0);
+  const paidSum = pays.reduce((s, p) => s + (Number(p.amount) || 0), 0);
+  const base = paidSum > 0 ? paidSum : (INV.total || 0);
+  return {
+    refunded: Math.round(refunded * 100) / 100,
+    paidSum: Math.round(base * 100) / 100,
+    full: refunded > 0 && refunded >= base - 0.005,
+    partial: refunded > 0 && refunded < base - 0.005,
+  };
+}
+function fmtUsd(n) { return '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+// Honest refunded receipt for a legacy invoice, same voice as receipt.html's
+// S6 copy. Self-contained inline styles, matching the cancelled-state block's
+// pattern, so it never borrows the celebratory paid layout.
+function renderRefundedInvoice(rf) {
+  const heading = rf.full ? 'Refund issued' : 'Partial refund issued';
+  const sub = rf.full
+    ? `Your payment of ${fmtUsd(rf.refunded)} was refunded. Depending on your bank, it can take 5 to 10 business days to appear back on your statement. If it has not shown up by then, text Key at (864) 863-7800.`
+    : `${fmtUsd(rf.refunded)} of your ${fmtUsd(rf.paidSum)} payment was refunded, so your net paid is ${fmtUsd(Math.max(0, rf.paidSum - rf.refunded))}. Refunds take 5 to 10 business days to appear, depending on your bank.`;
+  document.getElementById('main').innerHTML =
+    '<div style="max-width:520px;margin:0 auto;padding:56px 20px;text-align:center;font-family:Inter,system-ui,sans-serif">' +
+      '<div style="font-family:Outfit,sans-serif;font-size:24px;font-weight:800;color:#0b1f3b;margin-bottom:12px">' + heading + '</div>' +
+      '<div style="font-size:15px;line-height:1.6;color:#4a5568;margin-bottom:20px">' + esc(sub) + '</div>' +
+      '<div style="font-size:13px;color:#4a5568">Keep this for your records. Questions? Text Key at <a href="tel:8648637800" style="color:#1d4ed8;font-weight:600">(864) 863-7800</a>.</div>' +
+    '</div>';
+}
+
 // ── RENDER PAID INVOICE ─────────────────────────────────────
 function renderPaidInvoice() {
+  // A refunded payment must never render the celebratory paid receipt (S6 /
+  // quality arc finding 1). Branch to the honest refunded view first.
+  const _rf = invRefundTotals();
+  if (_rf.full || _rf.partial) { renderRefundedInvoice(_rf); return; }
   const lineItems = INV.line_items || [];
   const total = INV.total || lineItems.reduce((s, li) => s + (li.amount || 0), 0);
   const createdDate = new Date(INV.created_at).toLocaleDateString('en-US', {
