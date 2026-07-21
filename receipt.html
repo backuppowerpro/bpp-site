@@ -652,21 +652,29 @@ function renderReceipt(){
   // Proof breakdown (line_items + total)
   renderBreakdownRows();
 
-  // Short summary line under the breakdown (keep the text-Key prompt)
+  // Short summary line under the breakdown (keep the text-Key prompt). On a
+  // refund it must not claim "paid in full" (quality arc finding 2, same
+  // incomplete-S6-override class as the focal number above).
   var summary=document.getElementById('receipt-summary');
   if(summary){
-    var head = isDeposit
-      ? 'Deposit received. '
-      : 'Generator inlet install, done and paid in full. ';
+    var head = rf.full
+      ? ('Refund of '+fmt(rf.refunded)+' issued. ')
+      : rf.partial
+        ? ('Paid, with '+fmt(rf.refunded)+' refunded. ')
+        : (isDeposit ? 'Deposit received. ' : 'Generator inlet install, done and paid in full. ');
     summary.innerHTML = head + 'Questions on this receipt? Text Key at <a href="sms:+18648637800" class="dm-ink" style="color:#0b1f3b;font-weight:600;text-decoration:none;">(864) 863-7800</a>.';
   }
 
   // Preheader (inbox-style preview text), bound to real values
   var pre=document.getElementById('preheader');
   if(pre){
-    var preParts=['Payment of '+fmt(total)+' received'];
-    if(paid) preParts.push('on '+ (function(){ try{ return new Date(INV.paid_at).toLocaleDateString('en-US',{month:'long',day:'numeric'}); }catch(e){ return ''; } })());
-    pre.textContent = preParts.join(' ')+(isDeposit ? '. Deposit received, thank you. I will text you to set your install date.' : '. Generator inlet install, done and paid in full. Nothing else is owed.');
+    if(rf.full){
+      pre.textContent = 'Your payment of '+fmt(rf.refunded)+' was refunded.';
+    } else {
+      var preParts=['Payment of '+fmt(total)+' received'];
+      if(paid) preParts.push('on '+ (function(){ try{ return new Date(INV.paid_at).toLocaleDateString('en-US',{month:'long',day:'numeric'}); }catch(e){ return ''; } })());
+      pre.textContent = preParts.join(' ')+(isDeposit ? '. Deposit received, thank you. I will text you to set your install date.' : (rf.partial ? ('. '+fmt(rf.refunded)+' of it was refunded.') : '. Generator inlet install, done and paid in full. Nothing else is owed.'));
+    }
   }
 
   showReceipt();
