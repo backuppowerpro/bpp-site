@@ -648,7 +648,6 @@
         <section class="celebrate rv" style="--rvd: 0ms;">
           <div class="big-check"><svg viewBox="0 0 30 30"><path d="M7 16l5.5 5.5L23 9.5"></path></svg></div>
           <h1 data-thanks-head="">I've got your setup.</h1>
-          <p class="sub" data-thanks-sub="">I'm reviewing it now. You'll hear from me by text.</p>
         </section>
 
         <!-- 2b. reviewing beat: Key has it (static presence, not pulse theater) -->
@@ -679,7 +678,7 @@
           <p class="pk">Your ballpark</p>
           <p class="pl" data-price-line="">Installs like yours usually land between</p>
           <p class="pn" data-price-num="" style="display:none;"></p>
-          <p class="pf" data-price-follow="" style="display:none;">That's a ballpark from what you told me, not your final number. I'm reviewing your setup now; I'll text you the firm quote myself.</p>
+          <p class="pf" data-price-follow="" style="display:none;">That's a ballpark from what you told me, not your final number.</p>
           <ul>
             <li><span class="tick"><svg viewBox="0 0 12 12"><path d="M2 6.5l2.6 2.6L10 3.5"></path></svg></span>Permits and inspection handled, start to finish</li>
             <li><span class="tick"><svg viewBox="0 0 12 12"><path d="M2 6.5l2.6 2.6L10 3.5"></path></svg></span>Generator cord included, 20 ft or longer</li>
@@ -713,15 +712,15 @@
         <section class="sent" data-sent="" aria-live="polite">
           <div class="sh">
             <span class="si"><svg viewBox="0 0 14 14"><path d="M2.5 7.5l3 3 6-7"></path></svg></span>
-            <h2>Got it. Guide comes by email shortly.</h2>
+            <h2>Got it. Your guide is on the way.</h2>
           </div>
-          <p>I'm reviewing your panel now. Firm quote comes by text from me after I look it over.</p>
+          <p>Keep an eye on your inbox, and peek in spam just in case.</p>
           <p class="ksig">Key</p>
         </section>
 
         <!-- 6. closing line -->
         <div class="closing rv" style="--rvd: 320ms;">
-          <p class="cl">I'm on it. Your firm quote comes by text from me, not a robot.</p>
+          <p class="cl">I'm on it myself, start to finish. Not a robot.</p>
           <span class="cavatar" style="background: url('/assets/images/key-headshot.jpg') center 20% / cover no-repeat;" role="img" aria-label="Key Goodson"></span>
           <span class="csig">Key Goodson</span>
           <span class="csub">Master Electrician</span>
@@ -793,8 +792,7 @@
         _ul.appendChild(_li);
       }
       if (reviewLine) reviewLine.textContent = 'Key is ready for your panel photo';
-      if (reviewSub) reviewSub.textContent = 'Text me the breaker-box photo when you can. Firm quote follows after I review it.';
-      if (celebrateSub) celebrateSub.textContent = "I've got your location and run. I'll text you, then the panel photo whenever it's easy.";
+      if (reviewSub) reviewSub.textContent = 'Text me the breaker-box photo when you can.';
     }
 
     /* Honesty gate (Key): if they answered "not sure" to any pricing question, we do NOT
@@ -813,8 +811,7 @@
       if (kick) kick.textContent = 'Your quote';
       num.style.display = 'none';
       hideFollow();
-      line.textContent = "I can't give you an honest estimate yet, because we're not sure about " + reason + ". No problem, you'll get a text from me shortly so we can nail that down, then I'll send a firm quote.";
-      if (celebrateSub) celebrateSub.textContent = "I'm on it. I'll text you so we can lock the missing pieces.";
+      line.textContent = "I can't give you an honest estimate yet, because we're not sure about " + reason + ". No problem, I'll text you shortly so we can nail that down.";
       /* the single biggest drop signal: did they land on a number or the honest
          no-number state, and which unanswered question caused it. */
       WALK.ph('walk_v2_price_shown', { state: 'unsure', has_range: false, unsure_count: unsure.length });
@@ -828,11 +825,8 @@
         '<span class="and">and</span><span class="d">$</span>' + Math.round(v.walk_range.high_cents / 100).toLocaleString('en-US');
       num.style.display = '';
       if (follow) {
-        follow.textContent = "That's a ballpark from what you told me, not your final number. I'm reviewing your setup now; I'll text you the firm quote myself.";
+        follow.textContent = "That's a ballpark from what you told me, not your final number.";
         follow.style.display = '';
-      }
-      if (celebrateSub && (v.photo_count || v.photo_received)) {
-        celebrateSub.textContent = "I'm reviewing your panel now. You'll hear from me by text, then your firm quote after I look it over.";
       }
       WALK.ph('walk_v2_price_shown', {
         state: 'range',
@@ -848,13 +842,13 @@
       if (kick) kick.textContent = 'Your quote';
       num.style.display = 'none';
       hideFollow();
-      line.textContent = "I'm reviewing your setup now. You'll get a text from me shortly, then your firm quote after I look it over.";
+      line.textContent = "I'm reviewing your setup now.";
       WALK.ph('walk_v2_price_shown', { state: 'working', has_range: false });
     }
 
     /* already asked for the gift on a revisit: show the sent state */
     if (v.gift_requested) { gift.style.display = 'none'; sent.classList.add('show'); }
-  }).catch(function () { /* a read failure must NOT bounce them off the thank-you page; keep the honest no-number state */ if (kick) kick.textContent = 'Your quote'; num.style.display = 'none'; hideFollow(); line.textContent = "I'm reviewing your setup now. You'll get a text from me shortly, then your firm quote after I look it over."; });
+  }).catch(function () { /* a read failure must NOT bounce them off the thank-you page; keep the honest no-number state */ if (kick) kick.textContent = 'Your quote'; num.style.display = 'none'; hideFollow(); line.textContent = "I'm reviewing your setup now."; });
 
   function emailValid(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test((v || '').trim()); }
   email.addEventListener('input', function () { send.disabled = !emailValid(email.value); });
