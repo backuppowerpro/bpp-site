@@ -89,6 +89,9 @@
             return '';
           }
           return {
+            id: f.id || '',
+            lng: (f.center && f.center[0]) || null,
+            lat: (f.center && f.center[1]) || null,
             description: f.place_name || '',
             city: ctxText('place'),
             state: ctxState(),

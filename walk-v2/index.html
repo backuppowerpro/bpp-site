@@ -512,6 +512,10 @@
   .addr-opt .a1 { font-weight: 600; }
   .addr-opt .a2 { color: var(--muted); font-size: 14px; }
   .addr-opt .lines { display: flex; flex-direction: column; gap: 1px; }
+  /* the "not listed" escape reads as the secondary option, not a found address:
+     muted label, hairline divider above it, distinct from the real suggestions. */
+  .addr-opt.addr-escape { border-top: 1px solid var(--line, #e5e7eb); }
+  .addr-opt.addr-escape .a1 { font-weight: 600; color: var(--muted); }
 
   /* ================= 5. part 2 ================= */
   .part2 {
@@ -1155,7 +1159,7 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
   function paintFieldOk() {
     if (nameField) nameField.classList.toggle('ok', nameIn.value.trim().length > 0);
     if (phoneField) phoneField.classList.toggle('ok', phoneValid(phoneIn.value));
-    if (addrField) addrField.classList.toggle('ok', addrIn.value.trim().length >= 6);
+    if (addrField) addrField.classList.toggle('ok', addrOk());
   }
   /* funnel step events, each at most once per visit (drop-off tracking) */
   var fired = {};
@@ -1163,23 +1167,38 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
 
   /* Address auto-suggest via the server-side Places proxy. Debounced; a pick
      fills the field. The field still works as a plain input if Google is down. */
-  var addrTimer = null, addrPicked = false, addrSel = { city: '', state: '', zip: '' }, lastAddrPreds = [], addrSvg =
-    '<svg viewBox="0 0 16 16"><path d="M8 14s4.5-4 4.5-7.5a4.5 4.5 0 0 0-9 0C3.5 10 8 14 8 14z"></path><circle cx="8" cy="6.5" r="1.6"></circle></svg>';
+  var addrTimer = null, addrPicked = false, addrSel = { city: '', state: '', zip: '' }, lastAddrPreds = [];
+  /* Soft-block (Key 2026-07-21): the Next gate requires a VALIDATED address, a real
+     picked suggestion OR the explicit "not listed" escape, not just >=6 chars, so a
+     lazy fake free-text address can no longer pass. addrValidatedValue pins the exact
+     string that was validated; editing it re-invalidates. addrUnverified marks an
+     escape pick so the lead can be flagged for review. */
+  var addrValidated = false, addrValidatedValue = '', addrUnverified = false;
+  var addrSvg = '<svg viewBox="0 0 16 16"><path d="M8 14s4.5-4 4.5-7.5a4.5 4.5 0 0 0-9 0C3.5 10 8 14 8 14z"></path><circle cx="8" cy="6.5" r="1.6"></circle></svg>';
+  var addrEditSvg = '<svg viewBox="0 0 16 16"><path d="M11 2.5l2.5 2.5L6 12.5 3 13l.5-3z"></path></svg>';
   function closeDrop() { drop.classList.remove('open'); drop.innerHTML = ''; }
   function renderDrop(preds) {
     lastAddrPreds = preds || [];
-    if (!preds.length) { closeDrop(); return; }
-    drop.innerHTML = preds.map(function (p) {
+    var q = addrIn.value.trim();
+    var html = (preds || []).map(function (p) {
       var d = String(p.description || '');
-      var i = d.indexOf(',');
-      var a1 = i > -1 ? d.slice(0, i) : d;
-      var a2 = i > -1 ? d.slice(i + 1).trim() : '';
       return '<button type="button" class="addr-opt" data-addr-pick="' + encodeURIComponent(d) + '">' +
         addrSvg + '<span class="lines"><span class="a1"></span><span class="a2"></span></span></button>';
     }).join('');
-    /* set text via textContent (never innerHTML on the address string) */
-    var opts = drop.querySelectorAll('.addr-opt');
-    preds.forEach(function (p, k) {
+    /* Deliberate escape (soft-block): a real address Mapbox does not know still gets
+       through, but only by an explicit tap, and it rides as flagged. Shown once the
+       typed address looks complete, and it is the ONLY row when Mapbox returns nothing. */
+    if (q.length >= 6) {
+      html += '<button type="button" class="addr-opt addr-escape" data-addr-escape="1">' +
+        addrEditSvg + '<span class="lines"><span class="a1">My address isn\'t listed</span>' +
+        '<span class="a2">Use what I typed</span></span></button>';
+    }
+    if (!html) { closeDrop(); return; }
+    drop.innerHTML = html;
+    /* set suggestion text via textContent (never innerHTML on the address string) */
+    var opts = drop.querySelectorAll('.addr-opt[data-addr-pick]');
+    (preds || []).forEach(function (p, k) {
+      if (!opts[k]) return;
       var d = String(p.description || ''); var i = d.indexOf(',');
       opts[k].querySelector('.a1').textContent = i > -1 ? d.slice(0, i) : d;
       opts[k].querySelector('.a2').textContent = i > -1 ? d.slice(i + 1).trim() : '';
@@ -1189,6 +1208,7 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
   function suggest() {
     if (addrPicked) { addrPicked = false; return; }
     addrSel = { city: '', state: '', zip: '' }; // editing after a pick invalidates the structured parts
+    addrValidated = false; addrUnverified = false; // and re-locks Next until a fresh pick
     var q = addrIn.value.trim();
     if (addrTimer) clearTimeout(addrTimer);
     if (q.length < 3) { closeDrop(); return; }
@@ -1197,12 +1217,31 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
     }, 220);
   }
   drop.addEventListener('click', function (e) {
+    /* explicit "my address isn't listed" escape: validate the typed text, but flag it */
+    var esc = e.target.closest('[data-addr-escape]');
+    if (esc) {
+      addrPicked = true; addrValidated = true; addrUnverified = true;
+      addrValidatedValue = addrIn.value.trim();
+      closeDrop(); refresh();
+      return;
+    }
     var b = e.target.closest('[data-addr-pick]'); if (!b) return;
     addrPicked = true;
-    addrIn.value = decodeURIComponent(b.getAttribute('data-addr-pick'));
+    var picked = decodeURIComponent(b.getAttribute('data-addr-pick'));
+    addrIn.value = picked;
+    /* copy the picked prediction's structured parts so the lead carries city/state/zip */
+    var match = null;
+    for (var mi = 0; mi < lastAddrPreds.length; mi++) {
+      if (String(lastAddrPreds[mi].description) === picked) { match = lastAddrPreds[mi]; break; }
+    }
+    if (match) addrSel = { city: match.city || '', state: match.state || '', zip: match.zip || '' };
+    addrValidated = true; addrUnverified = false; addrValidatedValue = picked;
     closeDrop(); refresh();
   });
   addrIn.addEventListener('blur', function () { setTimeout(closeDrop, 150); });
+  /* Re-open the list on focus when the address is typed but not yet validated, so
+     "Pick your address from the list" is never a dead end with no visible list. */
+  addrIn.addEventListener('focus', function () { if (!addrOk() && addrIn.value.trim().length >= 3) suggest(); });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDrop(); });
 
   function digits(v) { return (v || '').replace(/\D/g, ''); }
@@ -1218,11 +1257,11 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
     if (d.length > 3) return '(' + d.slice(0, 3) + ') ' + d.slice(3);
     return d;
   }
+  /* address is valid only when a suggestion (or the explicit escape) was picked AND
+     the field has not been edited since (Key 2026-07-21 soft-block). */
+  function addrOk() { return addrValidated && addrIn.value.trim() === addrValidatedValue; }
   function part1Done() {
-    /* address gate relaxed to >=6 (short rural addresses like "5 Oak Rd" are valid and
-       were blocked at >=10 with no error affordance); the autocomplete dropdown guides
-       entry, and the submit-time geocode backfills structured parts. */
-    return nameIn.value.trim().length > 0 && phoneValid(phoneIn.value) && addrIn.value.trim().length >= 6;
+    return nameIn.value.trim().length > 0 && phoneValid(phoneIn.value) && addrOk();
   }
   function answered() { return sel['30a'] || sel['50a'] || excl !== null; }
   /* the button says what actually happens next, never "lock in my price"
@@ -1239,7 +1278,8 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
   function missingMsg() {
     if (!nameIn.value.trim()) return 'Add your name to continue.';
     if (!phoneValid(phoneIn.value)) return 'Add your phone number to continue.';
-    if (addrIn.value.trim().length < 6) return 'Add your address to continue.';
+    if (addrIn.value.trim().length < 3) return 'Add your address to continue.';
+    if (!addrOk()) return 'Pick your address from the list so I can find your permit.';
     if (!answered()) return 'Pick your outlet below to continue.';
     return '';
   }
@@ -1414,7 +1454,7 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
 
     var payload = {
       firstName: name, lastName: '', phone: natDigits(phoneIn.value), email: '',
-      address: addrIn.value.trim(), addressStreet: '', addressCity: addrSel.city, addressCounty: '', addressState: addrSel.state || 'SC', addressZip: addrSel.zip, addressCountry: 'US',
+      address: addrIn.value.trim(), addressStreet: '', addressCity: addrSel.city, addressCounty: '', addressState: addrSel.state || 'SC', addressZip: addrSel.zip, addressCountry: 'US', addressUnverified: addrUnverified ? 'true' : '',
       leadChannel: attr.channel, utmSource: attr.source, utmMedium: attr.medium, utmCampaign: attr.campaign,
       hasCompatibleGenerator: noneSel ? 'No - needs 240V generator (future pool)' : (unsureSel ? 'Unsure - outlet check pending' : ('Yes - 240V ' + amps.join('/') + 'A confirmed')),
       outletAmps: amps,
