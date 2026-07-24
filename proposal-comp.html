@@ -659,7 +659,7 @@ function renderScopeLines(){
   var box=document.getElementById('scopeLines'); if(!box) return;
   var a=AMP[chosenAmp],items=[];
   if(SCOPE.cord.included)    items.push({img:a.cordImg,name:a.cordName,desc:'Plugs into your connection box',price:'Included',inc:true});
-  if(SCOPE.wireRun.included) items.push({img:'assets/product-images/wire-run.jpg',name:'Extended wire run',desc:(SCOPE.wireRun.ft?SCOPE.wireRun.ft+'ft run, extra length included in your quote':'For the run we discussed'),price:'Included',inc:true});
+  if(SCOPE.wireRun.included) items.push({img:'assets/product-images/wire-run.jpg',name:'Extended wire run',desc:'Extra wire length included, already in your quote',price:'Included',inc:true});
   if(SCOPE.permit.included)  items.push({img:'assets/product-images/permit-inspection.jpg',name:'Permit + county inspection',desc:'Filed and coordinated by us',price:'$125',inc:false});
   // Extra line items Key added in the quote builder. They are part of the
   // total (customAdder), so they MUST be visible: no invisible money.

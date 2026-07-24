@@ -1253,9 +1253,7 @@ function renderPricing() {
       ]
     );
     if (longRun) {
-      const lrDesc = (P.creator_version === 'v3')
-        ? 'Extra wire length included, already in your quote'
-        : `${P.run_ft || 5}ft of wire run, distance already included in your quote`;
+      const lrDesc = 'Extra wire length included, already in your quote';
       rows += priceRowIncluded('Extended Wire Run', lrDesc, null, null);
     }
     rows += priceRow(
