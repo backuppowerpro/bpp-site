@@ -1031,6 +1031,131 @@ function JobSetupCard({ contact }) {
   );
 }
 
+function qwv2OperatorText(value) {
+  if (value == null || value === '') return '';
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+  return String(value).replace(/_/g, ' ').trim();
+}
+
+function qwv2ObjectLine(value, keys) {
+  if (!value || typeof value !== 'object') return '';
+  return keys.map(key => qwv2OperatorText(value[key])).filter(Boolean).join(' · ');
+}
+
+function QuoteWalkOperatorCard({ contact, receipt, bumpData }) {
+  const projection = window.CRM?.quoteWalkV2OperatorProjection?.(receipt);
+  const display = window.CRM?.quoteWalkV2OperatorDisplay?.(projection);
+  const [claiming, setClaiming] = React.useState(false);
+  const [claimError, setClaimError] = React.useState('');
+  const claimInFlightRef = React.useRef(false);
+  if (!projection || projection.availability !== 'available') return null;
+
+  const claim = async () => {
+    if (claimInFlightRef.current || !projection.actionable || contact.do_not_contact) return;
+    claimInFlightRef.current = true;
+    setClaiming(true);
+    setClaimError('');
+    let result;
+    try {
+      result = window.CRM?.claimQuoteWalkV2Handoff
+        ? await window.CRM.claimQuoteWalkV2Handoff(contact)
+        : { ok: false, error: 'Quote Desk claim is unavailable.' };
+    } catch (error) {
+      result = { ok: false, error: error?.message || 'Quote Desk claim failed.' };
+    } finally {
+      claimInFlightRef.current = false;
+      setClaiming(false);
+    }
+    if (!result.ok) {
+      setClaimError(result.error || 'Quote Desk claim failed.');
+      return;
+    }
+    bumpData?.();
+  };
+
+  const setup = projection.setup || {};
+  const address = projection.address || {};
+  const range = projection.range || {};
+  const acceptance = projection.acceptance || {};
+  const guide = projection.guide || {};
+  const handoff = projection.handoff || {};
+  const reminder = projection.reminder || {};
+  const track = reminder.track || {};
+  const latest = reminder.latestReceipt || {};
+  const suppression = reminder.suppression || {};
+
+  return (
+    <InfoSection title="Quote Walk">
+      <InfoLineRow
+        label="Current step"
+        value={[
+          qwv2OperatorText(projection.journey.stage),
+          qwv2OperatorText(projection.journey.status),
+          qwv2OperatorText(projection.journey.currentStep),
+        ].filter(Boolean).join(' · ') || 'Quote Walk'}
+      />
+      <InfoLineRow label="Last activity" value={qwv2OperatorText(projection.journey.lastActivityAt) || 'Not recorded'} />
+      {!projection.history && <InfoLineRow label="Next action" value={qwv2OperatorText(display?.nextAction) || 'None'} />}
+      <InfoLineRow
+        label="Readiness blockers"
+        value={projection.blockers.all.length
+          ? projection.blockers.all.map(qwv2OperatorText).join(', ')
+          : 'None'}
+      />
+      <InfoLineRow
+        label="Observed connections"
+        value={setup.observedConnections.map(qwv2OperatorText).join(' + ') || 'Not recorded'}
+      />
+      <InfoLineRow label="Pricing basis" value={qwv2OperatorText(setup.pricingBasis) || 'Not available'} />
+      <InfoLineRow
+        label="Panel and distance"
+        value={[
+          qwv2OperatorText(setup.panelLocation),
+          qwv2OperatorText(setup.panelLocationStatus),
+          qwv2OperatorText(setup.distanceBand),
+        ].filter(Boolean).join(' · ') || 'Not complete'}
+      />
+      <InfoLineRow label="Setup source" value={qwv2OperatorText(setup.provenance) || 'Not recorded'} />
+      <InfoLineRow
+        label="Verified address"
+        value={qwv2ObjectLine(address, ['formatted_address', 'address', 'county', 'service_area_status', 'verification_status']) || 'Not verified'}
+      />
+      {projection.panels.map((panel, index) => (
+        <InfoLineRow
+          key={'qwv2-panel-' + (panel.id || index)}
+          label={'Panel ' + (index + 1)}
+          value={qwv2ObjectLine(panel, ['label', 'location', 'status', 'provenance']) || 'Recorded'}
+        />
+      ))}
+      {projection.media.map((media, index) => (
+        <InfoLineRow
+          key={'qwv2-media-' + (media.id || index)}
+          label={'Photo ' + (index + 1)}
+          value={qwv2ObjectLine(media, ['kind', 'panel_id', 'status', 'provenance']) || 'Recorded'}
+        />
+      ))}
+      <InfoLineRow label="Current range" value={qwv2ObjectLine(range, ['display', 'range_label', 'low', 'high', 'pricing_basis', 'status']) || 'Not generated'} />
+      <InfoLineRow label="Range acceptance" value={qwv2ObjectLine(acceptance, ['status', 'accepted_at', 'snapshot_id']) || 'Not accepted'} />
+      <InfoLineRow label="Guide" value={qwv2ObjectLine(guide, ['status', 'title', 'bound_at']) || 'Not earned'} />
+      <InfoLineRow label="Quote Desk handoff" value={qwv2ObjectLine(handoff, ['status', 'claimed_at', 'completed_at']) || 'Not ready'} />
+      <InfoLineRow label="Reminder track" value={qwv2ObjectLine(track, ['state', 'track', 'slot', 'due_at', 'next_due_at']) || 'None'} />
+      <InfoLineRow label="Reminder result" value={qwv2ObjectLine(latest, ['result', 'status', 'attempted_at', 'retry_at', 'error']) || 'None'} />
+      <InfoLineRow label="Reminder suppression" value={qwv2ObjectLine(suppression, ['state', 'reason', 'suppressed_at']) || 'None'} />
+      {projection.history && <InfoLineRow label="Quote Desk" value="Read-only history" />}
+      {!projection.history && projection.actionable && (
+        <InfoLineRow
+          label="Quote Desk"
+          value={contact.do_not_contact ? 'Blocked by do not contact' : 'Current accepted journey is ready'}
+          actions={!contact.do_not_contact ? (
+            <GoldActionBtn onClick={claim}>{claiming ? 'Claiming...' : 'Claim'}</GoldActionBtn>
+          ) : null}
+        />
+      )}
+      {claimError && <InfoLineRow label="Claim recovery" value={claimError + ' Try again when the issue is resolved.'} />}
+    </InfoSection>
+  );
+}
+
 // ── Contact Overview ──────────────────────────────────────────────
 function ContactOverview({ contact, events, permits = [], proposals = [], materials = [], invoices = [], messages = [], calls = [], bumpData, onOpenTab }) {
   const [note, setNote] = React.useState(contact.notes || '');
@@ -1239,11 +1364,19 @@ function ContactOverview({ contact, events, permits = [], proposals = [], materi
   // live proposal, promote firm-quote SMS + one-tap draft proposal into DO NEXT
   // instead of the bare "Send proposal" stage verb (which only opened the
   // empty creator). Walk showed a range; Key still sends the firm number.
+  const quoteWalkReceipt = window.CRM?.quoteWalkV2Receipts?.[String(contact.id)];
+  const quoteWalkMode = window.CRM?.quoteWalkV2ReceiptMode?.(quoteWalkReceipt) || 'unavailable';
+  const legacyQuoteReady = quoteWalkMode === 'legacy'
+    && typeof window.CRM?.isQuoteDeskReady === 'function'
+    && window.CRM.isQuoteDeskReady(contact, preRead, proposals);
+  const quoteDeskState = window.CRM?.quoteWalkV2QuoteDeskState?.(
+    quoteWalkReceipt,
+    legacyQuoteReady
+  );
   const showQuoteDesk = !!(
     nextStep && nextStep.state === 'front_half'
     && !contact.archived
-    && typeof window.CRM?.isQuoteDeskReady === 'function'
-    && window.CRM.isQuoteDeskReady(contact, preRead, proposals)
+    && quoteDeskState?.actionable
   );
   const frontHalfVerb = (!showQuoteDesk && nextStep && nextStep.state === 'front_half' && !contact.archived && typeof stageActionVerbFor === 'function')
     ? stageActionVerbFor(contact.stage) : null;
@@ -1388,6 +1521,9 @@ function ContactOverview({ contact, events, permits = [], proposals = [], materi
           </div>
           <span style={{ fontSize:13, color: moneyStatus.color, fontWeight:700, padding:'4px 0', flexShrink:0 }}>View →</span>
         </button>
+      )}
+      {quoteWalkMode === 'v2' && (
+        <QuoteWalkOperatorCard contact={contact} receipt={quoteWalkReceipt} bumpData={bumpData} />
       )}
       {/* The old "No install scheduled" pill lived here. Deleted (Key Q10
           2026-06-09): that state is exactly the Next-step card's
@@ -3862,6 +3998,88 @@ async function generateMailingInsertPDF(contact) {
 // Key can attest via a second, explicit confirm, which writes a permanent
 // permit_trail record) -> then the email preview + Key's send tap.
 let __packetBusy = false;
+const __manualEmailClientKeys = new Map();
+const __MANUAL_EMAIL_INTENT_PREFIX = 'bpp:manual-email-intent:v1:';
+function __manualEmailStableJson(value) {
+  if (value === undefined) return '"__undefined__"';
+  if (value == null || typeof value !== 'object') return JSON.stringify(value) ?? 'null';
+  if (Array.isArray(value)) return '[' + value.map(__manualEmailStableJson).join(',') + ']';
+  return '{' + Object.keys(value).sort().map(key => JSON.stringify(key) + ':' + __manualEmailStableJson(value[key])).join(',') + '}';
+}
+async function __manualEmailStorageKey(signature) {
+  try {
+    const bytes = await globalThis.crypto.subtle.digest('SHA-256', new TextEncoder().encode(signature));
+    const hash = Array.from(new Uint8Array(bytes)).map(byte => byte.toString(16).padStart(2, '0')).join('');
+    return __MANUAL_EMAIL_INTENT_PREFIX + hash;
+  } catch (_) {
+    let first = 0x811c9dc5;
+    let second = 0x9e3779b9;
+    for (let i = 0; i < signature.length; i += 1) {
+      first = Math.imul(first ^ signature.charCodeAt(i), 0x01000193);
+      second = Math.imul(second ^ signature.charCodeAt(i), 0x85ebca6b);
+    }
+    return __MANUAL_EMAIL_INTENT_PREFIX + (first >>> 0).toString(16).padStart(8, '0') + (second >>> 0).toString(16).padStart(8, '0');
+  }
+}
+async function __manualEmailIntentLocation(intent) {
+  const signature = __manualEmailStableJson(intent);
+  const storageKey = await __manualEmailStorageKey(signature);
+  return { signature, storageKey, intentKey: storageKey.slice(__MANUAL_EMAIL_INTENT_PREFIX.length) };
+}
+function __manualEmailIntentIdentity(payload) {
+  const vars = payload.variables || {};
+  return {
+    template: payload.template,
+    contact_id: payload.contact_id,
+    to_email: payload.to_email,
+    subject: payload.subject,
+    resource_id: vars.proposal_url || vars.invoice_url || vars.receipt_url
+      || vars.certificate_url || vars.owner_guide_url || vars.retry_url
+      || vars.quote_num || vars.invoice_num || vars.receipt_num || payload.subject,
+  };
+}
+function __manualEmailStoredRecord(signature, storageKey) {
+  let record = __manualEmailClientKeys.get(signature) || null;
+  if (!record) {
+    try { record = JSON.parse(globalThis.sessionStorage?.getItem(storageKey) || 'null'); } catch (_) { record = null; }
+  }
+  if (!record || !/^[A-Za-z0-9_-]{16,100}$/.test(String(record.key || '')) || !record.payload || typeof record.payload !== 'object') {
+    return null;
+  }
+  return record;
+}
+async function __manualEmailRememberedPayload(intent) {
+  const { signature, storageKey } = await __manualEmailIntentLocation(intent);
+  return __manualEmailStoredRecord(signature, storageKey)?.payload || null;
+}
+async function __manualEmailAttempt(intent, confirmedPayload) {
+  const { signature, storageKey, intentKey } = await __manualEmailIntentLocation(intent);
+  let record = __manualEmailStoredRecord(signature, storageKey);
+  if (!record) {
+    const nonce = globalThis.crypto?.randomUUID
+      ? globalThis.crypto.randomUUID().replace(/-/g, '')
+      : (Date.now().toString(36) + Math.random().toString(36).slice(2));
+    record = {
+      key: 'manual_email_' + nonce,
+      payload: JSON.parse(JSON.stringify(confirmedPayload)),
+    };
+  }
+  __manualEmailClientKeys.set(signature, record);
+  try { globalThis.sessionStorage?.setItem(storageKey, JSON.stringify(record)); } catch (_) {}
+  return { signature, storageKey, intentKey, key: record.key, payload: record.payload };
+}
+function __finishManualEmailAttempt(attempt) {
+  if (!attempt) return;
+  if (__manualEmailClientKeys.get(attempt.signature)?.key === attempt.key) {
+    __manualEmailClientKeys.delete(attempt.signature);
+  }
+  try {
+    const stored = JSON.parse(globalThis.sessionStorage?.getItem(attempt.storageKey) || 'null');
+    if (stored?.key === attempt.key) {
+      globalThis.sessionStorage.removeItem(attempt.storageKey);
+    }
+  } catch (_) {}
+}
 async function runCompletionPacket(contact) {
   if (__packetBusy) { window.showToast?.('Completion packet already in progress.'); return; }
   __packetBusy = true;
@@ -3935,13 +4153,16 @@ async function sendCompletionEmail(contact, packet) {
     owner_guide_url: guideUrl,
     permit_line: permitLine,
   };
+  const currentPayload = { template: 'completion', contact_id: contact.id, subject, variables, trigger_source: 'crm_v3_finance_action' };
+  const emailIntent = __manualEmailIntentIdentity({ ...currentPayload, to_email: contact.email });
+  const sendPayload = await __manualEmailRememberedPayload(emailIntent) || currentPayload;
 
   // #202 preview: dry-run render first so Key reviews the exact email body.
   let emailPreviewUrl = null;
   let dryRunWarning = null;
   try {
     const { data: dry } = await CRM.__invokeFn('send-email', {
-      body: { template: 'completion', contact_id: contact.id, subject, variables, trigger_source: 'crm_v3_finance_action', dry_run: true },
+      body: { ...sendPayload, dry_run: true },
     });
     if (dry?.html) emailPreviewUrl = URL.createObjectURL(new Blob([dry.html], { type: 'text/html' }));
     if (dry?.would_block) {
@@ -3961,7 +4182,7 @@ async function sendCompletionEmail(contact, packet) {
         {dryRunWarning && <div style={{ background: '#FDEEEE', border: '1px solid #F2C4C1', borderRadius: 8, padding: '8px 10px', fontSize: 12, color: '#8A241D', lineHeight: 1.4 }}>{dryRunWarning}</div>}
         <div style={{ background: '#F8F8F6', border: '1px solid #EBEBEA', borderRadius: 8, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 7 }}>
           <div style={{ display: 'flex', gap: 8 }}><span style={pvLabel}>To</span><span style={{ ...pvVal, fontWeight: 600 }}>{contact.email}</span></div>
-          <div style={{ display: 'flex', gap: 8 }}><span style={pvLabel}>Subject</span><span style={pvVal}>{subject}</span></div>
+          <div style={{ display: 'flex', gap: 8 }}><span style={pvLabel}>Subject</span><span style={pvVal}>{sendPayload.subject}</span></div>
         </div>
         {emailPreviewUrl && <a href={emailPreviewUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12.5, fontWeight: 700, color: '#1e40af', textDecoration: 'none' }}>Preview the exact email body ›</a>}
         <a href={certUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12.5, fontWeight: 700, color: '#1e40af', textDecoration: 'none' }}>Preview the certificate this email links to ›</a>
@@ -3971,8 +4192,9 @@ async function sendCompletionEmail(contact, packet) {
   });
   if (!ok) return;
 
+  const dispatchAttempt = await __manualEmailAttempt(emailIntent, sendPayload);
   const { data, error } = await CRM.__invokeFn('send-email', {
-    body: { template: 'completion', contact_id: contact.id, subject, variables, trigger_source: 'crm_v3_finance_action' },
+    body: { ...dispatchAttempt.payload, idempotency_key: dispatchAttempt.key, manual_intent_key: dispatchAttempt.intentKey },
   });
   if (error) {
     let detail = error.message || 'unknown';
@@ -3983,7 +4205,13 @@ async function sendCompletionEmail(contact, packet) {
     window.showToast?.(`Email failed: ${detail}`, { kind: 'error' });
     return;
   }
+  if (data?.ok === false) {
+    if (data.retry_same_intent !== true) __finishManualEmailAttempt(dispatchAttempt);
+    window.showToast?.(`Email failed: ${data.error || 'send_failed'}`, { kind: 'error' });
+    return;
+  }
   if (data?.skipped) {
+    __finishManualEmailAttempt(dispatchAttempt);
     const skipMsg = {
       dnc: 'Not sent, this contact is marked do not contact.',
       no_email_on_file: 'Not sent, no email address on file for this contact.',
@@ -3992,6 +4220,11 @@ async function sendCompletionEmail(contact, packet) {
     window.showToast?.(skipMsg, { kind: 'error' });
     return;
   }
+  if (data?.ok !== true || typeof data?.sent !== 'string' || !data.sent.trim()) {
+    window.showToast?.('Email status is unclear. Retry the same send or reconcile it before creating another.', { kind: 'error' });
+    return;
+  }
+  __finishManualEmailAttempt(dispatchAttempt);
   window.showToast?.(`Completion packet sent to ${contact.email}`);
   window.dispatchEvent(new CustomEvent('crm-email-logged', { detail: { contact_id: contact.id } }));
 }
@@ -6275,6 +6508,11 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
       variables.amount = fmtC(dueC);
       variables.retry_url = url || invoiceUrl(invoice) || '';
     }
+    const currentPayload = { template, contact_id, subject, variables, trigger_source: 'crm_v3_finance_action' };
+    const emailIntent = __manualEmailIntentIdentity({ ...currentPayload, to_email: contact.email });
+    const sendPayload = await __manualEmailRememberedPayload(emailIntent) || currentPayload;
+    const sendVariables = sendPayload.variables || {};
+    const sendUrl = sendVariables[`${template}_url`] || sendVariables.certificate_url || sendVariables.invoice_url || sendVariables.receipt_url || null;
     // #202 preview: show Key exactly what is going out, then send only on
     // confirm. Recipient + real subject + amount + doc number catch the
     // catastrophic mistakes (wrong email, wrong amount, wrong document); the
@@ -6287,17 +6525,17 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
     };
     const isRefundReceipt = template === 'refund-receipt';
     const isAchFailed = template === 'ach-failed';
-    const docNum = variables.invoice_num || variables.quote_num || variables.receipt_num || null;
+    const docNum = sendVariables.invoice_num || sendVariables.quote_num || sendVariables.receipt_num || null;
     const amountLabel = isRefundReceipt ? 'Refund' : isAchFailed ? 'Due' : isBalanceReceipt ? 'Balance' : 'Amount';
     // 'invoice' routes through variables.total, not a fresh total computation,
     // so the confirm modal's Amount row matches the same balance-aware value
     // the outbound email carries (variables.total is the remaining balance
     // once paid_cents > 0, the full total otherwise). The number Key confirms
     // must be the number the customer reads.
-    const amountVal = isRefundReceipt ? variables.refund_amount
-      : isAchFailed ? variables.amount
-      : isBalanceReceipt ? variables.balance_remaining
-      : template === 'invoice' ? variables.total
+    const amountVal = isRefundReceipt ? sendVariables.refund_amount
+      : isAchFailed ? sendVariables.amount
+      : isBalanceReceipt ? sendVariables.balance_remaining
+      : template === 'invoice' ? sendVariables.total
       : (total ? '$' + total.toLocaleString() : null);
     // #202 durable half: fetch the exact rendered email HTML via dry_run
     // (never sends via Resend, never logs to messages_email, read-only
@@ -6309,7 +6547,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
     let dryRunWarning = null;
     try {
       const { data: dry } = await CRM.__invokeFn('send-email', {
-        body: { template, contact_id, subject, variables, trigger_source: 'crm_v3_finance_action', dry_run: true },
+        body: { ...sendPayload, dry_run: true },
       });
       if (dry?.html) {
         emailPreviewUrl = URL.createObjectURL(new Blob([dry.html], { type: 'text/html' }));
@@ -6328,13 +6566,13 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
         {dryRunWarning && <div style={{ background:'#FDEEEE', border:'1px solid #F2C4C1', borderRadius:8, padding:'8px 10px', fontSize:12, color:'#8A241D', lineHeight:1.4 }}>{dryRunWarning}</div>}
         <div style={{ background:'#F8F8F6', border:'1px solid #EBEBEA', borderRadius:8, padding:'10px 12px', display:'flex', flexDirection:'column', gap:7 }}>
           <div style={{ display:'flex', gap:8 }}><span style={pvLabel}>To</span><span style={{ ...pvVal, fontWeight:600 }}>{contact.email}</span></div>
-          <div style={{ display:'flex', gap:8 }}><span style={pvLabel}>Subject</span><span style={pvVal}>{subject}</span></div>
+          <div style={{ display:'flex', gap:8 }}><span style={pvLabel}>Subject</span><span style={pvVal}>{sendPayload.subject}</span></div>
           {amountVal && <div style={{ display:'flex', gap:8 }}><span style={pvLabel}>{amountLabel}</span><span style={{ ...pvVal, fontFamily:"'JetBrains Mono','DM Mono',monospace" }}>{amountVal}</span></div>}
           {docNum && <div style={{ display:'flex', gap:8 }}><span style={pvLabel}>Doc #</span><span style={{ ...pvVal, fontFamily:"'JetBrains Mono','DM Mono',monospace" }}>{docNum}</span></div>}
         </div>
         {emailPreviewUrl && <a href={emailPreviewUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize:12.5, fontWeight:700, color:'#1e40af', textDecoration:'none' }}>Preview the exact email body ›</a>}
-        {url
-          ? <a href={url} target="_blank" rel="noopener noreferrer" style={{ fontSize:12.5, fontWeight:700, color:'#1e40af', textDecoration:'none' }}>Preview the page this email links to ›</a>
+        {sendUrl
+          ? <a href={sendUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize:12.5, fontWeight:700, color:'#1e40af', textDecoration:'none' }}>Preview the page this email links to ›</a>
           : <div style={{ fontSize:12, color:MUTED }}>Record only. No customer page link.</div>}
       </div>
     );
@@ -6344,13 +6582,12 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
       confirmLabel: 'Send email',
     });
     if (!ok) return;
+    const dispatchAttempt = await __manualEmailAttempt(emailIntent, sendPayload);
     const { data, error } = await CRM.__invokeFn('send-email', {
       body: {
-        template,
-        contact_id,
-        subject,
-        variables,
-        trigger_source: 'crm_v3_finance_action',
+        ...dispatchAttempt.payload,
+        idempotency_key: dispatchAttempt.key,
+        manual_intent_key: dispatchAttempt.intentKey,
       },
     });
     if (error) {
@@ -6364,7 +6601,13 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
       window.showToast?.(`Email failed: ${detail}`);
       return;
     }
+    if (data?.ok === false) {
+      if (data.retry_same_intent !== true) __finishManualEmailAttempt(dispatchAttempt);
+      window.showToast?.(`Email failed: ${data.error || 'send_failed'}`, { kind: 'error' });
+      return;
+    }
     if (data?.skipped) {
+      __finishManualEmailAttempt(dispatchAttempt);
       // Plain-language, error-tone feedback so Key clearly sees the email did
       // NOT go out (the raw enum read as jargon; audit 2026-06-22). No em-dashes.
       const skipMsg = {
@@ -6375,6 +6618,11 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
       window.showToast?.(skipMsg, { kind: 'error' });
       return;
     }
+    if (data?.ok !== true || typeof data?.sent !== 'string' || !data.sent.trim()) {
+      window.showToast?.('Email status is unclear. Retry the same send or reconcile it before creating another.', { kind: 'error' });
+      return;
+    }
+    __finishManualEmailAttempt(dispatchAttempt);
     window.showToast?.(`Email sent to ${contact.email}`);
     // #213: send-email already logged this to messages_email; tell the open
     // thread to refetch so the internal "Email sent" note appears right away.
@@ -6430,6 +6678,9 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
   // string - verified against proposal.html:403 and invoice.html:189.
   const proposalUrl = (p) => p?.token ? `https://backuppowerpro.com/proposal.html?token=${p.token}` : null;
   const invoiceUrl  = (i) => i?.token ? `https://backuppowerpro.com/invoice.html?token=${i.token}`  : null;
+  const proposalHasFirmFacts = (p) => window.CRM?.proposalHasFirmFacts
+    ? window.CRM.proposalHasFirmFacts(p)
+    : false;
 
   const propActivity = p => {
     const verbByStatus = { approved:'Approved', signed:'Signed', declined:'Declined', sent:null, viewed:null, draft:null };
@@ -6474,12 +6725,16 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
   // depositAsk: a Signed (awaiting deposit) proposal sends deposit-chase copy
   // instead of the generic update line (#114). Same link, same dedupe, the
   // promote-to-Sent block below cannot touch it (status guard excludes Signed).
-  const sendLink = async (linkUrl, depositAsk = false) => {
+  const sendLink = async (linkUrl, depositAsk = false, proposal = null) => {
     // Guard: a draft proposal or invoice that hasn't been issued a token
     // yet has linkUrl=null. Sending "null" as a URL would deliver the
     // literal word to the customer. Refuse + tell Key why.
     if (!linkUrl) {
       window.showToast?.('No link yet, save the draft first');
+      return;
+    }
+    if (proposal && !proposalHasFirmFacts(proposal)) {
+      window.showToast?.('Confirm amperage and run distance before sending this proposal');
       return;
     }
     const lockKey = `${contact.id}::${linkUrl}`;
@@ -6550,8 +6805,12 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
       setTimeout(() => sendingRef.current.delete(lockKey), 2000);
     }
   };
-  const copyLink = async (linkUrl) => {
+  const copyLink = async (linkUrl, proposal = null) => {
     if (!linkUrl) { window.showToast?.('No link yet, save the draft first'); return; }
+    if (proposal && !proposalHasFirmFacts(proposal)) {
+      window.showToast?.('Confirm amperage and run distance before copying this proposal');
+      return;
+    }
     const ok = await window.copyText(linkUrl);
     // 2026-05-26: stamp copied_at + sent_at + flip to 'Sent' status when
     // Key copies a draft proposal link, because the act of copying means
@@ -6595,7 +6854,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
     window.open(linkUrl + sep + 'preview=1', '_blank', 'noopener,noreferrer');
   };
 
-  const FinanceRow = ({ left, money, status, activity, linkUrl, onMarkPaid, onCancel, onVoid, onEdit, onDelete, onEmail, onRevive, onRefund, divided, kind = 'head', paidDate }) => {
+  const FinanceRow = ({ left, money, status, activity, linkUrl, proposal, onMarkPaid, onCancel, onVoid, onEdit, onDelete, onEmail, onRevive, onRefund, divided, kind = 'head', paidDate }) => {
     // 40px on touch (Apple HIG = 44; 40 keeps the row visually compact
     // while staying above the "frustration threshold" Material flags at
     // 48px). Cursor-driven desktop is fine at 32 - but the inline style
@@ -6630,17 +6889,17 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
     const primary = onMarkPaid
       ? { label:'Mark paid', onClick:onMarkPaid }
       : (status === 'signed' && showSend && linkUrl)
-        ? { label:'Send deposit link', onClick:() => sendLink(linkUrl, true), icon:SendIcon }
+        ? { label:'Send deposit link', onClick:() => sendLink(linkUrl, true, proposal), icon:SendIcon }
         : (showSend && linkUrl)
-          ? { label:'Send', onClick:() => sendLink(linkUrl, false), icon:SendIcon }
+          ? { label:'Send', onClick:() => sendLink(linkUrl, false, proposal), icon:SendIcon }
           : null;
     const confirmThen = (cfg, fn) => async () => { const ok = await window.confirmAction?.(cfg); if (ok) fn(); };
     const overflowItems = [
       // When Mark paid takes the primary slot (an unpaid invoice), Send got
       // displaced , keep the SMS-resend reachable here so Key can still re-text
       // an unpaid invoice's link, exactly like the old two-row layout offered.
-      (showSend && linkUrl && onMarkPaid) && { label:'Send link', onClick:() => sendLink(linkUrl, false) },
-      (showCopy && linkUrl) && { label:'Copy link', onClick:() => copyLink(linkUrl) },
+      (showSend && linkUrl && onMarkPaid) && { label:'Send link', onClick:() => sendLink(linkUrl, false, proposal) },
+      (showCopy && linkUrl) && { label:'Copy link', onClick:() => copyLink(linkUrl, proposal) },
       (showView && linkUrl) && { label:'View as customer', onClick:() => viewAsCustomer(linkUrl) },
       onEmail && { label: sendingEmail ? 'Sending…' : 'Email', onClick:onEmail, disabled: sendingEmail },
       onEdit && { label:'Edit', onClick:onEdit },
@@ -6777,6 +7036,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
             status={proposal.status}
             activity={propActivity(proposal)}
             linkUrl={proposalUrl(proposal)}
+            proposal={proposal}
             onCancel={proposal.status === 'sent' || proposal.status === 'viewed' ? () => cancelProposal(proposal) : null}
             onRevive={['declined','cancelled','expired'].includes(proposal.status) ? () => reviveProposal(proposal) : null}
             onEdit={['draft','sent','viewed'].includes(proposal.status) ? () => { setProposalModalOpen(false); setEditingProposalId(proposal.id); } : null}
@@ -6789,7 +7049,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
             // (superseding sets superseded_at and leaves status untouched),
             // so a status-array literal would let a replaced ghost draft
             // still be emailed to a customer as if it were live.
-            onEmail={(proposalUrl(proposal) && !proposal.superseded_at && !['declined','cancelled','expired'].includes(proposal.status)) ? () => emailDoc({ template: 'proposal', contact_id: contact.id, proposal }) : null}
+            onEmail={(proposalUrl(proposal) && proposalHasFirmFacts(proposal) && !proposal.superseded_at && !['declined','cancelled','expired'].includes(proposal.status)) ? () => emailDoc({ template: 'proposal', contact_id: contact.id, proposal }) : null}
           />
         )}
 
@@ -6950,11 +7210,18 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
     const methodApi = method === 'Card (offline)' ? 'Card'
       : method === 'Paid elsewhere' ? 'Other'
       : method;
+    const attemptId = `${liveInv?.id || moneyProposal.id}:${amountDollars}:${methodApi}`;
+    window.__bppPaymentAttemptKeys = window.__bppPaymentAttemptKeys || new Map();
+    const attemptKeys = window.__bppPaymentAttemptKeys;
+    const idempotencyKey = attemptKeys.get(attemptId)
+      || (crypto.randomUUID ? crypto.randomUUID() : `payment_${Date.now()}_${Math.random().toString(36).slice(2)}`);
+    attemptKeys.set(attemptId, idempotencyKey);
     try {
       const { data, error } = await CRM.__invokeFn('record-payment', {
-        body: { proposal_id: moneyProposal.id, invoice_id: liveInv?.id || undefined, amount: amountDollars, method: methodApi },
+        body: { proposal_id: moneyProposal.id, invoice_id: liveInv?.id || undefined, amount: amountDollars, method: methodApi, idempotency_key: idempotencyKey },
       });
       if (error || (data && data.ok === false)) { window.showToast?.(`Record failed: ${error?.message || data?.error || 'unknown'}`); return false; }
+      attemptKeys.delete(attemptId);
       window.showToast?.(`Recorded ${method} payment` + (moneyProposal?.status === 'signed' ? '. Still Signed until deposit Approved path runs' : ''));
       window.dispatchEvent(new CustomEvent('crm-data-changed'));
       return true;
@@ -7050,7 +7317,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
           depositAmount={Math.round(depositDueCents) / 100}
           depositOfTotal={Math.round(mpFullCents) / 100}
           depositRate={mpDepositRate}
-          onSendDepositLink={() => moneyProposal && sendLink(proposalUrl(moneyProposal), true)}
+          onSendDepositLink={() => moneyProposal && sendLink(proposalUrl(moneyProposal), true, moneyProposal)}
         />
       )}
       {/* Top create buttons. Either creates a new inline composer at the
@@ -8563,31 +8830,21 @@ function ContactMessages({ contact, thread, isDnc }) {
 
   // Shared SMS preflight used by BOTH immediate send() and scheduled onSchedule
   // so the two guards can't drift (scheduled send used to bypass both, audit
-  // 2026-06-22 Group 2/3). Returns false to BLOCK (showing its own toast /
-  // confirm), true to proceed. Covers the TCPA do-not-contact gate and a
-  // 4-plus-segment confirm (real cost + out-of-order delivery risk).
+  // 2026-06-22 Group 2/3). Returns false to block after showing a toast, true
+  // to proceed. Covers the TCPA do-not-contact gate and the
+  // provider's actual 1,600-character ceiling. Carrier segmenting is an
+  // implementation detail and should not interrupt a normal conversation.
   const smsPreflight = async (body, extraLen = 0) => {
     if (contact.do_not_contact) {
       window.showToast?.('Marked do not contact, cannot send');
       return false;
     }
-    // Count segments off the REAL outbound length: the composer text PLUS the
-    // file-link URLs send() appends per non-image attachment (audit 2026-06-22
-    // [3]). extraLen is a conservative per-file estimate so a 3-going-on-5
-    // segment file send still trips the confirm instead of silently costing
-    // more / arriving out of order. With no file attachment extraLen is 0 and
-    // the count is exact, identical to before.
+    // Count the REAL outbound length: the composer text plus the file-link URLs
+    // send() appends per non-image attachment.
     const _len = (body || '').length + (extraLen || 0);
-    const _isUni = /[^\x00-\x7F]/.test(body || '');
-    const _perSeg = _isUni ? 70 : 160, _perSegMulti = _isUni ? 67 : 153;
-    const _segs = _len === 0 ? 0 : (_len <= _perSeg ? 1 : Math.ceil(_len / _perSegMulti));
-    if (_segs >= 4) {
-      const ok = await window.confirmAction?.({
-        title: `Send a ${_segs}-segment text?`,
-        body: `This message is about ${_len} characters (${_segs} SMS segments). Long texts cost more and can arrive out of order. Send it?`,
-        confirmLabel: 'Send anyway',
-      });
-      if (!ok) return false;
+    if (_len > 1600) {
+      window.showToast?.('Text is over the 1,600-character limit');
+      return false;
     }
     return true;
   };
@@ -8612,7 +8869,7 @@ function ContactMessages({ contact, thread, isDnc }) {
     // tap can't slip two sends past the async preflight.
     sendingRef.current = true;
     setSending(true);
-    // DNC gate + 4-plus-segment confirm, shared with onSchedule. Estimate the
+    // DNC gate + provider length ceiling, shared with onSchedule. Estimate the
     // file-link length (each non-image attachment appends a ~120-char public
     // URL) so the segment confirm reflects what actually goes out (audit [3]).
     const _extraLen = atts.filter(a => a.type !== 'image').length * 120;
@@ -9241,26 +9498,6 @@ function ContactMessages({ contact, thread, isDnc }) {
 
       <ScheduledMessagesStrip contactId={contact.id} />
 
-      {/* SMS segment counter: only render when getting close to / past a
-          segment break. GSM-7: 160 chars/seg, 153/seg in multi. UCS-2 (any
-          char > 127): 70/seg, 67/seg in multi. Without this, Key can
-          accidentally send a 2-segment SMS without realizing he just paid
-          double + risked out-of-order delivery. */}
-      {!isDnc && !searchOpen && (() => {
-        const len = msg.length;
-        const isUnicode = /[^\x00-\x7F]/.test(msg);
-        const perSeg = isUnicode ? 70 : 160;
-        const perSegMulti = isUnicode ? 67 : 153;
-        const segments = len === 0 ? 0 : (len <= perSeg ? 1 : Math.ceil(len / perSegMulti));
-        const warnAt = isUnicode ? 56 : 120; // 80% of single segment
-        if (len < warnAt) return null;
-        const danger = segments > 1;
-        return (
-          <div style={{ padding:'0 18px 4px', fontSize:11, color: danger ? '#B45309' : '#9CA3AF', fontWeight:600, textAlign:'right', flexShrink:0 }}>
-            {len} / {perSeg}{danger ? ` · ${segments} segments${isUnicode ? ' (unicode)' : ''}` : ''}
-          </div>
-        );
-      })()}
       {/* Compose. v10.1.27: padding-bottom uses --vvs which collapses to 0
           when the keyboard is open (visualViewport.height < 600), restoring
           to env(safe-area-inset-bottom) when keyboard closed. Eliminates
@@ -9409,10 +9646,10 @@ function ContactMessages({ contact, thread, isDnc }) {
               if (schedulingRef.current) return;
               schedulingRef.current = true;
               try {
-                // Same DNC gate + 4-plus-segment confirm send() runs, so a
+                // Same DNC gate + provider length ceiling send() runs, so a
                 // scheduled message can't bypass them and surface as a silent
                 // drop 60s later when it comes due (audit 2026-06-22 Group 2/3).
-                // Include the projected file-link length in the segment count.
+                // Include the projected file-link length in the total.
                 const _extraLen = atts.filter(a => a.type !== 'image').length * 120;
                 if (!(await smsPreflight(body, _extraLen))) return;
                 // Clear the composer optimistically (mirrors send()).
@@ -9527,11 +9764,8 @@ function CallNote({ call }) {
 // <audio> just plays nothing silently; this names the failure. Control height
 // raised to 44px (folds in CM-33).
 function CallAudio({ src }) {
-  // The src is a get-recording proxy URL that HARD-REQUIRES the apikey header
-  // (verify_jwt=false + requireAnonOrServiceRole), but a native <audio> element
-  // cannot attach a custom header, so a bare `src={proxyUrl}` 401s on EVERY
-  // real recording/voicemail (audit 2026-06-23). Fix: on the user's Play tap,
-  // fetch the bytes with the publishable key and hand <audio> a blob: URL.
+  // A native audio element cannot attach Key's operator session. On Play,
+  // fetch the protected bytes with that session and hand audio a blob URL.
   // Lazy (only on tap, so the calls list never eager-fetches every recording)
   // and authenticated. Blob is revoked on src-change + unmount.
   const [state, setState] = React.useState('idle'); // idle | loading | ready | error
@@ -9544,8 +9778,12 @@ function CallAudio({ src }) {
     if (!src) { setState('error'); return; }
     setState('loading');
     try {
+      const db = window.CRM && window.CRM.__db;
       const key = (window.CRM && window.CRM.__anonKey) || '';
-      const res = await fetch(src, { headers: { apikey: key, Authorization: 'Bearer ' + key } });
+      const sessionResult = db ? await db.auth.getSession() : null;
+      const token = sessionResult?.data?.session?.access_token || '';
+      if (!token) throw new Error('operator session required');
+      const res = await fetch(src, { headers: { apikey: key, Authorization: 'Bearer ' + token } });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const url = URL.createObjectURL(await res.blob());
       revoke(); blobRef.current = url; setBlobUrl(url); setState('ready');

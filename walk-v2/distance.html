@@ -4,15 +4,13 @@
 <meta name="referrer" content="strict-origin-when-cross-origin">
 
 <meta charset="utf-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-wygnGpICbMppymZ/+XZT8Vgnv0wtsjTA4zJ1JolzPtc=' 'sha256-/8VzyP0DcjwqIWqNFUMCkO1DTQ2XWb6UrRk36pWu84o='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-79EA0Z7tOgJx/57ELeHbp0LMplLGf3/Fv468aggOIt4='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<script src="/walk-v2/token-bootstrap.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
 <title>Backup Power Pro · Quote Walk · Step 2</title>
 <link rel="icon" href="/favicon.png" type="image/png" />
 <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.jpg" />
 <meta name="theme-color" content="#0b1f3b" />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'" />
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"></noscript>
 <style>
   :root {
     --navy: #0b1f3b;
@@ -257,14 +255,30 @@
     border-radius: 14px;
     background: var(--card);
     box-shadow: var(--shadow-sm);
-    display: flex;
+    overflow: hidden;
+  }
+  .dia-ico img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  /* solid gray line bridging the panel, distance, and connection box */
+  .dia-line { flex: 1 1 auto; height: 2px; border-radius: 2px; background: var(--navy-soft); opacity: 0.4; }
+  .dia-mid {
+    flex: 0 0 auto;
+    min-width: 58px;
+    min-height: 42px;
+    padding: 7px 9px;
+    border-radius: 11px;
+    background: var(--card);
+    box-shadow: var(--shadow-sm), inset 0 0 0 1px var(--edge);
+    color: var(--navy);
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: var(--navy);
+    font-family: var(--head);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.1;
+    text-align: center;
   }
-  .dia-ico svg { width: 30px; height: 30px; stroke-width: 1.6; }
-  /* solid gray line bridging the two boxes */
-  .dia-line { flex: 1 1 auto; height: 2px; border-radius: 2px; background: var(--navy-soft); opacity: 0.4; }
+  .dia-mid.is-pending { font-size: 20px; color: var(--faint); }
   .dia-foot { display: flex; align-items: flex-start; justify-content: space-between; margin-top: 10px; gap: 8px; }
   .dia-lbl {
     font-family: var(--head);
@@ -329,7 +343,7 @@
     transition: box-shadow var(--dur) var(--ease), background var(--dur) var(--ease), transform var(--dur) var(--ease);
   }
   .opt:active { transform: scale(0.985); }
-  .cord { flex: 0 0 auto; width: 84px; height: 16px; display: flex; align-items: center; }
+  .cord { order: 2; flex: 0 0 auto; width: 84px; height: 16px; display: flex; align-items: center; }
   .cord .plug {
     width: 8px;
     height: 13px;
@@ -355,8 +369,9 @@
     margin-left: 2px;
     transition: color var(--dur) var(--ease);
   }
-  .opt .lbl { flex: 1 1 auto; font-family: var(--head); font-size: 16px; font-weight: 700; color: var(--navy); }
+  .opt .lbl { order: 1; flex: 1 1 auto; font-family: var(--head); font-size: 16px; font-weight: 700; color: var(--navy); }
   .opt .tick {
+    order: 3;
     flex: 0 0 auto;
     width: 24px;
     height: 24px;
@@ -405,6 +420,39 @@
     box-shadow: var(--shadow-gold);
   }
   .echo .ring svg { width: 11px; height: 11px; stroke-width: 3; }
+  .opts.is-collapsed .opt[aria-pressed="false"] { display: none; }
+  .distance-confirm { display: none; margin-top: 2px; }
+  .distance-confirm.show { display: block; }
+  .distance-confirm .context {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    padding: 8px 0;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.35;
+    border-bottom: 1px solid rgba(11,31,59,.09);
+  }
+  .distance-confirm .context:last-of-type { border-bottom: 0; }
+  .distance-confirm .context::before { content: "✓"; color: var(--gold-ink); font-weight: 800; }
+  .distance-confirm .cord-benefit::before { content: none; }
+  .cord-benefit img {
+    width: 62px;
+    height: 42px;
+    flex: 0 0 auto;
+    object-fit: contain;
+    border-radius: 8px;
+    background: #fff;
+  }
+  .body.is-confirmed .ask, .body.is-confirmed .explain .lead, .body.is-confirmed .echo { display: none; }
+  .distance-confirm .confirm-actions { display: grid; gap: 2px; }
+  .distance-confirm button {
+    width: 100%; min-height: 48px; border-radius: 100px; font-weight: 800;
+  }
+  .distance-confirm .continue { color: var(--navy); background: var(--gold); box-shadow: var(--shadow-gold); }
+  .distance-confirm .change { color: var(--navy); background: transparent; box-shadow:none; }
 
   /* ================= 6. reassurance note + cord photo ================= */
   .note {
@@ -465,7 +513,7 @@
     .state-label { display: none; }
   }
 </style>
-<script>!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+" (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);posthog.init('phc_qoA51lePZqXYtPJYkrIpdA4U8iMDJ79L1kje7r4pD4O',{api_host:'https://us.i.posthog.com',property_denylist:['$current_url','$initial_current_url','$referrer','$initial_referrer'],sanitize_properties:function(p){for(var k in p){var v=p[k];if(typeof v==='string'&&v.indexOf('http')===0&&v.indexOf('?')>-1){try{var u=new URL(v);p[k]=u.origin+u.pathname;}catch(e){p[k]=v.split('?')[0];}}}return p;},person_profiles:'identified_only',capture_pageview:true,capture_pageleave:true,enable_heatmaps:true,capture_dead_clicks:true})</script>
+<link rel="stylesheet" href="/walk-v2/mobile-canvas.css" />
 </head>
 <body>
 <div class="stack" id="stack">
@@ -481,48 +529,50 @@
     </header>
 
     <!-- 2. progress band -->
-    <div class="prog">
-      <div class="rail" role="img" aria-label="Step 2 of 3: Distance. Location complete.">
-        <div class="pstep done"><span class="dot"><svg viewBox="0 0 8 8"><path d="M1.5 4.2l1.8 1.8 3.2-4"></path></svg></span><span class="pl">Location</span></div>
+    <div class="prog qw-progress" data-qw-step="distance">
+      <div class="rail qw-progress-rail" role="img" aria-label="Step 3 of 4: Distance. Generator and Panel complete.">
+        <div class="pstep done"><span class="dot"></span><span class="pl">Generator</span></div>
+        <div class="pstep done"><span class="dot"></span><span class="pl">Panel</span></div>
         <div class="pstep on"><span class="dot"></span><span class="pl">Distance</span></div>
-        <div class="pstep"><span class="dot"></span><span class="pl">Photo</span></div>
+        <div class="pstep"><span class="dot"></span><span class="pl">Photos</span></div>
       </div>
     </div>
 
-    <button class="back-btn" type="button" data-back="">
-      <svg viewBox="0 0 16 16"><path d="M10 3l-5 5 5 5"></path></svg>Back
+    <button class="back-btn qw-back" type="button" data-back="" aria-label="Back">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3l-5 5 5 5"></path></svg>
     </button>
 
     <div class="body">
 
-      <!-- 3. explainer + diagram (plain words, one line) -->
-      <section class="explain rv" style="--rvd: 0ms;">
-        <p class="lead">Closer outdoor plug to your breaker box = shorter wire, lower price.</p>
+      <!-- 3. compact diagram -->
+      <section class="explain">
         <div class="diagram">
           <div class="dia-track">
             <div class="dia-ico">
-              <svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="1.5"></rect><rect x="7.6" y="6.2" width="3.6" height="2.3" rx="0.6"></rect><rect x="12.8" y="6.2" width="3.6" height="2.3" rx="0.6"></rect><rect x="7.6" y="10.85" width="3.6" height="2.3" rx="0.6"></rect><rect x="12.8" y="10.85" width="3.6" height="2.3" rx="0.6"></rect><rect x="7.6" y="15.5" width="3.6" height="2.3" rx="0.6"></rect><rect x="12.8" y="15.5" width="3.6" height="2.3" rx="0.6"></rect></svg>
+              <img src="/img/panel-example.jpg" alt="Main electrical panel" />
             </div>
             <div class="dia-line"></div>
+            <div class="dia-mid is-pending" data-distance-cue aria-live="polite">?</div>
+            <div class="dia-line"></div>
             <div class="dia-ico">
-              <svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="16" rx="2"></rect><circle cx="12" cy="12" r="3.4"></circle><path d="M12 9.8v1M10.6 13.3l.8-.6M13.4 13.3l-.8-.6"></path></svg>
+              <img src="/img/install-inlet-siding.jpg" alt="New outdoor connection" />
             </div>
           </div>
           <div class="dia-foot">
-            <div class="dia-lbl">Breaker box</div>
-            <div class="dia-lbl">Outdoor plug<span>on the wall</span></div>
+            <div class="dia-lbl">Main panel</div>
+            <div class="dia-lbl">New outdoor<br />connection</div>
           </div>
         </div>
       </section>
 
       <!-- 4. ask -->
-      <section class="ask rv" style="--rvd: 90ms;">
-        <h1>About how far is your breaker box from where the new outdoor plug will go?</h1>
-        <p class="helper">That's the new outdoor plug for your generator. Best guess is fine, or tap Not sure.</p>
+      <section class="ask">
+        <h1>How far is your panel from where you want the new outdoor connection?</h1>
+        <p class="helper">A rough estimate works.</p>
       </section>
 
       <!-- 5. distance options -->
-      <section class="opts rv" style="--rvd: 160ms;" data-dists="">
+      <section class="opts" data-dists="">
         <button class="opt" type="button" data-dist="About 5 ft" aria-pressed="false">
           <span class="cord"><span class="plug"></span><span class="run" style="--w: 12px;"></span></span>
           <span class="lbl">About 5 ft</span>
@@ -561,25 +611,21 @@
         <span data-echo-text="">Got it.</span>
       </div>
 
-      <!-- 6. reassurance note + cord photo -->
-      <section class="note rv" style="--rvd: 230ms;">
-        <div class="ph">
-          <img src="/assets/product-images/cord-30amp.jpg" alt="The included yellow 30-amp generator cord, at least 20 feet long" loading="lazy" />
-        </div>
-        <div class="txt">
-          <span class="badge">
-            <svg viewBox="0 0 18 18"><path d="M3.5 9.5l3.4 3.4L14.5 5.5"></path></svg>
-          </span>
-          <p>Every install includes <b>at least a 20 ft cord</b> to reach the generator from the new box, so placement stays flexible.</p>
+      <section class="distance-confirm" data-distance-confirm="" aria-live="polite">
+        <p class="context cord-benefit"><img data-cord-image src="/assets/product-images/cord-30amp.jpg" alt="Yellow manufactured generator connection cord" /><span>Your setup stays flexible: at least 20 ft of compatible cord is included, so the generator can run outdoors away from doors, windows, and vents. Longer lengths are available when needed.</span></p>
+        <div class="confirm-actions qw-action-stack">
+          <button class="continue qw-primary-action" type="button" data-continue="">Continue</button>
+          <button class="change qw-secondary-action" type="button" data-change="">Change distance</button>
         </div>
       </section>
+
     </div>
 
     <!-- 7. footer -->
     <footer class="foot">
-      <strong>Key Goodson, Master Electrician, SC Lic #2942</strong><br />
-      Serving Greenville, Spartanburg, and Pickens counties<br />
-      Questions? Text me at (864) 863-7800
+      <strong>Key Goodson, Licensed Electrician, SC Lic #2942</strong>
+      <span>Serving Greenville, Spartanburg, and Pickens counties</span>
+      <span>Every project is reviewed and permitted by Key, completed with trusted local installation partners, and coordinated through final inspection.</span>
     </footer>
   </main>
 
@@ -593,49 +639,107 @@
   WALK.ph('walk_v2_screen_view', { screen: 'distance' });
 
   var main = document.getElementById('mainPage');
+  var body = main.querySelector('.body');
   var echo = main.querySelector('[data-echo]');
   var echoText = main.querySelector('[data-echo-text]');
+  var options = main.querySelector('[data-dists]');
+  var confirmation = main.querySelector('[data-distance-confirm]');
+  var distanceCue = main.querySelector('[data-distance-cue]');
+  var cordImage = main.querySelector('[data-cord-image]');
   var BAND_API = { 'About 5 ft': 'about_5', '5-10 ft': '5_10', '10-20 ft': '10_20', '20-40 ft': '20_40', 'Over 40 ft': 'over_40', 'Not sure': 'not_sure' };
   var API_BAND = {}; Object.keys(BAND_API).forEach(function (k) { API_BAND[BAND_API[k]] = k; });
-  var settleTimer = null, navigated = false;
+  var DISTANCE_ORDER = { about_5: 1, '5_10': 2, '10_20': 3, '20_40': 4, over_40: 5 };
+  var selectedLabel = null, saving = false, navigated = false;
+  var priorDistanceBand = null, revisingCurrentRange = false;
 
   function paint(label, echoLine) {
+    selectedLabel = label || null;
     main.querySelectorAll('[data-dist]').forEach(function (c) {
       c.setAttribute('aria-pressed', c.getAttribute('data-dist') === label ? 'true' : 'false');
     });
     if (echoLine) {
       echoText.textContent = label === 'Not sure'
-        ? "No problem, I'll walk it off with you."
+        ? 'Got it. You can finish this later.'
         : 'Got it, ' + label.toLowerCase() + '.';
       echo.classList.remove('show'); void echo.offsetWidth; echo.classList.add('show');
     }
+    var confirmable = !!label;
+    distanceCue.textContent = confirmable ? label : '?';
+    distanceCue.classList.toggle('is-pending', !confirmable);
+    body.classList.toggle('is-confirmed', confirmable);
+    options.classList.toggle('is-collapsed', confirmable);
+    confirmation.classList.toggle('show', confirmable);
   }
 
   WALK.view(t).then(function (v) {
+    var params = new URLSearchParams(window.location.search);
+    var sequentialEntry = params.get('sequence') === '1';
     /* Self-correcting entry guard: only fires when a PRIOR step is unanswered
        (panel location here). A forwarded / hand-edited deep link straight to this
        page would otherwise let an incomplete walk finalize and skip Key's "ready
        to price" ping. routeFromState bounces to the first unanswered step. It does
        NOT bounce when location is already answered, so normal flow and Back-nav
        are untouched (no self-redirect, the landing already runs this same guard). */
-    if (!v.confirmed_panel_room) { WALK.routeFromState(t, v); return; }
-    if (v.distance_band && API_BAND[v.distance_band]) paint(API_BAND[v.distance_band], false);
+    if (!sequentialEntry && !v.confirmed_panel_room) { WALK.routeFromState(t, v); return; }
+    cordImage.src = '/assets/product-images/cord-30amp.jpg';
+    var editMode = params.get('edit') === '1';
+    var recoveryMode = params.get('recovery') === '1';
+    var savedDistance = v.distance_band && API_BAND[v.distance_band];
+    var state = v.quote_walk_v2 || {};
+    priorDistanceBand = state.distance_band || v.distance_band || null;
+    revisingCurrentRange = editMode && Boolean(state.current_range_snapshot_id);
+    if (revisingCurrentRange && DISTANCE_ORDER[priorDistanceBand]) {
+      main.querySelectorAll('[data-dist]').forEach(function (card) {
+        var candidate = BAND_API[card.getAttribute('data-dist')];
+        card.hidden = !DISTANCE_ORDER[candidate]
+          || DISTANCE_ORDER[candidate] >= DISTANCE_ORDER[priorDistanceBand];
+      });
+    }
+    var pendingDistance = savedDistance === 'Not sure';
+    if (!editMode && savedDistance && !(recoveryMode && pendingDistance)) paint(savedDistance, false);
   }).catch(function () { /* the welcome-back preselect is best-effort; a transient read failure must NOT strip the token and bounce a mid-walk customer to a blank form. The step works without it. */ });
 
   main.querySelectorAll('[data-dist]').forEach(function (card) {
     card.addEventListener('click', function () {
-      if (navigated) return;                 /* already leaving; ignore late taps */
+      if (navigated || saving) return;
       var label = card.getAttribute('data-dist');
       paint(label, true);
       WALK.ph('walk_v2_confirm_tap', { field: 'distance_band', value: BAND_API[label] });
-      /* Fresh Air + Musk accelerate: keep mis-tap settle, cut waiting theater. */
-      if (settleTimer) { clearTimeout(settleTimer); settleTimer = null; }
-      settleTimer = setTimeout(function () {
-        WALK.confirm(t, { distance_band: BAND_API[label] })
-          .then(function () { navigated = true; WALK.go('photos.html', t); })
-          .catch(function () { settleTimer = null; paint(label, true); /* restore the ack; let them tap again, never strand */ });
-      }, 280);
     });
+  });
+
+  main.querySelector('[data-change]').addEventListener('click', function () {
+    paint(null, false);
+    echo.classList.remove('show');
+    main.querySelector('[data-dist]').focus();
+  });
+
+  main.querySelector('[data-continue]').addEventListener('click', function () {
+    if (!selectedLabel || saving) return;
+    saving = true;
+    var answers = { distance_band: BAND_API[selectedLabel] };
+    if (revisingCurrentRange && answers.distance_band !== priorDistanceBand) {
+      answers.revision_reason = 'shorter_distance';
+    }
+    WALK.confirm(t, answers)
+      .then(function () {
+        navigated = true;
+        var recovery = new URLSearchParams(window.location.search).get('recovery') === '1';
+        if (recovery) {
+          WALK.view(t).then(function (latest) {
+            WALK.routeRecoveryFromState(t, latest);
+          }).catch(function () {
+            WALK.go('incomplete.html', t);
+          });
+        } else {
+          WALK.go('photos.html', t, { sequence: '1' });
+        }
+      })
+      .catch(function () {
+        saving = false;
+        echoText.textContent = 'That distance did not save. Try again.';
+        echo.classList.add('show');
+      });
   });
 
   var backBtn = main.querySelector('[data-back]');

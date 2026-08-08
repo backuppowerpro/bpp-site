@@ -83,8 +83,12 @@
       .then(function (d) {
         done = true; clearTimeout(t);
         var token = d && d.token;
-        if (token && /^[a-f0-9]{32,64}$/i.test(token)) {
-          location.replace('/walk-v2/?t=' + token);
+        var resumePath = d && d.resume_path;
+        if (token && /^[a-f0-9]{32,64}$/i.test(token)
+            && typeof resumePath === 'string'
+            && /^\/walk-v2\/(?:[a-z0-9-]+\.html)?\?t=[a-f0-9]{32,64}$/i.test(resumePath)
+            && resumePath.endsWith(token)) {
+          location.replace(resumePath);
         } else { fail(); }
       })
       .catch(function () { done = true; clearTimeout(t); fail(); });

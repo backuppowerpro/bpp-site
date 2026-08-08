@@ -1,0 +1,489 @@
+/*
+  Approved customer canvas translated from the accepted Quote Walk review.
+  Every page stays at the same compact mobile-first width on desktop.
+*/
+@media (min-width: 760px) {
+  .stack {
+    width: 100% !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    padding: 28px 14px 96px !important;
+  }
+
+  .page,
+  .page.w-desktop {
+    width: 390px !important;
+    max-width: 390px !important;
+    min-height: calc(100vh - 56px);
+    margin: 0 auto !important;
+    border-radius: 24px !important;
+    box-shadow: 0 10px 28px rgba(11,31,59,.10), 0 2px 8px rgba(11,31,59,.05) !important;
+    overflow: hidden;
+  }
+
+  .state-label,
+  .state-label.wide {
+    width: 390px !important;
+  }
+
+  .site-head {
+    padding-right: 20px !important;
+    padding-left: 20px !important;
+  }
+
+  .page[data-screen-label="Quote walk: generator connection"] .body {
+    max-width: none !important;
+    padding: 28px 20px 10px !important;
+  }
+
+  .page[data-screen-label="Quote walk: generator connection"] h1 {
+    font-size: 29px !important;
+  }
+}
+
+@media (max-width: 759px) {
+  .page,
+  .page.w-desktop {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 100vh;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+}
+
+.page {
+  --qw-content-gutter: 20px;
+}
+
+.page .site-head,
+.page .hero .textzone,
+.page .body-grid {
+  padding-right: var(--qw-content-gutter) !important;
+  padding-left: var(--qw-content-gutter) !important;
+}
+
+.page .proof-track {
+  padding-right: var(--qw-content-gutter) !important;
+  padding-left: var(--qw-content-gutter) !important;
+  scroll-padding-inline: var(--qw-content-gutter) !important;
+}
+
+.qw-progress {
+  padding: 14px 10px 12px !important;
+  background: var(--card, #fff) !important;
+  border-bottom: 1px solid var(--edge-soft, rgba(11,31,59,.07)) !important;
+}
+
+.qw-progress .qw-progress-rail {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  position: relative !important;
+  width: 100% !important;
+  max-width: 390px !important;
+  margin: 0 auto !important;
+}
+
+.qw-progress .qw-progress-rail::before {
+  content: "" !important;
+  position: absolute !important;
+  top: 5px !important;
+  right: 12.5% !important;
+  left: 12.5% !important;
+  height: 2px !important;
+  background: var(--edge, rgba(11,31,59,.12)) !important;
+}
+
+.qw-progress .pstep {
+  position: relative !important;
+  z-index: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 7px !important;
+  min-width: 0 !important;
+}
+
+.qw-progress .pstep.reached:not(:last-child)::after {
+  content: "" !important;
+  position: absolute !important;
+  z-index: -1 !important;
+  top: 5px !important;
+  left: 50% !important;
+  width: 100% !important;
+  height: 2px !important;
+  background: var(--gold, #ffba00) !important;
+}
+
+.qw-progress .pstep .dot {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 12px !important;
+  height: 12px !important;
+  border-radius: 50% !important;
+  color: var(--navy, #0b1f3b) !important;
+  background: var(--page, #fafbfc) !important;
+  box-shadow: inset 0 0 0 2px var(--edge, rgba(11,31,59,.12)) !important;
+}
+
+.qw-progress .pstep .dot svg {
+  display: none !important;
+}
+
+.qw-progress .pstep.done .dot {
+  background: var(--gold, #ffba00) !important;
+  box-shadow: none !important;
+}
+
+.qw-progress .pstep.on .dot {
+  background: var(--page, #fafbfc) !important;
+  box-shadow: 0 0 0 4px rgba(255,186,0,.22) !important;
+}
+
+.qw-progress .pstep.on.done .dot {
+  background: var(--gold, #ffba00) !important;
+}
+
+.qw-progress .pstep .pl {
+  overflow: hidden !important;
+  max-width: 100% !important;
+  color: var(--faint, #5d6b7e) !important;
+  font-family: var(--head, Outfit, sans-serif) !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+  letter-spacing: .08em !important;
+  text-transform: uppercase !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.qw-progress .pstep.on .pl,
+.qw-progress .pstep.done .pl {
+  color: var(--gold-ink, #8a5a00) !important;
+}
+
+.page .qw-back {
+  display: inline-grid !important;
+  place-items: center !important;
+  width: 44px !important;
+  min-width: 44px !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  margin: 6px 0 0 var(--qw-content-gutter) !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  background: transparent !important;
+  color: #0b1f3b !important;
+  box-shadow: none !important;
+}
+
+.page .qw-back svg {
+  width: 20px !important;
+  height: 20px !important;
+  fill: none !important;
+  stroke: currentColor !important;
+  stroke-width: 2 !important;
+}
+
+.page .qw-back:active {
+  background: rgba(11,31,59,.06) !important;
+}
+
+.page .qw-back:focus-visible {
+  outline: 3px solid #ffba00 !important;
+  outline-offset: 1px !important;
+}
+
+.page > .qw-back + .body,
+.page > .qw-back + .body-grid {
+  padding-top: 4px !important;
+}
+
+.qw-action-stack {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 2px !important;
+  width: 100% !important;
+  margin-top: 12px !important;
+}
+
+.qw-primary-action {
+  width: 100% !important;
+  min-height: 52px !important;
+  padding: 0 20px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  color: #0b1f3b !important;
+  background: #ffba00 !important;
+  box-shadow: 0 6px 24px rgba(255,186,0,.28) !important;
+  font-family: Outfit, sans-serif !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+}
+
+.qw-secondary-action {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  justify-self: center !important;
+  width: auto !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  margin: 0 !important;
+  padding: 8px 12px !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  color: #0b1f3b !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-family: Inter, system-ui, sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  text-decoration: underline !important;
+  text-decoration-thickness: 1px !important;
+  text-underline-offset: 3px !important;
+}
+
+.qw-secondary-action[hidden] {
+  display: none !important;
+}
+
+.qw-secondary-action:hover {
+  text-decoration-thickness: 2px !important;
+}
+
+.qw-secondary-action:active {
+  background: rgba(11,31,59,.06) !important;
+}
+
+.qw-secondary-action:focus-visible {
+  outline: 3px solid #ffba00 !important;
+  outline-offset: 1px !important;
+}
+
+.page h1,
+.page .ask h1,
+.page .ask h2,
+.page .celebrate h1 {
+  font-size: 28px !important;
+  font-weight: 800 !important;
+  line-height: 1.1 !important;
+}
+
+.page .hero h1 {
+  width: 100% !important;
+  max-width: 100% !important;
+  font-size: 24px !important;
+  font-weight: 750 !important;
+  line-height: 1.02 !important;
+  letter-spacing: -.035em !important;
+}
+
+.page h2 {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+}
+
+.page button,
+.page .btn,
+.page .cta,
+.page .choice strong {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+}
+
+.page #rangePage {
+  gap: 12px !important;
+  padding: 20px 16px 34px !important;
+}
+
+.page #rangePage .intro p {
+  margin-top: 6px !important;
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+}
+
+.page #rangePage .card,
+.page #rangePage .range,
+.page #rangePage .notice {
+  padding: 15px !important;
+  border-radius: 14px !important;
+}
+
+.page #rangePage .recap-grid {
+  gap: 0 !important;
+  margin-top: 6px !important;
+}
+
+.page #rangePage .recap-row {
+  min-height: 38px !important;
+  padding: 8px 0 !important;
+}
+
+.page #rangePage .path-proof,
+.page #rangePage .photo-proof {
+  margin-top: 10px !important;
+}
+
+.page #rangePage .amount {
+  font-size: 32px !important;
+  line-height: 1.05 !important;
+}
+
+.page #rangePage .range p {
+  margin-top: 8px !important;
+  font-size: 13.5px !important;
+  line-height: 1.4 !important;
+}
+
+.page #rangePage .actions {
+  gap: 8px !important;
+  margin-top: 10px !important;
+}
+
+.page #rangePage h2 {
+  font-size: 16px !important;
+  font-weight: 650 !important;
+  line-height: 1.32 !important;
+}
+
+.page #rangePage .btn {
+  min-height: 50px !important;
+  padding: 10px 16px !important;
+}
+
+.page #rangePage .distance-options + .btn {
+  margin-top: 14px !important;
+}
+
+.page #rangePage .distance-options + .btn + .link-btn {
+  margin-top: 6px !important;
+}
+
+.page[data-screen-label*="thank you"] .body-grid {
+  gap: 0 !important;
+  padding: 22px 18px 10px !important;
+}
+
+.page[data-screen-label*="thank you"] .rv {
+  opacity: 1 !important;
+  transform: none !important;
+  transition: none !important;
+}
+
+.page[data-screen-label*="thank you"] .col-main {
+  gap: 12px !important;
+}
+
+.page[data-screen-label*="thank you"] .celebrate {
+  display: grid !important;
+  grid-template-columns: 36px 1fr !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.page[data-screen-label*="thank you"] .celebrate .big-check {
+  width: 36px !important;
+  height: 36px !important;
+  margin: 0 !important;
+}
+
+.page[data-screen-label*="thank you"] .reviewing,
+.page[data-screen-label*="thank you"] .recap,
+.page[data-screen-label*="thank you"] .price {
+  margin: 0 !important;
+  padding: 13px 14px !important;
+  border-radius: 14px !important;
+}
+
+.page[data-screen-label*="thank you"] .reviewing {
+  min-height: 58px !important;
+}
+
+.page[data-screen-label*="thank you"] .ravatar {
+  width: 40px !important;
+  height: 40px !important;
+}
+
+.page[data-screen-label*="thank you"] .price .pn {
+  margin-top: 3px !important;
+  font-size: 29px !important;
+  line-height: 1.05 !important;
+}
+
+.page[data-screen-label*="thank you"] .price .pl,
+.page[data-screen-label*="thank you"] .price .pf,
+.page[data-screen-label*="thank you"] .next-step p {
+  margin: 5px 0 0 !important;
+  font-size: 13px !important;
+  line-height: 1.4 !important;
+}
+
+.page[data-screen-label*="thank you"] .compact-recap ul {
+  gap: 4px !important;
+  margin-top: 7px !important;
+}
+
+.page[data-screen-label*="thank you"] .compact-recap li {
+  min-height: 30px !important;
+  font-size: 13px !important;
+}
+
+.page[data-screen-label*="thank you"] .foot {
+  padding: 14px 18px 18px !important;
+}
+
+.page .foot {
+  margin-top: 18px !important;
+  padding: 14px 18px 18px !important;
+  border-top: 1px solid rgba(11,31,59,.09) !important;
+  background: transparent !important;
+  color: #68758a !important;
+  font-size: 11.5px !important;
+  line-height: 1.42 !important;
+  text-align: center !important;
+}
+
+.page .foot strong,
+.page .foot span {
+  display: block !important;
+}
+
+.page .foot strong {
+  color: #4f5e73 !important;
+  font-family: Inter, system-ui, sans-serif !important;
+  font-weight: 650 !important;
+}
+
+.page .foot span + span {
+  margin-top: 3px !important;
+}
+
+@media (max-width: 340px) {
+  .page h1,
+  .page .ask h1,
+  .page .ask h2,
+  .page .celebrate h1 {
+    font-size: 25px !important;
+  }
+
+  .page #rangePage {
+    padding-right: 14px !important;
+    padding-left: 14px !important;
+  }
+
+  .page #rangePage .amount {
+    font-size: 29px !important;
+  }
+
+  .page .hero h1 {
+    font-size: 19.5px !important;
+  }
+}

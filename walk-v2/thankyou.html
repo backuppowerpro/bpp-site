@@ -4,14 +4,13 @@
 <meta name="referrer" content="strict-origin-when-cross-origin">
 
 <meta charset="utf-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-wygnGpICbMppymZ/+XZT8Vgnv0wtsjTA4zJ1JolzPtc=' 'sha256-5V0i3duCeK56PWKnEGRixbV+nARhJewv2lZ3TGm4piw='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-vJTGL1d96TSIuABuUIQ8TUdUz5v/h9tVLGK35mlVJQ0='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<script src="/walk-v2/token-bootstrap.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
 <title>Backup Power Pro · Thank You</title>
 <link rel="icon" href="/favicon.png" type="image/png" />
 <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.jpg" />
 <meta name="theme-color" content="#0b1f3b" />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet" />
 <style>
   :root {
     --navy: #0b1f3b;
@@ -476,6 +475,25 @@
   }
   .gift input::placeholder { color: var(--faint); }
   .gift input:focus { outline: none; box-shadow: inset 0 0 0 2px var(--gold); }
+  .gift .gift-error {
+    display: none;
+    margin: 0 0 10px;
+    color: #8f2f26;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+  .gift .gift-error.show { display: block; }
+  .gift .gift-direct-link {
+    display: none;
+    min-height: 44px;
+    align-items: center;
+    color: var(--navy);
+    font-family: var(--head);
+    font-size: 15px;
+    font-weight: 700;
+    margin: -4px 0 10px;
+  }
+  .gift .gift-direct-link.show { display: inline-flex; }
   .gift .send {
     display: flex;
     align-items: center;
@@ -500,63 +518,6 @@
     color: rgba(11,31,59,0.45);
     box-shadow: none;
     cursor: not-allowed;
-  }
-
-  /* sent confirmation */
-  .sent {
-    display: none;
-    background: var(--navy);
-    border-radius: var(--r-lg);
-    box-shadow: var(--shadow-md);
-    padding: 22px;
-    color: #fff;
-  }
-  .sent.show { display: block; animation: rise 360ms var(--ease) both; }
-  @media (prefers-reduced-motion: reduce) { .sent.show { animation: none; } }
-  @keyframes rise {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .sent .sh {
-    display: flex;
-    align-items: center;
-    gap: 11px;
-    margin-bottom: 10px;
-  }
-  .sent .si {
-    width: 36px;
-    height: 36px;
-    flex: 0 0 auto;
-    border-radius: 50%;
-    background: var(--gold);
-    color: var(--navy);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .sent .si svg { width: 16px; height: 16px; stroke-width: 2.6; }
-  .sent h2 {
-    font-family: var(--head);
-    font-size: 17px;
-    font-weight: 800;
-    letter-spacing: -0.01em;
-    color: #fff;
-    margin: 0;
-  }
-  .sent p {
-    font-size: 14px;
-    line-height: 1.6;
-    color: rgba(255,255,255,0.82);
-    margin: 0 0 10px;
-  }
-  .sent .ksig {
-    font-family: var(--script);
-    font-size: 28px;
-    font-weight: 600;
-    color: var(--gold);
-    transform: rotate(-1.5deg);
-    display: inline-block;
-    margin: 0;
   }
 
   /* ================= 6. closing line ================= */
@@ -626,7 +587,7 @@
     .state-label { display: none; }
   }
 </style>
-<script>!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+" (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);posthog.init('phc_qoA51lePZqXYtPJYkrIpdA4U8iMDJ79L1kje7r4pD4O',{api_host:'https://us.i.posthog.com',property_denylist:['$current_url','$initial_current_url','$referrer','$initial_referrer'],sanitize_properties:function(p){for(var k in p){var v=p[k];if(typeof v==='string'&&v.indexOf('http')===0&&v.indexOf('?')>-1){try{var u=new URL(v);p[k]=u.origin+u.pathname;}catch(e){p[k]=v.split('?')[0];}}}return p;},person_profiles:'identified_only',capture_pageview:true,capture_pageleave:true,enable_heatmaps:true,capture_dead_clicks:true})</script>
+<link rel="stylesheet" href="/walk-v2/mobile-canvas.css" />
 </head>
 <body>
 <div class="stack" id="stack">
@@ -643,96 +604,52 @@
 
     <div class="body-grid">
       <div class="col-main">
-
-        <!-- 2. ownership: baton caught, calm inevitability -->
         <section class="celebrate rv" style="--rvd: 0ms;">
           <div class="big-check"><svg viewBox="0 0 30 30"><path d="M7 16l5.5 5.5L23 9.5"></path></svg></div>
           <h1 data-thanks-head="">I've got your setup.</h1>
         </section>
 
-        <!-- 2b. reviewing beat: Key has it (static presence, not pulse theater) -->
         <section class="reviewing rv" style="--rvd: 40ms;" data-reviewing="" aria-live="polite">
           <span class="ravatar" style="background: url('/assets/images/key-headshot.jpg') center 20% / cover no-repeat;" role="img" aria-label="Key Goodson">
             <span class="pulse" aria-hidden="true"></span>
           </span>
           <div class="rcopy">
-            <p class="rline" data-review-line="">On my desk now</p>
-            <p class="rsub" data-review-sub="">Firm all-in number comes by text after I look it over</p>
+            <p class="rline">Key Goodson</p>
+            <p class="rsub">Licensed Electrician</p>
+            <span hidden data-review-line=""></span>
+            <span hidden data-review-sub=""></span>
           </div>
         </section>
 
-        <!-- 3. recap card -->
-        <section class="recap rv" style="--rvd: 90ms;">
-          <p class="tk">Already on my desk</p>
+        <section class="recap next-step rv" style="--rvd: 80ms;">
+          <p class="tk">What happens next</p>
+          <p>I'll review your setup and text your proposal link to the mobile number you provided. No payment is due now.</p>
+        </section>
+
+        <section class="price rv" style="--rvd: 90ms;">
+          <p class="pk">Accepted project range</p>
+          <p class="pl" data-price-line="">Your accepted current range</p>
+          <p class="pn" data-price-num="" style="display:none;"></p>
+          <p class="pf" data-price-follow="">This is the range for the setup you accepted.</p>
+        </section>
+
+        <section class="recap compact-recap rv" style="--rvd: 140ms;" hidden>
+          <p class="tk">Accepted setup</p>
           <ul>
-            <li><span class="ric"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"></circle><path d="M5.5 6.2l1.6 1.2M10.5 6.2L8.9 7.4M8 11.5V9.8"></path></svg></span><span data-recap="outlet">Outlet: I'll confirm it on site</span></li>
+            <li><span class="ric"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"></circle><path d="M5.5 6.2l1.6 1.2M10.5 6.2L8.9 7.4M8 11.5V9.8"></path></svg></span><span data-recap="outlet">Generator connection not confirmed</span></li>
             <li><span class="ric"><svg viewBox="0 0 16 16"><path d="M2 13V6.5L8 2.5l6 4V13"></path><path d="M4.5 13V8h7v5M4.5 10h7"></path></svg></span><span data-recap="room">Panel location noted</span></li>
             <li><span class="ric"><svg viewBox="0 0 16 16"><path d="M2.5 8h11M2.5 8l2-2M2.5 8l2 2M13.5 8l-2-2M13.5 8l-2 2"></path></svg></span><span data-recap="distance">Distance noted</span></li>
-            <li><span class="ric"><svg viewBox="0 0 16 16"><path d="M8 14s4.5-4 4.5-7.5a4.5 4.5 0 0 0-9 0C3.5 10 8 14 8 14z"></path><circle cx="8" cy="6.5" r="1.6"></circle></svg></span><span data-recap="address">Your address</span></li>
+            <li hidden><span data-recap="address">Your address</span></li>
           </ul>
         </section>
 
-        <!-- 4. price card, the hero. Range is a ballpark from amp + distance;
-             Key texts the firm number after he reviews (honest framing, Key 2026-07-13). -->
-        <section class="price rv" style="--rvd: 180ms;">
-          <p class="pk">Your ballpark</p>
-          <p class="pl" data-price-line="">Installs like yours usually land between</p>
-          <p class="pn" data-price-num="" style="display:none;"></p>
-          <p class="pf" data-price-follow="" style="display:none;">That's a ballpark from what you told me, not your final number.</p>
-          <ul>
-            <li><span class="tick"><svg viewBox="0 0 12 12"><path d="M2 6.5l2.6 2.6L10 3.5"></path></svg></span>Permits and inspection handled, start to finish</li>
-            <li><span class="tick"><svg viewBox="0 0 12 12"><path d="M2 6.5l2.6 2.6L10 3.5"></path></svg></span>Generator cord included, 20 ft or longer</li>
-            <li><span class="tick"><svg viewBox="0 0 12 12"><path d="M2 6.5l2.6 2.6L10 3.5"></path></svg></span>Licensed, insured, and inspected by the county</li>
-            <li><span class="tick"><svg viewBox="0 0 12 12"><path d="M2 6.5l2.6 2.6L10 3.5"></path></svg></span>Done in one day, by me or a trusted install partner</li>
-          </ul>
-        </section>
-
-        <!-- quiet forward action: reach Key the moment the price lands (secondary, not the gold primary) -->
-        <p class="ask-key" style="margin:14px 2px 0;font-size:15px;line-height:1.55;color:var(--faint);text-align:center">Questions before then? Text me anytime, <a href="sms:+18648637800" style="color:var(--navy);font-weight:600;text-decoration:none;border-bottom:1px solid var(--gold);padding-bottom:1px;min-height:44px;display:inline-flex;align-items:center">(864) 863-7800</a>.</p>
-      </div>
-
-      <div class="col-side">
-
-        <!-- 5. gift card -->
-        <section class="gift rv" style="--rvd: 260ms;" data-gift="">
-          <div class="gh">
-            <span class="gi"><svg viewBox="0 0 18 18"><rect x="2.5" y="7" width="13" height="8.5" rx="1.2"></rect><path d="M2 4.5h14V7H2zM9 4.5v11M9 4.5S7 1.5 5.2 2.2 5.5 4.9 9 4.5zM9 4.5s2-3 3.8-2.3-.3 2.7-3.8 2.3z"></path></svg></span>
-            <h2>Your outage-prep guide is ready.</h2>
-          </div>
-          <p class="gs">The checklist I wish every generator owner had before the lights go out. Where should I send it?</p>
-          <input type="email" inputmode="email" autocomplete="email" placeholder="Your email" data-email="" aria-label="Your email" />
-          <button class="send" type="button" data-send="" disabled="">
-            Send my free guide
-            <svg viewBox="0 0 18 18"><path d="M2.5 9L15 3.5 11.5 15l-3-4.5z"></path><path d="M15 3.5L8.5 10.5"></path></svg>
-          </button>
-          <p style="font-size:13px;color:var(--faint);margin-top:10px;line-height:1.5;text-align:center">Just for your guide and quote. No spam, unsubscribe anytime.</p>
-        </section>
-
-        <!-- sent confirmation, replaces gift card -->
-        <section class="sent" data-sent="" aria-live="polite">
-          <div class="sh">
-            <span class="si"><svg viewBox="0 0 14 14"><path d="M2.5 7.5l3 3 6-7"></path></svg></span>
-            <h2>Got it. Your guide is on the way.</h2>
-          </div>
-          <p>Keep an eye on your inbox, and peek in spam just in case.</p>
-          <p class="ksig">Key</p>
-        </section>
-
-        <!-- 6. closing line -->
-        <div class="closing rv" style="--rvd: 320ms;">
-          <p class="cl">I'm on it myself, start to finish. Not a robot.</p>
-          <span class="cavatar" style="background: url('/assets/images/key-headshot.jpg') center 20% / cover no-repeat;" role="img" aria-label="Key Goodson"></span>
-          <span class="csig">Key Goodson</span>
-          <span class="csub">Master Electrician</span>
-        </div>
       </div>
     </div>
 
-    <!-- 7. footer -->
     <footer class="foot">
-      <strong>Key Goodson, Master Electrician, SC Lic #2942</strong><br />
-      Serving Greenville, Spartanburg, and Pickens counties<br />
-      Questions? Text me at (864) 863-7800
+      <strong>Key Goodson, Licensed Electrician, SC Lic #2942</strong>
+      <span>Serving Greenville, Spartanburg, and Pickens counties</span>
+      <span>Every project is reviewed and permitted by Key, completed with trusted local installation partners, and coordinated through final inspection.</span>
     </footer>
   </main>
 
@@ -744,20 +661,11 @@
 (function () {
   var t = WALK.requireToken(); if (!t) return;
   WALK.ph('walk_v2_screen_view', { screen: 'thankyou' });
-  /* Key 2026-07-13: completers get the opener SMS (not mid-walk). Fire-and-forget;
-     a network blip must never bounce them off thank-you. */
-  if (typeof WALK.markThankyou === 'function') {
-    WALK.markThankyou(t).catch(function () {});
-  }
 
   var main = document.getElementById('mainPage');
-  var gift = main.querySelector('[data-gift]');
-  var sent = main.querySelector('[data-sent]');
-  var email = main.querySelector('[data-email]');
-  var send = main.querySelector('[data-send]');
 
-  var ROOM_LABEL = { garage: 'Panel in the garage', basement: 'Panel in the basement', outside: 'Panel outside with the meter', closet: 'Panel in a closet', laundry: 'Panel in the laundry room', other: 'Panel location noted', not_sure: "Panel location: I'll find it on site" };
-  var BAND_LABEL = { about_5: 'About 5 ft run', '5_10': 'About 5-10 ft run', '10_20': 'About 10-20 ft run', '20_40': 'About 20-40 ft run', over_40: 'Over 40 ft run', not_sure: "Run distance: I'll measure it on site" };
+  var ROOM_LABEL = { garage: 'Panel in the garage', basement: 'Panel in the basement', outside: 'Panel outside with the meter', closet: 'Panel in a closet', laundry: 'Panel in the laundry room', other: 'Panel location noted', not_sure: 'Panel location not confirmed' };
+  var BAND_LABEL = { about_5: 'About 5 ft run', '5_10': 'About 5-10 ft run', '10_20': 'About 10-20 ft run', '20_40': 'About 20-40 ft run', over_40: 'Over 40 ft run', not_sure: 'Run distance not confirmed' };
 
   function dollars(cents) { return '$' + Math.round(cents / 100).toLocaleString('en-US'); }
 
@@ -776,11 +684,54 @@
   /* Fresh Air (2026-07-13): no timed copy swap. Static desk line stays honest. */
 
   WALK.view(t).then(function (v) {
-    if (v.first_name) main.querySelector('[data-thanks-head]').textContent = "I've got your setup, " + v.first_name + '.';
-    if (v.amperage) main.querySelector('[data-recap="outlet"]').textContent = v.amperage + ' Amp outlet';
+    var v2State = v.quote_walk_v2 || null;
+    var readiness = v2State && v2State.readiness || {};
+    if (!v2State || !readiness.ready_for_handoff || v2State.handoff_recorded !== true) {
+      WALK.go('range.html', t);
+      return;
+    }
+    if (v.first_name) {
+      var displayName = String(v.first_name).replace(/(^|[\s'-])([a-z])/g, function (_, lead, letter) {
+        return lead + letter.toUpperCase();
+      });
+      main.querySelector('[data-thanks-head]').textContent = "I've got your setup, " + displayName + '.';
+    }
+    var acceptedSnapshot = v2State.current_range_snapshot;
+    var acceptedCurrent = acceptedSnapshot
+      && acceptedSnapshot.status === 'available'
+      && acceptedSnapshot.snapshot_id === v2State.accepted_range_snapshot_id;
+    if (!acceptedCurrent) {
+      WALK.go('range.html', t);
+      return;
+    }
+    kick.textContent = 'Accepted project range';
+    line.textContent = 'Your accepted current range';
+    num.textContent = dollars(acceptedSnapshot.low_cents) + ' to ' + dollars(acceptedSnapshot.high_cents);
+    num.style.display = '';
+    follow.style.display = '';
+    reviewLine.textContent = 'Your range and setup are accepted';
+    reviewSub.textContent = '';
+    reviewSub.style.display = 'none';
+    var connectionTruth = WALK.readConnectionTruth(t, v);
+    var observedConnections = connectionTruth.connection_answers || [];
+    if (observedConnections.length === 2) {
+      main.querySelector('[data-recap="outlet"]').textContent = acceptedSnapshot.pricing_basis === '30'
+        ? '30 Amp and 50 Amp observed. The selected 30 Amp installation drives this accepted revised range.'
+        : '30 Amp and 50 Amp observed. The higher 50 Amp connection drives this accepted range.';
+    } else if (observedConnections.length === 1) {
+      main.querySelector('[data-recap="outlet"]').textContent = observedConnections[0] + ' generator connection';
+    } else if (v.amperage) {
+      main.querySelector('[data-recap="outlet"]').textContent = v.amperage + ' Amp generator connection';
+    }
     if (v.confirmed_panel_room) main.querySelector('[data-recap="room"]').textContent = ROOM_LABEL[v.confirmed_panel_room] || 'Panel location noted';
     if (v.distance_band) main.querySelector('[data-recap="distance"]').textContent = BAND_LABEL[v.distance_band] || 'Distance noted';
     if (v.address) main.querySelector('[data-recap="address"]').textContent = String(v.address).split(',')[0];
+
+    WALK.ph('walk_v2_range_accepted_view', {
+      snapshot_id: acceptedSnapshot.snapshot_id,
+      journey_version: acceptedSnapshot.journey_version,
+    });
+    return;
 
     /* Deferred the panel photo? Acknowledge it's still outstanding so the recap
        tells the whole truth (and sets expectation for the photo reminder). */
@@ -788,11 +739,11 @@
       var _ul = main.querySelector('[data-recap="address"]').closest('ul');
       if (_ul) {
         var _li = document.createElement('li');
-        _li.innerHTML = '<span class="ric"><svg viewBox="0 0 16 16"><rect x="2.5" y="5" width="11" height="8" rx="1.5"></rect><path d="M5.5 5l1-1.5h3l1 1.5"></path><circle cx="8" cy="9" r="2"></circle></svg></span><span>Panel photo: I\'ll grab it from you by text</span>';
+        _li.innerHTML = '<span class="ric"><svg viewBox="0 0 16 16"><rect x="2.5" y="5" width="11" height="8" rx="1.5"></rect><path d="M5.5 5l1-1.5h3l1 1.5"></path><circle cx="8" cy="9" r="2"></circle></svg></span><span>Panel photo still needed before this setup can be reviewed</span>';
         _ul.appendChild(_li);
       }
-      if (reviewLine) reviewLine.textContent = 'Key is ready for your panel photo';
-      if (reviewSub) reviewSub.textContent = 'Text me the breaker-box photo when you can.';
+      if (reviewLine) reviewLine.textContent = 'Your saved setup is incomplete';
+      if (reviewSub) reviewSub.textContent = 'Return to add the required panel photo.';
     }
 
     /* Honesty gate (Key): if they answered "not sure" to any pricing question, we do NOT
@@ -811,7 +762,7 @@
       if (kick) kick.textContent = 'Your quote';
       num.style.display = 'none';
       hideFollow();
-      line.textContent = "I can't give you an honest estimate yet, because we're not sure about " + reason + ". No problem, I'll text you shortly so we can nail that down.";
+      line.textContent = "I can't give you an honest estimate yet because we still need to confirm " + reason + '. Return to update that answer before future review.';
       /* the single biggest drop signal: did they land on a number or the honest
          no-number state, and which unanswered question caused it. */
       WALK.ph('walk_v2_price_shown', { state: 'unsure', has_range: false, unsure_count: unsure.length });
@@ -842,28 +793,11 @@
       if (kick) kick.textContent = 'Your quote';
       num.style.display = 'none';
       hideFollow();
-      line.textContent = "I'm reviewing your setup now.";
+      line.textContent = 'Your setup is saved. A range is not available from the current answers.';
       WALK.ph('walk_v2_price_shown', { state: 'working', has_range: false });
     }
 
-    /* already asked for the gift on a revisit: show the sent state */
-    if (v.gift_requested) { gift.style.display = 'none'; sent.classList.add('show'); }
-  }).catch(function () { /* a read failure must NOT bounce them off the thank-you page; keep the honest no-number state */ if (kick) kick.textContent = 'Your quote'; num.style.display = 'none'; hideFollow(); line.textContent = "I'm reviewing your setup now."; });
-
-  function emailValid(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test((v || '').trim()); }
-  email.addEventListener('input', function () { send.disabled = !emailValid(email.value); });
-  send.addEventListener('click', function () {
-    if (send.disabled) return;
-    send.disabled = true;
-    WALK.emailCapture(t, email.value.trim()).then(function () {
-      WALK.ph('walk_v2_email_captured');
-      gift.style.display = 'none';
-      sent.classList.add('show');
-    }).catch(function () {
-      send.disabled = false;
-      alert('That did not go through, mind trying once more?');
-    });
-  });
+  }).catch(function () { /* a read failure must NOT bounce them off the thank-you page; keep the honest no-number state */ if (kick) kick.textContent = 'Your quote'; num.style.display = 'none'; hideFollow(); line.textContent = 'Your setup is saved. The current range could not be loaded.'; });
 
   /* scroll reveal (comp behavior, unchanged) */
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;

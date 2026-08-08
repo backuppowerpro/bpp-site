@@ -6,15 +6,13 @@
 
 
 <meta charset="utf-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-wygnGpICbMppymZ/+XZT8Vgnv0wtsjTA4zJ1JolzPtc=' 'sha256-6XvcOHHmwbhL3EUuHcd+TZH3ZwXHQm/RBbOsrtS1zZc='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-MrmhzpkHukIm0k9SqZ9up/8dFOQd/BtFVpwQCG7swsw='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<script src="/walk-v2/token-bootstrap.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
 <title>Backup Power Pro · Quote Walk · Step 1</title>
 <link rel="icon" href="/favicon.png" type="image/png" />
 <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.jpg" />
 <meta name="theme-color" content="#0b1f3b" />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'" />
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"></noscript>
 <style>
   :root {
     --navy: #0b1f3b;
@@ -367,6 +365,88 @@
     background: rgba(255,186,0,0.16);
     color: var(--gold);
   }
+  .room.room--wide { grid-column: 1 / -1; }
+  .room-copy { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
+  .room-copy strong { font: inherit; }
+  .room-sub { color: var(--muted); font-family: var(--body); font-size: 13px; font-weight: 500; line-height: 1.3; }
+  .room[aria-pressed="true"] .room-sub { color: rgba(255,255,255,.76); }
+  .rooms.is-collapsed { grid-template-columns: 1fr; }
+  .rooms.is-collapsed .room:not([aria-pressed="true"]) { display: none; }
+  .selection-actions {
+    display: none;
+    gap: 10px;
+    align-items: center;
+  }
+  .selection-actions.show { display: grid; }
+  .continue-btn, .change-btn, .guide-btn {
+    min-height: 48px;
+    border-radius: var(--r-pill);
+    font-family: var(--head);
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .continue-btn {
+    flex: 1 1 auto;
+    padding: 0 22px;
+    color: var(--navy);
+    background: var(--gold);
+    box-shadow: var(--shadow-gold);
+  }
+  .change-btn {
+    flex: 0 0 auto;
+    padding: 0 14px;
+    color: var(--navy);
+    background: transparent;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+  .panel-guide {
+    display: none;
+    padding: 14px;
+    border-radius: var(--r-lg);
+    background: var(--card);
+    box-shadow: var(--shadow-sm), inset 0 0 0 1.5px var(--edge);
+  }
+  .ask[hidden], .rooms[hidden] { display: none !important; }
+  .panel-guide.show { display: grid; gap: 10px; }
+  .panel-guide img {
+    width: 100%;
+    height: 132px;
+    object-fit: cover;
+    border-radius: 10px;
+  }
+  .panel-guide h3 {
+    margin: 0;
+    color: var(--navy);
+    font-family: var(--head);
+    font-size: 17px;
+  }
+  .panel-guide p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13.5px;
+    line-height: 1.4;
+  }
+  .guide-actions {
+    display: grid;
+    gap: 2px;
+    margin-top: 2px;
+  }
+  .guide-btn {
+    width: 100%;
+    min-height: 48px;
+    padding: 0 22px;
+    color: var(--navy);
+    background: var(--gold);
+    box-shadow: var(--shadow-gold);
+  }
+  .guide-btn.secondary {
+    min-height: 44px;
+    background: transparent;
+    box-shadow: none;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
 
   /* echo line */
   .echo {
@@ -557,7 +637,7 @@
     .state-label { display: none; }
   }
 </style>
-<script>!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+" (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);posthog.init('phc_qoA51lePZqXYtPJYkrIpdA4U8iMDJ79L1kje7r4pD4O',{api_host:'https://us.i.posthog.com',property_denylist:['$current_url','$initial_current_url','$referrer','$initial_referrer'],sanitize_properties:function(p){for(var k in p){var v=p[k];if(typeof v==='string'&&v.indexOf('http')===0&&v.indexOf('?')>-1){try{var u=new URL(v);p[k]=u.origin+u.pathname;}catch(e){p[k]=v.split('?')[0];}}}return p;},person_profiles:'identified_only',capture_pageview:true,capture_pageleave:true,enable_heatmaps:true,capture_dead_clicks:true})</script>
+<link rel="stylesheet" href="/walk-v2/mobile-canvas.css" />
 </head>
 <body>
 <div class="stack" id="stack">
@@ -573,25 +653,29 @@
     </header>
 
     <!-- 2. progress band -->
-    <div class="prog">
-      <div class="rail" role="img" aria-label="Step 1 of 3: Location">
-        <div class="pstep on"><span class="dot"></span><span class="pl">Location</span></div>
+    <div class="prog qw-progress" data-qw-step="panel">
+      <div class="rail qw-progress-rail" role="img" aria-label="Step 2 of 4: Panel. Generator complete.">
+        <div class="pstep done"><span class="dot"></span><span class="pl">Generator</span></div>
+        <div class="pstep on"><span class="dot"></span><span class="pl">Panel</span></div>
         <div class="pstep"><span class="dot"></span><span class="pl">Distance</span></div>
-        <div class="pstep"><span class="dot"></span><span class="pl">Photo</span></div>
+        <div class="pstep"><span class="dot"></span><span class="pl">Photos</span></div>
       </div>
     </div>
+    <button class="back-btn qw-back" type="button" data-back="" aria-label="Back">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10.5 3.5L6 8l4.5 4.5"></path></svg>
+    </button>
 
     <div class="body-grid">
       <div class="col-main">
 
         <!-- 3. ask -->
-        <section class="ask rv" style="--rvd: 0ms;">
+        <section class="ask">
           <h2>Where does your main panel live?</h2>
-          <p class="helper">The gray breaker box. Garage is usual; newer homes sometimes keep it outside by the meter.</p>
+          <p class="helper">Choose where the main breaker panel is located.</p>
         </section>
 
         <!-- 4. room cards -->
-        <section class="rooms rv" style="--rvd: 90ms;" data-rooms="">
+        <section class="rooms" data-rooms="">
           <button class="room" type="button" data-room="Garage" aria-pressed="false">
             <span class="ric"><svg viewBox="0 0 16 16"><path d="M2 13V6.5L8 2.5l6 4V13"></path><path d="M4.5 13V8h7v5M4.5 10h7"></path></svg></span>
             Garage
@@ -608,17 +692,21 @@
             <span class="ric"><svg viewBox="0 0 16 16"><rect x="3.5" y="2.5" width="9" height="11" rx="1"></rect><path d="M8 2.5v11M6.3 8h.2M9.5 8h.2"></path></svg></span>
             Closet
           </button>
-          <button class="room" type="button" data-room="Laundry room" aria-pressed="false">
+          <button class="room" type="button" data-room="Utility area" aria-pressed="false">
             <span class="ric"><svg viewBox="0 0 16 16"><rect x="3" y="2.5" width="10" height="11" rx="1.5"></rect><circle cx="8" cy="9" r="2.8"></circle><path d="M5 4.5h.2M7 4.5h.2"></path></svg></span>
-            Laundry room
+            Utility area
           </button>
-          <button class="room" type="button" data-room="Somewhere else" aria-pressed="false">
+          <button class="room" type="button" data-room="Not sure" aria-pressed="false">
+            <span class="ric"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.5"></circle><path d="M6.5 6.3a1.6 1.6 0 0 1 3.1.5c0 1.2-1.6 1.5-1.6 2.6M8 11.8h.01"></path></svg></span>
+            Not sure
+          </button>
+          <button class="room room--wide" type="button" data-room="Somewhere else" aria-pressed="false">
             <span class="ric"><svg viewBox="0 0 16 16"><path d="M8 14s4.5-4 4.5-7.5a4.5 4.5 0 0 0-9 0C3.5 10 8 14 8 14z"></path><circle cx="8" cy="6.5" r="1.6"></circle></svg></span>
             Somewhere else
           </button>
-          <button class="room" type="button" data-room="Not sure" aria-pressed="false">
-            <span class="ric"><svg viewBox="0 0 16 16"><path d="M5.8 6a2.3 2.3 0 1 1 3.2 2.1c-.7.3-1 .8-1 1.4v.5"></path><path d="M8 12.5v.2"></path></svg></span>
-            Not sure
+          <button class="room room--wide" type="button" data-room="More than one panel" aria-pressed="false">
+            <span class="ric"><svg viewBox="0 0 16 16"><rect x="2.5" y="3" width="5" height="10" rx="1"></rect><rect x="8.5" y="3" width="5" height="10" rx="1"></rect><path d="M4.2 6h1.6M10.2 6h1.6"></path></svg></span>
+            <span class="room-copy"><strong>More than one panel</strong><span class="room-sub">Not sure which is the main</span></span>
           </button>
         </section>
 
@@ -627,14 +715,31 @@
           <span class="ring"><svg viewBox="0 0 14 14"><path d="M2.5 7.5l3 3 6-7"></path></svg></span>
           <span data-echo-text="">Got it, garage.</span>
         </div>
+
+        <div class="selection-actions" data-selection-actions="">
+          <button class="continue-btn qw-primary-action" type="button" data-continue="">Continue</button>
+          <button class="change-btn qw-secondary-action" type="button" data-change="">Change panel location</button>
+        </div>
+
+        <section class="panel-guide" data-panel-guide="" aria-live="polite">
+          <img src="/img/panel-example.jpg" alt="Electrical panel with its hinged outer door open" />
+          <h3>Common places to look</h3>
+          <p>Check the garage, basement, outside wall, closet, or utility area.</p>
+          <p>You may open the hinged outer door, but never remove screws or the inner cover.</p>
+          <div class="guide-actions">
+            <button class="guide-btn qw-primary-action" type="button" data-found="">I found it</button>
+            <button class="guide-btn secondary qw-secondary-action" type="button" data-later="">I'll check later</button>
+          </div>
+        </section>
+
       </div>
     </div>
 
     <!-- 6. footer -->
     <footer class="foot">
-      <strong>Key Goodson, Master Electrician, SC Lic #2942</strong><br />
-      Serving Greenville, Spartanburg, and Pickens counties<br />
-      Questions? Text me at (864) 863-7800
+      <strong>Key Goodson, Licensed Electrician, SC Lic #2942</strong>
+      <span>Serving Greenville, Spartanburg, and Pickens counties</span>
+      <span>Every project is reviewed and permitted by Key, completed with trusted local installation partners, and coordinated through final inspection.</span>
     </footer>
   </main>
 
@@ -650,48 +755,110 @@
   var main = document.getElementById('mainPage');
   var echo = main.querySelector('[data-echo]');
   var echoText = main.querySelector('[data-echo-text]');
-  var ROOM_API = { 'Garage': 'garage', 'Basement': 'basement', 'Outside': 'outside', 'Closet': 'closet', 'Laundry room': 'laundry', 'Somewhere else': 'other', 'Not sure': 'not_sure' };
+  var ask = main.querySelector('.ask');
+  var rooms = main.querySelector('[data-rooms]');
+  var selectionActions = main.querySelector('[data-selection-actions]');
+  var panelGuide = main.querySelector('[data-panel-guide]');
+  var ROOM_API = { 'Garage': 'garage', 'Basement': 'basement', 'Outside': 'outside', 'Closet': 'closet', 'Utility area': 'laundry', 'Somewhere else': 'other', 'More than one panel': 'more_than_one_panel', 'Not sure': 'not_sure' };
   var API_ROOM = {}; Object.keys(ROOM_API).forEach(function (k) { API_ROOM[ROOM_API[k]] = k; });
-  var settleTimer = null, navigated = false;
+  var selectedRoom = null, saving = false;
 
   function paint(room, echoLine) {
+    selectedRoom = room || null;
+    var help = room === 'Not sure';
     main.querySelectorAll('[data-room]').forEach(function (c) {
       c.setAttribute('aria-pressed', c.getAttribute('data-room') === room ? 'true' : 'false');
     });
-    if (echoLine) {
-      echoText.textContent = room === 'Not sure'
-        ? "No problem, I'll find it with you."
+    ask.hidden = help;
+    rooms.hidden = help;
+    panelGuide.classList.toggle('show', help);
+    var hasSelection = !!room && !help;
+    rooms.classList.toggle('is-collapsed', hasSelection);
+    selectionActions.classList.toggle('show', hasSelection);
+    if (echoLine && !help) {
+      echoText.textContent = room === 'More than one panel'
+        ? 'Got it, more than one panel.'
         : 'Got it, ' + room.toLowerCase() + '.';
       echo.classList.remove('show'); void echo.offsetWidth; echo.classList.add('show');
+    } else {
+      echo.classList.remove('show');
     }
   }
 
   /* welcome back: preselect their earlier answer (never re-ask) */
   WALK.view(t).then(function (v) {
-    if (v.confirmed_panel_room && API_ROOM[v.confirmed_panel_room]) paint(API_ROOM[v.confirmed_panel_room], false);
+    var params = new URLSearchParams(window.location.search);
+    var editMode = params.get('edit') === '1';
+    var recoveryMode = params.get('recovery') === '1';
+    var savedRoom = v.confirmed_panel_room && API_ROOM[v.confirmed_panel_room];
+    var pendingRoom = savedRoom === 'Not sure';
+    if (!editMode && savedRoom && !(recoveryMode && pendingRoom)) paint(savedRoom, false);
   }).catch(function () { /* the welcome-back preselect is best-effort; a transient read failure must NOT strip the token and bounce a mid-walk customer to a blank form. The step works without it. */ });
 
   main.querySelectorAll('[data-room]').forEach(function (card) {
     card.addEventListener('click', function () {
-      if (navigated) return;                 /* already leaving; ignore late taps */
+      if (saving) return;
       var room = card.getAttribute('data-room');
       paint(room, true);
       WALK.ph('walk_v2_confirm_tap', { field: 'panel_room', value: ROOM_API[room] });
-      /* Fresh Air + Musk accelerate: keep mis-tap settle, cut waiting theater.
-         Sibling may delete further; do not re-add "Saving…" copy. */
-      if (settleTimer) { clearTimeout(settleTimer); settleTimer = null; }
-      settleTimer = setTimeout(function () {
-        WALK.confirm(t, { confirmed_panel_room: ROOM_API[room] })
-          .then(function () { navigated = true; WALK.go('distance.html', t); })
-          .catch(function () { settleTimer = null; paint(room, true); /* restore the ack; let them tap again, never strand */ });
-      }, 280);
     });
   });
 
-  /* No Back on step 1: the only place "back" could go is the landing form, and the
-     landing's resume guard routes a tokened visit forward via routeFromState, so a
-     step-1 Back just loops. Steps 2+ keep their Back (real prevPage). Browser back
-     still reaches the landing for anyone who wants to re-edit name/phone/address. */
+  main.querySelector('[data-change]').addEventListener('click', function () {
+    paint(null, false);
+    echo.classList.remove('show');
+    main.querySelector('[data-room]').focus();
+  });
+
+  main.querySelector('[data-found]').addEventListener('click', function () {
+    paint(null, false);
+    main.querySelector('[data-room]').focus();
+  });
+
+  main.querySelector('[data-later]').addEventListener('click', function () {
+    saveAndContinue('Not sure', true);
+  });
+
+  function saveAndContinue(room, continueForward) {
+    if (!room || saving) return;
+    saving = true;
+    var payload = { confirmed_panel_room: ROOM_API[room] };
+    if (room === 'More than one panel') {
+      payload.panels = [];
+      payload.panel_inventory_status = 'multiple_unsure_main';
+    } else if (room === 'Not sure') {
+      payload.panels = [];
+      payload.panel_inventory_status = 'incomplete';
+    } else {
+      payload.panels = [{ stable_key: 'main-panel', label: 'Main panel' }];
+      payload.panel_inventory_status = 'single_complete';
+    }
+    WALK.confirm(t, payload).then(function () {
+      var recovery = new URLSearchParams(window.location.search).get('recovery') === '1';
+      if (recovery) {
+        WALK.view(t).then(function (latest) {
+          WALK.routeRecoveryFromState(t, latest);
+        }).catch(function () {
+          WALK.go('incomplete.html', t);
+        });
+      } else if (continueForward) WALK.go('distance.html', t, { sequence: '1' });
+      else WALK.go('incomplete.html', t);
+    }).catch(function () {
+      saving = false;
+      echoText.textContent = 'That answer did not save. Try again.';
+      echo.classList.add('show');
+    });
+  }
+
+  main.querySelector('[data-continue]').addEventListener('click', function () {
+    saveAndContinue(selectedRoom, true);
+  });
+
+  var backBtn = main.querySelector('[data-back]');
+  if (backBtn) backBtn.addEventListener('click', function () {
+    WALK.ph('walk_v2_back_tap', { from: 'location' });
+    WALK.back('connection.html', t);
+  });
 
   /* scroll reveal (comp behavior, unchanged) */
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;

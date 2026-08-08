@@ -1049,6 +1049,7 @@ function DialerPopup({ onClose, seed }) {
   // box; capDial truncates it so an over-long value can't re-hide digits on open.
   const [dial, setDial] = React.useState(() => capDial(seed));
   const [calling, setCalling] = React.useState(false);
+  const callingRef = React.useRef(false);
   const contacts = (window.CRM && window.CRM.contacts) || [];
 
   // Animate-out-then-close (Key 2026-06-21: no instant-vanish popups). The
@@ -1102,8 +1103,13 @@ function DialerPopup({ onClose, seed }) {
   // still block the call even when the first name/digit match was the non-DNC
   // twin (critic 2026-06-20, TCPA-relevant).
   const targetNorm = norm10(callTarget || '');
-  const matchDnc = !!targetNorm && contacts.some(c => c.do_not_contact && norm10(c.phone) === targetNorm);
-  const canCall = !!callTarget && !matchDnc;
+  const dncPhones = (window.CRM && Array.isArray(window.CRM.dncPhones)) ? window.CRM.dncPhones : [];
+  const matchDnc = !!targetNorm && (
+    contacts.some(c => c.do_not_contact && norm10(c.phone) === targetNorm)
+    || dncPhones.some(phone => norm10(phone) === targetNorm)
+  );
+  const safetyUnavailable = !!(window.CRM && window.CRM.contactsLoadFailed);
+  const canCall = !!callTarget && !matchDnc && !safetyUnavailable;
 
   React.useEffect(() => {
     const onKey = e => { if (e.key === 'Escape') beginClose(); };
@@ -1112,7 +1118,14 @@ function DialerPopup({ onClose, seed }) {
   }, [onClose]);
 
   async function placeCall() {
-    if (!canCall || calling) return;  // guard the async window against a double-tap = double call
+    const currentDncPhones = (window.CRM && Array.isArray(window.CRM.dncPhones)) ? window.CRM.dncPhones : [];
+    const blockedNow = !!(window.CRM && window.CRM.contactsLoadFailed)
+      || (!!targetNorm && (
+        ((window.CRM && window.CRM.contacts) || []).some(c => c.do_not_contact && norm10(c.phone) === targetNorm)
+        || currentDncPhones.some(phone => norm10(phone) === targetNorm)
+      ));
+    if (!canCall || blockedNow || callingRef.current) return;
+    callingRef.current = true;
     setCalling(true);
     const ok = window.BPPVoice ? await window.BPPVoice.call(callTarget, matchIsTarget ? dialMatch.name : null) : false;
     if (!ok) window.location.href = 'tel:' + callTarget;
@@ -1154,6 +1167,7 @@ function DialerPopup({ onClose, seed }) {
             the contact above isn't the matched-target one, so a disabled Call
             always names its reason. */}
         {matchDnc && <div style={{ fontSize: 12, fontWeight: 600, color: '#991B1B', marginBottom: 10 }}>Marked Do Not Contact</div>}
+        {safetyUnavailable && <div style={{ fontSize: 12, fontWeight: 600, color: '#991B1B', marginBottom: 10 }}>Calling unavailable until contacts finish loading</div>}
         {/* DP-1: inputMode="none" so focusing the field never raises the native
             iOS keyboard on top of the custom keypad (the keypad is the single
             entry affordance). autoFocus keeps the caret; the keys' onMouseDown
@@ -1197,6 +1211,7 @@ function TabHoldHost({ onOpen }) {
   const [qq, setQq] = React.useState(false);
   const [dialer, setDialer] = React.useState(false);
   const [dialerSeed, setDialerSeed] = React.useState('');
+  const dialerReturnFocus = React.useRef(null);
   React.useEffect(() => {
     const onHold = e => {
       if (e.detail?.action === 'quickquote') setQq(true);
@@ -1207,7 +1222,11 @@ function TabHoldHost({ onOpen }) {
   // crm-open-keypad opens the dialer popup. Long-press Calls dispatches it with
   // no detail (empty dial); the "Open in dialer" row carries detail.seedDial.
   React.useEffect(() => {
-    const onKeypad = e => { setDialerSeed(e.detail?.seedDial || ''); setDialer(true); };
+    const onKeypad = e => {
+      dialerReturnFocus.current = e.detail?.returnFocus || document.activeElement;
+      setDialerSeed(e.detail?.seedDial || '');
+      setDialer(true);
+    };
     window.addEventListener('crm-open-keypad', onKeypad);
     return () => window.removeEventListener('crm-open-keypad', onKeypad);
   }, []);
@@ -1226,7 +1245,10 @@ function TabHoldHost({ onOpen }) {
           onOpen={(id, tab) => { setQq(false); if (onOpen) onOpen(id, tab); }}
         />
       )}
-      {dialer && <DialerPopup seed={dialerSeed} onClose={() => setDialer(false)} />}
+      {dialer && <DialerPopup seed={dialerSeed} onClose={() => {
+        setDialer(false);
+        requestAnimationFrame(() => dialerReturnFocus.current?.focus?.());
+      }} />}
     </React.Fragment>
   );
 }

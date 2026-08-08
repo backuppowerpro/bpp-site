@@ -1,4 +1,16 @@
 
+import {
+  consumeQuoteWalkV2HandoffReceipt,
+  fetchQuoteWalkV2OperatorReceipt,
+  fetchQuoteWalkV2ReceiptMap,
+  markQuoteWalkV2OperatorNotificationSeen,
+  quoteWalkV2OperatorDisplay,
+  quoteWalkV2OperatorProjection,
+  quoteWalkV2QuoteDeskState,
+  quoteWalkV2ReceiptMode,
+  quoteWalkV2ReceiptVerdict,
+} from '../v3-app/src/quote-walk-v2-receipts.js';
+
 // One contact column list for BOTH fetch paths (initial + refresh). The two
 // lists drifted on 2026-06-10 (refresh lacked ai_summary) and the AI summary
 // card silently vanished after any data refresh; never maintain two copies.
@@ -33,9 +45,33 @@ const TEST_MODE = (function () {
     // ONLY localhost / 127.0.0.1. backuppowerpro.com can never match, so
     // production always falls through to the real Supabase client + SignInGate.
     var local = (h === 'localhost' || h === '127.0.0.1');
-    return local && new URLSearchParams(location.search).get('test') === '1';
+    var browserFixture = new URLSearchParams(location.search).get('test') === '1';
+    // The native simulator has no useful query-string entry point. Its test
+    // build sets this flag before Ionic imports crm-data.js, and remains
+    // triple-contained: compile-time opt-in, Capacitor's localhost origin,
+    // and the capacitor protocol. A normal native build cannot reach it.
+    var simulatorFixture = window.__BPP_SIM_TEST__ === true && location.protocol === 'capacitor:';
+    return local && (browserFixture || simulatorFixture);
   } catch (e) { return false; }
 })();
+
+// Test-only failure seam. It is usable only with the localhost-only
+// `?test=1` harness and proves that a cached operator list never renders as
+// a fake new account when the live contacts read is unavailable.
+const TEST_CONTACTS_FAILURE = (function () {
+  if (!TEST_MODE) return false;
+  try { return new URLSearchParams(location.search).get('contacts-fail') === '1'; }
+  catch (_) { return false; }
+})();
+
+// Native Simulator fixtures need renderable local media. A public Storage URL
+// is useful for browser interception, but it deliberately does not exist in a
+// side-effect-free simulator build. Keep these data URLs behind the explicit
+// simulator flag so a normal CRM session can never display fixture media.
+var SIM_FIXTURE_MEDIA = window.__BPP_SIM_TEST__ === true ? {
+  first: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="240" height="160" viewBox="0 0 240 160"><rect width="240" height="160" fill="#e5e7eb"/><rect x="78" y="14" width="84" height="132" rx="6" fill="#374151"/><rect x="89" y="28" width="62" height="34" fill="#9ca3af"/><path d="M89 83h62M89 105h62M110 62v72M130 62v72" stroke="#f9fafb" stroke-width="5"/></svg>'),
+  second: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="240" height="160" viewBox="0 0 240 160"><rect width="240" height="160" fill="#f5f0e6"/><path d="M38 32h164M38 58h164M38 84h164M38 110h164M38 136h164" stroke="#c7b48a" stroke-width="3"/><path d="M62 30v110M126 30v110" stroke="#9b7b45" stroke-width="3"/><text x="74" y="79" font-size="16" fill="#374151">Panel notes</text></svg>'),
+} : null;
 
 // No-op Supabase stub: every query chain resolves to {data:[],error:null} so
 // writes succeed silently, realtime channels are inert, edge fns no-op, and
@@ -102,9 +138,9 @@ function __makeStubDb() {
       proposal_id: null,
       sub_id: partial.sub_id || 't-sub-1',
       status: status,
-      permit_owner: partial.permit_owner != null ? partial.permit_owner : 'sub',
-      permit_required: partial.permit_required != null ? partial.permit_required : true,
-      permit_description: partial.permit_description || 'Portable generator inlet and interlock.',
+      permit_owner: 'bpp',
+      permit_required: true,
+      permit_description: null,
       scope_json: partial.scope_json || { description: '' },
       client: client,
       customer: { name: client.name, address: client.install_address, phone: client.phone, email: client.email },
@@ -117,7 +153,7 @@ function __makeStubDb() {
       sub_contact_name: 'Marcus Webb',
       payout_amount: partial.payout_amount != null ? partial.payout_amount : 314,
       payout_pct: 0.20,
-      payout_permit_flat: 75,
+      payout_permit_flat: 0,
       payout_job_price: 1197,
       payout_agreed_amount: partial.payout_agreed_amount != null ? partial.payout_agreed_amount : (ACCEPTED.indexOf(status) >= 0 ? (partial.payout_amount != null ? partial.payout_amount : 314) : null),
       payout_revised_reason: partial.payout_revised_reason || null,
@@ -176,11 +212,16 @@ function __makeStubDb() {
       client_name: 'Glenn Parker', client_address: '33 Maple St Greenville SC 29601', client_phone: '+18645550105',
     }),
   ];
+  var TEST_PAYOUTS = [{
+    id: 't-payout-1', sub_id: 't-sub-1', offer_id: 't-offer-eric',
+    amount_cents: 31400, client_name: 'Eric Lutz', job_code: 'TOFFER',
+    completed_at: '2026-07-10T12:30:00Z', paid_at: null, method: null,
+  }];
   var subAdminList = function (opts) {
     var view = (opts && opts.body && opts.body.view) || 'roster';
     if (view === 'roster') return Promise.resolve({ data: { subs: [TEST_SUB] }, error: null });
     if (view === 'profile') return Promise.resolve({ data: {
-      sub: TEST_SUB, contacts: [], documents: [TEST_SUB_DOC], agreement: null, payouts: [],
+      sub: TEST_SUB, contacts: [], documents: [TEST_SUB_DOC], agreement: null, payouts: TEST_PAYOUTS.slice(),
       performance: { score: 92, metrics: null, summary: 'Reliable, fast permits.', computed_at: null },
       feedback: [], jobs: TEST_JOBS.filter(function (j) { return j.sub_id === 't-sub-1'; }),
     }, error: null });
@@ -343,6 +384,17 @@ function __makeStubDb() {
           data: { ok: true, onboard_link: 'https://backuppowerpro.com/subs/apply/?token=test-token', reused: subAction === 'copy_onboard' },
           error: null,
         });
+        if (subAction === 'mark_payout_paid') {
+          var payoutBody = (opts && opts.body) || {};
+          var payout = TEST_PAYOUTS.find(function (p) { return p.id === payoutBody.payout_id; });
+          if (!payout) return Promise.resolve({ data: { error: 'payout not found' }, error: null });
+          var alreadyPaid = !!payout.paid_at;
+          if (!alreadyPaid) {
+            payout.paid_at = new Date().toISOString();
+            payout.method = payoutBody.method || 'other';
+          }
+          return Promise.resolve({ data: { ok: true, payout: Object.assign({}, payout), already_paid: alreadyPaid }, error: null });
+        }
         return Promise.resolve({ data: { ok: true, sub_id: 't-sub-1' }, error: null });
       }
       // Sub doc actions (Ionic Increment T1): view/verify a compliance
@@ -360,7 +412,21 @@ function __makeStubDb() {
       // Recompute the internal perf snapshot (Ionic Increment T1).
       if (name === 'sub-rank') return Promise.resolve({ data: { ok: true, perf_score: 82 }, error: null });
       // Add/list sub feedback (Ionic Increment T1).
-      if (name === 'sub-feedback') return Promise.resolve({ data: { ok: true }, error: null });
+      if (name === 'sub-feedback') {
+        var feedbackBody = (opts && opts.body) || {};
+        if (feedbackBody.action === 'add_incident' && feedbackBody.kind === 'failed_inspection') {
+          var reworkJob = TEST_JOBS.find(function (j) { return j.offer_id === feedbackBody.offer_id || j.id === feedbackBody.offer_id; });
+          if (!reworkJob) return Promise.resolve({ data: { error: 'offer not found' }, error: null });
+          reworkJob.status = 'install_submitted';
+          reworkJob.pass_submitted_at = null;
+          reworkJob.approved_at = null;
+          reworkJob.client_approval_confirmed_at = null;
+          reworkJob.work_done_tested_confirmed_at = null;
+          reworkJob.updated_at = new Date().toISOString();
+          return Promise.resolve({ data: { ok: true, status: 'install_submitted' }, error: null });
+        }
+        return Promise.resolve({ data: { ok: true }, error: null });
+      }
       // Sub logo upload (Ionic Increment T1): echo a fake public url so the
       // upload flow completes under ?test=1 without a real storage write.
       // Field is logo_url, matching the real fn (sub-logo-upload/index.ts:102)
@@ -392,8 +458,8 @@ function __makeStubDb() {
           contact_id: createBody.contact_id,
           sub_id: createBody.sub_id || 't-sub-1',
           status: 'offered',
-          permit_owner: createBody.permit_owner || 'sub',
-          permit_required: createBody.permit_required != null ? createBody.permit_required : true,
+          permit_owner: 'bpp',
+          permit_required: true,
           payout_amount: 314, payout_agreed_amount: null, payout_locked: false,
         });
         TEST_JOBS.unshift(created);
@@ -419,18 +485,9 @@ function __makeStubDb() {
             && !(editBody.payout_revised_reason && String(editBody.payout_revised_reason).trim())) {
           return Promise.resolve({ data: { error: 'payout_revised_reason required after accept' }, error: null });
         }
-        // Permit-terms change pre-accept: recompute payout the same way the
-        // real fn does when payout_amount is NOT also sent (fold $75 only when
-        // sub pulls a required permit). Formula display only under ?test=1.
-        if ((editBody.permit_owner != null || editBody.permit_required != null)
-            && editBody.payout_amount == null && editJob.status === 'offered') {
-          var nextOwner = editBody.permit_owner != null ? editBody.permit_owner : editJob.permit_owner;
-          var nextReq = editBody.permit_required != null ? editBody.permit_required : editJob.permit_required;
-          var base = Math.round((editJob.payout_job_price || 1197) * (editJob.payout_pct || 0.20));
-          var flat = (editJob.payout_permit_flat != null ? editJob.payout_permit_flat : 75);
-          editJob.payout_amount = base + (nextReq && nextOwner === 'sub' ? flat : 0);
-          editJob.permit_owner = nextOwner;
-          editJob.permit_required = nextReq;
+        if (editBody.permit_owner != null || editBody.permit_required != null
+            || editBody.permit_description != null || editBody.payout_permit_flat != null) {
+          return Promise.resolve({ data: { error: 'Permit fields are managed by BPP and are not part of the subcontractor offer.' }, error: null });
         }
         Object.keys(editBody).forEach(function (k) {
           if (k === 'offer_id') return;
@@ -466,9 +523,7 @@ function __makeStubDb() {
         }
         var aJob = TEST_JOBS.find(function (j) { return j.offer_id === aBody.offer_id || j.id === aBody.offer_id; });
         if (!aJob) return Promise.resolve({ data: { error: 'offer not found' }, error: null });
-        var okStatus = aJob.permit_owner === 'bpp'
-          ? (aJob.status === 'install_submitted' || aJob.status === 'pass_submitted')
-          : (aJob.status === 'pass_submitted');
+        var okStatus = aJob.status === 'pass_submitted';
         if (!okStatus) return Promise.resolve({ data: { error: 'offer is not ready for payout approval' }, error: null });
         aJob.status = 'approved_paid';
         aJob.payout_locked = true;
@@ -484,7 +539,6 @@ function __makeStubDb() {
           draft: {
             est_labor_hours: 4,
             timeframe_estimate: 'Half day',
-            permit_description: 'Standard 200A whole-home generator inlet permit, panel interconnect per NEC 702.',
           },
         },
         error: null,
@@ -969,10 +1023,9 @@ async function advanceJobSendReview(contact) {
 //
 // Write-shape parity is the contract: the payload below mirrors
 // NewProposalModal.submit() column-for-column (legacy mirrors included)
-// with the modal's untouched defaults (amp from contacts.amperage else 30,
-// 5' run, cord+inlet+permit included, no line items, no discount, PoM not
-// offered, deposit REQUIRED per Key 2026-07-11). The total comes THROUGH quoteV3Total
-// so pricing changes propagate; never hardcode the $1,197.
+// with confirmed amperage and run distance, cord+inlet+permit included, no
+// line items, no discount, PoM not offered, and the required deposit. The
+// total comes through quoteV3Total so pricing changes propagate.
 // Returns { ok:true, proposal } (proposal = mapProposal shape, already
 // pushed into window.CRM.proposals) or { ok:false, error }.
 const _DEAD_PROPOSAL_STATUSES = ['cancelled', 'declined', 'expired'];
@@ -998,8 +1051,32 @@ const _draftGenInFlight = new Set();
 
 // Flow C: latest pre-read for a contact (the Price Brief row's data).
 // Read-only via the operator policy; returns null when none exists, so
-// callers render nothing for pre-Flow-C contacts.
-async function fetchPreRead(contactId) {
+// callers render nothing for pre-Flow-C contacts. Cache both completed and
+// in-flight reads for this app session: contact siblings must share one stable
+// answer, not visibly fill themselves in after an operator pans to a tab.
+var _preReadCache = new Map();
+
+function fetchPreRead(contactId) {
+  var key = String(contactId || '');
+  if (!key) return Promise.resolve(null);
+  if (_preReadCache.has(key)) return Promise.resolve(_preReadCache.get(key));
+  var request = fetchPreReadFresh(contactId).then(function (data) {
+    _preReadCache.set(key, data || null);
+    return data || null;
+  }).catch(function () {
+    _preReadCache.set(key, null);
+    return null;
+  });
+  _preReadCache.set(key, request);
+  return request;
+}
+
+function peekPreRead(contactId) {
+  var cached = _preReadCache.get(String(contactId || ''));
+  return cached && typeof cached.then !== 'function' ? cached : null;
+}
+
+async function fetchPreReadFresh(contactId) {
   // TEST_MODE serves the synthetic fixture for this contact (the detail page's
   // walk verdict + quote-desk read); production falls through to the real query.
   if (TEST_MODE) return (window.CRM && window.CRM.__testPreReads && window.CRM.__testPreReads[contactId]) || null;
@@ -1007,7 +1084,7 @@ async function fetchPreRead(contactId) {
   try {
     var q = await window.CRM.__db
       .from('property_pre_reads')
-      .select('token, confidence, subdivision, predicted_panel_room, clone_contact_id, confirmed_panel_room, confirmed_generator_spot, customer_run_ft_estimate, distance_band, photo_received_at, photo_read, save_later_requested_at, first_viewed_at, view_count, range_low_cents, range_high_cents, gift_requested_at, thankyou_at, completion_notified_at')
+      .select('id, token, confidence, subdivision, predicted_panel_room, clone_contact_id, confirmed_panel_room, confirmed_generator_spot, customer_run_ft_estimate, distance_band, photo_received_at, photo_read, save_later_requested_at, first_viewed_at, view_count, range_low_cents, range_high_cents, gift_requested_at, thankyou_at, completion_notified_at, connection_status, generator_ownership_status, generator_needed_active')
       .eq('contact_id', contactId)
       .order('created_at', { ascending: false })
       .limit(1)
@@ -1024,7 +1101,30 @@ async function fetchPreRead(contactId) {
 // the native Ionic list calls this; the bespoke CRM boot path is untouched.
 // Read-only via the operator policy; any failure yields {} (rows just show no
 // walk verdict). Latest-per-contact wins via the created_at desc order.
-async function fetchPreReadsBulk() {
+var _preReadsBulkCache = null;
+var _preReadsBulkPromise = null;
+
+function fetchPreReadsBulk(force) {
+  if (!force && _preReadsBulkCache) return Promise.resolve(_preReadsBulkCache);
+  if (!force && _preReadsBulkPromise) return _preReadsBulkPromise;
+  var request = fetchPreReadsBulkFresh().then(function (map) {
+    _preReadsBulkCache = map || {};
+    return _preReadsBulkCache;
+  }).catch(function () {
+    _preReadsBulkCache = {};
+    return _preReadsBulkCache;
+  }).finally(function () {
+    if (_preReadsBulkPromise === request) _preReadsBulkPromise = null;
+  });
+  _preReadsBulkPromise = request;
+  return request;
+}
+
+function peekPreReadsBulk() {
+  return _preReadsBulkCache;
+}
+
+async function fetchPreReadsBulkFresh() {
   // TEST_MODE serves synthetic fixtures (the real per-contact query is stubbed
   // to [] by __makeStubDb); production always falls through to the real query.
   if (TEST_MODE) return (window.CRM && window.CRM.__testPreReads) || {};
@@ -1032,7 +1132,7 @@ async function fetchPreReadsBulk() {
   try {
     var q = await window.CRM.__db
       .from('property_pre_reads')
-      .select('contact_id, confirmed_panel_room, confirmed_generator_spot, customer_run_ft_estimate, distance_band, photo_received_at, gift_requested_at, thankyou_at, completion_notified_at, created_at')
+      .select('id, contact_id, confirmed_panel_room, confirmed_generator_spot, customer_run_ft_estimate, distance_band, photo_received_at, gift_requested_at, thankyou_at, completion_notified_at, connection_status, generator_ownership_status, generator_needed_active, created_at')
       .order('created_at', { ascending: false })
       .limit(1000);
     if (q.error || !q.data) return {};
@@ -1043,6 +1143,122 @@ async function fetchPreReadsBulk() {
     }
     return byContact;
   } catch (_) { return {}; }
+}
+
+var _quoteWalkV2ReceiptPromise = null;
+
+async function fetchQuoteWalkV2Receipts(force) {
+  if (!force && _quoteWalkV2ReceiptPromise) return _quoteWalkV2ReceiptPromise;
+  var request = fetchPreReadsBulk(force).then(function (preReads) {
+    return fetchQuoteWalkV2ReceiptMap(window.CRM && window.CRM.__db, preReads);
+  }).then(function (receipts) {
+    window.CRM.quoteWalkV2Receipts = receipts || {};
+    window.dispatchEvent(new CustomEvent('crm-data-changed', {
+      detail: { table: 'quote_walk_v2_operator_receipt' },
+    }));
+    return window.CRM.quoteWalkV2Receipts;
+  }).catch(function () {
+    window.CRM.quoteWalkV2Receipts = {};
+    return window.CRM.quoteWalkV2Receipts;
+  }).finally(function () {
+    if (_quoteWalkV2ReceiptPromise === request) _quoteWalkV2ReceiptPromise = null;
+  });
+  _quoteWalkV2ReceiptPromise = request;
+  return request;
+}
+
+async function fetchQuoteWalkV2ReceiptForContact(contactId, force) {
+  var contactKey = String(contactId || '');
+  if (!contactKey) return { error: 'contact_id_missing' };
+  if (!force && window.CRM.quoteWalkV2Receipts
+      && window.CRM.quoteWalkV2Receipts[contactKey]) {
+    return window.CRM.quoteWalkV2Receipts[contactKey];
+  }
+  var receipt;
+  try {
+    var preRead = await fetchPreRead(contactKey);
+    receipt = preRead && preRead.id
+      ? await fetchQuoteWalkV2OperatorReceipt(
+          window.CRM && window.CRM.__db,
+          preRead.id
+        )
+      : { error: 'not_found' };
+  } catch (error) {
+    receipt = {
+      error: error && error.message
+        ? String(error.message)
+        : 'operator_receipt_failed',
+    };
+  }
+  window.CRM.quoteWalkV2Receipts = Object.assign(
+    {},
+    window.CRM.quoteWalkV2Receipts || {},
+    { [contactKey]: receipt }
+  );
+  window.dispatchEvent(new CustomEvent('crm-data-changed', {
+    detail: { table: 'quote_walk_v2_operator_receipt', contact_id: contactKey },
+  }));
+  return receipt;
+}
+
+async function markQuoteWalkV2NotificationSeen(contactId) {
+  var contactKey = String(contactId || '');
+  if (!contactKey) return { ok: false, error: 'contact_id_missing' };
+  var receipt = window.CRM.quoteWalkV2Receipts
+    ? window.CRM.quoteWalkV2Receipts[contactKey]
+    : null;
+  if (!receipt || receipt.error) {
+    receipt = await fetchQuoteWalkV2ReceiptForContact(contactKey, true);
+  }
+  var result = await markQuoteWalkV2OperatorNotificationSeen(
+    window.CRM && window.CRM.__db,
+    receipt
+  );
+  if (!result.ok || result.skipped) return result;
+  var refreshed = await fetchQuoteWalkV2ReceiptForContact(contactKey, true);
+  return { ok: true, notification: result.notification, receipt: refreshed };
+}
+
+async function claimQuoteWalkV2Handoff(contact) {
+  if (!contact || !contact.id) return { ok: false, error: 'No contact selected' };
+  if (contact.do_not_contact) {
+    return { ok: false, error: 'Quote Desk claim is blocked by do not contact.' };
+  }
+  if (contact.archived) {
+    return { ok: false, error: 'Quote Desk claim is blocked for an archived contact.' };
+  }
+  var receipt = await fetchQuoteWalkV2ReceiptForContact(contact.id, true);
+  var verdict = quoteWalkV2ReceiptVerdict(receipt);
+  if (!verdict.ready) {
+    return { ok: false, error: verdict.message, verdict: verdict };
+  }
+  var result = await consumeQuoteWalkV2HandoffReceipt(
+    window.CRM && window.CRM.__db,
+    receipt
+  );
+  if (result.ok) {
+    var refreshed = await fetchQuoteWalkV2ReceiptForContact(contact.id, true);
+    if (refreshed && refreshed.error) {
+      window.CRM.quoteWalkV2Receipts = Object.assign(
+        {},
+        window.CRM.quoteWalkV2Receipts || {},
+        {
+          [String(contact.id)]: Object.assign({}, receipt, {
+            handoff_status: 'claimed',
+            handoff: Object.assign({}, receipt.handoff || {}, {
+              status: 'claimed',
+              claimed_at: result.claimed_at || null,
+              read_only_history: true,
+            }),
+          }),
+        }
+      );
+      window.dispatchEvent(new CustomEvent('crm-data-changed', {
+        detail: { table: 'quote_walk_v2_quote_handoffs', contact_id: contact.id },
+      }));
+    }
+  }
+  return result;
 }
 
 // ── Quote Desk (lead → firm quote speed, 2026-07-13) ───────────────────
@@ -1065,7 +1281,7 @@ function _quoteDeskAmp(contact, preRead) {
   if (photo && (photo.amperage === 30 || photo.amperage === 50 || photo.amperage === '30' || photo.amperage === '50')) {
     return String(photo.amperage);
   }
-  return '30';
+  return null;
 }
 
 function _quoteDeskRunFt(contact, preRead) {
@@ -1073,7 +1289,7 @@ function _quoteDeskRunFt(contact, preRead) {
   if (!(isFinite(runFt) && runFt > 0) && preRead && preRead.customer_run_ft_estimate != null) {
     runFt = Number(preRead.customer_run_ft_estimate);
   }
-  if (!(isFinite(runFt) && runFt > 0)) return { lengthFt: 5, runFt: null, distanceUnconfirmed: true };
+  if (!(isFinite(runFt) && runFt > 0)) return { lengthFt: null, runFt: null, distanceUnconfirmed: true };
   var lengthFt = Math.min(100, Math.max(5, Math.ceil(runFt / 5) * 5));
   return { lengthFt: lengthFt, runFt: runFt, distanceUnconfirmed: false };
 }
@@ -1082,8 +1298,44 @@ function _quoteDeskRunFt(contact, preRead) {
 // (same inputs as generateDraftProposal). Fall back to walk range midpoint
 // when the engine is unavailable. Always a SUGGESTION; Key edits before send.
 function suggestFirmQuote(contact, preRead) {
+  if (!preRead || preRead.generator_needed_active
+      || (preRead.connection_status !== 'confirmed_30' && preRead.connection_status !== 'confirmed_50')) {
+    return {
+      ready: false,
+      missingFacts: ['generator connection'],
+      dollars: null,
+      amp: null,
+      lengthFt: null,
+      runFt: null,
+      distanceUnconfirmed: true,
+      rangeLow: null,
+      rangeHigh: null,
+      source: null,
+      hasPhoto: !!(preRead && preRead.photo_received_at),
+      distanceBand: (preRead && preRead.distance_band) || null,
+    };
+  }
   var amp = _quoteDeskAmp(contact, preRead);
   var run = _quoteDeskRunFt(contact, preRead);
+  var missingFacts = [];
+  if (!amp) missingFacts.push('amperage');
+  if (run.distanceUnconfirmed || !run.lengthFt) missingFacts.push('distance');
+  if (missingFacts.length) {
+    return {
+      ready: false,
+      missingFacts: missingFacts,
+      dollars: null,
+      amp: amp,
+      lengthFt: run.lengthFt,
+      runFt: run.runFt,
+      distanceUnconfirmed: run.distanceUnconfirmed,
+      rangeLow: preRead && preRead.range_low_cents != null ? Math.round(Number(preRead.range_low_cents) / 100) : null,
+      rangeHigh: preRead && preRead.range_high_cents != null ? Math.round(Number(preRead.range_high_cents) / 100) : null,
+      source: null,
+      hasPhoto: !!(preRead && preRead.photo_received_at),
+      distanceBand: (preRead && preRead.distance_band) || null,
+    };
+  }
   var dollars = null;
   var source = 'default';
   if (typeof window.quoteV3Total === 'function') {
@@ -1107,6 +1359,8 @@ function suggestFirmQuote(contact, preRead) {
     source = 'fallback';
   }
   return {
+    ready: true,
+    missingFacts: [],
     dollars: Math.round(dollars),
     amp: amp,
     lengthFt: run.lengthFt,
@@ -1127,6 +1381,7 @@ function buildFirmQuoteSmsDraft(contact, preRead, opts) {
   var sug = (opts.suggestion && typeof opts.suggestion === 'object')
     ? opts.suggestion
     : suggestFirmQuote(contact, preRead);
+  if (!sug.ready) return null;
   var first = _quoteDeskFirstName(contact);
   var greet = first ? ('Hey ' + first + ', ') : 'Hey, ';
   var dollars = (opts.dollars != null && isFinite(Number(opts.dollars)))
@@ -1162,6 +1417,7 @@ function prefillFirmQuoteSms(contact, preRead, opts) {
   if (contact.do_not_contact) return { ok: false, error: 'Marked do not contact' };
   if (contact.archived) return { ok: false, error: 'Contact is archived' };
   var suggestion = suggestFirmQuote(contact, preRead);
+  if (!suggestion.ready) return { ok: false, error: 'Confirm ' + suggestion.missingFacts.join(' and ') + ' before drafting a firm quote.', suggestion: suggestion };
   var text = buildFirmQuoteSmsDraft(contact, preRead, Object.assign({}, opts || {}, { suggestion: suggestion }));
   try {
     sessionStorage.setItem('draft:' + contact.id, text);
@@ -1376,7 +1632,11 @@ async function deskClearBatchDraft(contacts) {
 function isQuoteDeskReady(contact, preRead, proposals) {
   if (!contact || contact.archived || contact.do_not_contact) return false;
   if (contact.stage !== 'new' && contact.stage !== 'quoted') return false;
-  if (!preRead) return false;
+  var receipt = window.CRM && window.CRM.quoteWalkV2Receipts
+    ? window.CRM.quoteWalkV2Receipts[String(contact.id)]
+    : null;
+  var legacyReady = Boolean(preRead && suggestFirmQuote(contact, preRead).ready === true);
+  if (!quoteWalkV2QuoteDeskState(receipt, legacyReady).actionable) return false;
   var DEAD = ['cancelled', 'declined', 'expired'];
   var list = proposals || (window.CRM && window.CRM.proposals) || [];
   for (var i = 0; i < list.length; i++) {
@@ -1386,14 +1646,14 @@ function isQuoteDeskReady(contact, preRead, proposals) {
     if (DEAD.indexOf(String(p.status || '').toLowerCase()) !== -1) continue;
     return false; // live proposal already exists
   }
-  // Enough walk signal: distance, photo, amp, or a stored range.
-  if (preRead.customer_run_ft_estimate != null) return true;
-  if (preRead.distance_band && preRead.distance_band !== 'not_sure') return true;
-  if (preRead.photo_received_at) return true;
-  if (preRead.range_low_cents != null && preRead.range_high_cents != null) return true;
-  if (contact.amperage === '30' || contact.amperage === '50' || contact.amperage === 30 || contact.amperage === 50) return true;
-  if (preRead.confirmed_panel_room) return true;
-  return false;
+  return true;
+}
+
+function proposalHasFirmFacts(proposal) {
+  if (!proposal) return false;
+  var amp = String(proposal.selected_amp || proposal.amp_type || '');
+  var lengthFt = Number(proposal.length_ft);
+  return (amp === '30' || amp === '50') && isFinite(lengthFt) && lengthFt > 0;
 }
 
 async function generateDraftProposal(contact) {
@@ -1401,12 +1661,35 @@ async function generateDraftProposal(contact) {
   if (!contact || !contact.id) return { ok: false, error: 'no contact' };
   if (contact.do_not_contact) return { ok: false, error: 'Marked do not contact' };
   if (contact.archived) return { ok: false, error: 'Contact is archived' };
-  if (typeof window.quoteV3Total !== 'function') return { ok: false, error: 'pricing engine not loaded' };
   if (_draftGenInFlight.has(contact.id)) return { ok: false, error: 'Draft generation already in progress' };
   if (_hasLiveProposalLocal(contact.id)) return { ok: false, error: 'Live proposal already exists' };
   _draftGenInFlight.add(contact.id);
   try {
-    return await _generateDraftProposalInner(contact);
+    var preRead = null;
+    try { preRead = await fetchPreRead(contact.id); } catch (_) { preRead = null; }
+    var receipt = await fetchQuoteWalkV2ReceiptForContact(contact.id, true);
+    var legacyReady = Boolean(preRead && suggestFirmQuote(contact, preRead).ready === true);
+    var deskState = quoteWalkV2QuoteDeskState(receipt, legacyReady);
+    if (deskState.mode === 'legacy') {
+      if (typeof window.quoteV3Total !== 'function') {
+        return { ok: false, error: 'pricing engine not loaded' };
+      }
+      if (!deskState.actionable) {
+        return { ok: false, error: deskState.verdict.message, verdict: deskState.verdict };
+      }
+      return await _generateDraftProposalInner(contact);
+    }
+    if (deskState.mode !== 'v2') {
+      return { ok: false, error: deskState.verdict.message, verdict: deskState.verdict };
+    }
+    var claimed = await claimQuoteWalkV2Handoff(contact);
+    if (!claimed.ok) return claimed;
+    return {
+      ok: true,
+      handoffClaimed: true,
+      claim: claimed.claim,
+      message: 'Quote Walk handoff claimed. Proposal creation requires the authoritative handoff payload.',
+    };
   } finally {
     _draftGenInFlight.delete(contact.id);
   }
@@ -1418,21 +1701,12 @@ async function _generateDraftProposalInner(contact) {
   var preRead = null;
   try { preRead = await fetchPreRead(contact.id); } catch (_) { preRead = null; }
   var sug = suggestFirmQuote(contact, preRead);
+  if (!sug.ready) return { ok: false, error: 'Confirm ' + sug.missingFacts.join(' and ') + ' before creating a firm proposal.' };
   var amp = sug.amp;
   var lengthFt = sug.lengthFt;
-  var distanceUnconfirmed = sug.distanceUnconfirmed;
-  // Flow C honesty: when the customer never gave a run distance (the walk
-  // "not sure" answer, or no pre-read at all), the draft defaults to 5 ft.
-  // Surface that plainly in the draft notes / Price Brief context so Key
-  // confirms the run on the call before sending (never ship a silent 5 ft
-  // guess as a firm number).
   var draftNote = '';
-  if (distanceUnconfirmed) {
-    draftNote = 'Distance unconfirmed, defaulted to 5 ft. Confirm the cord run before sending.';
-  }
   if (sug.rangeLow != null && sug.rangeHigh != null) {
-    draftNote = (draftNote ? draftNote + ' ' : '')
-      + 'Walk ballpark was $' + sug.rangeLow + ' to $' + sug.rangeHigh
+    draftNote = 'Walk ballpark was $' + sug.rangeLow + ' to $' + sug.rangeHigh
       + '; firm number still needs Key\'s send.';
   }
   var total = window.quoteV3Total({
@@ -1896,6 +2170,24 @@ let __paidByInvoice = {}; // { [invoice_id]: paidCents }
 // Individual COMPLETED payment rows per invoice, so the operator Refund action can
 // target a SPECIFIC payment (refund-payment takes a payment_id). { [invoice_id]: [rows] }.
 let __paymentsByInvoice = {};
+function applyPaidRows(data) {
+  const next = {};
+  const rows = {};
+  for (const p of (data || [])) {
+    if (!p.invoice_id) continue;
+    if (String(p.status || '').toLowerCase() === 'completed') {
+      const net = (Number(p.amount) || 0) - (Number(p.refunded_amount) || 0);
+      next[p.invoice_id] = (next[p.invoice_id] || 0) + Math.round(net * 100);
+    }
+    (rows[p.invoice_id] = rows[p.invoice_id] || []).push({
+      id: p.id, proposal_id: p.proposal_id || null,
+      amount: Number(p.amount) || 0, refunded_amount: Number(p.refunded_amount) || 0,
+      status: p.status,
+    });
+  }
+  __paidByInvoice = next;
+  __paymentsByInvoice = rows;
+}
 async function loadPaidByInvoice() {
   try {
     // NOTE: select ONLY live columns here. pay_method/discount_amount come from the
@@ -1909,22 +2201,7 @@ async function loadPaidByInvoice() {
       .select('id, invoice_id, proposal_id, amount, refunded_amount, status')
       .in('status', ['completed', 'processing', 'failed']).limit(5000);
     if (error) { console.warn('[CRM] payments sum load failed:', error.message); return; }
-    const next = {};
-    const rows = {};
-    for (const p of (data || [])) {
-      if (!p.invoice_id) continue;
-      if (String(p.status || '').toLowerCase() === 'completed') {
-        const net = (Number(p.amount) || 0) - (Number(p.refunded_amount) || 0);
-        next[p.invoice_id] = (next[p.invoice_id] || 0) + Math.round(net * 100);
-      }
-      (rows[p.invoice_id] = rows[p.invoice_id] || []).push({
-        id: p.id, proposal_id: p.proposal_id || null,
-        amount: Number(p.amount) || 0, refunded_amount: Number(p.refunded_amount) || 0,
-        status: p.status,
-      });
-    }
-    __paidByInvoice = next;
-    __paymentsByInvoice = rows;
+    applyPaidRows(data);
   } catch (e) { console.warn('[CRM] payments sum load error:', e.message); }
 }
 
@@ -2262,6 +2539,7 @@ window.CRM = {
   permits: [],
   materials: [],
   readiness: [],
+  quoteWalkV2Receipts: {},
   stageHistory: [],
   jurisdictions: [
     // The 4 BPP service-area jurisdictions, matching BPP_JURISDICTIONS in
@@ -2297,17 +2575,27 @@ window.CRM = {
   clearDeskClearQueue,
   readDeskClearQueue,
   isQuoteDeskReady,
+  proposalHasFirmFacts,
   fetchPreRead,
+  peekPreRead,
   fetchPreReadsBulk,
+  peekPreReadsBulk,
+  fetchQuoteWalkV2Receipts,
+  fetchQuoteWalkV2ReceiptForContact,
+  markQuoteWalkV2NotificationSeen,
+  claimQuoteWalkV2Handoff,
+  quoteWalkV2ReceiptVerdict,
+  quoteWalkV2QuoteDeskState,
+  quoteWalkV2ReceiptMode,
+  quoteWalkV2OperatorProjection,
+  quoteWalkV2OperatorDisplay,
   now: new Date(),
   loaded: false,
   authed: false,
   __db,
   __invokeFn,
-  // Exposed for authenticated BINARY fetches (e.g. CallAudio fetching a
-  // get-recording .mp3 as a blob: a native <audio> cannot send the apikey
-  // header the proxy requires). Both are the PUBLIC, RLS-scoped publishable
-  // values already shipped in this bundle, so exposing them adds no exposure.
+  // Exposed for binary fetches. CallAudio combines the public API key with
+  // Key's current operator session token before fetching a recording blob.
   __url: SUPABASE_URL,
   __anonKey: SUPABASE_ANON_KEY,
 };
@@ -2346,6 +2634,82 @@ let __loadInFlight = null;
 // read them identically to production. Populates the in-memory arrays, flips
 // authed/loaded, and fires the same 'crm-data-ready' event the real load uses,
 // so the real shell renders with zero app-side changes.
+function __phoneSafetyKey(value) {
+  const digits = String(value || '').replace(/\D/g, '').replace(/^1/, '').slice(-10);
+  return digits.length === 10 ? '+1' + digits : null;
+}
+
+function __dncPhoneSet(rows) {
+  return [...new Set((rows || [])
+    .filter(row => row && row.do_not_contact)
+    .map(row => __phoneSafetyKey(row.phone))
+    .filter(Boolean))];
+}
+
+async function __fetchDncPhoneSet(db) {
+  const rows = [];
+  const pageSize = 1000;
+  for (let page = 0; page < 100; page++) {
+    const from = page * pageSize;
+    const { data, error } = await db.from('contacts')
+      .select('phone, do_not_contact')
+      .eq('do_not_contact', true)
+      .not('phone', 'is', null)
+      .order('id', { ascending: true })
+      .range(from, from + pageSize - 1);
+    if (error) return { data: null, error };
+    rows.push(...(data || []));
+    if (!data || data.length < pageSize) return { data: __dncPhoneSet(rows), error: null };
+  }
+  return { data: null, error: { message: 'DNC safety list exceeded pagination guard' } };
+}
+
+// A temporary iOS network failure must never make a real operator account
+// look like a genuinely empty account. Keep the last verified contact and
+// DNC snapshot for read-only continuity. While it is displayed,
+// contactsLoadFailed remains true, so customer actions remain fail-closed
+// until the live safety read succeeds again.
+const CONTACT_SNAPSHOT_KEY = 'bpp_v3_contacts_snapshot_v1';
+
+function __readContactSnapshot() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(CONTACT_SNAPSHOT_KEY) || 'null');
+    if (!saved || saved.version !== 1 || !Array.isArray(saved.contacts) || saved.contacts.length === 0) return null;
+    if (!saved.contacts.every(c => c && c.id)) return null;
+    return {
+      contacts: saved.contacts,
+      dncPhones: Array.isArray(saved.dncPhones) ? saved.dncPhones : [],
+    };
+  } catch (_) {
+    return null;
+  }
+}
+
+function __saveContactSnapshot(contacts, dncPhones) {
+  try {
+    localStorage.setItem(CONTACT_SNAPSHOT_KEY, JSON.stringify({
+      version: 1,
+      savedAt: Date.now(),
+      contacts: Array.isArray(contacts) ? contacts : [],
+      dncPhones: Array.isArray(dncPhones) ? dncPhones : [],
+    }));
+  } catch (_) {
+    // Snapshot storage is a continuity improvement, never a hard dependency.
+  }
+}
+
+function __showCachedContacts(snapshot, detail) {
+  if (!snapshot) return false;
+  CRM.contacts = snapshot.contacts;
+  CRM.dncPhones = snapshot.dncPhones;
+  CRM.contactsFromSnapshot = true;
+  CRM.contactsLoadFailed = true;
+  CRM.authed = true;
+  CRM.loaded = true;
+  window.dispatchEvent(new CustomEvent('crm-data-ready', { detail: Object.assign({ authed: true, cached: true }, detail || {}) }));
+  return true;
+}
+
 function __loadTestFixtures() {
   var nowMs = Date.now();
   var iso = function (d, h, m) { var x = new Date(nowMs); x.setDate(x.getDate() + d); x.setHours(h || 9, m || 0, 0, 0); return x.toISOString(); };
@@ -2366,6 +2730,9 @@ function __loadTestFixtures() {
     { id:'t-wanda',  name:'Wanda Ellis',    phone:'+18645550106', email:'wanda@example.test', address:'21 Birchwood Ct Taylors SC 29687',    stage:'booked',  amperage:'30', assigned_installer:'',         do_not_contact:false, archived:true,  channel:'direct',    created_at: ago(60*24*30) },
     { id:'t-carl',   name:'Carl Rhodes',    phone:'+18645550107', email:'carl@example.test',  address:'14 Pineview Rd Duncan SC 29334',      stage:'quoted',  amperage:'',   assigned_installer:'',         do_not_contact:true,  archived:false, channel:'meta',      created_at: ago(60*24*12) },
   ];
+  CRM.contactsLoadFailed = false;
+  CRM.contactsFromSnapshot = false;
+  CRM.dncPhones = __dncPhoneSet(CRM.contacts);
   // Synthetic property_pre_reads (TEST_MODE only) so the walk-verdict badges +
   // the Active-lens walk filter are visually exercisable without real walk
   // data. One per verdict-ladder rung; the other contacts have NO pre-read so
@@ -2402,12 +2769,12 @@ function __loadTestFixtures() {
   ];
   CRM.proposals = [
     // Ionic increment S2 fixture: pom_accepted:true added so Dana is the
-    // dedicated POM-inspection fixture (a Signed, not superseded proposal,
+    // dedicated POM-inspection fixture (an Approved, not superseded proposal,
     // exercising POMSection's gate under ?test=1). Her existing proposals-
     // focused story (t-pr1 Signed + t-pr7 superseded draft) is untouched,
     // this is additive only.
-    { id:'t-pr1', contact_id:'t-dana',   token:'tok-dana', status:'Signed', total:1447, amp_type:'50', selected_amp:'50', created_at: ago(60*24*4), sent_at: ago(60*24*4), viewed_at: ago(60*24*3), signed_at: ago(60*24*2), creator_version:3, pricing_tier:'pom', pom_accepted:true },
-    { id:'t-pr2', contact_id:'t-marcus', token:'tok-marc', status:'Sent',   total:1197, amp_type:'30', selected_amp:'30', created_at: ago(60*24*1), sent_at: ago(60*24*1), viewed_at: ago(60*8), signed_at:null, creator_version:3, pricing_tier:'pom' },
+    { id:'t-pr1', contact_id:'t-dana',   token:'tok-dana', status:'Approved', total:1447, amp_type:'50', selected_amp:'50', length_ft:25, created_at: ago(60*24*4), sent_at: ago(60*24*4), viewed_at: ago(60*24*3), signed_at: ago(60*24*2), approved_at: ago(60*24*2), creator_version:3, pricing_tier:'pom', pom_accepted:true },
+    { id:'t-pr2', contact_id:'t-marcus', token:'tok-marc', status:'Sent',   total:1197, amp_type:'30', selected_amp:'30', length_ft:25, created_at: ago(60*24*1), sent_at: ago(60*24*1), viewed_at: ago(60*8), signed_at:null, creator_version:3, pricing_tier:'pom' },
     // Approved (not just Signed), production reality per Key 2026-07-11: the
     // deposit payment (t-in3 below) is what GRANTS approved, mirroring
     // mapProposal's deposit-gate rule (crm-data.js:1113-1125, bug #114): a
@@ -2417,14 +2784,14 @@ function __loadTestFixtures() {
     // side effect: Glenn's money-status pill on ContactDetailPage moves from
     // 'Awaiting deposit' to the unbilled branch ('Send invoice', $1,358 =
     // $1,697 approved minus $339 invoiced, >= 20% unbilled threshold).
-    { id:'t-pr3', contact_id:'t-glenn',  token:'tok-glen', status:'Approved', total:1697, amp_type:'50', selected_amp:'50', created_at: ago(60*24*6), sent_at: ago(60*24*6), viewed_at: ago(60*24*6), signed_at: ago(60*24*5), creator_version:3, pricing_tier:'pom' },
+    { id:'t-pr3', contact_id:'t-glenn',  token:'tok-glen', status:'Approved', total:1697, amp_type:'50', selected_amp:'50', length_ft:25, created_at: ago(60*24*6), sent_at: ago(60*24*6), viewed_at: ago(60*24*6), signed_at: ago(60*24*5), creator_version:3, pricing_tier:'pom' },
     // Ionic Finance increment G fixture: a DECLINED proposal for Priya
     // (raw status 'Declined', mapProposal passes non-listed statuses through
     // lowercase unchanged, so mapped status stays 'declined') so the
     // Proposals sub-tab has a struck-through pill to exercise. amount_cents
     // set directly (bypassing the dollars-denominated `total` field the
     // other fixtures use) so the mapped total is unambiguous at $899.
-    { id:'t-pr4', contact_id:'t-priya',  token:'tok-priya', status:'Declined', amount_cents:89900, amp_type:'30', selected_amp:'30', created_at: ago(60*24*10), sent_at: ago(60*24*10), viewed_at:null, signed_at:null, creator_version:3, pricing_tier:'pom' },
+    { id:'t-pr4', contact_id:'t-priya',  token:'tok-priya', status:'Declined', amount_cents:89900, amp_type:'30', selected_amp:'30', length_ft:25, created_at: ago(60*24*10), sent_at: ago(60*24*10), viewed_at:null, signed_at:null, creator_version:3, pricing_tier:'pom' },
     // Ionic increment O fixtures (proposal composer + per-status actions):
     // t-pr5 is a fresh 'Created' draft for Eric (a second proposal alongside
     // his existing paid deal, exercises Send/Copy/Edit/Delete). t-pr6 is an
@@ -2434,9 +2801,9 @@ function __loadTestFixtures() {
     // draft for Dana (superseded_at set, created 30 minutes before t-pr1
     // superseded it), proving contactMoneyDocs still lists a superseded row
     // instead of silently hiding it, superseded is a column, not a status.
-    { id:'t-pr5', contact_id:'t-eric',  token:'tok-eric-2', status:'Created', total:1197, amp_type:'30', selected_amp:'30', created_at: ago(60*3), sent_at:null, viewed_at:null, signed_at:null, creator_version:3, pricing_tier:'standard' },
-    { id:'t-pr6', contact_id:'t-carl',  token:'tok-carl',   status:'expired', total:1297, amp_type:'30', selected_amp:'30', created_at: ago(60*24*20), sent_at: ago(60*24*20), viewed_at: ago(60*24*19), signed_at:null, creator_version:3, pricing_tier:'standard' },
-    { id:'t-pr7', contact_id:'t-dana',  token:'tok-dana-2', status:'Created', total:1447, amp_type:'50', selected_amp:'50', created_at: ago(60*24*4+30), sent_at:null, viewed_at:null, signed_at:null, creator_version:3, pricing_tier:'pom', superseded_at: ago(60*24*4), superseded_by:'t-pr1' },
+    { id:'t-pr5', contact_id:'t-eric',  token:'tok-eric-2', status:'Created', total:1197, amp_type:'30', selected_amp:'30', length_ft:25, created_at: ago(60*3), sent_at:null, viewed_at:null, signed_at:null, creator_version:3, pricing_tier:'standard' },
+    { id:'t-pr6', contact_id:'t-carl',  token:'tok-carl',   status:'expired', total:1297, amp_type:'30', selected_amp:'30', length_ft:25, created_at: ago(60*24*20), sent_at: ago(60*24*20), viewed_at: ago(60*24*19), signed_at:null, creator_version:3, pricing_tier:'standard' },
+    { id:'t-pr7', contact_id:'t-dana',  token:'tok-dana-2', status:'Created', total:1447, amp_type:'50', selected_amp:'50', length_ft:25, created_at: ago(60*24*4+30), sent_at:null, viewed_at:null, signed_at:null, creator_version:3, pricing_tier:'pom', superseded_at: ago(60*24*4), superseded_by:'t-pr1' },
   ];
   CRM.invoices = [
     { id:'t-in1', contact_id:'t-eric', status:'sent', amount_cents:144700, created_at: ago(60*24*1), sent_at: ago(60*24*1), due_at: iso(7,9), paid_at:null, invoice_num:'BPP-T-0001', line_items:[], token:'tok-inv-eric' },
@@ -2450,6 +2817,10 @@ function __loadTestFixtures() {
     // pulse (this calendar month).
     { id:'t-in2', contact_id:'t-marcus', status:'sent', amount_cents:59900, created_at: ago(60*24*20), sent_at: ago(60*24*20), due_at: iso(-13,9), paid_at:null, invoice_num:'BPP-T-0002', line_items:[], token:'tok-inv-marcus' },
     { id:'t-in3', contact_id:'t-glenn', kind:'deposit', status:'paid', amount_cents:33900, created_at: ago(60*24*5), sent_at: ago(60*24*5), paid_at: ago(60*24*2), invoice_num:'BPP-T-0003', line_items:[], token:'tok-inv-glenn' },
+    // Dana has a scheduled install, so her required deposit is already paid.
+    // This keeps the synthetic business state possible and prevents a false
+    // Booked + Install scheduled + Awaiting deposit combination in both CRMs.
+    { id:'t-in9', contact_id:'t-dana', proposal_id:'t-pr1', kind:'deposit', status:'paid', amount_cents:28900, created_at: ago(60*24*2), sent_at: ago(60*24*2), paid_at: ago(60*24*2), invoice_num:'BPP-T-0009', line_items:[], token:'tok-inv-dana-deposit' },
     // Ionic Increment L (invoice quick actions) coverage: a draft (Edit-price
     // -only action-sheet gate, never sent so never Void/Mark paid/Record
     // payment) and a voided invoice (Revive-only gate). Neither status
@@ -2491,6 +2862,30 @@ function __loadTestFixtures() {
     // row: exercises the honest "Photo unavailable" placeholder path in both
     // apps rather than leaving the MMS branch untested (critic, increment E).
     { id:'t-m7', contact_id:'t-eric', direction:'inbound', body:'', created_at: ago(60*5), sender_role:'customer', kind:'mms', read_at: ago(60*2) },
+  ];
+  CRM.__testMmsAttachments = {
+    't-m7': [{
+      storage_path: null,
+      content_type: 'image/jpeg',
+      size_bytes: 1024,
+      source_url: SIM_FIXTURE_MEDIA ? SIM_FIXTURE_MEDIA.first : 'https://reowtzedjflwmlptupbk.supabase.co/storage/v1/object/public/message-media/mms/fixture-customer-photo.jpg',
+    }],
+  };
+  // A second customer photo that is only present in the durable gallery
+  // exercises the receiver handoff: it must appear beside the thread
+  // attachment rather than disappearing because it has no attached fixture
+  // message in this test session.
+  CRM.contactPhotos = [
+    { id:'t-cp1', contact_id:'t-eric', url:SIM_FIXTURE_MEDIA ? SIM_FIXTURE_MEDIA.first : 'https://reowtzedjflwmlptupbk.supabase.co/storage/v1/object/public/message-media/mms/fixture-customer-photo-gallery.jpg', caption:'Texted in by customer' },
+    // Same object through a query-decorated URL, the production shape when a
+    // receiver and a refreshed gallery disagree on URL form. It must not add
+    // a second tile.
+    { id:'t-cp2', contact_id:'t-eric', url:SIM_FIXTURE_MEDIA ? SIM_FIXTURE_MEDIA.first + '#receiver-copy' : 'https://reowtzedjflwmlptupbk.supabase.co/storage/v1/object/public/message-media/mms/fixture-customer-photo-gallery.jpg?download=1', caption:'Duplicate transport row' },
+    // A legacy double-copy can occupy two different storage paths. The gallery
+    // must compare image bytes as a last display-only safety net, not merely
+    // the URL or filename.
+    { id:'t-cp3', contact_id:'t-eric', url:SIM_FIXTURE_MEDIA ? SIM_FIXTURE_MEDIA.first + '#legacy-copy' : 'https://reowtzedjflwmlptupbk.supabase.co/storage/v1/object/public/message-media/mms/legacy-copy/fixture-customer-photo-gallery.jpg', caption:'Duplicate legacy copy' },
+    { id:'t-cp4', contact_id:'t-eric', url:SIM_FIXTURE_MEDIA ? SIM_FIXTURE_MEDIA.second : 'https://reowtzedjflwmlptupbk.supabase.co/storage/v1/object/public/message-media/mms/fixture-customer-photo-second.jpg', caption:'A different customer photo' },
   ];
   CRM.calls = [
     { id:'t-c1', contact_id:'t-eric', direction:'inbound', started_at: ago(60*26), duration_sec:184, status:'completed', from_phone:'+18645550101', to_phone:'+18648637800', notes:null, ai_summary:'Confirmed install time and asked about cord length.' },
@@ -2605,7 +3000,22 @@ function __loadTestFixtures() {
 }
 
 async function loadLiveData() {
-  if (TEST_MODE) { __loadTestFixtures(); return; }
+  if (TEST_MODE) {
+    if (TEST_CONTACTS_FAILURE) {
+      if (!__showCachedContacts(__readContactSnapshot(), { testContactsFailure: true })) {
+        CRM.contacts = [];
+        CRM.dncPhones = [];
+        CRM.contactsFromSnapshot = false;
+        CRM.contactsLoadFailed = true;
+        CRM.authed = true;
+        CRM.loaded = true;
+        window.dispatchEvent(new CustomEvent('crm-data-ready', { detail: { authed: true, testContactsFailure: true } }));
+      }
+      return;
+    }
+    __loadTestFixtures();
+    return;
+  }
   if (__loadInFlight) return __loadInFlight;
   __loadInFlight = (async () => {
     try { await _loadLiveDataInner(); } finally { __loadInFlight = null; }
@@ -2614,6 +3024,7 @@ async function loadLiveData() {
 }
 
 async function _loadLiveDataInner() {
+  window.__bppBootMark?.('live data load started');
   if (!__db) {
     console.warn('[CRM] supabase-js not loaded, staying in empty state');
     return;
@@ -2625,7 +3036,16 @@ async function _loadLiveDataInner() {
   }
   __realtimeChannels = [];
 
-  const { data: { session } } = await __db.auth.getSession();
+  // A Capacitor WebView can occasionally leave session restoration pending
+  // forever after the OS suspends the app. Bound this one bootstrap boundary
+  // so the operator gets a recoverable signed-out state instead of an endless
+  // loading spinner. The table reads below already have their own timeouts.
+  const sessionResult = await Promise.race([
+    __db.auth.getSession(),
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Session restoration timed out after 8000ms')), 8000)),
+  ]);
+  const { data: { session } } = sessionResult;
+  window.__bppBootMark?.('session available');
   if (!session) {
     window.CRM.authed = false;
     window.CRM.loaded = true;
@@ -2633,6 +3053,14 @@ async function _loadLiveDataInner() {
     return;
   }
   window.CRM.authed = true;
+
+  // Restore a previously verified list while the fresh live read runs. This
+  // is deliberately read-only: the normal safety gate remains closed until
+  // contacts and the DNC list both arrive from the server.
+  const cachedContacts = __readContactSnapshot();
+  if (cachedContacts) {
+    __showCachedContacts(cachedContacts);
+  }
 
   const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(); // 90 days back
 
@@ -2649,7 +3077,7 @@ async function _loadLiveDataInner() {
   const fetchTable = (queryBuilder, label) =>
     withTimeout(queryBuilder, 8000, label).catch(e => ({ data: null, error: e }));
 
-  const [contactsR, eventsR, proposalsR, invoicesR, messagesR, stageHistoryR, permitsR, materialsR, callsR, jobPhotosR, readinessR] = await Promise.all([
+  const [contactsR, eventsR, proposalsR, invoicesR, messagesR, stageHistoryR, permitsR, materialsR, callsR, jobPhotosR, contactPhotosR, readinessR, dncR, paymentsR, installersR, linesR] = await Promise.all([
     fetchTable(__db.from('contacts')
       .select(CONTACT_COLS)
       .order('created_at', { ascending: false })
@@ -2716,6 +3144,13 @@ async function _loadLiveDataInner() {
       .select('id, contact_id, url, storage_path, caption, uploaded_by, uploaded_at, annotated, photo_kind')
       .order('uploaded_at', { ascending: false })
       .limit(1000), 'job_photos'),
+    // Customer photos are written by the inbound MMS and Quote Walk
+    // receivers. They are a separate durable gallery from job photos and
+    // must be loaded directly so a successful upload is not lost when a
+    // thread attachment read is delayed or legacy message metadata is sparse.
+    fetchTable(__db.from('contact_photos')
+      .select('id, contact_id, url, caption')
+      .limit(1000), 'contact_photos'),
     // job_readiness (Operating Model 2026 build #2): net-new-state-only rows
     // (Key's permit verification, parts-shipped stamp, AI date suggestion).
     // Rows are lazy; most contacts have none. advanceJobNext derives the
@@ -2723,21 +3158,48 @@ async function _loadLiveDataInner() {
     fetchTable(__db.from('job_readiness')
       .select('contact_id, opened_at, permit_verified_at, permit_verified_note, parts_shipped_at, suggested_install_at, suggested_sub, suggestion_reason, suggestion_notified_at, date_confirmed_at')
       .limit(500), 'job_readiness'),
+    withTimeout(__fetchDncPhoneSet(__db), 8000, 'DNC phone safety')
+      .catch(e => ({ data: null, error: e })),
+    fetchTable(__db.from('payments')
+      .select('id, invoice_id, proposal_id, amount, refunded_amount, status')
+      .in('status', ['completed', 'processing', 'failed']).limit(5000), 'payments'),
+    fetchTable(__db.from('installer_tokens')
+      .select('installer_name').is('revoked_at', null), 'installer roster'),
+    fetchTable(__db.from('twilio_lines')
+      .select('id, phone, label, color, is_default, active, sort_order')
+      .order('sort_order', { ascending: true }), 'phone lines'),
   ]);
+  window.__bppBootMark?.('initial data batch settled');
 
   // Surface any per-table failure once, quietly, in the console, not as a
   // blocking toast. The user sees a working app with whatever loaded.
   const tableErrors = [
     ['contacts', contactsR], ['events', eventsR], ['proposals', proposalsR],
     ['invoices', invoicesR], ['messages', messagesR], ['stage_history', stageHistoryR],
-    ['permits', permitsR], ['materials', materialsR], ['calls', callsR],
+    ['permits', permitsR], ['materials', materialsR], ['calls', callsR], ['contact photos', contactPhotosR], ['DNC phone safety', dncR],
+    ['payments', paymentsR], ['installer roster', installersR], ['phone lines', linesR],
   ].filter(([, r]) => r.error).map(([n, r]) => `${n}: ${r.error.message || r.error}`);
   if (tableErrors.length) console.warn('[CRM] partial load:', tableErrors);
 
-  window.CRM.contacts  = (contactsR.data  || []).map(mapContact).filter(c => !c.archived);
+  const contactsLive = !contactsR.error && !dncR.error;
+  window.CRM.contactsLoadFailed = !contactsLive;
+  if (contactsLive) {
+    window.CRM.dncPhones = dncR.data || [];
+    window.CRM.contacts = (contactsR.data || []).map(mapContact).filter(c => !c.archived);
+    window.CRM.contactsFromSnapshot = false;
+    __saveContactSnapshot(window.CRM.contacts, window.CRM.dncPhones);
+  } else if (cachedContacts) {
+    // Do not replace a known customer list with [] and make this look like a
+    // new account. It remains visibly stale and outbound actions are blocked.
+    __showCachedContacts(cachedContacts, { partialLoadFailure: true });
+  } else {
+    window.CRM.dncPhones = [];
+    window.CRM.contacts = [];
+    window.CRM.contactsFromSnapshot = false;
+  }
   window.CRM.events    = (eventsR.data    || []).map(mapEvent);
   window.CRM.proposals = (proposalsR.data || []).map(mapProposal);
-  await loadPaidByInvoice();
+  applyPaidRows(paymentsR.data || []);
   window.CRM.invoices  = (invoicesR.data  || []).map(mapInvoice);
   window.CRM.messages  = (messagesR.data  || []).map(mapMessage);
   window.CRM.stageHistory = stageHistoryR.data || [];
@@ -2745,31 +3207,18 @@ async function _loadLiveDataInner() {
   window.CRM.materials = (materialsR.data || []).map(mapMaterial);
   window.CRM.calls     = applyLocalListened((callsR.data || []).map(mapCall));
   window.CRM.jobPhotos = (jobPhotosR.data || []);
+  window.CRM.contactPhotos = (contactPhotosR.data || []);
   window.CRM.readiness = (readinessR.data || []);
   window.CRM.loaded = true;
 
-  // Active installer roster, names from installer_tokens (non-revoked).
-  // Used by the AssignInstaller picker to autocomplete; free-text still
-  // works so Key can type a new sub name and we create the token later.
-  try {
-    const { data: instData } = await __db.from('installer_tokens')
-      .select('installer_name').is('revoked_at', null);
-    window.CRM.installers = [...new Set((instData || []).map(r => r.installer_name).filter(Boolean))].sort();
-  } catch { window.CRM.installers = []; }
+  // Optional operator metadata shares the same bounded initial batch. A slow
+  // roster or line registry can no longer delay the primary Contacts/Messages UI.
+  window.CRM.installers = [...new Set((installersR.data || []).map(r => r.installer_name).filter(Boolean))].sort();
+  window.CRM.lines = linesR.data || [];
 
-  // Twilio line registry (multi-line messaging, 2026-06-20). Each row = one BPP
-  // number {phone, label, color}. The colored avatar ring (Calls + Messaging
-  // tabs) reads color from here via window.lineColorFor(contact.current_line).
-  // RLS allows authenticated select; any failure defaults to [] (no ring).
-  try {
-    const { data: linesData } = await __db.from('twilio_lines')
-      .select('id, phone, label, color, is_default, active, sort_order')
-      .order('sort_order', { ascending: true });
-    window.CRM.lines = (linesData || []);
-  } catch { window.CRM.lines = []; }
-
-  console.log(`[CRM] loaded ${CRM.contacts.length} contacts, ${CRM.events.length} events, ${CRM.proposals.length} proposals, ${CRM.invoices.length} invoices, ${CRM.messages.length} messages, ${CRM.stageHistory.length} stage transitions, ${CRM.permits.length} permits, ${CRM.materials.length} materials, ${CRM.calls.length} calls, ${CRM.jobPhotos.length} job photos, ${CRM.installers.length} installers`);
+  console.log(`[CRM] loaded ${CRM.contacts.length} contacts, ${CRM.events.length} events, ${CRM.proposals.length} proposals, ${CRM.invoices.length} invoices, ${CRM.messages.length} messages, ${CRM.stageHistory.length} stage transitions, ${CRM.permits.length} permits, ${CRM.materials.length} materials, ${CRM.calls.length} calls, ${CRM.jobPhotos.length} job photos, ${CRM.contactPhotos.length} customer photos, ${CRM.installers.length} installers`);
   window.dispatchEvent(new CustomEvent('crm-data-ready', { detail: { authed: true } }));
+  window.__bppBootMark?.('CRM ready');
 
   // Realtime, re-fetch the whole table on any change. The lists are small
   // enough (under 500 rows) that a full refresh is simpler than a delta
@@ -2777,13 +3226,28 @@ async function _loadLiveDataInner() {
   __realtimeChannels.push(__db.channel('v3-contacts')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'contacts' }, async () => {
       try {
-        const { data, error } = await __db.from('contacts')
-          .select(CONTACT_COLS)
-          .order('created_at', { ascending: false }).limit(500);
-        if (error) { console.warn('[CRM] realtime contacts refetch failed:', error.message); return; }
+        const [contactsResult, dncResult] = await Promise.all([
+          __db.from('contacts').select(CONTACT_COLS)
+            .order('created_at', { ascending: false }).limit(500),
+          __fetchDncPhoneSet(__db),
+        ]);
+        const { data, error } = contactsResult;
+        if (error || dncResult.error) {
+          window.CRM.contactsLoadFailed = true;
+          console.warn('[CRM] realtime contacts refetch failed:',
+            (error && error.message) || (dncResult.error && dncResult.error.message));
+          return;
+        }
+        window.CRM.contactsLoadFailed = false;
+        window.CRM.dncPhones = dncResult.data || [];
         window.CRM.contacts = (data || []).map(mapContact).filter(c => !c.archived);
+        window.CRM.contactsFromSnapshot = false;
+        __saveContactSnapshot(window.CRM.contacts, window.CRM.dncPhones);
         window.dispatchEvent(new CustomEvent('crm-data-changed', { detail: { table: 'contacts' } }));
-      } catch (e) { console.warn('[CRM] realtime contacts handler error:', e.message); }
+      } catch (e) {
+        window.CRM.contactsLoadFailed = true;
+        console.warn('[CRM] realtime contacts handler error:', e.message);
+      }
     })
     .subscribe());
 
@@ -2963,6 +3427,21 @@ async function _loadLiveDataInner() {
     })
     .subscribe());
 
+  // New customer images arrive through the webhook after Twilio has already
+  // acknowledged the text. Refresh this gallery independently so an open
+  // contact gains every copied image without an app restart.
+  __realtimeChannels.push(__db.channel('v3-contact-photos')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'contact_photos' }, async () => {
+      try {
+        const { data, error } = await __db.from('contact_photos')
+          .select('id, contact_id, url, caption').limit(1000);
+        if (error) { console.warn('[CRM] realtime contact_photos refetch failed:', error.message); return; }
+        window.CRM.contactPhotos = data || [];
+        window.dispatchEvent(new CustomEvent('crm-data-changed', { detail: { table: 'contact_photos' } }));
+      } catch (e) { console.warn('[CRM] realtime contact_photos handler error:', e.message); }
+    })
+    .subscribe());
+
 }
 
 // Lightweight refetch (no resubscribing) for online/focus reconciliation.
@@ -2972,7 +3451,7 @@ async function refetchAll() {
   if (!__db || !window.CRM.authed) return;
   const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
   try {
-    const [c, e, p, i, m, jp] = await Promise.all([
+    const [c, e, p, i, m, jp, cp, dnc] = await Promise.all([
       // THIRD fetch path: must use the same CONTACT_COLS as initial load +
       // realtime, or the fields it omits null out on every focus/online
       // refetch (the ai_summary card vanished this way, review 2026-06-10).
@@ -2990,15 +3469,29 @@ async function refetchAll() {
 'id, token, contact_id, proposal_id, total, status, created_at, paid_at, payment_method, line_items, creator_version').order('created_at', { ascending: false }).limit(500),
       __db.from('messages').select(MSG_COLS).gte('created_at', since).order('created_at', { ascending: false }).limit(2000),
       __db.from('job_photos').select('id, contact_id, url, storage_path, caption, uploaded_by, uploaded_at, annotated, photo_kind').order('uploaded_at', { ascending: false }).limit(1000),
+      __db.from('contact_photos').select('id, contact_id, url, caption').limit(1000),
+      __fetchDncPhoneSet(__db),
     ]);
-    if (c.data) window.CRM.contacts = c.data.map(mapContact).filter(x => !x.archived);
+    if (c.error || dnc.error) {
+      window.CRM.contactsLoadFailed = true;
+      console.warn('[CRM] contacts reconciliation failed:',
+        (c.error && (c.error.message || c.error)) || (dnc.error && (dnc.error.message || dnc.error)));
+    } else if (c.data) {
+      window.CRM.contactsLoadFailed = false;
+      window.CRM.dncPhones = dnc.data || [];
+      window.CRM.contacts = c.data.map(mapContact).filter(x => !x.archived);
+      window.CRM.contactsFromSnapshot = false;
+      __saveContactSnapshot(window.CRM.contacts, window.CRM.dncPhones);
+    }
     if (e.data) window.CRM.events = e.data.map(mapEvent);
     if (p.data) window.CRM.proposals = p.data.map(mapProposal);
     if (i.data) { await loadPaidByInvoice(); window.CRM.invoices = i.data.map(mapInvoice); }
     if (m.data) window.CRM.messages = applyLocalReads(m.data.map(mapMessage));
     if (jp.data) window.CRM.jobPhotos = jp.data;
+    if (cp.data) window.CRM.contactPhotos = cp.data;
     window.dispatchEvent(new CustomEvent('crm-data-changed', { detail: { table: 'all' } }));
   } catch (err) {
+    window.CRM.contactsLoadFailed = true;
     console.warn('[CRM] refetch failed:', err.message);
   }
 }
@@ -3038,6 +3531,8 @@ document.addEventListener('visibilitychange', () => {
 // Kick off load (non-blocking).
 loadLiveData().catch(err => {
   console.error('[CRM] load failed:', err);
+  window.CRM.contactsLoadFailed = true;
+  window.CRM.dncPhones = [];
   window.CRM.loaded = true; // unblock render anyway
   window.dispatchEvent(new CustomEvent('crm-data-ready', { detail: { authed: false, error: err.message } }));
 });

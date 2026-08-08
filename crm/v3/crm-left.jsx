@@ -869,6 +869,33 @@ function SearchDock({ inputId, value, onChange, onClear, onClose, onEnter, place
 function ContactsList({ contacts, messages, calls, onOpen, dncSet = new Set(), activeContactId, proposals = [], invoices = [], events = [] }) {
   const [search, setSearch] = React.useState('');
   const [stage, setStage] = React.useState('all');
+  const [quotePreReads, setQuotePreReads] = React.useState(() => window.CRM?.peekPreReadsBulk?.() || {});
+  const [quoteWalkV2Receipts, setQuoteWalkV2Receipts] = React.useState(
+    () => window.CRM?.quoteWalkV2Receipts || {}
+  );
+  React.useEffect(() => {
+    let alive = true;
+    window.CRM?.fetchPreReadsBulk?.().then(function (rows) {
+      if (alive) setQuotePreReads(rows || {});
+    }).catch(function () {});
+    return () => { alive = false; };
+  }, [contacts]);
+  React.useEffect(() => {
+    let alive = true;
+    window.CRM?.fetchQuoteWalkV2Receipts?.().then(function (rows) {
+      if (alive) setQuoteWalkV2Receipts(rows || {});
+    }).catch(function () {});
+    return () => { alive = false; };
+  }, [quotePreReads]);
+  React.useEffect(() => {
+    const syncReceipts = (event) => {
+      const table = event?.detail?.table || '';
+      if (!String(table).startsWith('quote_walk_v2_')) return;
+      setQuoteWalkV2Receipts({ ...(window.CRM?.quoteWalkV2Receipts || {}) });
+    };
+    window.addEventListener('crm-data-changed', syncReceipts);
+    return () => window.removeEventListener('crm-data-changed', syncReceipts);
+  }, []);
   const [newContactOpen, setNewContactOpen] = React.useState(false);
   const [newContactSeed, setNewContactSeed] = React.useState('');
   // Lens group picker (Key 2026-06-18): opened from the funnel button in the
@@ -1192,6 +1219,14 @@ function ContactsList({ contacts, messages, calls, onOpen, dncSet = new Set(), a
       if (c.archived || c.do_not_contact || dncSet.has(c.id) || snoozeMap[c.id] || coldSet.has(c.id)) continue;
       if (c.stage !== 'new' && c.stage !== 'quoted') continue;
       if (hasLiveProposal.has(c.id)) continue;
+      const receipt = quoteWalkV2Receipts[String(c.id)];
+      const legacyReady = window.CRM?.isQuoteDeskReady?.(
+        c, quotePreReads[c.id], proposals
+      ) === true;
+      const deskState = window.CRM?.quoteWalkV2QuoteDeskState?.(
+        receipt, legacyReady
+      );
+      if (!deskState?.actionable) continue;
       // engaged -> sort by last reply; fresh never-replied -> sort by when the
       // lead came in. Skip only if neither timestamp exists (no sort key).
       const ts = lastIn.get(c.id) || c.created_at;
@@ -1199,7 +1234,45 @@ function ContactsList({ contacts, messages, calls, onOpen, dncSet = new Set(), a
       map.set(c.id, ts);
     }
     return map;
-  }, [contacts, proposals, messages, dncSet, snoozeMap, coldSet]);
+  }, [contacts, proposals, messages, dncSet, snoozeMap, coldSet, quotePreReads, quoteWalkV2Receipts]);
+
+  const quoteDeskBlocked = React.useMemo(() => {
+    const DEAD = ['cancelled', 'declined', 'expired'];
+    const hasLiveProposal = new Set();
+    for (const proposal of (proposals || [])) {
+      const status = String(proposal.status || '').toLowerCase();
+      if (proposal.contact_id && !proposal.superseded_at && !DEAD.includes(status)) {
+        hasLiveProposal.add(proposal.contact_id);
+      }
+    }
+    const rows = [];
+    for (const contact of contacts) {
+      if (contact.archived || contact.do_not_contact || dncSet.has(contact.id)) continue;
+      if (contact.stage !== 'new' && contact.stage !== 'quoted') continue;
+      if (hasLiveProposal.has(contact.id)) continue;
+      if (!quotePreReads[contact.id]?.id) continue;
+      const receipt = quoteWalkV2Receipts[String(contact.id)];
+      const legacyReady = window.CRM?.isQuoteDeskReady?.(
+        contact, quotePreReads[contact.id], proposals
+      ) === true;
+      const deskState = window.CRM?.quoteWalkV2QuoteDeskState?.(
+        receipt, legacyReady
+      );
+      if (deskState?.mode !== 'legacy' && deskState?.visible
+          && !deskState?.actionable) {
+        rows.push({ contact, verdict: deskState.verdict });
+      }
+    }
+    return rows;
+  }, [contacts, proposals, dncSet, quotePreReads, quoteWalkV2Receipts]);
+
+  const quoteDeskVisibleMap = React.useMemo(() => {
+    const map = new Map(readyToQuoteMap);
+    for (const row of quoteDeskBlocked) {
+      map.set(row.contact.id, row.contact.created_at || '');
+    }
+    return map;
+  }, [readyToQuoteMap, quoteDeskBlocked]);
 
   // In-flight guard for the Draft + review action: generateDraftProposal is
   // idempotent against the DB, but a fast double-tap could race two inserts
@@ -1208,7 +1281,6 @@ function ContactsList({ contacts, messages, calls, onOpen, dncSet = new Set(), a
   // Quote Desk (Musk + fresh air): focus + silent auto-arm. No Prep ceremony.
   const [qdFocusIdx, setQdFocusIdx] = React.useState(0);
   const quoteDeskPrimed = React.useRef(false);
-  const deskAutoArmRef = React.useRef({ lastN: 0, arming: false });
 
   // "Rescue": the frozen one-tap re-engagement queue (savant audit #2).
   // Stage-1 leads captured BEFORE the call-ask opener went live (2026-06-09)
@@ -1346,7 +1418,7 @@ function ContactsList({ contacts, messages, calls, onOpen, dncSet = new Set(), a
     { value:'all',         label:'All' },
     ...(workQueueMap.size > 0 ? [{ value:'work_queue', label:'Work queue', count: workQueueMap.size }] : []),
     // Quote Desk always visible (CEO 2026-07-13): morning habit even when empty.
-    { value:'ready_to_quote', label:'Quote Desk', count: readyToQuoteMap.size },
+    { value:'ready_to_quote', label:'Quote Desk', count: quoteDeskVisibleMap.size },
     ...(rescueMap.size > 0 ? [{ value:'rescue', label:'Rescue', count: rescueMap.size }] : []),
     ...(permitQueueMap.size > 0 ? [{ value:'permits', label:'Permits', count: permitQueueMap.size }] : []),
     { value:'needs_reply', label:'Needs reply',   count: needsReplySet.size },
@@ -1480,7 +1552,7 @@ function ContactsList({ contacts, messages, calls, onOpen, dncSet = new Set(), a
     .filter(c => stage === 'snoozed' ? !!snoozeMap[c.id] : !snoozeMap[c.id])
     .filter(c => stage === 'all' ? true
               : stage === 'work_queue' ? workQueueMap.has(c.id)
-              : stage === 'ready_to_quote' ? readyToQuoteMap.has(c.id)
+              : stage === 'ready_to_quote' ? quoteDeskVisibleMap.has(c.id)
               : stage === 'rescue' ? rescueMap.has(c.id)
               : stage === 'permits' ? permitQueueMap.has(c.id)
               : stage === 'needs_reply' ? needsReplySet.has(c.id)
@@ -1542,8 +1614,8 @@ function ContactsList({ contacts, messages, calls, onOpen, dncSet = new Set(), a
       // lead-arrival time for fresh never-replied ones), the warmest/newest
       // quote opportunity floats to the top.
       if (stage === 'ready_to_quote') {
-        const ta = readyToQuoteMap.get(a.id) || '';
-        const tb = readyToQuoteMap.get(b.id) || '';
+        const ta = quoteDeskVisibleMap.get(a.id) || '';
+        const tb = quoteDeskVisibleMap.get(b.id) || '';
         if (tb !== ta) return tb.localeCompare(ta);
       }
       // Rescue: oldest-first (the precomputed queue index IS the sort key,
@@ -1608,7 +1680,16 @@ function ContactsList({ contacts, messages, calls, onOpen, dncSet = new Set(), a
 
   // Quote Desk keys: 1 Text, 2 Draft, 3 Next. Auto-arm owns batch. No send.
   const qdRitualRef = React.useRef({});
-  qdRitualRef.current = { stage, filtered, qdFocusContact, draftBusy, onOpen, setDraftBusy };
+  qdRitualRef.current = {
+    stage,
+    filtered,
+    qdFocusContact,
+    draftBusy,
+    onOpen,
+    setDraftBusy,
+    quotePreReads,
+    proposals,
+  };
   React.useEffect(() => {
     const onKey = async (e) => {
       const r = qdRitualRef.current;
@@ -1626,31 +1707,63 @@ function ContactsList({ contacts, messages, calls, onOpen, dncSet = new Set(), a
       }
       if (e.key === '1') {
         e.preventDefault();
-        if (c.do_not_contact) { window.showToast?.('Marked do not contact'); return; }
-        let pr = null;
-        try { pr = window.CRM?.fetchPreRead ? await window.CRM.fetchPreRead(c.id) : null; } catch (_) { pr = null; }
-        const res = window.CRM?.prefillFirmQuoteSms
-          ? window.CRM.prefillFirmQuoteSms(c, pr)
-          : { ok: false, error: 'quote desk not loaded' };
-        if (!res.ok) { window.showToast?.('Could not draft: ' + (res.error || 'unknown')); return; }
-        r.onOpen(c.id, 'messages');
+        const receipt = window.CRM?.quoteWalkV2Receipts?.[String(c.id)];
+        const legacyReady = window.CRM?.isQuoteDeskReady?.(
+          c, r.quotePreReads[c.id], r.proposals
+        ) === true;
+        const deskState = window.CRM?.quoteWalkV2QuoteDeskState?.(
+          receipt, legacyReady
+        );
+        if (deskState?.mode === 'legacy') {
+          if (c.do_not_contact) {
+            window.showToast?.('Marked do not contact');
+            return;
+          }
+          const preRead = r.quotePreReads[c.id] || null;
+          const result = window.CRM?.prefillFirmQuoteSms
+            ? window.CRM.prefillFirmQuoteSms(c, preRead)
+            : { ok: false, error: 'quote desk not loaded' };
+          if (!result.ok) {
+            window.showToast?.('Could not draft: ' + (result.error || 'unknown'));
+            return;
+          }
+          r.onOpen(c.id, 'messages');
+          return;
+        }
+        window.showToast?.(
+          deskState?.verdict?.message || 'Quote Walk readiness has not been verified.'
+        );
         return;
       }
       if (e.key === '2') {
         e.preventDefault();
+        const receipt = window.CRM?.quoteWalkV2Receipts?.[String(c.id)];
+        const legacyReady = window.CRM?.isQuoteDeskReady?.(
+          c, r.quotePreReads[c.id], r.proposals
+        ) === true;
+        const deskState = window.CRM?.quoteWalkV2QuoteDeskState?.(
+          receipt, legacyReady
+        );
+        if (!deskState?.actionable) {
+          window.showToast?.(
+            deskState?.verdict?.message || 'Quote Walk readiness has not been verified.'
+          );
+          return;
+        }
         if (r.draftBusy.has(c.id)) return;
         r.setDraftBusy(prev => new Set(prev).add(c.id));
         try {
           const res = window.CRM?.generateDraftProposal
             ? await window.CRM.generateDraftProposal(c)
             : { ok: false, error: 'generator not loaded' };
-          if (res.ok) {
+          if (res.ok && res.handoffClaimed) {
+            window.showToast?.(res.message || 'Quote Walk handoff claimed.');
+          } else if (res.ok) {
             r.onOpen(c.id, 'finance');
           } else if (/already exists/i.test(res.error || '')) {
             r.onOpen(c.id, 'finance');
           } else if (!/already in progress/i.test(res.error || '')) {
-            window.showToast?.('Draft failed: ' + (res.error || 'unknown'));
-            r.onOpen(c.id, 'finance');
+            window.showToast?.('Handoff blocked: ' + (res.error || 'unknown'));
           }
         } finally {
           r.setDraftBusy(prev => { const n = new Set(prev); n.delete(c.id); return n; });
@@ -1660,31 +1773,6 @@ function ContactsList({ contacts, messages, calls, onOpen, dncSet = new Set(), a
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
-
-  // 10x: queue grows → arm drafts + open first. Key only Sends.
-  React.useEffect(() => {
-    if (stage !== 'ready_to_quote') return;
-    const n = filtered.length;
-    const prev = deskAutoArmRef.current.lastN;
-    const grew = n > prev;
-    deskAutoArmRef.current.lastN = n;
-    if (!grew || !n) return;
-    const peek = window.CRM?.peekDeskClearQueue ? window.CRM.peekDeskClearQueue() : null;
-    if (peek && peek.active) return;
-    if (deskAutoArmRef.current.arming) return;
-    deskAutoArmRef.current.arming = true;
-    (async () => {
-      try {
-        const res = window.CRM?.deskClearBatchDraft
-          ? await window.CRM.deskClearBatchDraft(filtered)
-          : { ok: false };
-        if (!res.ok || !res.firstId) return;
-        onOpen(res.firstId, 'messages');
-      } finally {
-        deskAutoArmRef.current.arming = false;
-      }
-    })();
-  }, [stage, filtered.length]);
 
   const togglePin = async (e, id) => {
     e.stopPropagation();
@@ -1796,6 +1884,16 @@ function ContactsList({ contacts, messages, calls, onOpen, dncSet = new Set(), a
           ? 'linear-gradient(to bottom, transparent 0, #000 calc(env(safe-area-inset-top, 0px) + 18px))'
           : 'none',
       }} onRefresh={() => window.CRM?.__refetch?.()}>
+        {stage === 'ready_to_quote' && quoteDeskBlocked.length > 0 && (
+          <div style={{ padding:'10px 16px', background:'#FFFBEB', borderBottom:'1px solid #FDE68A' }}>
+            <div style={{ fontSize:12, fontWeight:700, color:NAVY }}>
+              {quoteDeskBlocked.length} {quoteDeskBlocked.length === 1 ? 'walk is' : 'walks are'} not ready
+            </div>
+            <div style={{ marginTop:2, fontSize:12, lineHeight:1.4, color:MUTED }}>
+              {quoteDeskBlocked[0].verdict?.message || 'Authoritative readiness is unavailable.'}
+            </div>
+          </div>
+        )}
         {/* Active-filter header (Key 2026-07-10): whenever a lens/filter is on
             and the dock is closed, this names the filter so the list is never
             mysteriously narrowed (no Norman door). For a MONEY filter it also
@@ -1859,6 +1957,13 @@ function ContactsList({ contacts, messages, calls, onOpen, dncSet = new Set(), a
           const isPremium = c.pricing_tier === 'premium' || c.pricing_tier === 'premium_plus';
           const sig = signalMap.get(c.id) || {};
           const rm = rowModelByContact.get(c.id) || {};   // Comp A: next-move + accent
+          const quoteDeskReceipt = quoteWalkV2Receipts[String(c.id)];
+          const quoteDeskLegacyReady = window.CRM?.isQuoteDeskReady?.(
+            c, quotePreReads[c.id], proposals
+          ) === true;
+          const quoteDeskState = window.CRM?.quoteWalkV2QuoteDeskState?.(
+            quoteDeskReceipt, quoteDeskLegacyReady
+          );
           // Last-message preview: prefer most recent inbound, else outbound.
           // Truncated; relative time. Hidden when DNC pill or other signals
           // would already overflow the row.
@@ -2026,80 +2131,69 @@ function ContactsList({ contacts, messages, calls, onOpen, dncSet = new Set(), a
                   <button
                     onClick={async (e) => {
                       e.stopPropagation();
-                      // Quote Desk (2026-07-13): prefill firm-quote SMS from
-                      // walk / pre-read. NOTHING sends; Key edits + taps Send.
-                      if (c.do_not_contact) {
-                        window.showToast?.('Marked do not contact');
+                      if (quoteDeskState?.mode === 'legacy') {
+                        if (c.do_not_contact) {
+                          window.showToast?.('Marked do not contact');
+                          return;
+                        }
+                        const preRead = quotePreReads[c.id] || null;
+                        const result = window.CRM?.prefillFirmQuoteSms
+                          ? window.CRM.prefillFirmQuoteSms(c, preRead)
+                          : { ok: false, error: 'quote desk not loaded' };
+                        if (!result.ok) {
+                          window.showToast?.('Could not draft: ' + (result.error || 'unknown'));
+                          return;
+                        }
+                        onOpen(c.id, 'messages');
                         return;
                       }
-                      let pr = null;
-                      try {
-                        pr = window.CRM?.fetchPreRead ? await window.CRM.fetchPreRead(c.id) : null;
-                      } catch (_) { pr = null; }
-                      const res = window.CRM?.prefillFirmQuoteSms
-                        ? window.CRM.prefillFirmQuoteSms(c, pr)
-                        : { ok: false, error: 'quote desk not loaded' };
-                      if (!res.ok) {
-                        window.showToast?.('Could not draft: ' + (res.error || 'unknown'));
-                        return;
-                      }
-                      onOpen(c.id, 'messages');
+                      window.showToast?.(
+                        quoteDeskState?.verdict?.message
+                          || 'Quote Walk readiness has not been verified.'
+                      );
                     }}
-                    aria-label={`Draft a firm-quote text for ${contactName(c) || 'contact'}`}
-                    title="Text firm quote"
+                    aria-label={quoteDeskState?.mode === 'legacy'
+                      ? `Draft a firm-quote text for ${contactName(c) || 'contact'}`
+                      : `Show Quote Walk readiness for ${contactName(c) || 'contact'}`}
+                    title={quoteDeskState?.mode === 'legacy'
+                      ? 'Text firm quote'
+                      : 'Show authoritative readiness'}
                     style={{
                       background: NAVY, border:'none', color: '#fff', fontSize:11, fontWeight:700,
                       padding:'9px 14px', borderRadius:6, cursor:'pointer',
                       fontFamily:'inherit', minHeight:44,
                     }}
-                  >{'Text'}</button>
-                  <button
+                  >{quoteDeskState?.mode === 'legacy' ? 'Text' : 'Status'}</button>
+                  {quoteDeskState?.actionable && (
+                    <button
                     onClick={async (e) => {
                       e.stopPropagation();
-                      // Deleted-step upgrade (savant audit #1): on a flat-rate
-                      // product the quote composer is mostly re-confirming the
-                      // standard config, so generate the standard DRAFT here
-                      // (status Created, never sent) and land Key on the
-                      // Finance tab where the fresh draft card sits at top with
-                      // its Edit + Send controls. One tap = draft + review.
-                      // NOTE: we deliberately do NOT fire crm-open-new-proposal
-                      // after generating, that opens the CREATE composer, whose
-                      // save would insert a SECOND proposal and supersede the
-                      // draft we just made. The create-composer remains the
-                      // fallback only when generation fails.
                       if (draftBusy.has(c.id)) return;
                       setDraftBusy(prev => new Set(prev).add(c.id));
                       try {
                         const res = window.CRM?.generateDraftProposal
                           ? await window.CRM.generateDraftProposal(c)
                           : { ok: false, error: 'generator not loaded' };
-                        if (res.ok) {
-                          // silent; Finance shows the draft
+                        if (res.ok && res.handoffClaimed) {
+                          window.showToast?.(res.message || 'Quote Walk handoff claimed.');
+                        } else if (res.ok) {
                           onOpen(c.id, 'finance');
                         } else if (/already in progress/i.test(res.error || '')) {
-                          // A second tap landed while the first generation is
-                          // still in flight (the generator's synchronous guard
-                          // caught it). The first tap owns the navigation, do
-                          // nothing here.
                         } else if (/already exists/i.test(res.error || '')) {
-                          // Race resolved by the generator's idempotency check:
-                          // a draft is already there, just go review it.
                           onOpen(c.id, 'finance');
                         } else {
-                          // Generation failed (network, auth). Fall back to the
-                          // original hand-create composer so the lens never
-                          // dead-ends.
-                          window.showToast?.('Draft failed: ' + (res.error || 'unknown'));
-                          window.__pendingOpenProposal = c.id;
-                          onOpen(c.id, 'finance');
-                          setTimeout(() => window.dispatchEvent(new CustomEvent('crm-open-new-proposal', { detail: { contactId: c.id } })), 300);
+                          window.showToast?.('Handoff blocked: ' + (res.error || 'unknown'));
                         }
                       } finally {
                         setDraftBusy(prev => { const n = new Set(prev); n.delete(c.id); return n; });
                       }
                     }}
-                    aria-label={`Create a standard draft proposal for ${contactName(c) || 'contact'} and review it`}
-                    title="Create the standard draft, then review + send it from Finance"
+                    aria-label={quoteDeskState?.mode === 'legacy'
+                      ? `Create a draft proposal for ${contactName(c) || 'contact'}`
+                      : `Claim the Quote Walk handoff for ${contactName(c) || 'contact'}`}
+                    title={quoteDeskState?.mode === 'legacy'
+                      ? 'Create draft and review'
+                      : 'Claim the authoritative Quote Walk handoff'}
                     disabled={draftBusy.has(c.id)}
                     style={{
                       background: 'transparent', border:'1.5px solid rgba(11,31,59,0.22)', color: NAVY, fontSize:11, fontWeight:700,
@@ -2107,7 +2201,10 @@ function ContactsList({ contacts, messages, calls, onOpen, dncSet = new Set(), a
                       fontFamily:'inherit', minHeight:44,
                       opacity: draftBusy.has(c.id) ? 0.6 : 1,
                     }}
-                  >{draftBusy.has(c.id) ? 'Drafting' : 'Draft + review'}</button>
+                  >{draftBusy.has(c.id)
+                      ? (quoteDeskState?.mode === 'legacy' ? 'Creating' : 'Claiming')
+                      : (quoteDeskState?.mode === 'legacy' ? 'Draft + review' : 'Claim handoff')}</button>
+                  )}
                 </div>
               ) : stage === 'rescue' ? (
                 <button
@@ -4234,6 +4331,16 @@ const CALL_PALETTE = {
 function CallsList({ calls, contacts, onOpen, activeContactId }) {
   const getContact = id => contacts.find(c => c.id === id);
   const pinned = window.usePinned ? window.usePinned() : new Set();
+  const [selectedCall, setSelectedCall] = React.useState(null);
+  const callTriggerRef = React.useRef(null);
+  const openCallDetail = (call, trigger) => {
+    callTriggerRef.current = trigger || document.activeElement;
+    setSelectedCall(call);
+  };
+  const closeCallDetail = () => {
+    setSelectedCall(null);
+    requestAnimationFrame(() => callTriggerRef.current?.focus?.());
+  };
 
   // Pinned-first: contacts you've starred surface to the top of every
   // calls slice (today / missed / voicemails / all). Within each pin
@@ -4381,7 +4488,7 @@ function CallsList({ calls, contacts, onOpen, activeContactId }) {
             return (
               <div key={cl.id} style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
                 <span style={{ fontSize:13, fontWeight:600, color:'#991B1B', flex:1 }}>{contactName(c)} · {formatPhone(c?.phone)}</span>
-                <button onClick={()=>onOpen(cl.contact_id,'calls')} style={{ fontSize:11, fontWeight:700, color:'white', background:'#991B1B', border:'none', borderRadius:6, padding:'4px 10px', minHeight:44, cursor:'pointer', fontFamily:'inherit' }}>Open</button>
+                <button onClick={(e)=>openCallDetail(cl,e.currentTarget)} style={{ fontSize:11, fontWeight:700, color:'white', background:'#991B1B', border:'none', borderRadius:6, padding:'4px 10px', minHeight:44, cursor:'pointer', fontFamily:'inherit' }}>Open</button>
               </div>
             );
           })}
@@ -4393,7 +4500,7 @@ function CallsList({ calls, contacts, onOpen, activeContactId }) {
           {voicemails.map(cl => {
             const c = getContact(cl.contact_id);
             return (
-              <button key={cl.id} onClick={()=>onOpen(cl.contact_id,'calls')} style={{ width:'100%', background: activeContactId===cl.contact_id?'#FFFBEB':'white', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:10, padding:'13px 18px', borderBottom:'1px solid #F5F5F3', textAlign:'left', boxShadow: activeContactId===cl.contact_id?'inset 2px 0 0 '+GOLD:'none' }}>
+              <button key={cl.id} data-call-event-id={cl.id} onClick={(e)=>openCallDetail(cl,e.currentTarget)} style={{ width:'100%', minHeight:44, background:'white', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:10, padding:'13px 18px', borderBottom:'1px solid #F5F5F3', textAlign:'left' }}>
                 <div style={{ width:40,height:40,borderRadius:'50%',background:'#EDE9FE',display:'flex',alignItems:'center',justifyContent:'center',color:'#7C3AED',flexShrink:0 }}><div style={{width:18,height:18}}>{Icons.voicemail}</div></div>
                 <div style={{ flex:1, minWidth:0 }}>
                   <div style={{ display:'flex', alignItems:'center', gap:5 }}>
@@ -4471,7 +4578,7 @@ function CallsList({ calls, contacts, onOpen, activeContactId }) {
           return (
             // CM-29: same capped entrance cascade as the inbox; `backwards` fill keeps
             // the press-scale, gated off during an active call search.
-            <button key={cl.id} onClick={()=>onOpen(cl.contact_id,'calls')} style={{ width:'100%', background: activeContactId===cl.contact_id?'#FFFBEB':'white', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:10, padding:'13px 18px', borderBottom:'1px solid #F5F5F3', textAlign:'left',
+            <button key={cl.id} data-call-event-id={cl.id} onClick={(e)=>openCallDetail(cl,e.currentTarget)} style={{ width:'100%', minHeight:44, background:'white', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:10, padding:'13px 18px', borderBottom:'1px solid #F5F5F3', textAlign:'left',
               animation: (!searchingCalls && i < 6) ? `bpp-fade-up 200ms cubic-bezier(0.2,0.8,0.3,1) ${i * 32}ms backwards` : undefined }}>
               <div style={{ position:'relative', flexShrink:0 }}>
                 <div style={{ width:40,height:40,borderRadius:'50%',background: hasVm?'#EDE9FE':isSpam?'#f3f4f6':p.bg,display:'flex',alignItems:'center',justifyContent:'center',color: hasVm?'#7C3AED':isSpam?'#6b7280':p.color }}>
@@ -4556,7 +4663,7 @@ function CallsList({ calls, contacts, onOpen, activeContactId }) {
           onChange={v => { setDial(v); if (filterQuery !== null && v !== filterQuery) { setFilterQuery(null); if (filter !== 'all') setFilter('all'); } }}
           onClear={() => { setDial(''); setFilter('all'); setFilterQuery(null); }}
           onClose={closeSearch}
-          onEnter={() => { const first = searchedVisible[0]; if (searchingCalls && first && first.contact_id) { onOpen(first.contact_id, 'calls'); closeSearch(); } }}
+          onEnter={() => { const first = searchedVisible[0]; if (searchingCalls && first) { openCallDetail(first, document.activeElement); closeSearch(); } }}
           filters={filterOpts}
           activeFilter={filter}
           onFilter={applyCallFilter}
@@ -4564,6 +4671,69 @@ function CallsList({ calls, contacts, onOpen, activeContactId }) {
           setFilterOpen={setPickerOpen}
         />
       )}
+      {selectedCall && window.ModalShell && (() => {
+        const cl = selectedCall;
+        const c = getContact(cl.contact_id);
+        const direction = cl.direction === 'out' ? 'Outgoing' : cl.direction === 'missed' ? 'Missed' : 'Incoming';
+        const source = cl.from_phone ? formatPhone(cl.from_phone) : 'Not available';
+        const destination = cl.to_phone ? formatPhone(cl.to_phone) : 'Not available';
+        const callbackPhone = cl.direction === 'out' ? cl.to_phone : cl.from_phone;
+        const detailRows = [
+          ['Contact', c ? contactName(c) : 'Unknown contact'],
+          ['Direction', direction],
+          ['Status', cl.status || 'Not available'],
+          ['Time', cl.started_at ? new Date(cl.started_at).toLocaleString() : 'Not available'],
+          ['Duration', formatDuration(cl.voicemail_duration || cl.duration_sec)],
+          ['From', source],
+          ['To', destination],
+        ];
+        const openDialer = () => {
+          const returnFocus = callTriggerRef.current;
+          setSelectedCall(null);
+          setTimeout(() => window.dispatchEvent(new CustomEvent('crm-open-keypad', {
+            detail: { seedDial: callbackPhone || '', returnFocus },
+          })), 0);
+        };
+        return (
+          <window.ModalShell
+            open={true}
+            onClose={closeCallDetail}
+            title="Call details"
+            footer={callbackPhone ? (
+              <button type="button" onClick={openDialer} style={{ width:'100%', minHeight:44, border:0, borderRadius:8, background:GOLD, color:NAVY, fontSize:14, fontWeight:700, fontFamily:'inherit', cursor:'pointer' }}>
+                Call back
+              </button>
+            ) : null}
+          >
+            <div data-call-detail-id={cl.id} role="dialog" aria-label="Call details">
+              {detailRows.map(([label, value]) => (
+                <div key={label} style={{ display:'grid', gridTemplateColumns:'92px minmax(0,1fr)', gap:12, padding:'9px 0', borderBottom:'1px solid #F1F2F4', fontSize:13 }}>
+                  <span style={{ color:MUTED, fontWeight:600 }}>{label}</span>
+                  <span style={{ color:NAVY, overflowWrap:'anywhere' }}>{value}</span>
+                </div>
+              ))}
+              {(cl.transcript || cl.voicemail_transcript) && (
+                <div style={{ paddingTop:14 }}>
+                  <div style={{ fontSize:12, fontWeight:700, color:MUTED, marginBottom:5 }}>Transcript</div>
+                  <div style={{ fontSize:13, lineHeight:1.5, color:NAVY, whiteSpace:'pre-wrap' }}>{cl.transcript || cl.voicemail_transcript}</div>
+                </div>
+              )}
+              {cl.ai_summary && (
+                <div style={{ paddingTop:14 }}>
+                  <div style={{ fontSize:12, fontWeight:700, color:MUTED, marginBottom:5 }}>AI summary</div>
+                  <div style={{ fontSize:13, lineHeight:1.5, color:NAVY, whiteSpace:'pre-wrap' }}>{cl.ai_summary}</div>
+                </div>
+              )}
+              {cl.notes && (
+                <div style={{ paddingTop:14 }}>
+                  <div style={{ fontSize:12, fontWeight:700, color:MUTED, marginBottom:5 }}>Notes</div>
+                  <div style={{ fontSize:13, lineHeight:1.5, color:NAVY, whiteSpace:'pre-wrap' }}>{cl.notes}</div>
+                </div>
+              )}
+            </div>
+          </window.ModalShell>
+        );
+      })()}
     </div>
   );
 }

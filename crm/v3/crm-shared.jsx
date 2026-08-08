@@ -703,14 +703,10 @@ function SegmentedControl({ value, onChange, options, ariaLabel }) {
 }
 
 // ── Contact Avatar ────────────────────────────────────────────────
-// Public-restricted Street View Static API key, same one used in v2,
-// proposal.html, invoice.html. Only mints image URLs; no geocoding/routing/
-// places/billing exposure. Safe to ship in client code.
-// Google Maps Street View Static API key, referrer-restricted in
-// Google Cloud Console to backuppowerpro.com / localhost. Designed for
-// public browser use; not a secret and not a CLAUDE.md "AIza" violation.
-// Audits that grep for AIza will re-flag this, leave the comment.
-const SV_KEY = 'AIzaSyB0xWm71ZDzS7ei5-vFx15rNP_lR1ZKbJs';
+// Street View is disabled in browser code. A privileged provider credential
+// belongs behind an authenticated server adapter, never in a shipped bundle.
+// Existing satellite and initials fallbacks keep the CRM usable when absent.
+const SV_KEY = '';
 const MAPBOX_TOKEN = 'pk.eyJ1Ijoia2V5ZWxlY3RyaWN1cHN0YXRlIiwiYSI6ImNtcm8zZ3NkeTFodmgyeG9hY284Z3F4YXcifQ.3mLKvFGpDEdkjEMQNVQhmg';
 
 // Satellite fallback: geocode via Mapbox (not Nominatim, avoids the shared
@@ -752,7 +748,7 @@ function isAddressableStreet(address) {
   return ROAD_RE.test(a);
 }
 function streetViewUrlFor(address, size = 80) {
-  if (!isAddressableStreet(address)) return null;
+  if (!SV_KEY || !isAddressableStreet(address)) return null;
   // Always request the API max (640x640 + scale=2 = ~1280px source). The
   // browser scales down to the avatar's actual rendered size, that's
   // sharper than letting Google return a smaller image and the browser
@@ -800,7 +796,7 @@ function colorFromString(s) {
 // onError handler never fires, leaving an empty-looking avatar.
 const __svImageryCache = new Map(); // address → 'ok' | 'none' | Promise
 async function checkSvImagery(address) {
-  if (!address) return 'none';
+  if (!SV_KEY || !address) return 'none';
   if (__svImageryCache.has(address)) {
     const v = __svImageryCache.get(address);
     if (typeof v === 'string') return v;

@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-idHgnqUxHWAL8TBzMrGuf24wUeE3vbTvctw5KjNTfzk='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-CNMCW5s+z77mlkreNMeKswDrfMJfKYwPLESYlLZ2rN0='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://reowtzedjflwmlptupbk.supabase.co; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<script src="/walk-v2/token-bootstrap.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Your project range | Backup Power Pro</title>
+<style>
+  :root {
+    --navy: #0b1f3b;
+    --navy-mid: #17365d;
+    --gold: #ffba00;
+    --gold-hover: #ffc519;
+    --gold-tint: #fff7e0;
+    --ink: #152033;
+    --muted: #526074;
+    --faint: #718096;
+    --edge: rgba(11,31,59,.14);
+    --surface: #f5f7fa;
+    --card: #fff;
+    --red: #b42318;
+    --green: #137a53;
+    --head: "Outfit", system-ui, sans-serif;
+    --body: "Inter", system-ui, sans-serif;
+    --shadow-sm: 0 2px 10px rgba(11,31,59,.08);
+    --shadow-md: 0 12px 34px rgba(11,31,59,.14);
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--surface); }
+  body { margin: 0; color: var(--ink); background: var(--surface); font-family: var(--body); }
+  button, a { font: inherit; }
+  button { border: 0; cursor: pointer; }
+  button:focus-visible, a:focus-visible { outline: 3px solid #1464c0; outline-offset: 3px; }
+  .page { width: min(100%, 720px); min-height: 100vh; margin: 0 auto; background: #fff; }
+  .head {
+    display: flex; align-items: center; justify-content: space-between;
+    min-height: 72px; gap: 10px; padding: 14px 20px; color: #fff; background: var(--navy);
+  }
+  .head img { display: block; width: auto; max-width: calc(100% - 84px); height: 27px; object-fit: contain; }
+  .step {
+    flex: 0 0 74px; color: rgba(255,255,255,.75);
+    font-size: 11px; font-weight: 700; line-height: 1.25; text-align: right;
+  }
+  main { display: grid; min-width: 0; gap: 16px; padding: 24px 18px 40px; }
+  h1, h2 { margin: 0; color: var(--navy); font-family: var(--head); }
+  h1 { font-size: 31px; line-height: 1.08; letter-spacing: -.02em; }
+  h2 { font-size: 20px; line-height: 1.2; }
+  .intro p, .card p { color: var(--muted); line-height: 1.55; }
+  .intro p { margin: 8px 0 0; font-size: 16px; }
+  .card, .range, .notice {
+    border-radius: 16px; background: var(--card);
+    box-shadow: var(--shadow-sm), inset 0 0 0 1.5px var(--edge);
+    padding: 18px;
+  }
+  .range { color: #fff; background: var(--navy); box-shadow: var(--shadow-md); }
+  .range .eyebrow, .eyebrow {
+    margin: 0 0 8px; color: var(--gold); font-family: var(--head);
+    font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
+  }
+  .amount {
+    color: #fff; font-family: var(--head); font-size: clamp(30px, 10vw, 39px);
+    font-weight: 800; line-height: 1.05; overflow-wrap: anywhere;
+  }
+  .range p { margin: 12px 0 0; color: rgba(255,255,255,.82); font-size: 15px; line-height: 1.5; }
+  .choice {
+    width: 100%; min-height: 54px; margin-top: 10px; padding: 12px 14px;
+    border-radius: 12px; color: var(--navy); background: #fff;
+    box-shadow: inset 0 0 0 1.5px var(--edge); text-align: left;
+  }
+  .choice strong, .choice small { display: block; }
+  .choice strong { font-family: var(--head); font-size: 16px; }
+  .choice small { margin-top: 4px; color: var(--muted); font-size: 13px; line-height: 1.35; }
+  .choice[aria-pressed="true"] { color: #fff; background: var(--navy); }
+  .choice[aria-pressed="true"] small { color: rgba(255,255,255,.78); }
+  .actions { display: grid; gap: 10px; }
+  .btn {
+    display: flex; align-items: center; justify-content: center; width: 100%; min-height: 54px;
+    padding: 12px 18px; border-radius: 999px; color: var(--navy); background: var(--gold);
+    font-family: var(--head); font-size: 17px; font-weight: 800; text-align: center; text-decoration: none;
+  }
+  .btn:hover { background: var(--gold-hover); }
+  .btn.secondary { background: #fff; box-shadow: inset 0 0 0 1.5px var(--edge); }
+  .btn:disabled { color: var(--faint); background: #e9edf3; cursor: not-allowed; }
+  .link-btn {
+    min-height: 44px; color: var(--navy); background: transparent;
+    font-weight: 700; text-decoration: underline; text-underline-offset: 4px;
+  }
+  .notice { color: var(--muted); font-size: 14px; line-height: 1.5; }
+  .notice.error { color: var(--red); background: #fff4f2; }
+  .notice.success { color: #075b3d; background: #ecfdf3; }
+  .street-view {
+    position: relative; min-height: 132px; overflow: hidden; border-radius: 18px;
+    background: #dfe4eb; box-shadow: inset 0 0 0 1px var(--edge);
+  }
+  .street-view img { display: block; width: 100%; height: 148px; object-fit: cover; }
+  .street-view .street-copy {
+    display: flex; align-items: center; justify-content: center; min-height: 132px;
+    padding: 18px; color: var(--muted); font-size: 13px; font-weight: 700; text-align: center;
+  }
+  .recap-grid { display: grid; gap: 8px; margin-top: 12px; }
+  .path-proof { display: grid; grid-template-columns: 48px 1fr auto 1fr 48px; align-items: center; margin-top: 14px; }
+  .path-end { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 10px; color: var(--navy); background: var(--surface); box-shadow: inset 0 0 0 1px var(--edge); font-size: 10px; font-weight: 800; text-align: center; }
+  .path-line { height: 2px; background: rgba(23,54,93,.45); }
+  .path-distance { min-height: 32px; padding: 8px 9px; border-radius: 8px; color: var(--navy); background: var(--gold); font-size: 11px; font-weight: 800; white-space: nowrap; }
+  .photo-proof { display: flex; align-items: center; gap: 12px; margin-top: 14px; }
+  .photo-strip { display: flex; min-width: 52px; }
+  .photo-strip img { width: 52px; height: 52px; margin-left: -12px; border: 2px solid #fff; border-radius: 10px; object-fit: cover; box-shadow: 0 3px 8px rgba(11,31,59,.16); }
+  .photo-strip img:first-child { margin-left: 0; }
+  .photo-proof strong { color: var(--navy); font-size: 13px; }
+  .recap-row {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+    min-height: 44px; padding: 10px 0; border-bottom: 1px solid rgba(11,31,59,.08);
+  }
+  .recap-row:last-child { border-bottom: 0; }
+  .recap-row span { color: var(--muted); font-size: 13px; }
+  .recap-row strong { color: var(--navy); font-size: 13px; text-align: right; }
+  .scope-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .included {
+    flex: 0 0 auto; padding: 5px 9px; border-radius: 100px; color: #8a5a00;
+    background: var(--gold-tint); font-size: 10px; font-weight: 800; letter-spacing: .07em;
+    text-transform: uppercase; box-shadow: inset 0 0 0 1px rgba(255,186,0,.4);
+  }
+  .scope-list { display: grid; margin-top: 10px; }
+  .scope-row { display: grid; grid-template-columns: 64px 1fr; gap: 10px; align-items: center; padding: 10px 0; border-top: 1px solid rgba(11,31,59,.08); }
+  .scope-row img { display: block; width: 64px; height: 58px; border-radius: 10px; object-fit: cover; background: var(--surface); }
+  .scope-copy { display: grid; gap: 3px; min-width: 0; }
+  .scope-copy strong { color: var(--navy); font-size: 14px; }
+  .scope-copy span { color: var(--muted); font-size: 12px; line-height: 1.4; }
+  .hidden { display: none !important; }
+  .distance-options { display: grid; gap: 8px; margin-top: 12px; }
+  .distance-options + .btn { margin-top: 14px; }
+  .distance-options + .btn + .link-btn { display: flex; align-items: center; justify-content: center; width: 100%; margin-top: 6px; }
+  .guide { border: 2px solid rgba(255,186,0,.55); background: var(--gold-tint); }
+  .guide a { margin-top: 12px; }
+  .history { margin: 10px 0 0; padding-left: 20px; color: var(--muted); line-height: 1.5; }
+  .foot {
+    padding: 20px; color: rgba(255,255,255,.7); background: var(--navy);
+    font-size: 12px; line-height: 1.6; text-align: center;
+  }
+  @media (max-width: 340px) {
+    .head { padding-left: 14px; padding-right: 14px; }
+    .head img { height: 26px; }
+    .step { max-width: 74px; font-size: 11px; line-height: 1.25; text-align: right; }
+  }
+  @media (min-width: 760px) {
+    .page { margin: 24px auto; min-height: auto; border-radius: 20px; overflow: hidden; box-shadow: var(--shadow-md); }
+    main { padding: 34px 40px 48px; }
+  }
+</style>
+<link rel="stylesheet" href="/walk-v2/mobile-canvas.css" />
+</head>
+<body>
+<div class="page">
+  <header class="head">
+    <img src="/assets/images/logo-white-v2.png" alt="Backup Power Pro" />
+    <span class="step">Calculated range</span>
+  </header>
+  <main id="rangePage">
+    <section class="intro">
+      <h1>Your current project range</h1>
+      <p>This range is calculated for the saved setup shown here. It is not a firm proposal.</p>
+    </section>
+
+    <div class="notice" data-loading="" role="status">Checking your saved setup...</div>
+    <div class="notice error hidden" data-error="" role="alert"></div>
+
+    <section class="street-view hidden" data-street-view="" aria-label="Saved project address context">
+      <img data-street-image="" alt="" />
+    </section>
+
+    <section class="card hidden" data-recap="">
+      <h2>Your setup</h2>
+      <div class="recap-grid">
+        <div class="recap-row"><span>Generator connection</span><strong data-recap-connections=""></strong></div>
+        <div class="recap-row"><span>Panel</span><strong data-recap-panels=""></strong></div>
+        <div class="recap-row"><span>Connection path</span><strong data-recap-distance=""></strong></div>
+        <div class="recap-row"><span>Photos</span><strong data-recap-photos=""></strong></div>
+      </div>
+      <div class="path-proof" aria-label="Saved installation path">
+        <span class="path-end">Main panel</span><span class="path-line"></span>
+        <span class="path-distance" data-path-distance=""></span><span class="path-line"></span>
+        <span class="path-end">Outdoor box</span>
+      </div>
+      <div class="photo-proof">
+        <div class="photo-strip" data-photo-strip=""></div>
+        <strong data-photo-proof=""></strong>
+      </div>
+    </section>
+
+    <section class="range hidden" data-range-card="">
+      <p class="eyebrow">Your typical project range</p>
+      <div class="amount" data-amount=""></div>
+      <p data-basis=""></p>
+    </section>
+
+    <section class="notice hidden" data-revision-context="" role="status"></section>
+
+    <button class="btn secondary hidden" type="button" data-scope-reveal="">See everything included</button>
+
+    <section class="card hidden" data-scope="">
+      <div class="scope-head">
+        <h2 tabindex="-1">What's included</h2>
+        <span class="included">Included in this range</span>
+      </div>
+      <div class="scope-list" data-scope-list=""></div>
+    </section>
+
+    <section class="card hidden" data-fit-card="">
+      <h2>If your final proposal is within this range or lower, would you feel comfortable moving forward?</h2>
+      <div class="actions" style="margin-top:14px">
+        <button class="btn" type="button" data-accept="">Yes, prepare my proposal</button>
+        <button class="btn secondary" type="button" data-no="">No, show me my options</button>
+      </div>
+    </section>
+
+    <section class="card hidden" data-options="">
+      <h2>Would a different setup work better?</h2>
+      <p>These choices change the saved setup. Required installation work, permit, and required inspection stay included.</p>
+      <button class="choice hidden" type="button" data-alt-30="">
+        <strong>Choose a 30 Amp installation</strong>
+        <small>Both observed connections stay saved. The revised range will use the selected 30 Amp installation.</small>
+      </button>
+      <button class="choice hidden" type="button" data-alt-50="">
+        <strong>Return to a 50 Amp installation</strong>
+        <small>Both observed connections stay saved. The revised range will return to the higher 50 Amp connection.</small>
+      </button>
+      <button class="choice" type="button" data-alt-distance="">
+        <strong>Reconsider the outdoor connection location</strong>
+        <small>Choose a real shorter path if another safe location works.</small>
+      </button>
+      <button class="choice" type="button" data-alt-cord="">
+        <strong>I will provide my own approved compatible cord</strong>
+        <small>The revised range will remove the compatible cord from the included scope.</small>
+      </button>
+      <button class="choice hidden" type="button" data-alt-cord-restore="">
+        <strong>Include the approved compatible cord again</strong>
+        <small>The revised range will restore the cord and return to the approved range for this setup.</small>
+      </button>
+      <button class="choice" type="button" data-no-alternative="">
+        <strong>None of these options work for me</strong>
+        <small>Finish here without requesting a proposal.</small>
+      </button>
+      <button class="link-btn" type="button" data-close-options="">Back to the current range</button>
+    </section>
+
+    <section class="notice hidden" data-not-fit-terminal="" role="status">
+      <strong>Your Quote Walk is saved.</strong><br />
+      No proposal has been requested or prepared.
+    </section>
+
+    <section class="card hidden" data-distance-revision="">
+      <h2>Choose the real shorter connection path.</h2>
+      <p>A revised range is created only after a different shorter path is selected and saved.</p>
+      <div class="distance-options" data-distance-options=""></div>
+      <button class="btn" type="button" data-save-distance="" disabled>Save this changed setup</button>
+      <button class="link-btn" type="button" data-cancel-distance="">Back without changing</button>
+    </section>
+
+  </main>
+  <footer class="foot">
+    <strong>Key Goodson, Licensed Electrician, SC Lic #2942</strong>
+    <span>Serving Greenville, Spartanburg, and Pickens counties</span>
+    <span>Every project is reviewed and permitted by Key, completed with trusted local installation partners, and coordinated through final inspection.</span>
+  </footer>
+</div>
+<script src="/walk-v2/walk.js"></script>
+<script>
+(function () {
+  var t = WALK.requireToken(); if (!t) return;
+  var main = document.getElementById('rangePage');
+  var loading = main.querySelector('[data-loading]');
+  var error = main.querySelector('[data-error]');
+  var rangeCard = main.querySelector('[data-range-card]');
+  var revisionContext = main.querySelector('[data-revision-context]');
+  var scopeReveal = main.querySelector('[data-scope-reveal]');
+  var streetView = main.querySelector('[data-street-view]');
+  var recap = main.querySelector('[data-recap]');
+  var scope = main.querySelector('[data-scope]');
+  var fitCard = main.querySelector('[data-fit-card]');
+  var options = main.querySelector('[data-options]');
+  var revision = main.querySelector('[data-distance-revision]');
+  var view = null;
+  var selectedDistance = null;
+  var scopeRevealed = false;
+  var finalizing = false;
+  var DISTANCES = [
+    ['about_5', 'About 5 ft or less'],
+    ['5_10', 'About 6 to 10 ft'],
+    ['10_20', 'About 11 to 20 ft'],
+    ['20_40', 'About 21 to 40 ft'],
+    ['over_40', 'More than 40 ft']
+  ];
+  var DISTANCE_ORDER = { about_5: 1, '5_10': 2, '10_20': 3, '20_40': 4, over_40: 5 };
+  var DISTANCE_LABELS = { about_5: 'About 5 ft or less', '5_10': 'About 6 to 10 ft', '10_20': 'About 11 to 20 ft', '20_40': 'About 21 to 40 ft', over_40: 'More than 40 ft' };
+  var SCOPE_CATALOG = {
+    installation: function (basis) { return [basis + 'A generator connection installation', 'Panel-matched installation, breaker wiring, testing, and cleanup.', '/assets/images/work-full-install.jpg']; },
+    metal_outdoor_connection_box: function (basis) { return [basis + 'A metal outdoor connection box', 'Durable metal housing and a weather-rated cover provide a permanent outdoor place to connect your portable generator.', '/assets/product-images/inlet-' + basis + 'amp.jpg']; },
+    heavy_duty_compatible_cord: function (basis) { return ['Heavy-duty compatible cord', 'A complete factory-manufactured cord assembly, matched to your portable generator and connection box.', '/assets/product-images/cord-' + basis + 'amp.jpg']; },
+    system_walkthrough: function () { return ['System walkthrough', 'You see the finished system work and learn how to connect your portable generator and select circuits safely.', '/assets/product-images/system-walkthrough.jpg']; },
+    panel_guide: function () { return ['Step-by-step panel guide', 'A durable instruction label stays inside your panel for quick reference during an outage.', '/assets/product-images/panel-operating-guide.jpg']; },
+    permit_and_required_inspection: function () { return ['Permit and required inspection', 'Required for local code compliance. We handle the application, permit fee, inspection scheduling, and follow-through.', '/assets/product-images/permit-inspection-photo.jpg']; },
+    one_year_workmanship_support: function () { return ['One-year workmanship support', 'If an issue comes from our installation work during the first year, we return and correct it at no charge.', '/assets/product-images/workmanship-support.jpg']; }
+  };
+
+  function show(el, yes) { el.classList.toggle('hidden', !yes); }
+  function fail(message) {
+    loading.classList.add('hidden');
+    error.textContent = message;
+    error.classList.remove('hidden');
+  }
+  function money(cents) { return '$' + Math.round(Number(cents) / 100).toLocaleString('en-US'); }
+  function v2() { return view && view.quote_walk_v2 || {}; }
+  function panelRecapLabel(state, panels) {
+    if (panels.length === 1) return '1 panel';
+    if (panels.length > 1) return panels.length + ' panels';
+    if (state.panel_inventory_status === 'multiple_unsure_main'
+        || state.panel_location === 'More than one panel') return 'More than one';
+    if (state.panel_inventory_status === 'single_complete') return '1 panel';
+    return 'Confirmed';
+  }
+  function safeImageHref(value) {
+    try {
+      var url = new URL(String(value || ''), window.location.origin);
+      return url.origin === window.location.origin || url.origin === 'https://reowtzedjflwmlptupbk.supabase.co' ? url.href : '';
+    } catch (cause) { return ''; }
+  }
+  function renderScope(snapshot) {
+    var rows = Array.isArray(snapshot.scope_rows) ? snapshot.scope_rows : [];
+    var keys = rows.map(function (row) { return String(row && row.key || ''); });
+    var expectedCount = snapshot.cord_included === false ? 6 : 7;
+    var valid = rows.length === expectedCount && new Set(keys).size === expectedCount && rows.every(function (row) {
+      return row && SCOPE_CATALOG[row.key] && row.included === true;
+    }) && (snapshot.cord_included !== false || keys.indexOf('heavy_duty_compatible_cord') === -1);
+    if (!valid) {
+      fail('The included scope does not match the saved range. No scope details or proposal readiness have been assumed.');
+      show(scope, false);
+      show(fitCard, false);
+      return false;
+    }
+    var scopeList = main.querySelector('[data-scope-list]');
+    scopeList.replaceChildren();
+    rows.forEach(function (row) {
+      var copy = SCOPE_CATALOG[row.key](String(snapshot.pricing_basis));
+      var item = document.createElement('div');
+      item.className = 'scope-row';
+      var image = document.createElement('img');
+      image.src = copy[2];
+      image.alt = copy[0];
+      var body = document.createElement('div');
+      body.className = 'scope-copy';
+      var title = document.createElement('strong');
+      title.textContent = copy[0];
+      var description = document.createElement('span');
+      description.textContent = copy[1];
+      body.append(title, description);
+      item.append(image, body);
+      scopeList.appendChild(item);
+    });
+    return true;
+  }
+  function render() {
+    loading.classList.add('hidden');
+    error.classList.add('hidden');
+    var snapshot = v2().current_range_snapshot;
+    if (!snapshot || snapshot.status !== 'available') {
+      fail('A current range could not be loaded from the saved setup.');
+      return;
+    }
+    main.querySelector('[data-amount]').textContent = money(snapshot.low_cents) + ' to ' + money(snapshot.high_cents);
+    var observed = Array.isArray(v2().observed_connections) ? v2().observed_connections : [];
+    var panels = Array.isArray(v2().panels) ? v2().panels : [];
+    var media = Array.isArray(v2().media) ? v2().media : [];
+    main.querySelector('[data-recap-connections]').textContent = observed.map(function (amp) { return amp + ' Amp'; }).join(' and ');
+    main.querySelector('[data-recap-panels]').textContent = panelRecapLabel(v2(), panels);
+    main.querySelector('[data-recap-distance]').textContent = DISTANCE_LABELS[v2().distance_band] || 'Confirmed';
+    main.querySelector('[data-recap-photos]').textContent = media.length + ' received';
+    main.querySelector('[data-path-distance]').textContent = DISTANCE_LABELS[v2().distance_band] || 'Confirmed path';
+    main.querySelector('[data-photo-proof]').textContent = media.length + (media.length === 1 ? ' submitted photo' : ' submitted photos');
+    var photoStrip = main.querySelector('[data-photo-strip]');
+    photoStrip.replaceChildren();
+    media.slice(0, 3).forEach(function (item, index) {
+      var href = safeImageHref(item.preview_href);
+      if (!href) return;
+      var image = document.createElement('img');
+      image.src = href;
+      image.alt = 'Submitted project photo ' + (index + 1);
+      photoStrip.appendChild(image);
+    });
+    var street = v2().street_view_context || {};
+    var streetHref = street.status === 'available' ? safeImageHref(street.image_href) : '';
+    var streetImage = main.querySelector('[data-street-image]');
+    if (streetHref) {
+      streetImage.src = streetHref;
+      streetImage.alt = 'Verified Street View for ' + String(street.normalized_address || 'the saved project address');
+    } else {
+      streetImage.removeAttribute('src');
+      streetImage.alt = '';
+    }
+    if (!renderScope(snapshot)) return;
+    main.querySelector('[data-basis]').textContent = observed.length === 2
+      ? (v2().pricing_basis === '30'
+        ? 'Both 30 Amp and 50 Amp were observed. This revised range uses the explicitly selected 30 Amp installation.'
+        : 'Both 30 Amp and 50 Amp were observed. This range uses the higher 50 Amp connection.')
+      : 'This range uses the confirmed ' + v2().pricing_basis + ' Amp connection.';
+    var revisionMessage = '';
+    if (snapshot.revision_reason === 'both_to_30') {
+      revisionMessage = 'Revised setup: You selected a 30 Amp installation. Both observed connections remain saved.';
+    } else if (snapshot.revision_reason === 'shorter_distance') {
+      revisionMessage = 'Revised setup: The connection path changed to ' + (DISTANCE_LABELS[snapshot.distance_band] || 'the newly selected shorter path') + '. This saved path produced the revised range.';
+    } else if (snapshot.revision_reason === 'cord_removed') {
+      revisionMessage = 'Revised setup: You will provide the approved compatible cord. The cord is not included in this range.';
+    } else if (snapshot.revision_reason === 'cord_restored') {
+      revisionMessage = 'Revised setup: The approved compatible cord is included again.';
+    } else if (snapshot.revision_reason === 'return_to_50') {
+      revisionMessage = 'Revised setup: You returned to the 50 Amp installation. Both observed connections remain saved.';
+    }
+    revisionContext.textContent = revisionMessage;
+    show(revisionContext, Boolean(revisionMessage));
+    var notFitClosed = v2().not_fit_status === 'closed';
+    var editingOptions = !notFitClosed && v2().range_fit_answer === 'no' && !v2().accepted_range_snapshot_id;
+    show(recap, !editingOptions && !notFitClosed);
+    show(streetView, Boolean(streetHref) && !editingOptions && !notFitClosed);
+    show(rangeCard, !editingOptions && !notFitClosed);
+    show(scope, !editingOptions && !notFitClosed && scopeRevealed);
+    show(scopeReveal, !editingOptions && !notFitClosed && !scopeRevealed);
+    show(fitCard, !notFitClosed && !v2().accepted_range_snapshot_id && !editingOptions);
+    show(options, editingOptions);
+    show(main.querySelector('[data-not-fit-terminal]'), notFitClosed);
+    show(main.querySelector('[data-alt-30]'), observed.indexOf('30') !== -1 && observed.indexOf('50') !== -1 && v2().pricing_basis === '50');
+    show(main.querySelector('[data-alt-50]'), observed.indexOf('30') !== -1 && observed.indexOf('50') !== -1 && v2().pricing_basis === '30');
+    show(main.querySelector('[data-alt-cord]'), snapshot.cord_included !== false);
+    show(main.querySelector('[data-alt-cord-restore]'), snapshot.cord_included === false);
+    if (v2().accepted_range_snapshot_id) {
+      finalizeHandoff();
+    }
+  }
+  function refresh() {
+    return WALK.view(t).then(function (value) { view = value; render(); return value; });
+  }
+  function stateAction(action, payload) {
+    loading.textContent = 'Saving your current setup...';
+    loading.classList.remove('hidden');
+    return WALK.stateAction(t, action, payload || {}).then(refresh).catch(function (cause) {
+      loading.classList.add('hidden');
+      var code = cause && cause.body && cause.body.error;
+      fail(code === 'readiness_incomplete'
+        ? 'Your range is still locked because a required answer or photo is missing.'
+        : 'That change did not save. Your prior range remains current. Try again.');
+      throw cause;
+    });
+  }
+  function ensureRange() {
+    return refresh().then(function () {
+      var readiness = v2().readiness || {};
+      if (!readiness.inputs_ready) {
+        var blockers = Array.isArray(readiness.input_blockers) ? readiness.input_blockers : [];
+        WALK.go('incomplete.html', t);
+        throw new Error('readiness_incomplete');
+      }
+      if (!v2().current_range_snapshot || v2().current_range_snapshot.status !== 'available') return stateAction('create_range', {});
+      return view;
+    });
+  }
+
+  function finalizeHandoff() {
+    if (finalizing) return;
+    if (v2().handoff_recorded === true) {
+      WALK.go('thankyou.html', t);
+      return;
+    }
+    finalizing = true;
+    loading.textContent = 'Saving your current setup...';
+    loading.classList.remove('hidden');
+    WALK.stateAction(t, 'handoff', {}).then(function () {
+      WALK.go('thankyou.html', t);
+    }).catch(function () {
+      loading.classList.add('hidden');
+      fail('That change did not save. Your prior range remains current. Try again.');
+      finalizing = false;
+    });
+  }
+
+  main.querySelector('[data-accept]').addEventListener('click', function () {
+    if (finalizing) return;
+    finalizing = true;
+    main.querySelector('[data-accept]').disabled = true;
+    stateAction('accept_range', {}).then(function () {
+      finalizing = false;
+      finalizeHandoff();
+    }).catch(function () {
+      finalizing = false;
+      main.querySelector('[data-accept]').disabled = false;
+    });
+  });
+  scopeReveal.addEventListener('click', function () {
+    scopeRevealed = true;
+    show(scopeReveal, false);
+    show(scope, true);
+    scope.querySelector('h2').focus({ preventScroll: true });
+  });
+  main.querySelector('[data-no]').addEventListener('click', function () {
+    WALK.confirm(t, { range_fit_answer: 'no' }).then(refresh).catch(function () { fail('That answer did not save. Try again.'); });
+  });
+  main.querySelector('[data-close-options]').addEventListener('click', function () {
+    WALK.confirm(t, { range_fit_answer: null }).then(refresh).catch(function () {
+      fail('That choice did not save. Your current range remains available. Try again.');
+    });
+  });
+  main.querySelector('[data-alt-30]').addEventListener('click', function () {
+    WALK.confirm(t, { pricing_basis: '30', revision_reason: 'both_to_30' })
+      .then(function () { return stateAction('create_range', { revision_reason: 'both_to_30' }); })
+      .catch(function () {});
+  });
+  main.querySelector('[data-alt-50]').addEventListener('click', function () {
+    WALK.confirm(t, { pricing_basis: '50', revision_reason: 'return_to_50' })
+      .then(function () { return stateAction('create_range', { revision_reason: 'return_to_50' }); })
+      .catch(function () {});
+  });
+  main.querySelector('[data-alt-distance]').addEventListener('click', function () {
+    options.classList.add('hidden');
+    revision.classList.remove('hidden');
+    var current = v2().distance_band;
+    main.querySelector('[data-distance-options]').innerHTML = DISTANCES.map(function (item) {
+      var disabled = DISTANCE_ORDER[item[0]] >= DISTANCE_ORDER[current];
+      return '<button class="choice" type="button" data-distance="' + item[0] + '" ' + (disabled ? 'disabled' : '') + '><strong>' + item[1] + '</strong><small>' + (disabled ? 'Not shorter than the saved path' : 'Choose only if this real path works') + '</small></button>';
+    }).join('');
+  });
+  main.querySelector('[data-alt-cord]').addEventListener('click', function () {
+    WALK.confirm(t, { cord_included: false, revision_reason: 'cord_removed' })
+      .then(function () { return stateAction('create_range', { revision_reason: 'cord_removed' }); })
+      .catch(function () {});
+  });
+  main.querySelector('[data-alt-cord-restore]').addEventListener('click', function () {
+    WALK.confirm(t, { cord_included: true, revision_reason: 'cord_restored' })
+      .then(function () { return stateAction('create_range', { revision_reason: 'cord_restored' }); })
+      .catch(function () {});
+  });
+  main.querySelector('[data-no-alternative]').addEventListener('click', function () {
+    WALK.confirm(t, { not_fit_status: 'closed' })
+      .then(refresh)
+      .catch(function () { fail('That choice did not save. Your current range remains available. Try again.'); });
+  });
+  main.querySelector('[data-distance-options]').addEventListener('click', function (event) {
+    var button = event.target.closest('[data-distance]');
+    if (!button || button.disabled) return;
+    selectedDistance = button.getAttribute('data-distance');
+    main.querySelectorAll('[data-distance]').forEach(function (item) {
+      item.setAttribute('aria-pressed', item === button ? 'true' : 'false');
+    });
+    main.querySelector('[data-save-distance]').disabled = false;
+  });
+  main.querySelector('[data-save-distance]').addEventListener('click', function () {
+    if (!selectedDistance) return;
+    WALK.confirm(t, { distance_band: selectedDistance, revision_reason: 'shorter_distance' })
+      .then(function () { return stateAction('create_range', { revision_reason: 'shorter_distance' }); })
+      .then(function () { revision.classList.add('hidden'); selectedDistance = null; })
+      .catch(function () {});
+  });
+  main.querySelector('[data-cancel-distance]').addEventListener('click', function () {
+    revision.classList.add('hidden');
+    options.classList.remove('hidden');
+    selectedDistance = null;
+  });
+  WALK.ph('walk_v2_screen_view', { screen: 'range' });
+  ensureRange().catch(function (cause) {
+    if (String(cause && cause.message) !== 'readiness_incomplete') fail('Your current range could not be loaded. Try again.');
+  });
+})();
+</script>
+</body>
+</html>

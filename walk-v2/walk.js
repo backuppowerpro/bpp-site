@@ -2,14 +2,37 @@
  * comps; this file only moves data: token plumbing, the four endpoints,
  * PostHog events. No visual decisions live here. */
 (function () {
-  var BASE = 'https://reowtzedjflwmlptupbk.supabase.co/functions/v1';
+  /* Production keeps the canonical Supabase endpoint. The local release gate
+     sets this before the shared script loads so the exact customer pages can
+     exercise disposable functions and PostgreSQL without production access. */
+  var BASE = window.BPP_QUOTE_WALK_FUNCTIONS_BASE
+    || 'https://reowtzedjflwmlptupbk.supabase.co/functions/v1';
+  var TOKEN_STORAGE_KEY = 'bpp:qwv2:bearer';
 
-  function token() {
-    var t = new URLSearchParams(window.location.search).get('t') || '';
-    return /^[a-f0-9]{32,64}$/i.test(t) ? t : '';
+  function setToken(value) {
+    var next = /^[a-zA-Z0-9_-]{32,160}$/.test(String(value || '')) ? String(value) : '';
+    try {
+      if (next) sessionStorage.setItem(TOKEN_STORAGE_KEY, next);
+      else sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+    } catch (_) {}
+    return next;
   }
-  function go(page, t) {
-    window.location.href = '/walk-v2/' + page + (t ? '?t=' + encodeURIComponent(t) : '');
+  function token() {
+    var t = '';
+    try { t = sessionStorage.getItem(TOKEN_STORAGE_KEY) || ''; } catch (_) {}
+    if (!t) t = new URLSearchParams(window.location.search).get('t') || '';
+    return /^[a-zA-Z0-9_-]{32,160}$/.test(t) ? t : '';
+  }
+  function go(page, t, extra) {
+    setToken(t);
+    var params = new URLSearchParams();
+    Object.keys(extra || {}).forEach(function (key) {
+      if (extra[key] != null) params.set(key, String(extra[key]));
+    });
+    var query = params.toString();
+    var target = '/walk-v2/' + page + (query ? '?' + query : '');
+    if (window.__QW_NAVIGATE__) window.__QW_NAVIGATE__(target);
+    else window.location.href = target;
   }
   /* explicit back-a-step, token preserved everywhere. With no prevPage we send
    * them to the landing WITH the token so the landing's resume guard routes them
@@ -18,15 +41,190 @@
    * step, and step pages do not redirect back to the landing on load. */
   function back(prevPage, t) {
     if (prevPage) { go(prevPage, t); return; }
-    window.location.href = '/walk-v2/' + (t ? '?t=' + encodeURIComponent(t) : '');
+    go('', t);
   }
   function ph(event, props) {
     try { window.posthog && posthog.capture(event, Object.assign({ funnel: 'walkv2' }, props || {})); } catch (_) {}
   }
+  function fingerprint(value) {
+    var text = JSON.stringify(value || {});
+    var hash = 2166136261;
+    for (var i = 0; i < text.length; i++) {
+      hash ^= text.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+    return (hash >>> 0).toString(16);
+  }
+  function tokenScope(t) {
+    return fingerprint(['quote-walk-v2-session', String(t || '')]);
+  }
+  function connectionTruthKey(t) {
+    return 'bpp:qwv2:connection-truth:' + tokenScope(t);
+  }
+  function journeyStateKey(t) {
+    return 'bpp:qwv2:journey-state:' + tokenScope(t);
+  }
+  function readJourneyState(t) {
+    try { return JSON.parse(sessionStorage.getItem(journeyStateKey(t)) || 'null') || {}; } catch (_) { return {}; }
+  }
+  function rememberJourneyState(t, value) {
+    var current = readJourneyState(t);
+    var v2 = value && value.quote_walk_v2 || {};
+    var version = Number(value && value.expected_version || value && value.version || v2.version || current.version || 0);
+    var next = {
+      version: version || null,
+      panels: Array.isArray(v2.panels) ? v2.panels : (current.panels || []),
+      blockers: Array.isArray(v2.blockers) ? v2.blockers : (Array.isArray(value && value.blockers) ? value.blockers : (current.blockers || [])),
+      media: Array.isArray(v2.media) ? v2.media : (current.media || [])
+    };
+    try { sessionStorage.setItem(journeyStateKey(t), JSON.stringify(next)); } catch (_) {}
+    return next;
+  }
+  function requestKey(t, action, payload, journeyVersion) {
+    var version = Number(journeyVersion || 0);
+    var storageKey = 'bpp:qwv2:req:' + fingerprint([t, action, version, payload]);
+    try {
+      var existing = sessionStorage.getItem(storageKey);
+      if (existing) return existing;
+      var random = '';
+      if (window.crypto && crypto.getRandomValues) {
+        var bytes = new Uint8Array(12);
+        crypto.getRandomValues(bytes);
+        random = Array.from(bytes, function (byte) { return byte.toString(16).padStart(2, '0'); }).join('');
+      } else {
+        random = String(Date.now()) + String(Math.random()).slice(2);
+      }
+      var key = 'qwv2:' + action + ':v' + version + ':' + fingerprint(payload) + ':' + random;
+      sessionStorage.setItem(storageKey, key);
+      return key;
+    } catch (_) {
+      return 'qwv2:' + action + ':v' + version + ':' + fingerprint([t, payload]) + ':fallback';
+    }
+  }
+  function normalizeConnectionSet(values) {
+    var seen = {};
+    return (Array.isArray(values) ? values : []).map(function (value) {
+      var text = String(value || '').toUpperCase();
+      if (text === '30' || text === '30A' || text === 'CONFIRMED_30') return '30A';
+      if (text === '50' || text === '50A' || text === 'CONFIRMED_50') return '50A';
+      return '';
+    }).filter(function (value) {
+      if (!value || seen[value]) return false;
+      seen[value] = true;
+      return true;
+    }).sort();
+  }
+  function pricingBasis(values) {
+    var set = normalizeConnectionSet(values);
+    if (set.indexOf('50A') !== -1) return '50A';
+    return set.length === 1 && set[0] === '30A' ? '30A' : null;
+  }
+  function saveConnectionTruth(t, values) {
+    var set = normalizeConnectionSet(values);
+    var record = {
+      connection_answers: set,
+      pricing_basis: pricingBasis(set),
+      pricing_basis_rule_version: 'connection-set-v1',
+      pricing_basis_authority: 'key_explicit_2026_07_28'
+    };
+    try { sessionStorage.setItem(connectionTruthKey(t), JSON.stringify(record)); } catch (_) {}
+    return record;
+  }
+  function readConnectionTruth(t, view) {
+    var direct = normalizeConnectionSet(
+      view && view.quote_walk_v2 && view.quote_walk_v2.observed_connections
+      || view && view.connection_answers
+    );
+    if (direct.length) {
+      return {
+        connection_answers: direct,
+        pricing_basis: pricingBasis(direct),
+        pricing_basis_rule_version: 'connection-set-v1',
+        pricing_basis_authority: 'key_explicit_2026_07_28'
+      };
+    }
+    if (!view || !view.quote_walk_v2) try {
+      var saved = JSON.parse(sessionStorage.getItem(connectionTruthKey(t)) || 'null');
+      if (saved && normalizeConnectionSet(saved.connection_answers).length) {
+        saved.connection_answers = normalizeConnectionSet(saved.connection_answers);
+        saved.pricing_basis = pricingBasis(saved.connection_answers);
+        return saved;
+      }
+    } catch (_) {}
+    var legacy = [];
+    if (view && view.connection_status === 'confirmed_30') legacy = ['30A'];
+    if (view && view.connection_status === 'confirmed_50') legacy = ['50A'];
+    if (!legacy.length && view && String(view.amperage || '') === '30') legacy = ['30A'];
+    if (!legacy.length && view && String(view.amperage || '') === '50') legacy = ['50A'];
+    return {
+      connection_answers: legacy,
+      pricing_basis: pricingBasis(legacy),
+      pricing_basis_rule_version: 'connection-set-v1',
+      pricing_basis_authority: 'key_explicit_2026_07_28'
+    };
+  }
+  function progressTruth(view) {
+    var value = view || {};
+    var state = value.quote_walk_v2 || {};
+    var observed = normalizeConnectionSet(state.observed_connections || value.connection_answers);
+    if (!observed.length && (value.connection_status === 'confirmed_30' || value.connection_status === 'confirmed_50')) {
+      observed = [value.connection_status === 'confirmed_50' ? '50A' : '30A'];
+    }
+    var panelLocation = value.confirmed_panel_room || state.panel_location || '';
+    var panelInventory = state.panel_inventory_status || value.panel_inventory_status || '';
+    var distance = value.distance_band || state.distance_band || '';
+    var blockers = Array.isArray(state.blockers)
+      ? state.blockers
+      : state.readiness && Array.isArray(state.readiness.input_blockers)
+        ? state.readiness.input_blockers
+        : null;
+    var hasSavedPhoto = Array.isArray(state.media) && state.media.length > 0;
+    return {
+      generator: observed.length > 0,
+      panel: Boolean(panelLocation && panelLocation !== 'not_sure' && panelInventory !== 'incomplete'),
+      distance: Boolean(distance && distance !== 'not_sure'),
+      photos: Boolean(hasSavedPhoto && blockers && blockers.indexOf('panel_photo') === -1)
+    };
+  }
+  function paintProgress(root, view) {
+    var scope = root && root.querySelector ? root : document;
+    var progress = scope.querySelector('.qw-progress');
+    if (!progress) return progressTruth(view);
+    var current = String(progress.getAttribute('data-qw-step') || '').toLowerCase();
+    var truth = progressTruth(view);
+    var labels = [];
+    var steps = Array.from(progress.querySelectorAll('.pstep'));
+    var currentIndex = steps.findIndex(function (step) {
+      var labelNode = step.querySelector('.pl');
+      return String(labelNode && labelNode.textContent || '').trim().toLowerCase() === current;
+    });
+    steps.forEach(function (step, index) {
+      var labelNode = step.querySelector('.pl');
+      var key = String(labelNode && labelNode.textContent || '').trim().toLowerCase();
+      var complete = truth[key] === true;
+      step.classList.toggle('done', complete);
+      step.classList.toggle('on', key === current);
+      step.classList.toggle('reached', currentIndex >= 0 && index < currentIndex);
+      step.toggleAttribute('data-complete', complete);
+      if (key === current) step.setAttribute('aria-current', 'step');
+      else step.removeAttribute('aria-current');
+      labels.push((key === current ? 'Current ' : '') + key + (complete ? ' complete' : ' incomplete'));
+    });
+    var rail = progress.querySelector('.qw-progress-rail');
+    if (rail) rail.setAttribute('aria-label', labels.join('. ') + '.');
+    return truth;
+  }
   function getJson(url) {
     return fetch(url).then(function (r) {
-      if (!r.ok) throw new Error('http_' + r.status);
-      return r.json();
+      return r.json().catch(function () { return {}; }).then(function (body) {
+        if (!r.ok) {
+          var error = new Error(body && body.error || 'http_' + r.status);
+          error.status = r.status;
+          error.body = body;
+          throw error;
+        }
+        return body;
+      });
     });
   }
   function postJson(url, body, timeoutMs) {
@@ -52,12 +250,164 @@
 
   window.WALK = {
     token: token,
+    setToken: setToken,
     go: go,
     back: back,
     ph: ph,
-    view: function (t) { return getJson(BASE + '/pre-read-view?token=' + encodeURIComponent(t)); },
-    confirm: function (t, fields) { return postJson(BASE + '/pre-read-confirm', Object.assign({ token: t }, fields)); },
-    photo: function (t, dataUrl, idx) { return postJson(BASE + '/pre-read-photo', { token: t, image: dataUrl, idx: idx }); },
+    normalizeConnectionSet: normalizeConnectionSet,
+    pricingBasis: pricingBasis,
+    saveConnectionTruth: saveConnectionTruth,
+    readConnectionTruth: readConnectionTruth,
+    progressTruth: progressTruth,
+    paintProgress: paintProgress,
+    view: function (t) {
+      return getJson(BASE + '/pre-read-view?token=' + encodeURIComponent(t)).then(function (value) {
+        rememberJourneyState(t, value);
+        if (typeof document !== 'undefined') paintProgress(document, value);
+        var state = value && value.quote_walk_v2 || {};
+        var path = String(window.location && window.location.pathname || '').replace(/\/index\.html$/, '/');
+        if (state.service_area_status === 'verified_out_of_area' && path !== '/walk-v2/') {
+          go('index.html', t, { area: 'out' });
+        }
+        return value;
+      });
+    },
+    confirm: function (t, fields) {
+      var stableRequestKey = null;
+      function send(retried) {
+        var state = readJourneyState(t);
+        var payload = Object.assign({ token: t }, fields);
+        if (state.version) {
+          payload.expected_version = state.version;
+          stableRequestKey = stableRequestKey || requestKey(t, 'save_answers', fields, state.version);
+          payload.request_key = stableRequestKey;
+        }
+        return postJson(BASE + '/pre-read-confirm', payload).then(function (value) {
+          rememberJourneyState(t, value);
+          if (typeof document !== 'undefined') paintProgress(document, value);
+          return value;
+        }).catch(function (error) {
+          if (!retried && error && error.body && error.body.error === 'stale_journey_version') {
+            return getJson(BASE + '/pre-read-view?token=' + encodeURIComponent(t))
+              .then(function (value) { rememberJourneyState(t, value); return send(true); });
+          }
+          throw error;
+        });
+      }
+      return send(false);
+    },
+    stateAction: function (t, action, fields) {
+      if (['create_range', 'accept_range', 'supersede_media', 'handoff'].indexOf(action) === -1) {
+        return Promise.reject(new Error('invalid_state_action'));
+      }
+      var payloadFields = fields || {};
+      if (!payloadFields || typeof payloadFields !== 'object' || Array.isArray(payloadFields)) {
+        return Promise.reject(new Error('invalid_state_payload'));
+      }
+      var payloadKeys = Object.keys(payloadFields);
+      var validCreateRange = action === 'create_range'
+        && payloadKeys.length <= 1
+        && payloadKeys.every(function (key) { return key === 'revision_reason'; })
+        && (
+          !payloadKeys.length
+          || ['initial', 'both_to_30', 'shorter_distance', 'cord_removed', 'cord_restored', 'return_to_50']
+            .indexOf(String(payloadFields.revision_reason || '')) !== -1
+        );
+      var validSupersedeMedia = action === 'supersede_media'
+        && payloadKeys.length === 1
+        && payloadKeys[0] === 'media_id'
+        && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i
+          .test(String(payloadFields.media_id || ''));
+      var validEmpty = ['accept_range', 'handoff'].indexOf(action) !== -1
+        && payloadKeys.length === 0;
+      if (!validCreateRange && !validSupersedeMedia && !validEmpty) {
+        return Promise.reject(new Error('invalid_state_payload'));
+      }
+      function send(retried) {
+        var state = readJourneyState(t);
+        if (!state.version) {
+          return getJson(BASE + '/pre-read-view?token=' + encodeURIComponent(t))
+            .then(function (value) {
+              rememberJourneyState(t, value);
+              return send(retried);
+            });
+        }
+        var body = {
+          action: action,
+          credential: t,
+          expected_version: state.version,
+          request_key: requestKey(t, action, payloadFields, state.version),
+          payload: payloadFields
+        };
+        return postJson(BASE + '/quote-walk-v2-state', body).then(function (value) {
+          rememberJourneyState(t, value);
+          return value;
+        }).catch(function (error) {
+          if (!retried && error && error.body && error.body.error === 'stale_journey_version') {
+            return getJson(BASE + '/pre-read-view?token=' + encodeURIComponent(t))
+              .then(function (value) {
+                rememberJourneyState(t, value);
+                return send(true);
+              });
+          }
+          throw error;
+        });
+      }
+      return send(false);
+    },
+    photo: function (t, dataUrl, idx, suppliedIdentity) {
+      idx = Number(idx);
+      if (
+        !Number.isInteger(idx)
+        || idx < 1
+        || (suppliedIdentity ? idx > 100 : idx > 3)
+      ) {
+        return Promise.reject(new Error('invalid_media_index'));
+      }
+      function send(retried) {
+        var state = readJourneyState(t);
+        var role = suppliedIdentity && suppliedIdentity.role != null
+          ? String(suppliedIdentity.role)
+          : 'setup_photo';
+        if (role !== 'setup_photo') {
+          return Promise.reject(new Error('invalid_media_role'));
+        }
+        if (suppliedIdentity && suppliedIdentity.panel_id != null) {
+          return Promise.reject(new Error('invalid_media_panel'));
+        }
+        var panelId = null;
+        var identity = {
+          journey_version: state.version || null,
+          role: role,
+          panel_id: panelId,
+          image: fingerprint(dataUrl)
+        };
+        var payload = { token: t, image: dataUrl, idx: idx };
+        if (state.version) {
+          payload.role = role;
+          payload.panel_id = panelId;
+          payload.expected_version = state.version;
+          payload.request_key = requestKey(t, 'register_media', identity, state.version);
+        }
+        return postJson(BASE + '/pre-read-photo', payload).then(function (value) {
+          if (state.version && (!value || value.receipt_settled !== true)) {
+            throw new Error('media_receipt_unsettled');
+          }
+          rememberJourneyState(t, value);
+          return value;
+        }).catch(function (error) {
+          if (!retried && error && error.body && error.body.error === 'stale_journey_version') {
+            return getJson(BASE + '/pre-read-view?token=' + encodeURIComponent(t))
+              .then(function (value) { rememberJourneyState(t, value); return send(true); });
+          }
+          throw error;
+        });
+      }
+      if (readJourneyState(t).version) return send(false);
+      return getJson(BASE + '/pre-read-view?token=' + encodeURIComponent(t))
+        .then(function (value) { rememberJourneyState(t, value); }, function () {})
+        .then(function () { return send(false); });
+    },
     saveLater: function (t) { return postJson(BASE + '/pre-read-save-later', { token: t }); },
     emailCapture: function (t, email) { return postJson(BASE + '/walk-email-capture', { token: t, email: email }); },
     /* address auto-suggest via Mapbox Geocoding, the same provider the rest of
@@ -112,17 +462,71 @@
       if (!t) { window.location.replace('/walk-v2/'); return null; }
       return t;
     },
-    /* resume routing: land on the first unanswered step (D6) */
+    /* Resume at the first unanswered step. New records always carry a
+       connection_status. Amperage remains a legacy fallback for saved walks
+       created before the connection step was separated from the lead form. */
     routeFromState: function (t, v) {
-      /* an outlet-unsure lead (amperage still null) picks the outlet first, on the
-         educated guide page, before the walk. In the walk null amperage only happens
-         for the unsure branch (30/50 leads have it set, none leads never enter), so
-         this also makes the evening reminder's /w/ short link land them on the page. */
-      if (v.amperage == null) return go('outlet.html', t);
+      var v2 = v.quote_walk_v2;
+      if (v2 && Array.isArray(v2.blockers)) {
+        if (v2.service_area_status === 'verified_out_of_area') {
+          go('index.html', t, { area: 'out' });
+          return;
+        }
+        if (v2.blockers.indexOf('generator_connection') !== -1) return go('connection.html', t);
+        if (v2.blockers.indexOf('panel_location') !== -1) return go('location.html', t);
+        if (v2.blockers.indexOf('distance') !== -1) return go('distance.html', t);
+        if (
+          v2.blockers.indexOf('generator_connection_photo') !== -1
+          || v2.blockers.indexOf('panel_photo') !== -1
+          || v2.blockers.indexOf('panel_context_photo') !== -1
+        ) return go('photos.html', t);
+        if (v2.blockers.indexOf('service_area') !== -1) return go('range.html', t);
+        return go('range.html', t);
+      }
+      var status = v.connection_status || '';
+      if (v.generator_ownership_status === 'not_owned' ||
+          status === 'no_compatible_generator_connection') return go('generator-needed.html', t);
+      if (!status && v.amperage == null) return go('connection.html', t);
+      if (status === 'unanswered') return go('connection.html', t);
       if (!v.confirmed_panel_room) return go('location.html', t);
       if (!v.distance_band) return go('distance.html', t);
       if (!v.photo_count && !v.photo_received) return go('photos.html', t);
       return go('thankyou.html', t);
+    },
+    /* Recovery is task-directed. It re-opens only the first truly unresolved
+       requirement, then skips every answer that is already complete. */
+    routeRecoveryFromState: function (t, v) {
+      var state = v && v.quote_walk_v2 || {};
+      var blockers = Array.isArray(state.blockers)
+        ? state.blockers
+        : state.readiness && Array.isArray(state.readiness.input_blockers)
+          ? state.readiness.input_blockers
+          : [];
+      if (state.service_area_status === 'verified_out_of_area') {
+        go('index.html', t, { area: 'out' });
+        return;
+      }
+      if (blockers.indexOf('service_area') !== -1) return go('incomplete.html', t);
+      if (blockers.indexOf('generator_connection') !== -1) {
+        if (v.generator_ownership_status === 'not_owned'
+            || v.connection_status === 'no_generator'
+            || v.connection_status === 'no_compatible_generator_connection') {
+          return go('generator-needed.html', t);
+        }
+        return go('connection.html', t, { recovery: '1', edit: '1' });
+      }
+      if (blockers.indexOf('panel_location') !== -1 || blockers.indexOf('panel_inventory') !== -1) {
+        return go('location.html', t, { recovery: '1', edit: '1' });
+      }
+      if (blockers.indexOf('distance') !== -1) {
+        return go('distance.html', t, { recovery: '1', edit: '1' });
+      }
+      if (
+        blockers.indexOf('generator_connection_photo') !== -1
+        || blockers.indexOf('panel_photo') !== -1
+        || blockers.indexOf('panel_context_photo') !== -1
+      ) return go('photos.html', t, { recovery: '1' });
+      return go('range.html', t);
     },
     /* shrink a photo to a phone-friendly JPEG dataURL before upload */
     resizeImage: function (file, maxPx) {

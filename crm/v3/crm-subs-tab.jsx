@@ -55,27 +55,6 @@
     return isNaN(n) ? null : n;
   };
 
-  // Key-confirmed permit flat ($75). Operator-facing only: the sub NEVER sees
-  // a "+$75 permit" line item and is never told about the $75. When Key pulls
-  // the permit, payout is silently $75 less. Default = sub pulls (full payout).
-  const PERMIT_FLAT_DEFAULT = 75;
-
-  // The three permit modes the operator can set per job, mapped to the two
-  // stored fields. "No permit needed" leaves permit_owner as-is (the sub side
-  // ignores it when permit_required is false).
-  //   sub  -> { permit_owner:'sub', permit_required:true  }  (full payout; $75 folded in, invisible to sub)
-  //   bpp  -> { permit_owner:'bpp', permit_required:true  }  (pays $75 less; sub never told why)
-  //   none -> {                     permit_required:false }  (no $75 in the payout)
-  //
-  // The payout number is NOT composed here on purpose: sub-offer-edit is the ONE
-  // composer of the money (round(job_price*pct) + $75-if-sub-pulls-required),
-  // pre-accept only, and it already handles the manual-override + frozen-post-accept
-  // cases. The CRM sends only the permit terms and re-reads the recomputed offer,
-  // so the money formula lives in exactly one place (no client/server drift).
-  function permitModeOf(owner, required) {
-    if (required === false) return 'none';
-    return owner === 'bpp' ? 'bpp' : 'sub';
-  }
   const fmtDate = (iso) => {
     if (!iso) return '';
     try { return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); } catch { return ''; }
@@ -99,16 +78,16 @@
     return res;
   }
 
-  // Offer lifecycle -> stepper geometry. The comp's 6 steps:
-  // Offer, Accept, Permit, Photos, Inspect, Paid. Declined/withdrawn/expired
+  // Offer lifecycle -> stepper geometry.
+  // Offer, Accept, Photos, Inspect, Paid. Declined/withdrawn/expired
   // are terminal at the Accept slot.
-  const STEP_LABELS = ['Offer', 'Accept', 'Permit', 'Photos', 'Inspect', 'Paid'];
+  const STEP_LABELS = ['Offer', 'Accept', 'Photos', 'Inspect', 'Paid'];
   function stepStateFor(status) {
-    // returns an array of 6: 'done' | 'now' | 'term' | ''
+    // returns an array of 5: 'done' | 'now' | 'term' | ''
     const s = String(status || '');
     const set = (doneUpTo, nowIdx, termIdx) => {
-      const out = ['', '', '', '', '', ''];
-      for (let i = 0; i < 6; i++) {
+      const out = ['', '', '', '', ''];
+      for (let i = 0; i < 5; i++) {
         if (termIdx != null && i === termIdx) out[i] = 'term';
         else if (i < doneUpTo) out[i] = 'done';
         else if (i === nowIdx) out[i] = 'now';
@@ -118,10 +97,10 @@
     switch (s) {
       case 'offered':          return set(0, 0, null);
       case 'accepted':         return set(2, 2, null);
-      case 'permit_submitted': return set(3, 3, null);
-      case 'install_submitted':return set(4, 4, null);
-      case 'pass_submitted':   return set(5, 5, null);
-      case 'approved_paid':    return set(6, -1, null); // all done
+      case 'permit_submitted': return set(2, 2, null);
+      case 'install_submitted':return set(3, 3, null);
+      case 'pass_submitted':   return set(4, 4, null);
+      case 'approved_paid':    return set(5, -1, null); // all done
       case 'declined':         return set(1, -1, 1);
       case 'withdrawn':        return set(1, -1, 1);
       case 'expired':          return set(1, -1, 1);
@@ -462,112 +441,6 @@
     );
   }
 
-  // A 3-way "who pulls the permit" control (Key 2026-07-13: default = sub pulls).
-  // Sets permit_owner + permit_required on the offer; the server (sub-offer-edit)
-  // then recomposes the ONE payout number the sub sees. The $75 is NEVER shown to
-  // the sub as a line item; when Key pulls, payout is silently $75 less.
-  // Pre-accept the server recomputes payout_amount on this permit-terms change;
-  // post-accept the payout is FROZEN, so the control is shown read-only (the
-  // payout-revision guardrail owns any post-accept money change, done through the
-  // separate payout field). The money formula lives ONLY on the server, so the
-  // CRM never sends payout_amount from here (that would suppress the recompose).
-  //
-  // Reuses the existing segmented-choice primitive (same language as the
-  // Roster/Jobs tabs and the feedback up/down buttons) + Card2. Not net-new
-  // design language, so no fresh comp: composed from approved primitives.
-  function PermitControl({ job, offerId, locked, onSaved }) {
-    const owner = job.permit_owner === 'bpp' ? 'bpp' : 'sub';
-    const required = job.permit_required === false ? false : true; // NEW column, defaults true
-    const mode = permitModeOf(owner, required);
-    const [busy, setBusy] = R.useState(null); // the mode being saved
-    const [savedMode, setSavedMode] = R.useState(null);
-
-    // Whether the payout is formula-composed (so the server WILL recompose it when
-    // the permit terms change) vs a manual override (server leaves it, no auto-change).
-    // Display-only, drives the helper copy; the money decision lives server-side.
-    const isFormula = job.payout_job_price != null && job.payout_pct != null;
-    const flat = money(job.payout_permit_flat != null ? job.payout_permit_flat : PERMIT_FLAT_DEFAULT);
-
-    const OPTIONS = [
-      { key: 'sub',  label: 'Sub pulls the permit', sub: `Default. Full payout (one number; they never see a ${flat} line)` },
-      { key: 'bpp',  label: 'I pull the permit',    sub: `Pays ${flat} less. Sub never told why.` },
-      { key: 'none', label: 'No permit needed',     sub: `No ${flat} in the payout` },
-    ];
-
-    const choose = async (nextMode) => {
-      if (busy || locked || nextMode === mode) return;
-      setBusy(nextMode);
-      const nextOwner = nextMode === 'bpp' ? 'bpp' : nextMode === 'sub' ? 'sub' : owner;
-      const nextRequired = nextMode !== 'none';
-      // Send ONLY the permit terms. sub-offer-edit is the single composer of the
-      // payout: pre-accept + formula-composed, it recomputes payout_amount (folding
-      // in the $75 only when the sub pulls a required permit) and keeps
-      // payout_permit_flat consistent. We deliberately do NOT send payout_amount,
-      // since an explicit payout_amount would suppress that server recompose.
-      const { data, error } = await callFn('sub-offer-edit', { offer_id: offerId, permit_owner: nextOwner, permit_required: nextRequired });
-      if (error) { toast('Save failed: ' + (await fnErr(error))); setBusy(null); return; }
-      if (data && data.error) { toast('Save failed: ' + data.error); setBusy(null); return; }
-      setBusy(null);
-      setSavedMode(nextMode);
-      toast(isFormula ? 'Saved, payout updated' : 'Saved');
-      onSaved?.(data);
-      setTimeout(() => setSavedMode(null), 1600);
-    };
-
-    return (
-      <Card2 style={{ padding: '13px 15px', marginBottom: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
-          <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.03em', textTransform: 'uppercase', color: FAINT }}>Permit</span>
-          {locked && (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10.5, fontWeight: 700, color: MUTED }}>
-              <svg viewBox="0 0 24 24" style={{ width: 12, height: 12, fill: 'none', stroke: 'currentColor', strokeWidth: 2.1, strokeLinecap: 'round', strokeLinejoin: 'round' }}><rect x="4.5" y="11" width="15" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg> Locked after accept
-            </span>
-          )}
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {OPTIONS.map((o) => {
-            const on = mode === o.key;
-            const saving = busy === o.key;
-            const justSaved = savedMode === o.key;
-            return (
-              <button
-                key={o.key}
-                type="button"
-                onClick={() => choose(o.key)}
-                disabled={locked || busy != null}
-                aria-pressed={on}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 11, width: '100%', textAlign: 'left',
-                  minHeight: 54, padding: '10px 13px', borderRadius: 10, cursor: (locked || busy != null) ? 'default' : 'pointer',
-                  border: `1.5px solid ${on ? NAVY : LINE}`, background: on ? '#eef2fb' : '#fff',
-                  fontFamily: 'inherit', opacity: (locked && !on) ? 0.5 : 1,
-                }}
-              >
-                <span style={{ flex: '0 0 auto', width: 20, height: 20, borderRadius: '50%', border: `2px solid ${on ? NAVY : '#c3cbd6'}`, background: on ? NAVY : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {on && <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#fff' }} />}
-                </span>
-                <span style={{ flex: '1 1 auto', minWidth: 0 }}>
-                  <span style={{ display: 'block', fontSize: 15, fontWeight: 700, color: NAVY, lineHeight: 1.25 }}>{o.label}</span>
-                  <span style={{ display: 'block', fontSize: 12, fontWeight: 600, color: FAINT, marginTop: 1 }}>{o.sub}</span>
-                </span>
-                {saving && <span style={{ flex: '0 0 auto', fontSize: 12, fontWeight: 700, color: MUTED }}>...</span>}
-                {justSaved && !saving && (
-                  <svg viewBox="0 0 24 24" style={{ flex: '0 0 auto', width: 17, height: 17, fill: 'none', stroke: GREEN, strokeWidth: 2.5, strokeLinecap: 'round', strokeLinejoin: 'round' }}><path d="M5 12.5l4 4 10-10" /></svg>
-                )}
-              </button>
-            );
-          })}
-        </div>
-        {!locked && !isFormula && (
-          <p style={{ fontSize: 12, color: AMBER, margin: '10px 2px 0', lineHeight: 1.45 }}>This offer has a manual payout, so it will not auto-change. Set the payout below by hand if the permit choice should change it.</p>
-        )}
-        {!locked && isFormula && (
-          <p style={{ fontSize: 12, color: FAINT, margin: '10px 2px 0', lineHeight: 1.45 }}>The sub always sees one payout number and is never told about the {money(job.payout_permit_flat != null ? job.payout_permit_flat : PERMIT_FLAT_DEFAULT)}. When you pull the permit, payout is that amount less, silently.</p>
-        )}
-      </Card2>
-    );
-  }
-
   // ══════════════════════════════════════════════════════════════════
   //  PROFILE SHEET (roster row -> full sub profile, incl. internal perf)
   // ══════════════════════════════════════════════════════════════════
@@ -581,6 +454,7 @@
     const [fbNote, setFbNote] = R.useState('');
     const [fbJob, setFbJob] = R.useState('');
     const [recomputing, setRecomputing] = R.useState(false);
+    const [payoutBusy, setPayoutBusy] = R.useState(null);
     // Edit details (Key 2026-07-10): the operator can correct a sub's info any
     // time from the CRM. sub-upsert's edit path (id + whitelisted fields) already
     // exists; this opens the reused sub form pre-filled from the loaded profile.
@@ -712,6 +586,18 @@
       if (error) { toast('Could not update status: ' + (await fnErr(error))); return; }
       if (res && res.error) { toast(res.error); return; }
       toast(goingInactive ? 'Deactivated' : 'Reactivated'); load(); onChanged?.();
+    };
+    const markPayoutPaid = async (payout) => {
+      if (!payout?.id || payoutBusy) return;
+      if (!window.confirm(`Mark ${money((payout.amount_cents != null ? payout.amount_cents / 100 : payout.amount))} paid offline?`)) return;
+      setPayoutBusy(payout.id);
+      const { data: res, error } = await callFn('sub-upsert', {
+        action: 'mark_payout_paid', payout_id: payout.id, method: 'offline',
+      });
+      setPayoutBusy(null);
+      if (error) { toast('Mark paid failed: ' + (await fnErr(error))); return; }
+      if (res && res.error) { toast('Mark paid failed: ' + res.error); return; }
+      toast(res?.already_paid ? 'Already marked paid' : 'Marked paid'); load(); onChanged?.();
     };
 
     // The endpoint emits the compliance booleans on data.sub AND at the top level;
@@ -854,6 +740,7 @@
                         <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                           <span style={{ fontFamily: MONO, fontSize: 15, fontWeight: 700, color: paid ? GREEN : RED }}>{money((p.amount_cents != null ? p.amount_cents / 100 : p.amount))}</span>
                           <span style={{ fontSize: 11, color: paid ? GREEN : MUTED, fontWeight: 700 }}>{paid ? 'Paid' : 'Owed'}</span>
+                          {!paid && <button type="button" onClick={() => markPayoutPaid(p)} disabled={payoutBusy === p.id} style={{ minHeight: 44, padding: '0 11px', border: `1px solid ${NAVY}`, background: '#fff', color: NAVY, borderRadius: 8, fontFamily: 'inherit', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{payoutBusy === p.id ? 'Saving...' : 'Mark paid'}</button>}
                         </span>
                       </div>
                     );
@@ -1005,7 +892,7 @@
     const [suggestions, setSuggestions] = R.useState(null);
     const [copiedId, setCopiedId] = R.useState(null);
     const [drafting, setDrafting] = R.useState(false);
-    const [draft, setDraft] = R.useState(null);   // { est_labor_hours, timeframe_estimate, permit_description } pre-fill, not yet saved
+    const [draft, setDraft] = R.useState(null);   // labor and timeframe pre-fill, not yet saved
 
     const load = R.useCallback(async () => {
       if (!offerId && !contactId) return;
@@ -1026,10 +913,7 @@
     const oid = job.offer_id || job.id || offerId;
     const cid = job.contact_id || contactId;
     const payoutLocked = ['accepted', 'permit_submitted', 'install_submitted', 'pass_submitted', 'approved_paid'].includes(status);
-    // Match sub-approve-payout: sub-pulled needs pass_submitted; Key-pulled (bpp)
-    // can approve from install_submitted once attestations land.
-    const showFoot = status === 'pass_submitted'
-      || (job.permit_owner === 'bpp' && status === 'install_submitted');
+    const showFoot = status === 'pass_submitted';
 
     const cust = job.customer || {};
     const scope = job.scope || {};
@@ -1048,12 +932,7 @@
     R.useEffect(() => { if (open && needsSub && cid) loadSuggestions(); }, [open, needsSub, cid]);
 
     const copyJobLink = async (subId) => {
-      // Create with the default permit composition: the sub pulls a REQUIRED
-      // permit, so the $75 permit flat is IN the one payout number. Key can
-      // switch this pre-accept in the offer detail (PermitControl), which
-      // recomposes the payout. permit_required=true is also the DB default;
-      // sending it here keeps the CRM's model explicit and forward-safe.
-      const { data: res, error } = await callFn('sub-offer-create', { contact_id: cid, sub_id: subId, permit_owner: 'sub', permit_required: true });
+      const { data: res, error } = await callFn('sub-offer-create', { contact_id: cid, sub_id: subId });
       if (error) { toast('Create failed: ' + (await fnErr(error))); return; }
       if (res && res.error) { toast('Create failed: ' + res.error); return; }
       const link = res?.link;
@@ -1064,9 +943,9 @@
       onChanged?.();
       load();
     };
-    // Draft labor / timeframe / permit with AI. sub-draft-scope reads the
+    // Draft labor and timeframe with AI. sub-draft-scope reads the
     // proposal + install notes and returns a draft (it does NOT persist); we
-    // pre-fill the three EditFields so Key can review and Save each one (each
+    // pre-fill the EditFields so Key can review and Save each one (each
     // Save goes through sub-offer-edit). Nothing is written until Key saves.
     const draftScope = async () => {
       if (drafting) return;
@@ -1080,7 +959,6 @@
       setDraft({
         est_labor_hours: d.est_labor_hours,
         timeframe_estimate: d.timeframe_estimate,
-        permit_description: d.permit_description,
       });
       toast('AI draft ready, review and Save each field');
     };
@@ -1102,6 +980,18 @@
       if (res && res.error) { toast('Approve failed: ' + res.error); return; }
       setApproved(true); toast('Payout obligation recorded'); onChanged?.(); load();
     };
+    const recordInspectionFailure = async () => {
+      if (!oid || !job.sub_id || !cid) return;
+      const detail = window.prompt('What failed inspection? This reopens the job for correction and blocks payout until new pass proof is uploaded.');
+      if (detail == null) return;
+      const { data: res, error } = await callFn('sub-feedback', {
+        action: 'add_incident', kind: 'failed_inspection', sub_id: job.sub_id,
+        contact_id: cid, offer_id: oid, detail: detail.trim() || null,
+      });
+      if (error) { toast('Could not reopen job: ' + (await fnErr(error))); return; }
+      if (res && res.error) { toast('Could not reopen job: ' + res.error); return; }
+      toast('Inspection failed, job reopened for correction'); onChanged?.(); load();
+    };
     // Server records payout_agreed_amount (frozen at accept), not a later edit of payout_amount.
     const owedDollars = job.payout_agreed_amount != null ? job.payout_agreed_amount : job.payout_amount;
     const owedDiffers = job.payout_agreed_amount != null
@@ -1121,6 +1011,9 @@
               </div>
             ) : (
               <React.Fragment>
+                <button onClick={recordInspectionFailure} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', minHeight: 46, marginBottom: 9, background: '#fff', color: RED, border: `1px solid ${RED}`, borderRadius: 10, fontFamily: 'inherit', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+                  Inspection failed
+                </button>
                 <button onClick={approvePayout} disabled={approving} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, width: '100%', minHeight: 54, background: GOLD, color: DEEP, border: 0, borderRadius: 12, fontFamily: 'inherit', fontSize: 17, fontWeight: 800, letterSpacing: '-0.01em', cursor: approving ? 'default' : 'pointer', boxShadow: '0 8px 22px rgba(255,186,0,.32)' }}>
                   <svg viewBox="0 0 24 24" style={{ width: 19, height: 19, fill: 'none', stroke: DEEP, strokeWidth: 2.4, strokeLinecap: 'round', strokeLinejoin: 'round' }}><path d="M12 3v18M8 8a3 3 0 0 1 3-2.5h2a3 3 0 0 1 0 6h-2a3 3 0 0 0 0 6h2a3 3 0 0 0 3-2.5" /></svg>
                   {approving ? 'Approving...' : `Record owed, ${money(owedDollars)}`}
@@ -1183,10 +1076,10 @@
               </React.Fragment>
             )}
 
-            {/* Client, for the permit only (revealed post-accept) */}
+            {/* Client, for the installation (revealed post-accept) */}
             {cust && (cust.name || cust.address) && (
               <React.Fragment>
-                <SubLabel>Client, for the permit only</SubLabel>
+                <SubLabel>Client, for the installation</SubLabel>
                 <Card2>
                   <KV first k="Name" v={cust.name || '(none)'} />
                   <KV k="Address" v={cust.address ? <React.Fragment>{cust.address}<br /><a href={`https://maps.apple.com/?q=${encodeURIComponent(cust.address)}`} target="_blank" rel="noopener" style={{ color: NAVY, textDecoration: 'underline', textDecorationColor: GOLD, textDecorationThickness: 2, textUnderlineOffset: 2 }}>Open in Maps</a></React.Fragment> : '(none)'} />
@@ -1208,10 +1101,9 @@
                     {drafting ? 'Drafting...' : 'Draft with AI'}
                   </button>
                 ) : null}>Job setup</SubLabel>
-                {draft && <p style={{ fontSize: 12, color: '#7a5a00', margin: '0 2px 10px', lineHeight: 1.45 }}>AI drafted the labor, timeframe, and permit description below. Review each and tap Save to send it to the sub. Nothing is saved until you do.</p>}
+                {draft && <p style={{ fontSize: 12, color: '#7a5a00', margin: '0 2px 10px', lineHeight: 1.45 }}>AI drafted the labor and timeframe below. Review each and tap Save to send it to the sub. Nothing is saved until you do.</p>}
                 <EditField label="Timeframe estimate" aiTag offerId={oid} field="timeframe_estimate" value={draft && draft.timeframe_estimate != null ? draft.timeframe_estimate : job.timeframe_estimate} onSaved={load} />
                 <EditField label="Firm install date" offerId={oid} field="firm_install_date" value={job.firm_install_date ? String(job.firm_install_date).slice(0, 10) : ''} onSaved={load} />
-                <PermitControl job={job} offerId={oid} locked={payoutLocked} onSaved={load} />
                 <EditField label="Payout amount" offerId={oid} field="payout_amount" money value={job.payout_amount} locked={payoutLocked} lockNote={`The sub already accepted ${money(job.payout_agreed_amount != null ? job.payout_agreed_amount : job.payout_amount)}. Changing it needs a reason and shows the sub what changed.`} onSaved={load} />
                 <EditField label="Labor hours" aiTag offerId={oid} field="est_labor_hours" value={draft && draft.est_labor_hours != null ? draft.est_labor_hours : job.est_labor_hours} onSaved={load} />
 
@@ -1244,9 +1136,6 @@
                   <MaterialsShipControl job={job} offerId={oid} onSaved={load} />
                 )}
 
-                <div style={{ marginTop: 16 }}>
-                  <EditField label="Permit description" aiTag textarea offerId={oid} field="permit_description" value={draft && draft.permit_description != null ? draft.permit_description : job.permit_description} onSaved={load} />
-                </div>
                 <EditField label="Scope notes" textarea offerId={oid} jsonField="scope_json" jsonKey="description" jsonSource={job.scope_json} value={(job.scope_json && job.scope_json.description) || job.scope_notes} onSaved={load} />
               </React.Fragment>
             )}
@@ -1648,7 +1537,7 @@
       const db = window.CRM?.__db;
       if (!db) return;
       const { data, error } = await db.from('sub_candidates')
-        .select('id, created_at, name, phone, email, business_name, sc_license, years_experience, service_areas, capacity_per_month, source, stage')
+        .select('id, created_at, name, phone, email, business_name, sc_license, license_verified, insurance_status, years_experience, service_areas, capacity_per_month, source, stage')
         .in('stage', ['applied', 'screened', 'test_install'])
         .order('created_at', { ascending: false });
       if (!error) setApplicants(data || []);
@@ -1666,13 +1555,37 @@
       toast(okMsg);
       loadApplicants();
     };
-    const advanceApplicant = (cand) => {
+    const addApplicantLicense = (cand) => {
+      const entered = window.prompt('SC license number', cand.sc_license || '');
+      if (entered == null) return;
+      const license = entered.trim();
+      if (!license) { toast('Enter the SC license number before verifying it'); return; }
+      patchApplicant(cand, { sc_license: license, license_verified: false }, `${cand.name}: license added`);
+    };
+    const advanceApplicant = async (cand) => {
       const next = CAND_NEXT[cand.stage];
       if (!next) return;
-      patchApplicant(cand, { stage: next }, next === 'active' ? `${cand.name} is active` : `${cand.name}: ${next.replace('_', ' ')}`);
-      // Graduating to a real sub: open New sub seeded with the name so the
-      // recruiting record hands off to an actual sub without re-typing.
-      if (next === 'active') { setAddingSubSeed(cand.name || ''); setAddingSub(true); }
+      if (next !== 'active') {
+        await patchApplicant(cand, { stage: next }, `${cand.name}: ${next.replace('_', ' ')}`);
+        return;
+      }
+      const { data: res, error } = await callFn('sub-upsert', {
+        action: 'graduate_candidate', candidate_id: cand.id,
+      });
+      if (error || !res?.ok) {
+        const reason = res?.error === 'license_number_required'
+          ? 'Add the SC license number before making this applicant active'
+          : res?.error === 'license_not_verified'
+            ? 'Verify the license before making this applicant active'
+          : res?.error === 'insurance_not_verified'
+            ? 'Verify insurance before making this applicant active'
+            : 'Could not create the subcontractor record';
+        toast(reason);
+        return;
+      }
+      toast(`${cand.name} is now in the subcontractor roster`);
+      setRoster(null);
+      loadApplicants();
     };
     const declineApplicant = (cand) => patchApplicant(cand, { stage: 'declined' }, `${cand.name} moved to past candidates`);
     const copyApplyLink = async () => {
@@ -1748,7 +1661,16 @@
                       {a.service_areas ? <span>{a.service_areas}</span> : null}
                       {a.sc_license ? <span>Lic {a.sc_license}</span> : null}
                       {a.capacity_per_month ? <span>wants {a.capacity_per_month}/mo</span> : null}
+                      {a.license_verified ? <span>License verified</span> : null}
+                      {a.insurance_status === 'verified' ? <span>Insurance verified</span> : null}
                     </div>
+                    {(!a.license_verified || a.insurance_status !== 'verified') && (
+                      <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+                        {!a.sc_license && <button onClick={() => addApplicantLicense(a)} style={{ minHeight: 40, padding: '0 12px', border: `1.5px solid ${LINE_SOFT}`, background: '#fff', color: NAVY, borderRadius: 10, fontFamily: 'inherit', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Add license</button>}
+                        {a.sc_license && !a.license_verified && <button onClick={() => patchApplicant(a, { license_verified: true }, `${a.name}: license verified`)} style={{ minHeight: 40, padding: '0 12px', border: `1.5px solid ${LINE_SOFT}`, background: '#fff', color: NAVY, borderRadius: 10, fontFamily: 'inherit', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Verify license</button>}
+                        {a.insurance_status !== 'verified' && <button onClick={() => patchApplicant(a, { insurance_status: 'verified' }, `${a.name}: insurance verified`)} style={{ minHeight: 40, padding: '0 12px', border: `1.5px solid ${LINE_SOFT}`, background: '#fff', color: NAVY, borderRadius: 10, fontFamily: 'inherit', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Verify insurance</button>}
+                      </div>
+                    )}
                     <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
                       <button onClick={() => advanceApplicant(a)} style={{ flex: '1 1 auto', minHeight: 44, border: 0, background: NAVY, color: '#fff', borderRadius: 10, fontFamily: 'inherit', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>{CAND_LABEL[a.stage] || 'Advance'}</button>
                       <button onClick={() => declineApplicant(a)} style={{ flex: '0 0 auto', minHeight: 44, padding: '0 14px', border: `1.5px solid ${LINE_SOFT}`, background: '#fff', color: MUTED, borderRadius: 10, fontFamily: 'inherit', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Decline</button>
