@@ -2,7 +2,7 @@
 <html lang="en" class="qw-template-document-root">
 <head>
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-ogo6DxZoqLSoPnrdQedhgCHa5RQ8kCZoNpEwXed6cEM='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-oy8BBmKR81N7mZJF/Mlkt18/mt1YBTZQMPYdlXc+IIY='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://reowtzedjflwmlptupbk.supabase.co; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-gm2LrKUIVO+iOPvO3QUB9215td4ZvBqU5jo39dKlRFY='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-oy8BBmKR81N7mZJF/Mlkt18/mt1YBTZQMPYdlXc+IIY='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://reowtzedjflwmlptupbk.supabase.co; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script src="/walk-v2/token-bootstrap.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
 <meta name="robots" content="noindex, nofollow" />
@@ -521,15 +521,17 @@
   function refresh() {
     return WALK.view(t).then(function (value) { view = value; render(); return value; });
   }
-  function stateAction(action, payload) {
+  function stateAction(action, payload, localErrorOnly) {
     loading.textContent = 'Saving your current setup...';
     loading.classList.remove('hidden');
     return WALK.stateAction(t, action, payload || {}).then(refresh).catch(function (cause) {
       loading.classList.add('hidden');
       var code = cause && cause.body && cause.body.error;
-      fail(code === 'readiness_incomplete'
-        ? 'Your range is still locked because a required answer or photo is missing.'
-        : 'That change did not save. Your prior range remains current. Try again.');
+      if (!localErrorOnly) {
+        fail(code === 'readiness_incomplete'
+          ? 'Your range is still locked because a required answer or photo is missing.'
+          : 'That change did not save. Your prior range remains current. Try again.');
+      }
       throw cause;
     });
   }
@@ -578,6 +580,7 @@
     button.addEventListener('click', acceptCurrentRange);
   });
   editPhone.addEventListener('click', function () {
+    error.classList.add('hidden');
     phoneStatus.textContent = '';
     show(phoneStatus, false);
     show(phoneError, false);
@@ -607,15 +610,18 @@
     }
     var save = acceptedDelivery.querySelector('[data-save-phone]');
     save.disabled = true;
-    stateAction('update_phone', { phone: nextPhone }).then(function () {
+    stateAction('update_phone', { phone: nextPhone }, true).then(function () {
       var confirmation = v2().confirmation_event || {};
       phoneStatus.textContent = confirmation.manual_resend_required
         ? 'Your number is updated. Key will use the new number when he resends the proposal link.'
         : 'Got it. I’ll use the number ending in ' + nextPhone.slice(-4) + ' for your proposal.';
       show(phoneStatus, true);
       show(phoneForm, false);
-    }).catch(function () {
-      phoneError.textContent = 'That number did not save. Your previous number is still on file. Try again.';
+    }).catch(function (cause) {
+      var code = cause && cause.body && cause.body.error;
+      phoneError.textContent = code === 'phone_suppressed'
+        ? 'That number is opted out of texts. Use a different mobile number.'
+        : 'That number did not save. Your previous number is still on file. Try again.';
       show(phoneError, true);
     }).finally(function () { save.disabled = false; });
   });
