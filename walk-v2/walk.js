@@ -550,4 +550,37 @@
       });
     },
   };
+
+  /* Keep the address result list inside the visible mobile viewport, including
+     when the on-screen keyboard changes the visual viewport height. */
+  var addressDrop = document.querySelector('[data-addr-drop]');
+  function syncAddressDropViewport() {
+    if (!addressDrop || !addressDrop.classList.contains('open')) {
+      if (addressDrop) addressDrop.style.removeProperty('--addr-drop-max-height');
+      return;
+    }
+    var viewport = window.visualViewport;
+    var viewportBottom = viewport ? viewport.offsetTop + viewport.height : window.innerHeight;
+    var available = Math.floor(viewportBottom - addressDrop.getBoundingClientRect().top - 12);
+    if (available < 96) {
+      var addressInput = document.querySelector('#fAddr');
+      if (addressInput) addressInput.scrollIntoView({ block: 'start' });
+      viewportBottom = viewport ? viewport.offsetTop + viewport.height : window.innerHeight;
+      available = Math.floor(viewportBottom - addressDrop.getBoundingClientRect().top - 12);
+    }
+    available = Math.max(96, available);
+    addressDrop.style.setProperty('--addr-drop-max-height', available + 'px');
+  }
+  if (addressDrop) {
+    new MutationObserver(syncAddressDropViewport).observe(addressDrop, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+    window.addEventListener('resize', syncAddressDropViewport, { passive: true });
+    window.addEventListener('scroll', syncAddressDropViewport, { passive: true });
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', syncAddressDropViewport, { passive: true });
+      window.visualViewport.addEventListener('scroll', syncAddressDropViewport, { passive: true });
+    }
+  }
 })();
