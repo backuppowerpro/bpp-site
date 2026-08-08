@@ -126,19 +126,6 @@
     }
     .section-title{margin:0;color:var(--plan-navy);font:800 21px/1.16 Outfit,sans-serif;letter-spacing:-.015em}
     .key-signature{margin:13px 0 6px;color:var(--plan-navy);font:700 25px/1 Dancing Script,cursive}
-    .trust-pills{
-      display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0;padding:0 18px 18px;
-    }
-    .trust-pill{
-      display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:8px 7px;
-      border-radius:999px;background:#fff2bd;color:#765500;
-      font:800 10px/1 Outfit,sans-serif;text-align:center;
-    }
-    .trust-pill[hidden]{display:none}
-    .trust-pill svg{
-      width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;
-      stroke-linecap:round;stroke-linejoin:round;
-    }
     .price-journey-card{overflow:hidden;background:#fff}
     .price-card{background:var(--plan-navy);color:#fff}
     .price-card .section-label{color:#ffd15a}
@@ -387,8 +374,6 @@
       .recommendation-head img{width:70px;height:70px}
       .recommendation-byline strong{font-size:clamp(11px,3.35vw,13px);letter-spacing:-.015em;white-space:nowrap}
       .recommendation-copy{margin:0 18px;padding:12px 0 14px}
-      .trust-pills{gap:7px;padding:0 14px 15px}
-      .trust-pill{min-height:38px;padding-inline:5px;font-size:9px}
       .value-card{padding:23px 18px}
       .project-item{grid-template-columns:54px minmax(0,1fr) auto;gap:10px;min-height:84px;padding:12px 3px}
       .project-media{width:54px;height:54px;border-radius:11px}
@@ -456,20 +441,6 @@
         <div class="recommendation-copy">
           <p id="personalNoteText">Sample, here is everything we talked through for your install, priced and ready. Approve it right from your phone and I will take it from there.</p>
           <div class="key-signature">Key Goodson</div>
-        </div>
-        <div class="trust-pills" aria-label="Project credentials">
-          <span class="trust-pill">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 12 2 2 4-4"></path><path d="M12 3 5 6v5c0 4.4 2.9 8.4 7 10 4.1-1.6 7-5.6 7-10V6z"></path></svg>
-            Licensed
-          </span>
-          <span class="trust-pill">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 7v5c0 4.8 3.4 8.1 8 9 4.6-.9 8-4.2 8-9V7z"></path><path d="m9 12 2 2 4-4"></path></svg>
-            Insured
-          </span>
-          <span class="trust-pill" id="permitTrust">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"></rect><path d="M9 4.5h6V7H9z"></path><path d="m9 13 2 2 4-4"></path></svg>
-            Permit included
-          </span>
         </div>
       </div>
     </section>
@@ -788,7 +759,6 @@
       function renderScope(){
         var items=standardProjectItems().concat(displayCustomItems());
         document.getElementById('projectScope').innerHTML=items.map(projectItemHtml).join('');
-        document.getElementById('permitTrust').hidden=!visibleSystemItem((fixture.systemItems||{}).permit,'permit');
       }
       function renderNote(){
         var note=String(fixture.notes||'').trim();
