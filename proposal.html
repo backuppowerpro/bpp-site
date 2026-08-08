@@ -522,6 +522,10 @@ window.addEventListener('DOMContentLoaded', async () => {
   // deposit_rate is the single source of truth for routing; redirect happens
   // before trackView + render so there is no double view-count or content flash.
   {
+    if (P.creator_version === 'v4') {
+      window.location.replace('/proposal-customer-mvp.html' + window.location.search);
+      return;
+    }
     // CUTOVER LIVE (2026-07-02, Key sign-off: "the preview shows the old one,
     // fix it"): every new-standard proposal (deposit_rate set and not the
     // legacy 50%) renders on the new page, for CUSTOMERS and for PREVIEW alike,
@@ -1527,6 +1531,7 @@ async function approveProposal() {
       body: JSON.stringify({
         token: P.token,
         action: 'sign',
+        proposal_revision: P.signature_revision,
         signer_name: name,
         safety_ack: true,
         selected_amp: String(chosenAmp),

@@ -373,8 +373,13 @@ window.addEventListener('DOMContentLoaded', async () => {
   // content flash. Preview links are never redirected so Key can still preview
   // the legacy layout. Mirrors the proposal.html deposit_rate cutover.
   {
+    const _isV4 = INV.creator_version === 'v4';
     const _isV3 = INV.creator_version === 'v3';
     const _pv = new URLSearchParams(window.location.search).get('preview') === '1';
+    if (_isV4) {
+      window.location.replace('/invoice-v4.html' + window.location.search);
+      return;
+    }
     if (_isV3 && !_pv) {
       window.location.replace('/invoice-comp.html' + window.location.search);
       return;
