@@ -4,7 +4,8 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="robots" content="noindex,nofollow,noarchive" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-wMaDVVq6BM07VRVtgBm5ZhoOMM1zHf8ct1f1gzIfNWU='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-+6Ffm1vrZYa4Vi2tMkHenmNSEHhXCrI5AmZspoSkIew='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; form-action 'self'; frame-src 'none'" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-85BhBFkdhUeJW2EYdCR44ap30MVHvy2ywDH26B5cK4s='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-+6Ffm1vrZYa4Vi2tMkHenmNSEHhXCrI5AmZspoSkIew='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; form-action 'self'; frame-src 'none'" />
+<script src="/walk-v2/token-bootstrap.js"></script>
 <title>Saved Quote Walk | Backup Power Pro</title>
 <style>
 :root {
@@ -77,7 +78,7 @@ h1 { margin:0 0 8px; color:var(--navy); font-family:var(--head); font-size:22px;
 <link rel="stylesheet" href="/walk-v2/mobile-canvas.css" />
 </head>
 <body>
-<div class="page">
+<div class="page" data-screen-label="Quote walk incomplete">
   <header class="head"><img src="/assets/images/logo-white-v2.png" alt="Backup Power Pro" /></header>
   <main>
     <p class="kicker">Saved for later</p>
@@ -87,9 +88,9 @@ h1 { margin:0 0 8px; color:var(--navy); font-family:var(--head); font-size:22px;
     <div class="tasks hidden" data-actions=""></div>
   </main>
   <footer class="foot">
-    <strong>Key Goodson, Licensed Electrician, SC Lic #2942</strong>
-    <span>Serving Greenville, Spartanburg, and Pickens counties</span>
-    <span>Every project is reviewed and permitted by Key, completed with trusted local installation partners, and coordinated through final inspection.</span>
+    <div class="foot-identity"><strong>Licensed and insured</strong><span>SC Lic #2942 by Key Electric</span></div>
+    <span class="foot-area">Currently serving Greenville, Spartanburg,<br>and Pickens counties</span>
+    <span class="foot-process">Every project is reviewed and permitted by Key, completed with trusted local installation partners, and coordinated through final inspection.</span>
   </footer>
 </div>
 <script src="/walk-v2/walk.js"></script>
@@ -128,8 +129,7 @@ h1 { margin:0 0 8px; color:var(--navy); font-family:var(--head); font-size:22px;
       button.addEventListener('click', load);
     } else {
       button.addEventListener('click', function () {
-        var query = new URLSearchParams({ t: t, recovery: '1' });
-        window.location.href = '/walk-v2/' + target + '?' + query.toString();
+        WALK.go(target, t, { recovery: '1' });
       });
     }
     card.appendChild(visual);
@@ -155,8 +155,7 @@ h1 { margin:0 0 8px; color:var(--navy); font-family:var(--head); font-size:22px;
       load(false);
       return;
     }
-    var query = new URLSearchParams({ t: t, recovery: '1' });
-    window.location.href = '/walk-v2/' + target + '?' + query.toString();
+    WALK.go(target, t, { recovery: '1' });
   }
   function unique(values) {
     return values.filter(function (value, index) { return values.indexOf(value) === index; });
@@ -168,7 +167,7 @@ h1 { margin:0 0 8px; color:var(--navy); font-family:var(--head); font-size:22px;
       ? readiness.input_blockers.map(String)
       : (Array.isArray(state.blockers) ? state.blockers.map(String) : []));
     if (state.service_area_status === 'verified_out_of_area') {
-      window.location.replace('/walk-v2/index.html?area=out&t=' + encodeURIComponent(t));
+      WALK.go('index.html', t, { area: 'out' });
       return;
     }
     if (!blockers.length) {

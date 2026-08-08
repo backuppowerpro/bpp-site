@@ -6,7 +6,8 @@
 
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://us.i.posthog.com https://us-assets.i.posthog.com https://connect.facebook.net 'sha256-SILzPhfLYZcCd4Tf0iA88+GJxTW0Ww/xsABc9z+kB/M=' 'sha256-G+RGGG/nS7Jz0Zp8ZGoJDT28GiNgr71xVKUjVbBKqLc=' 'sha256-wygnGpICbMppymZ/+XZT8Vgnv0wtsjTA4zJ1JolzPtc=' 'sha256-8D3LGBD86E4uSFC42nggO2UYeAOHJnZE1qO2PPhWGcM=' 'sha256-C6KL4dSidAIfZ88IF8QeDABri3YwVT+gwqSqUoxZEOU=' 'sha256-sCB8RP3Pywyw/WOUi7I/q2LrQkLy4iP7Gfh8cyXABPI='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-U3+JlW0NrtyQY5g2KLTlGlGKez3PyP4VD8SqZTe3tvM=' 'sha256-0Iyyv4VKPnVS157Xktla6XdEbzCmufeHLHEeNrA4/ks=' 'sha256-M8iRdWV7mgh/H8ZrJIYj7+JApx46IWfGlaIDVtJ6UBk='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://www.facebook.com; connect-src 'self' https://api.mapbox.com https://reowtzedjflwmlptupbk.supabase.co https://us.i.posthog.com https://us-assets.i.posthog.com https://*.posthog.com https://www.facebook.com; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-SILzPhfLYZcCd4Tf0iA88+GJxTW0Ww/xsABc9z+kB/M=' 'sha256-G+RGGG/nS7Jz0Zp8ZGoJDT28GiNgr71xVKUjVbBKqLc=' 'sha256-wygnGpICbMppymZ/+XZT8Vgnv0wtsjTA4zJ1JolzPtc=' 'sha256-8D3LGBD86E4uSFC42nggO2UYeAOHJnZE1qO2PPhWGcM=' 'sha256-CyZokA2CtmiDNgPMBMgwDybGngi/oE7042XVPWEk2Wk=' 'sha256-9Rx37WhDgGz/OAIuM+qq+kybsH2xDr3pNDGnSbZg67A='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-K2S09QqOYxExW92fGzlWi7bH8KOggn4Z0kGyDeRSRZ4=' 'sha256-0Iyyv4VKPnVS157Xktla6XdEbzCmufeHLHEeNrA4/ks=' 'sha256-M8iRdWV7mgh/H8ZrJIYj7+JApx46IWfGlaIDVtJ6UBk='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://api.mapbox.com https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<script src="/walk-v2/token-bootstrap.js"></script>
 <script>/* flip no-js->js before paint so scroll-reveal hides content only when JS can reveal it; 5s failsafe reveals everything if the reveal script ever fails, so the form is never stuck invisible */(function(){var e=document.documentElement;e.classList.remove('no-js');e.classList.add('js');setTimeout(function(){try{var l=document.querySelectorAll('.rv:not(.in)');for(var i=0;i<l.length;i++)l[i].classList.add('in');}catch(x){}},5000);})();</script>
 <script>/* Entry mode + dynamic hero (Key 2026-07-01 / 2026-07-13 / paid fast lane 2026-07-13):
    src=home -> home hero
@@ -367,7 +368,7 @@
   .proof-track::-webkit-scrollbar { display: none; }
   .proof-slide {
     flex: 0 0 calc(100% - 48px);
-    height: 172px;
+    height: 184px;
     display: flex;
     position: relative;
     overflow: hidden;
@@ -395,6 +396,10 @@
   .proof-slide--image .proof-image {
     width: 100%;
   }
+  .proof-slide--image {
+    background: transparent;
+    box-shadow: none;
+  }
   .proof-slide--image .proof-copy {
     position: absolute;
     inset: auto 0 0;
@@ -420,7 +425,7 @@
     flex-direction: column;
     justify-content: center;
     margin: 0;
-    padding: 18px 18px 16px;
+    padding: 14px 18px 10px;
     color: var(--navy);
   }
   .proof-review::before {
@@ -433,25 +438,36 @@
     line-height: 1;
   }
   .proof-review p {
-    margin: 5px 0 0;
+    margin: 3px 0 0;
     font-size: 12.5px;
     font-weight: 600;
     line-height: 1.4;
   }
   .proof-review .review-stars {
-    margin-top: 3px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 2px;
     color: var(--gold);
     font-size: 11px;
     line-height: 1;
     letter-spacing: .08em;
   }
   .proof-review cite {
-    margin-top: 8px;
+    margin-top: 5px;
     color: var(--muted);
     font-size: 11.5px;
     font-style: normal;
     font-weight: 750;
     line-height: 1.3;
+  }
+  @media (max-width: 340px) {
+    .proof-slide--image .proof-copy {
+      padding-right: 4px;
+      padding-left: 4px;
+      font-size: 14px;
+      letter-spacing: -0.01em;
+    }
   }
   .hero .photozone {
     position: relative;
@@ -633,7 +649,12 @@
     background: var(--card);
     border-radius: var(--r-md);
     box-shadow: var(--shadow-lift), inset 0 0 0 1px var(--edge-soft);
-    overflow: hidden;
+    max-height: var(--addr-drop-max-height, min(420px, calc(100dvh - 24px)));
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    scroll-padding-block: 4px calc(4px + env(safe-area-inset-bottom));
     padding: 4px;
   }
   .addr-drop.open { display: block; }
@@ -924,20 +945,6 @@
     .state-label { display: none; }
   }
 </style>
-<script>!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+" (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);posthog.init('phc_qoA51lePZqXYtPJYkrIpdA4U8iMDJ79L1kje7r4pD4O',{api_host:'https://us.i.posthog.com',property_denylist:['$current_url','$initial_current_url','$referrer','$initial_referrer'],sanitize_properties:function(p){for(var k in p){var v=p[k];if(typeof v==='string'&&v.indexOf('http')===0&&v.indexOf('?')>-1){try{var u=new URL(v);p[k]=u.origin+u.pathname;}catch(e){p[k]=v.split('?')[0];}}}return p;},person_profiles:'identified_only',capture_pageview:true,capture_pageleave:true,enable_heatmaps:true,capture_dead_clicks:true})</script>
-<!-- Meta Pixel: walk is the lead form. Without init, fbq('track','Lead') on submit is a no-op
-     when ads land on /walk-v2/ (or get-quote /m stubs). CAPI Lead still fires server-side. -->
-<script>
-!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
-n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
-document,'script','https://connect.facebook.net/en_US/fbevents.js');
-fbq('init','1389648775800936');
-fbq('track','PageView');
-fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'generator-installation'});
-</script>
-<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1389648775800936&ev=PageView&noscript=1" alt=""/></noscript>
 <link rel="stylesheet" href="/walk-v2/mobile-canvas.css" />
 </head>
 <body>
@@ -946,6 +953,7 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
   <!-- ============ MAIN PAGE (mobile, interactive) ============ -->
   <main class="page" id="mainPage" data-screen-label="Landing page (interactive, mobile)">
 
+    <div class="intro-card">
     <!-- 1. site header -->
     <header class="site-head">
       <a class="lockup" href="https://backuppowerpro.com" aria-label="Backup Power Pro" style="text-decoration:none;">
@@ -963,34 +971,71 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
           <div>
             <strong>Key Goodson</strong>
             <span>Licensed Electrician</span>
-            <div class="identity-rating" role="img" aria-label="4.9 out of 5 on Google"><b aria-hidden="true">★★★★★</b><em>4.9</em></div>
+            <div class="identity-rating" role="img" aria-label="100 plus Google reviews, rated 4.9 out of 5">
+              <img src="/img/google-g-logo.webp" alt="" width="14" height="14" />
+              <em>100+</em><b aria-hidden="true">★★★★★</b><em>4.9</em>
+            </div>
           </div>
         </div>
         <p class="process">I’ll guide you through a few quick questions and ask for photos of your panel. Then I’ll review your setup myself and text you a complete proposal, so you know exactly what’s included before any work begins.</p>
       </div>
     </section>
+    </div>
     <section class="proof-carousel" aria-label="Installed work and customer reviews">
       <div class="proof-track" role="group" aria-roledescription="carousel" tabindex="0" data-proof-track="" data-autoplay-ms="8000" data-autoplay-paused="false">
-        <article class="proof-slide proof-slide--image" role="group" aria-roledescription="slide" aria-label="Installed work 1 of 4" data-proof-slide="">
-          <img class="proof-image" src="/img/install-inlet-brick-hd.jpg" alt="Real BPP-installed metal outdoor connection box with a weather-rated cover on a brick wall" />
-          <p class="proof-copy">Metal outdoor-rated enclosure</p>
+        <article class="proof-slide proof-slide--image" role="group" aria-roledescription="slide" aria-label="Carousel item 1 of 10" data-proof-slide="">
+          <img class="proof-image" src="/img/connected-generator-current.jpg" alt="Portable generator connected by a yellow cord to an outdoor home inlet" />
+          <p class="proof-copy">One hookup. Power what matters.</p>
         </article>
-        <article class="proof-slide proof-slide--review" role="group" aria-roledescription="slide" aria-label="Customer review 2 of 4" data-proof-slide="">
+        <article class="proof-slide proof-slide--review" role="group" aria-roledescription="slide" aria-label="Carousel item 2 of 10" data-proof-slide="">
           <blockquote class="proof-review">
-            <div class="review-stars" role="img" aria-label="5 star Google review">★★★★★</div>
-            <p>He worked around my schedule and he was punctual, meticulous and professional.</p>
-            <cite>Don Nelson · Google review</cite>
+            <div class="review-stars" role="img" aria-label="5 star Google review"><img src="/img/google-g-logo.webp" alt="" width="13" height="13" />★★★★★</div>
+            <p>Installed a 50-amp Generator inlet box along with a panel interlock system in our home. I was impressed by Key’s attention to detail, professionalism, and organization.</p>
+            <cite>Jim J. · Google review</cite>
           </blockquote>
         </article>
-        <article class="proof-slide proof-slide--image" role="group" aria-roledescription="slide" aria-label="Installed work 3 of 4" data-proof-slide="">
-          <img class="proof-image" src="/img/install-inlet-interlock.jpg" alt="Interlock kit installed inside the breaker panel" />
-          <p class="proof-copy">Safety power transfer system</p>
+        <article class="proof-slide proof-slide--image" role="group" aria-roledescription="slide" aria-label="Carousel item 3 of 10" data-proof-slide="">
+          <img class="proof-image" src="/img/essentials-powered-current.png" alt="A lit home, a cold refrigerator, and a phone charging at night" />
+          <p class="proof-copy">Keep your essentials on.</p>
         </article>
-        <article class="proof-slide proof-slide--review" role="group" aria-roledescription="slide" aria-label="Customer review 4 of 4" data-proof-slide="">
+        <article class="proof-slide proof-slide--review" role="group" aria-roledescription="slide" aria-label="Carousel item 4 of 10" data-proof-slide="">
           <blockquote class="proof-review">
-            <div class="review-stars" role="img" aria-label="5 star Google review">★★★★★</div>
-            <p>The work was very professional and no mess left behind. Highly recommended.</p>
-            <cite>Chris Adams · Google review</cite>
+            <div class="review-stars" role="img" aria-label="5 star Google review"><img src="/img/google-g-logo.webp" alt="" width="13" height="13" />★★★★★</div>
+            <p>Oh my gosh these guys were absolutely fantastic. Everything went so smoothly and the finished work looks super professional.</p>
+            <cite>Hallie L. · Google review</cite>
+          </blockquote>
+        </article>
+        <article class="proof-slide proof-slide--image" role="group" aria-roledescription="slide" aria-label="Carousel item 5 of 10" data-proof-slide="">
+          <img class="proof-image" src="/img/outdoor-inlets-current.png" alt="Two BPP-installed metal outdoor generator connection boxes with weather-rated covers" />
+          <p class="proof-copy">A permanent outdoor connection.</p>
+        </article>
+        <article class="proof-slide proof-slide--review" role="group" aria-roledescription="slide" aria-label="Carousel item 6 of 10" data-proof-slide="">
+          <blockquote class="proof-review">
+            <div class="review-stars" role="img" aria-label="5 star Google review"><img src="/img/google-g-logo.webp" alt="" width="13" height="13" />★★★★★</div>
+            <p>punctual, professional, and truly set the bar high. Throughout permitting and scheduling, he kept me fully informed, and his performance and timing exceeded my expectations.</p>
+            <cite>Dino S. · Google review</cite>
+          </blockquote>
+        </article>
+        <article class="proof-slide proof-slide--image" role="group" aria-roledescription="slide" aria-label="Carousel item 7 of 10" data-proof-slide="">
+          <img class="proof-image" src="/img/transfer-systems-current.jpg" alt="Two installed breaker-panel interlock systems that prevent utility and generator power from being on at the same time" />
+          <p class="proof-copy">Safely switch to generator power.</p>
+        </article>
+        <article class="proof-slide proof-slide--review" role="group" aria-roledescription="slide" aria-label="Carousel item 8 of 10" data-proof-slide="">
+          <blockquote class="proof-review">
+            <div class="review-stars" role="img" aria-label="5 star Google review"><img src="/img/google-g-logo.webp" alt="" width="13" height="13" />★★★★★</div>
+            <p>Outstanding service, competent, on time, quick response, professional installation, clean, organized, safety a priority. Highly recommend! Will use again.</p>
+            <cite>Mark M. · Google review</cite>
+          </blockquote>
+        </article>
+        <article class="proof-slide proof-slide--image" role="group" aria-roledescription="slide" aria-label="Carousel item 9 of 10" data-proof-slide="">
+          <img class="proof-image" src="/img/cord-permit-current.jpg" alt="A compatible yellow generator cord and electrical permit paperwork posted for inspection" />
+          <p class="proof-copy">Cord included. Permit handled.</p>
+        </article>
+        <article class="proof-slide proof-slide--review" role="group" aria-roledescription="slide" aria-label="Carousel item 10 of 10" data-proof-slide="">
+          <blockquote class="proof-review">
+            <div class="review-stars" role="img" aria-label="5 star Google review"><img src="/img/google-g-logo.webp" alt="" width="13" height="13" />★★★★★</div>
+            <p>Best customer service ever, he went above and beyond to help us. Very knowledgeable and honest man!! Definitely I'll recommend Key to all my friends.</p>
+            <cite>Bogdi · Google review</cite>
           </blockquote>
         </article>
       </div>
@@ -1038,7 +1083,7 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
       } else if (mode === 'paid') {
         setHeroHeading('Portable generator hookup.', 'Priced without a home visit.');
         var fcTitle = document.querySelector('.form-card .fc-title');
-        if (fcTitle) fcTitle.textContent = "Let's start with a few details.";
+        if (fcTitle) fcTitle.textContent = "First, a few quick details.";
       }
       // cold/direct keeps the default HTML above
 
@@ -1230,7 +1275,7 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
 
         <!-- 4. form card -->
         <section class="form-card" id="quote-form">
-          <h2 class="fc-title">Let's start with a few details.</h2>
+          <h2 class="fc-title">First, a few quick details.</h2>
           <noscript>
             <div style="background:#fff8e6;border:1px solid #ffba00;border-radius:12px;padding:16px;margin-bottom:18px;color:#1b2b4b;font-size:16px;line-height:1.55;text-align:center;">
               Turn on JavaScript, then reload this page to start your quote.
@@ -1243,7 +1288,7 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
                 <input id="fName" name="name" type="text" inputmode="text" autocomplete="name" autocapitalize="words" placeholder="Sarah" data-f="name" />
               </div>
               <div class="field" data-phone-field="">
-                <label for="fPhone">Phone</label>
+                <label for="fPhone">Mobile number</label>
                 <input id="fPhone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(864) 000-0000" data-f="phone" />
                 <span class="field-error"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5"></circle><path d="M8 5v3.5M8 11v.2"></path></svg><span>Enter a 10-digit phone number so I can text your quote</span></span>
               </div>
@@ -1262,12 +1307,11 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
             <div class="submit-row">
               <p data-unconfirmed-address="" aria-live="polite" style="display:none; font-size:14px; line-height:1.5; color:var(--gold-ink, #8a5a00); text-align:center; margin:0 0 12px; font-weight:600;">Your address is saved exactly as entered. Continue with the setup questions. Your service area still needs to be verified before your project range or proposal can be prepared.</p>
               <button class="cta" type="submit" data-cta="" disabled="">
-                <svg viewBox="0 0 16 16"><path d="M2.5 3.5h11a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H6.5l-3 2.4V11.5h-1a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1z"></path></svg>
-                <span data-cta-label="">Continue</span>
+                <span data-cta-label="">Start my quote</span>
               </button>
               <p class="cta-hint" data-cta-hint="" aria-live="polite" style="display:none; font-size:14px; line-height:1.5; color:var(--gold-ink, #8a5a00); text-align:center; margin:10px 0 0; font-weight:600;"></p>
               <p data-submit-error="" role="alert" style="display:none; font-size:15px; line-height:1.5; color:var(--red, #dc2626); text-align:center; margin:10px 0 0; font-weight:600;"></p>
-              <p class="consent-fine">By tapping the button you agree to get texts from Backup Power Pro about your quote and install. Msg and data rates may apply. Reply STOP anytime.</p>
+              <p class="consent-fine">By tapping Start my quote, you agree to texts from Backup Power Pro about your project. Msg and data rates may apply. Reply STOP anytime.</p>
             </div>
           </form>
         </section>
@@ -1276,9 +1320,9 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
 
     <!-- 7. footer -->
     <footer class="foot">
-      <strong>Key Goodson, Licensed Electrician, SC Lic #2942</strong>
-      <span>Serving Greenville, Spartanburg, and Pickens counties</span>
-      <span>Every project is reviewed and permitted by Key, completed with trusted local installation partners, and coordinated through final inspection.</span>
+      <div class="foot-identity"><strong>Licensed and insured</strong><span>SC Lic #2942 by Key Electric</span></div>
+      <span class="foot-area">Currently serving Greenville, Spartanburg,<br>and Pickens counties</span>
+      <span class="foot-process">Every project is reviewed and permitted by Key, completed with trusted local installation partners, and coordinated through final inspection.</span>
     </footer>
   </main>
 
@@ -1542,7 +1586,7 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
       ) _se.style.display = 'none';
     }
     paintFieldOk();
-    ctaLabelEl.textContent = 'Continue';
+    ctaLabelEl.textContent = 'Start my quote';
     var ready = part1Done();
     cta.disabled = submitting || !ready;
     if (unconfirmedAddressNote) {
@@ -1703,7 +1747,9 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
        (a second contact in the rare concurrent-lookup race). keepalive covers
        unload; the sync-XHR fallback covers a fetch throw. */
     var body = JSON.stringify(payload);
-    var url = 'https://reowtzedjflwmlptupbk.supabase.co/functions/v1/quo-ai-new-lead';
+    var functionsBase = window.BPP_QUOTE_WALK_FUNCTIONS_BASE
+      || 'https://reowtzedjflwmlptupbk.supabase.co/functions/v1';
+    var url = functionsBase + '/quo-ai-new-lead';
     var delivered = false, tokenOut = null, serviceAreaStatus = '';
     try {
       var resp = await fetch(url, { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: body });
@@ -1741,7 +1787,7 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
     if (typeof fbq === 'function') { try { fbq('track', 'Lead', { content_name: 'walkv2-landing', content_category: 'generator-installation', value: 1200, currency: 'USD' }, { eventID: eventId }); } catch (_) {} }
     WALK.ph('walk_v2_submitted', { connection_status: 'unanswered', delivered: delivered });
     if (delivered && tokenOut && serviceAreaStatus === 'verified_out_of_area') {
-      window.location.replace('/walk-v2/index.html?area=out&t=' + encodeURIComponent(tokenOut));
+      WALK.go('index.html', tokenOut, { area: 'out' });
       return;
     }
     if (delivered && tokenOut) { WALK.go('connection.html', tokenOut); return; }

@@ -3,7 +3,8 @@
 <head>
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-Sz7JktsbVauYXew5M3iuQydS8y4RRTtnIXqKMdai4zE='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-79lEVaF9OEzkCqs+fVg3mpl+wxvtULfUq9df8TBzmus='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-ClVCen54E+lfIwJCthrUSQbASVNWwYZjlnAAwnUkPwg='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-79lEVaF9OEzkCqs+fVg3mpl+wxvtULfUq9df8TBzmus='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<script src="/walk-v2/token-bootstrap.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
 <title>Backup Power Pro · Quote Walk · Generator Needed</title>
 <link rel="icon" href="/favicon.png" type="image/png" />
@@ -104,9 +105,9 @@
       </section>
     </div>
     <footer class="foot">
-      <strong>Key Goodson, Licensed Electrician, SC Lic #2942</strong>
-      <span>Serving Greenville, Spartanburg, and Pickens counties</span>
-      <span>Every project is reviewed and permitted by Key, completed with trusted local installation partners, and coordinated through final inspection.</span>
+      <div class="foot-identity"><strong>Licensed and insured</strong><span>SC Lic #2942 by Key Electric</span></div>
+      <span class="foot-area">Currently serving Greenville, Spartanburg,<br>and Pickens counties</span>
+      <span class="foot-process">Every project is reviewed and permitted by Key, completed with trusted local installation partners, and coordinated through final inspection.</span>
     </footer>
   </main>
 </div>
@@ -125,13 +126,8 @@
   }
 
   function returnToConnection(eventName) {
-    var target = '/walk-v2/connection.html?t=' + encodeURIComponent(t) + '&from=generator-needed';
     WALK.ph(eventName, {});
-    if (window.__QW_NAVIGATE__) {
-      window.__QW_NAVIGATE__(target);
-      return;
-    }
-    window.location.href = target;
+    WALK.go('connection.html', t, { from: 'generator-needed' });
   }
   returnButton.addEventListener('click', function () {
     returnToConnection('walk_v2_generator_needed_return_tap');

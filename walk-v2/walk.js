@@ -2,20 +2,37 @@
  * comps; this file only moves data: token plumbing, the four endpoints,
  * PostHog events. No visual decisions live here. */
 (function () {
-  var BASE = 'https://reowtzedjflwmlptupbk.supabase.co/functions/v1';
+  /* Production keeps the canonical Supabase endpoint. The local release gate
+     sets this before the shared script loads so the exact customer pages can
+     exercise disposable functions and PostgreSQL without production access. */
+  var BASE = window.BPP_QUOTE_WALK_FUNCTIONS_BASE
+    || 'https://reowtzedjflwmlptupbk.supabase.co/functions/v1';
+  var TOKEN_STORAGE_KEY = 'bpp:qwv2:bearer';
 
+  function setToken(value) {
+    var next = /^[a-zA-Z0-9_-]{32,160}$/.test(String(value || '')) ? String(value) : '';
+    try {
+      if (next) sessionStorage.setItem(TOKEN_STORAGE_KEY, next);
+      else sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+    } catch (_) {}
+    return next;
+  }
   function token() {
-    var t = new URLSearchParams(window.location.search).get('t') || '';
+    var t = '';
+    try { t = sessionStorage.getItem(TOKEN_STORAGE_KEY) || ''; } catch (_) {}
+    if (!t) t = new URLSearchParams(window.location.search).get('t') || '';
     return /^[a-zA-Z0-9_-]{32,160}$/.test(t) ? t : '';
   }
   function go(page, t, extra) {
+    setToken(t);
     var params = new URLSearchParams();
-    if (t) params.set('t', t);
     Object.keys(extra || {}).forEach(function (key) {
       if (extra[key] != null) params.set(key, String(extra[key]));
     });
     var query = params.toString();
-    window.location.href = '/walk-v2/' + page + (query ? '?' + query : '');
+    var target = '/walk-v2/' + page + (query ? '?' + query : '');
+    if (window.__QW_NAVIGATE__) window.__QW_NAVIGATE__(target);
+    else window.location.href = target;
   }
   /* explicit back-a-step, token preserved everywhere. With no prevPage we send
    * them to the landing WITH the token so the landing's resume guard routes them
@@ -24,7 +41,7 @@
    * step, and step pages do not redirect back to the landing on load. */
   function back(prevPage, t) {
     if (prevPage) { go(prevPage, t); return; }
-    window.location.href = '/walk-v2/' + (t ? '?t=' + encodeURIComponent(t) : '');
+    go('', t);
   }
   function ph(event, props) {
     try { window.posthog && posthog.capture(event, Object.assign({ funnel: 'walkv2' }, props || {})); } catch (_) {}
@@ -63,8 +80,9 @@
     try { sessionStorage.setItem(journeyStateKey(t), JSON.stringify(next)); } catch (_) {}
     return next;
   }
-  function requestKey(t, action, payload) {
-    var storageKey = 'bpp:qwv2:req:' + fingerprint([t, action, payload]);
+  function requestKey(t, action, payload, journeyVersion) {
+    var version = Number(journeyVersion || 0);
+    var storageKey = 'bpp:qwv2:req:' + fingerprint([t, action, version, payload]);
     try {
       var existing = sessionStorage.getItem(storageKey);
       if (existing) return existing;
@@ -76,11 +94,11 @@
       } else {
         random = String(Date.now()) + String(Math.random()).slice(2);
       }
-      var key = 'qwv2:' + action + ':' + fingerprint(payload) + ':' + random;
+      var key = 'qwv2:' + action + ':v' + version + ':' + fingerprint(payload) + ':' + random;
       sessionStorage.setItem(storageKey, key);
       return key;
     } catch (_) {
-      return 'qwv2:' + action + ':' + fingerprint([t, payload]) + ':fallback';
+      return 'qwv2:' + action + ':v' + version + ':' + fingerprint([t, payload]) + ':fallback';
     }
   }
   function normalizeConnectionSet(values) {
@@ -155,11 +173,17 @@
     var panelLocation = value.confirmed_panel_room || state.panel_location || '';
     var panelInventory = state.panel_inventory_status || value.panel_inventory_status || '';
     var distance = value.distance_band || state.distance_band || '';
+    var blockers = Array.isArray(state.blockers)
+      ? state.blockers
+      : state.readiness && Array.isArray(state.readiness.input_blockers)
+        ? state.readiness.input_blockers
+        : null;
+    var hasSavedPhoto = Array.isArray(state.media) && state.media.length > 0;
     return {
       generator: observed.length > 0,
       panel: Boolean(panelLocation && panelLocation !== 'not_sure' && panelInventory !== 'incomplete'),
       distance: Boolean(distance && distance !== 'not_sure'),
-      photos: state.panel_photo_confirmed === true
+      photos: Boolean(hasSavedPhoto && blockers && blockers.indexOf('panel_photo') === -1)
     };
   }
   function paintProgress(root, view) {
@@ -226,6 +250,7 @@
 
   window.WALK = {
     token: token,
+    setToken: setToken,
     go: go,
     back: back,
     ph: ph,
@@ -238,26 +263,28 @@
     view: function (t) {
       return getJson(BASE + '/pre-read-view?token=' + encodeURIComponent(t)).then(function (value) {
         rememberJourneyState(t, value);
-        paintProgress(document, value);
+        if (typeof document !== 'undefined') paintProgress(document, value);
         var state = value && value.quote_walk_v2 || {};
         var path = String(window.location && window.location.pathname || '').replace(/\/index\.html$/, '/');
         if (state.service_area_status === 'verified_out_of_area' && path !== '/walk-v2/') {
-          window.location.replace('/walk-v2/index.html?area=out&t=' + encodeURIComponent(t));
+          go('index.html', t, { area: 'out' });
         }
         return value;
       });
     },
     confirm: function (t, fields) {
+      var stableRequestKey = null;
       function send(retried) {
         var state = readJourneyState(t);
         var payload = Object.assign({ token: t }, fields);
         if (state.version) {
           payload.expected_version = state.version;
-          payload.request_key = requestKey(t, 'save_answers', fields);
+          stableRequestKey = stableRequestKey || requestKey(t, 'save_answers', fields, state.version);
+          payload.request_key = stableRequestKey;
         }
         return postJson(BASE + '/pre-read-confirm', payload).then(function (value) {
           rememberJourneyState(t, value);
-          paintProgress(document, value);
+          if (typeof document !== 'undefined') paintProgress(document, value);
           return value;
         }).catch(function (error) {
           if (!retried && error && error.body && error.body.error === 'stale_journey_version') {
@@ -270,7 +297,7 @@
       return send(false);
     },
     stateAction: function (t, action, fields) {
-      if (['create_range', 'accept_range', 'supersede_media', 'handoff'].indexOf(action) === -1) {
+      if (['create_range', 'accept_range', 'supersede_media', 'update_phone', 'handoff'].indexOf(action) === -1) {
         return Promise.reject(new Error('invalid_state_action'));
       }
       var payloadFields = fields || {};
@@ -283,7 +310,7 @@
         && payloadKeys.every(function (key) { return key === 'revision_reason'; })
         && (
           !payloadKeys.length
-          || ['initial', 'both_to_30', 'shorter_distance', 'cord_removed', 'return_to_50']
+          || ['initial', 'both_to_30', 'shorter_distance', 'cord_removed', 'cord_restored', 'return_to_50']
             .indexOf(String(payloadFields.revision_reason || '')) !== -1
         );
       var validSupersedeMedia = action === 'supersede_media'
@@ -291,9 +318,17 @@
         && payloadKeys[0] === 'media_id'
         && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i
           .test(String(payloadFields.media_id || ''));
+      var updatePhoneDigits = String(payloadFields.phone || '').replace(/\D/g, '');
+      if (updatePhoneDigits.length === 11 && updatePhoneDigits.charAt(0) === '1') {
+        updatePhoneDigits = updatePhoneDigits.slice(1);
+      }
+      var validUpdatePhone = action === 'update_phone'
+        && payloadKeys.length === 1
+        && payloadKeys[0] === 'phone'
+        && /^[2-9][0-9]{2}[2-9][0-9]{6}$/.test(updatePhoneDigits);
       var validEmpty = ['accept_range', 'handoff'].indexOf(action) !== -1
         && payloadKeys.length === 0;
-      if (!validCreateRange && !validSupersedeMedia && !validEmpty) {
+      if (!validCreateRange && !validSupersedeMedia && !validUpdatePhone && !validEmpty) {
         return Promise.reject(new Error('invalid_state_payload'));
       }
       function send(retried) {
@@ -309,7 +344,7 @@
           action: action,
           credential: t,
           expected_version: state.version,
-          request_key: requestKey(t, action, payloadFields),
+          request_key: requestKey(t, action, payloadFields, state.version),
           payload: payloadFields
         };
         return postJson(BASE + '/quote-walk-v2-state', body).then(function (value) {
@@ -360,7 +395,7 @@
           payload.role = role;
           payload.panel_id = panelId;
           payload.expected_version = state.version;
-          payload.request_key = requestKey(t, 'register_media', identity);
+          payload.request_key = requestKey(t, 'register_media', identity, state.version);
         }
         return postJson(BASE + '/pre-read-photo', payload).then(function (value) {
           if (state.version && (!value || value.receipt_settled !== true)) {
@@ -442,7 +477,7 @@
       var v2 = v.quote_walk_v2;
       if (v2 && Array.isArray(v2.blockers)) {
         if (v2.service_area_status === 'verified_out_of_area') {
-          window.location.replace('/walk-v2/index.html?area=out&t=' + encodeURIComponent(t));
+          go('index.html', t, { area: 'out' });
           return;
         }
         if (v2.blockers.indexOf('generator_connection') !== -1) return go('connection.html', t);
@@ -476,7 +511,7 @@
           ? state.readiness.input_blockers
           : [];
       if (state.service_area_status === 'verified_out_of_area') {
-        window.location.replace('/walk-v2/index.html?area=out&t=' + encodeURIComponent(t));
+        go('index.html', t, { area: 'out' });
         return;
       }
       if (blockers.indexOf('service_area') !== -1) return go('incomplete.html', t);
@@ -523,4 +558,39 @@
       });
     },
   };
+
+  /* Keep the address result list inside the visible mobile viewport, including
+     when the on-screen keyboard changes the visual viewport height. */
+  var addressDrop = typeof document !== 'undefined'
+    ? document.querySelector('[data-addr-drop]')
+    : null;
+  function syncAddressDropViewport() {
+    if (!addressDrop || !addressDrop.classList.contains('open')) {
+      if (addressDrop) addressDrop.style.removeProperty('--addr-drop-max-height');
+      return;
+    }
+    var viewport = window.visualViewport;
+    var viewportBottom = viewport ? viewport.offsetTop + viewport.height : window.innerHeight;
+    var available = Math.floor(viewportBottom - addressDrop.getBoundingClientRect().top - 12);
+    if (available < 96) {
+      var addressInput = document.querySelector('#fAddr');
+      if (addressInput) addressInput.scrollIntoView({ block: 'start' });
+      viewportBottom = viewport ? viewport.offsetTop + viewport.height : window.innerHeight;
+      available = Math.floor(viewportBottom - addressDrop.getBoundingClientRect().top - 12);
+    }
+    available = Math.max(96, available);
+    addressDrop.style.setProperty('--addr-drop-max-height', available + 'px');
+  }
+  if (addressDrop) {
+    new MutationObserver(syncAddressDropViewport).observe(addressDrop, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+    window.addEventListener('resize', syncAddressDropViewport, { passive: true });
+    window.addEventListener('scroll', syncAddressDropViewport, { passive: true });
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', syncAddressDropViewport, { passive: true });
+      window.visualViewport.addEventListener('scroll', syncAddressDropViewport, { passive: true });
+    }
+  }
 })();
