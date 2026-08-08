@@ -39,6 +39,28 @@ function RightPanel({ contactId, tab, dncSet = new Set(), toggleDnc = () => {}, 
 // overlay, status pill) lives inside ContactInfoSection on the Contact tab.
 function ContactStrip({ contact, isDnc, toggleDnc, bumpData, onOpenTab, tab, onBack }) {
   const isPremium = contact.pricing_tier === 'premium' || contact.pricing_tier === 'premium_plus';
+  const [auditBusy, setAuditBusy] = React.useState(false);
+
+  const runMoneyAudit = async () => {
+    if (auditBusy || !CRM.__invokeFn) return;
+    setAuditBusy(true);
+    try {
+      const { data, error } = await CRM.__invokeFn('record-payment', { body: { action:'reconciliation_report' } });
+      if (error || !data?.ok) {
+        window.alert('Money audit failed. Try again.');
+        return;
+      }
+      const issues = Array.isArray(data.issues) ? data.issues.slice(0, 8) : [];
+      if (!issues.length) {
+        window.alert('Money audit complete. No reconciliation issues found.');
+        return;
+      }
+      const lines = issues.map(item => `${item.invoice_document_number || 'Invoice'}: ${String(item.reconciliation_state || 'review required').replaceAll('_', ' ')}`);
+      window.alert(`Money audit found ${data.issue_count || issues.length} issue${Number(data.issue_count || issues.length) === 1 ? '' : 's'}.\n\n${lines.join('\n')}`);
+    } finally {
+      setAuditBusy(false);
+    }
+  };
 
   // Pin state shares CRM.contacts as the source of truth (column added
   // 2026-05-09 via migration 20260509140000). Pins now sync between
@@ -131,6 +153,13 @@ function ContactStrip({ contact, isDnc, toggleDnc, bumpData, onOpenTab, tab, onB
           aria-label="Quick replies" title="Quick replies (suggestions + templates)"
           style={{ background:'none', border:'none', cursor:'pointer', flexShrink:0, width:44, height:44, display:'flex', alignItems:'center', justifyContent:'center', color:'#5a6478', padding:0 }}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="19" height="19"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/><path d="M8 10h8M8 13.5h5"/></svg>
+        </button>
+      )}
+      {tab === 'finance' && (
+        <button onClick={runMoneyAudit} disabled={auditBusy} type="button"
+          className="bpp-ios-navbar-btn" aria-label="Audit money records" title="Audit money records"
+          style={{ width:'auto', minWidth:44, padding:'0 8px', fontSize:12, fontWeight:700 }}>
+          {auditBusy ? 'Auditing...' : 'Audit money'}
         </button>
       )}
       <ContactOverflowMenu contact={contact} isDnc={isDnc} toggleDnc={toggleDnc} bumpData={bumpData} onOpenTab={onOpenTab} />

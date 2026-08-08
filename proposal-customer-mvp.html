@@ -28,6 +28,7 @@
     html{scroll-behavior:smooth}
     body{margin:0;background:var(--bg);color:var(--plan-ink);font-family:Inter,system-ui,sans-serif}
     body.booting .page,body.booting .sticky{visibility:hidden}
+    body:not(.booting) .proposal-loading{display:none}
     button,input{font:inherit}
     button,[role="button"],summary,label{touch-action:manipulation}
     a{color:inherit}
@@ -364,6 +365,9 @@
     .state-card{margin:28px auto;padding:42px 24px;text-align:center}
     .state-card h1{margin:0;color:var(--plan-navy);font:800 24px/1.15 Outfit,sans-serif}
     .state-card p{max-width:420px;margin:12px auto 0;color:var(--plan-muted);font-size:14px;line-height:1.6}
+    .proposal-loading{max-width:var(--page-max)}
+    .state-spin{width:34px;height:34px;margin:0 auto 16px;border:3px solid var(--plan-line);border-top-color:var(--plan-navy);border-radius:50%;animation:state-spin .7s linear infinite}
+    @keyframes state-spin{to{transform:rotate(360deg)}}
     .state-action{display:flex;align-items:center;justify-content:center;min-height:52px;margin:20px auto 0;padding:0 22px;border:0;border-radius:26px;background:var(--plan-gold);color:var(--plan-navy);font:800 14px/1 Outfit,sans-serif;text-decoration:none;cursor:pointer}
     @media (min-width:600px){
       .page{padding-top:22px}
@@ -397,6 +401,7 @@
     @media (prefers-reduced-motion:reduce){
       html{scroll-behavior:auto}
       *,*::before,*::after{transition:none!important}
+      .state-spin{animation:none}
       .hero-address-pin{opacity:1;transform:none;animation:none}
       .ack.attention-cue .ack-box{
         animation:none;border-color:#d89e00;background:var(--plan-warm);
@@ -415,6 +420,12 @@
       <strong id="compactProposalTitle">Sample's proposal</strong>
     </div>
   </header>
+
+  <section class="card state-card proposal-loading" aria-live="polite">
+    <div class="state-spin" aria-hidden="true"></div>
+    <h1>Loading your proposal...</h1>
+    <p>This can take a moment on a slower connection.</p>
+  </section>
 
   <main class="page">
     <section class="hero" id="plan">

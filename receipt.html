@@ -8,13 +8,12 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="color-scheme" content="light only">
 <meta name="supported-color-schemes" content="light only">
-<!-- connect-src so the live invoice-view fetch is allowed; img/style/font kept open for the DS + logo. This is a VIEW page (no checkout, no Stripe), so no api.stripe.com is needed. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co;">
-<!-- resolve relative asset paths to the live domain so the logo renders in any viewer/preview panel -->
-<base href="https://backuppowerpro.com/">
+<!-- View-only receipt. Every display, font, image, and PDF dependency is local; only its customer DTO crosses the network. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://*.supabase.co;">
 <title>Your receipt | Backup Power Pro</title>
-<!-- jsPDF for the black-and-white printable receipt download (same SRI-pinned build as invoice.html). Self-contained, no network at runtime. -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk" crossorigin="anonymous" defer></script>
+<link rel="stylesheet" href="assets/css/bpp-money-fonts.css?v=20260808a">
+<!-- SRI-pinned jsPDF 2.5.1 is stored locally so a CDN failure cannot remove the customer's printable receipt. -->
+<script src="assets/js/jspdf.umd.2.5.1.min.js" integrity="sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk" defer></script>
 <!--
   BPP RECEIPT, customer-facing VIEW page. Data-driven sibling of invoice.html's paid state.
   This was originally an email-transposition comp of the receipt; it is now wired to live data:
@@ -41,7 +40,6 @@
 </style>
 <![endif]-->
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Inter:wght@400;500;600&family=Dancing+Script:wght@700&display=swap');
   body{margin:0;padding:0;width:100%!important;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%}
   a{text-decoration:none}
   .display{font-family:'Outfit',Arial,Helvetica,sans-serif}
