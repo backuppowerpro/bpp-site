@@ -62,7 +62,7 @@
     grid-template-areas:
       "head head"
       "hero form"
-      "proof proof"
+      "proof form"
       "foot foot" !important;
     width: min(1160px, calc(100vw - 64px)) !important;
     max-width: 1160px !important;
@@ -83,7 +83,7 @@
 
   .page[data-screen-label="Landing page (interactive, mobile)"] .hero .textzone {
     display: flex;
-    min-height: 510px;
+    min-height: 0;
     flex-direction: column;
     justify-content: center;
     padding: 52px 56px 48px !important;
@@ -113,9 +113,7 @@
     margin: 0 !important;
     padding: 32px 34px !important;
     align-items: center;
-    background:
-      radial-gradient(100% 70% at 0 0, rgba(35,72,119,.42), transparent 64%),
-      var(--navy);
+    background: var(--navy);
   }
 
   .page[data-screen-label="Landing page (interactive, mobile)"] .col-main {
@@ -133,7 +131,8 @@
 
   .page[data-screen-label="Landing page (interactive, mobile)"] .proof-carousel {
     grid-area: proof;
-    padding: 26px 0 30px;
+    padding: 0 0 30px;
+    background: var(--navy);
   }
 
   .page[data-screen-label="Landing page (interactive, mobile)"] .proof-track {
@@ -144,8 +143,8 @@
   }
 
   .page[data-screen-label="Landing page (interactive, mobile)"] .proof-slide {
-    flex-basis: calc((100% - 36px) / 3);
-    height: 220px;
+    flex-basis: calc((100% - 18px) / 2);
+    height: 240px;
   }
 
   .page[data-screen-label="Landing page (interactive, mobile)"] .proof-review {
