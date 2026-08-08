@@ -426,7 +426,7 @@ html.qw-template-document-root {
 
 .accepted-phone-error {
   margin: 0 !important;
-  color: var(--red, #b42318) !important;
+  color: #fecaca !important;
   font-size: 12px !important;
   line-height: 1.4 !important;
 }
