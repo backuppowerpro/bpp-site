@@ -446,12 +446,17 @@
             }
             return '';
           }
+          function ctxCounty() {
+            var county = ctxText('district');
+            return county.replace(/\s+County$/i, '');
+          }
           return {
             id: f.id || '',
             lng: (f.center && f.center[0]) || null,
             lat: (f.center && f.center[1]) || null,
             description: f.place_name || '',
             city: ctxText('place'),
+            county: ctxCounty(),
             state: ctxState(),
             zip: ctxText('postcode'),
           };
