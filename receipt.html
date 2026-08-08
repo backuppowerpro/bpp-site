@@ -48,10 +48,23 @@
   .body-font{font-family:'Inter',Arial,Helvetica,sans-serif}
   .script{font-family:'Dancing Script','Brush Script MT',cursive}
   .num{font-variant-numeric:tabular-nums}
+  table{max-width:100%}
   @media only screen and (max-width:600px){
     .wrap{width:100%!important}
     .px{padding-left:24px!important;padding-right:24px!important}
     .h1{font-size:26px!important}
+  }
+  @media only screen and (max-width:360px){
+    .receipt-shell{padding-left:4px!important;padding-right:4px!important}
+    .brandbar{padding:14px 12px!important}
+    .brandlogo{width:118px!important;max-width:118px!important}
+    #paid-pill{font-size:9px!important;padding:5px 8px!important}
+    .px{padding-left:16px!important;padding-right:16px!important}
+    #billed-to{overflow-wrap:anywhere}
+    #receipt-num{max-width:72px;overflow-wrap:anywhere}
+    #breakdown{table-layout:fixed}
+    #breakdown td:first-child{overflow-wrap:anywhere;padding-right:8px!important}
+    #breakdown td:last-child{width:76px;white-space:nowrap}
   }
   /* Dark-mode survival: the receipt facts, the navy bar, and the white card must never wash out. */
   @media (prefers-color-scheme:dark){
@@ -96,18 +109,18 @@
 <!-- RECEIPT (the full paid receipt; hidden until real data binds) -->
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" id="receipt-root" class="dm-page" style="display:none;background:#eef1f7;">
   <tr>
-    <td align="center" style="padding:24px 12px 40px;">
+    <td align="center" class="receipt-shell" style="padding:24px 12px 40px;">
 
       <!-- 600px column -->
       <table role="presentation" width="600" class="wrap" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;">
 
         <!-- BRAND BAR (navy + logo + Paid pill) -->
         <tr>
-          <td bgcolor="#0b1f3b" class="dm-navy" style="background:#0b1f3b;border-radius:16px 16px 0 0;padding:16px 28px;">
+          <td bgcolor="#0b1f3b" class="dm-navy brandbar" style="background:#0b1f3b;border-radius:16px 16px 0 0;padding:16px 28px;">
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
               <tr>
                 <td align="left" valign="middle">
-                  <img src="assets/images/logo-white-v2.png" width="150" alt="Backup Power Pro" style="display:block;border:0;height:auto;width:150px;max-width:150px;">
+                  <img src="assets/images/logo-white-v2.png" width="150" class="brandlogo" alt="Backup Power Pro" style="display:block;border:0;height:auto;width:150px;max-width:150px;">
                 </td>
                 <td align="right" valign="middle">
                   <span id="paid-pill" class="display" style="font-family:'Outfit',Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:.03em;color:#9be7c4;background:#16352b;border-radius:20px;padding:6px 12px;white-space:nowrap;">&#10003; Paid in full</span>
@@ -236,7 +249,7 @@
             <p id="keep-note" class="body-font dm-ink2" style="margin:0 0 14px;font-family:'Inter',Arial,sans-serif;font-size:15px;line-height:1.6;color:#4a5568;">
               Save this. It is your record that the install is done and paid in full, with the permit and county inspection that I handled for you. Whenever you need the details, they are all right here.
             </p>
-            <p class="body-font dm-ink2" style="margin:0 0 16px;font-family:'Inter',Arial,sans-serif;font-size:15px;line-height:1.6;color:#4a5568;">
+            <p id="referral-note" class="body-font dm-ink2" style="margin:0 0 16px;font-family:'Inter',Arial,sans-serif;font-size:15px;line-height:1.6;color:#4a5568;">
               If a neighbor ever asks who did your generator hookup, send them my way. That is the highest compliment I get. Either way, you know where to find me.
             </p>
             <p class="body-font dm-ink2" id="signoff" style="margin:0 0 2px;font-family:'Inter',Arial,sans-serif;font-size:15px;line-height:1.6;color:#4a5568;">Glad your home is ready. Stay warm when the next one hits.</p>
@@ -250,7 +263,7 @@
           <td align="center" class="body-font dm-ink3" style="font-family:'Inter',Arial,sans-serif;font-size:12px;line-height:1.8;color:#6b7280;padding:22px 24px 0;">
             Backup Power Pro by Key Electric &middot; Greenville, Spartanburg &amp; Pickens counties<br>
             Questions? Text Key at <a href="sms:+18648637800" class="dm-ink" style="color:#0b1f3b;font-weight:600;text-decoration:none;">(864) 863-7800</a><br>
-            <span style="font-size:11px;color:#9aa3af;">Secure card payment, processed by Stripe</span>
+            <span id="paymentProvenance" style="font-size:11px;color:#9aa3af;">Payment method shown in this receipt</span>
           </td>
         </tr>
 
@@ -267,6 +280,7 @@ var SUPABASE_KEY = 'sb_publishable_4tYd9eFAYCTjnoKl1hbBBg_yyO9-vMB';
 var INV = null; // invoice record
 var PROP = null; // linked proposal (for deposit remaining-balance honesty)
 var PAYMENTS = []; // payment rows from invoice-view (amount, refunded_amount) for refund honesty
+var RECEIPT_PAYMENT = null; // immutable proof for exactly one completed payment
 
 // Refund math (S6, Key 2026-07-17: a refunded payment must never render the
 // celebratory paid receipt). Stripe's charge.refunded webhook records
@@ -322,15 +336,17 @@ function showReceipt(){
 // ── INIT ────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', function(){
   showState('Loading your receipt...','One moment while we pull up your receipt.', true);
-  var token = new URLSearchParams(window.location.search).get('token');
-  if(!token){
+  var params = new URLSearchParams(window.location.search);
+  var receiptToken = params.get('receipt');
+  var token = params.get('token');
+  if(!receiptToken && !token){
     showState('Receipt not found.','This isn\'t the personal link Key texted you. Text or call Key at <a href="sms:+18648637800">(864) 863-7800</a> and he will send a fresh one.', false);
     return;
   }
-  loadReceipt(token);
+  loadReceipt(receiptToken || token, !!receiptToken);
 });
 
-async function loadReceipt(token){
+async function loadReceipt(token,isPaymentReceipt){
   // Reads go through the invoice-view edge function (service role internally),
   // the same call invoice.html / invoice-comp.html use. Hard 10s timeout so a
   // hung edge fn / network blip cannot leave the customer staring at "Loading...".
@@ -338,7 +354,8 @@ async function loadReceipt(token){
   try{
     var ctrl=new AbortController();
     var timer=setTimeout(function(){ ctrl.abort(); }, 10000);
-    var res=await fetch(SUPABASE_URL+'/functions/v1/invoice-view?token='+encodeURIComponent(token),{
+    var query=isPaymentReceipt?'receipt_token=':'token=';
+    var res=await fetch(SUPABASE_URL+'/functions/v1/invoice-view?'+query+encodeURIComponent(token),{
       headers:{ 'Authorization':'Bearer '+SUPABASE_KEY },
       signal:ctrl.signal,
     });
@@ -348,6 +365,7 @@ async function loadReceipt(token){
       data=(j && j.invoice) || null;
       PROP=(j && j.proposal) || null;
       if(j && Array.isArray(j.payments)) PAYMENTS=j.payments;
+      RECEIPT_PAYMENT=(j && j.receipt_payment) || null;
     } else if(res.status===410){
       errorReason='This receipt link was replaced by a newer one. Please use the latest link or contact <a href="sms:+18648637800">(864) 863-7800</a>.';
     } else if(res.status===404 || res.status===400){
@@ -370,8 +388,22 @@ async function loadReceipt(token){
 
   INV=data;
 
+  if(RECEIPT_PAYMENT){
+    var customer=RECEIPT_PAYMENT.customer_snapshot||{};
+    var snapshot=RECEIPT_PAYMENT.invoice_snapshot||{};
+    INV.contact_name=customer.name||INV.contact_name||'';
+    INV.contact_email=customer.email||INV.contact_email||'';
+    INV.contact_phone=customer.phone||INV.contact_phone||'';
+    INV.contact_address=customer.address||INV.contact_address||'';
+    INV.line_items=RECEIPT_PAYMENT.line_items_snapshot||INV.line_items||[];
+    INV.total=Number(RECEIPT_PAYMENT.invoice_total||snapshot.total||INV.total||0);
+    INV.paid_at=RECEIPT_PAYMENT.received_at;
+    INV.payment_method=RECEIPT_PAYMENT.method;
+    INV.notes=snapshot.purpose||INV.notes||'invoice';
+  }
+
   // A receipt only exists for a PAID invoice. Guard every non-paid status.
-  if(INV.status!=='paid'){
+  if(!RECEIPT_PAYMENT && INV.status!=='paid'){
     var firstName=firstNameOf(INV.contact_name);
     showState(
       'This receipt is not ready yet.',
@@ -389,6 +421,18 @@ function invoiceTotal(){
   var items=(INV.line_items||[]);
   if(INV.total!==null && INV.total!==undefined && INV.total!=='') return Number(INV.total);
   return items.reduce(function(s,li){ return s+Number(li.amount||0); },0);
+}
+function paymentAmount(){
+  return RECEIPT_PAYMENT ? Number(RECEIPT_PAYMENT.amount||0) : invoiceTotal();
+}
+function remainingBalance(){
+  return RECEIPT_PAYMENT ? Number(RECEIPT_PAYMENT.remaining_after||0) : 0;
+}
+function currentRemainingBalance(){
+  if(RECEIPT_PAYMENT && RECEIPT_PAYMENT.current_remaining!==null && RECEIPT_PAYMENT.current_remaining!==undefined){
+    return Number(RECEIPT_PAYMENT.current_remaining||0);
+  }
+  return remainingBalance();
 }
 
 // Render line_items into the proof-breakdown rows. Negative amounts (deposits,
@@ -413,7 +457,7 @@ function renderBreakdownRows(){
   });
 
   // Total paid row, separating it from the $0 balance line that follows.
-  var total=invoiceTotal();
+  var total=paymentAmount();
   var totalTr=document.createElement('tr');
   totalTr.innerHTML=
     '<td align="left"  style="padding:9px 0 7px;color:#1a2a42;font-weight:600;border-top:1px solid #eef1f6;">Total paid</td>'+
@@ -437,18 +481,27 @@ function downloadReceiptPDF(){
   var doc=new jsPDF();
   var INK=[17,17,17], MUTE=[90,90,90], BG=[238,238,238];
   var items=(INV.line_items||[]);
-  var total=invoiceTotal();
+  var total=paymentAmount();
   var isDeposit = INV.notes==='deposit';
   var _rf=refundTotals();
-  var isRefund=_rf.full;
-  var receiptNum = INV.id ? String(INV.id).slice(0,8).toUpperCase()
+  var isPaymentReceipt=!!RECEIPT_PAYMENT;
+  var isAdjusted=isPaymentReceipt && _rf.refunded>0;
+  var isRefund=!isPaymentReceipt && _rf.full;
+  var receiptNum = RECEIPT_PAYMENT && RECEIPT_PAYMENT.document_number ? String(RECEIPT_PAYMENT.document_number)
+    : RECEIPT_PAYMENT && RECEIPT_PAYMENT.receipt_token ? String(RECEIPT_PAYMENT.receipt_token).replace(/-/g,'').slice(0,8).toUpperCase()
+    : RECEIPT_PAYMENT && RECEIPT_PAYMENT.id ? String(RECEIPT_PAYMENT.id).slice(0,8).toUpperCase()
+    : INV.id ? String(INV.id).slice(0,8).toUpperCase()
     : (new URLSearchParams(window.location.search).get('token')||'').slice(0,8).toUpperCase();
 
   // Header bar (black, white text)
   doc.setFillColor(INK[0],INK[1],INK[2]); doc.rect(0,0,210,40,'F');
   doc.setTextColor(255,255,255);
   doc.setFont('helvetica','bold'); doc.setFontSize(18);
-  doc.text(isRefund ? 'RECEIPT, REFUND ISSUED' : (isDeposit ? 'RECEIPT, DEPOSIT RECEIVED' : 'RECEIPT, PAID IN FULL'),20,20);
+  var paidInFull=RECEIPT_PAYMENT
+    ? (isAdjusted && typeof RECEIPT_PAYMENT.current_paid_in_full==='boolean'
+      ? RECEIPT_PAYMENT.current_paid_in_full : RECEIPT_PAYMENT.paid_in_full===true)
+    : !isDeposit;
+  doc.text(isAdjusted ? 'RECEIPT, PAYMENT ADJUSTED' : (isRefund ? 'RECEIPT, REFUND ISSUED' : (paidInFull ? 'RECEIPT, PAID IN FULL' : 'RECEIPT, PAYMENT RECEIVED')),20,20);
   doc.setFont('helvetica','normal'); doc.setFontSize(10);
   doc.text('Key Electric LLC, DBA Backup Power Pro',20,28);
   doc.text('22 Kimbell CT, Greenville SC 29617',20,33);
@@ -458,7 +511,7 @@ function downloadReceiptPDF(){
   // PAID watermark (light gray, faint)
   doc.setTextColor(180,180,180); doc.setFontSize(60); doc.setFont('helvetica','bold');
   try{ doc.setGState(new doc.GState({opacity:0.10})); }catch(e){}
-  doc.text(isRefund ? 'REFUNDED' : (isDeposit ? 'DEPOSIT' : 'PAID'),105,165,{align:'center',angle:35});
+  doc.text(isAdjusted ? 'ADJUSTED' : (isRefund ? 'REFUNDED' : (paidInFull ? 'PAID' : 'RECEIVED')),105,165,{align:'center',angle:35});
   try{ doc.setGState(new doc.GState({opacity:1})); }catch(e){}
 
   // Billed to (left)
@@ -506,20 +559,21 @@ function downloadReceiptPDF(){
   // Total + balance
   y+=2; doc.setDrawColor(INK[0],INK[1],INK[2]); doc.setLineWidth(0.5); doc.line(20,y,190,y); y+=8;
   doc.setFont('helvetica','bold'); doc.setFontSize(13);
-  doc.text(isDeposit ? 'Deposit paid' : 'Total paid',22,y); doc.text('$'+Number(total).toLocaleString(),188,y,{align:'right'}); y+=8;
-  var jobTotalPdf = PROP ? Number(PROP.signed_total != null ? PROP.signed_total : PROP.total) : 0;
-  var remainingPdf = isDeposit && jobTotalPdf > 0 ? Math.max(0, Math.round((jobTotalPdf - total) * 100) / 100) : 0;
+  doc.text('Payment received',22,y); doc.text('$'+Number(total).toLocaleString(),188,y,{align:'right'}); y+=8;
+  var remainingPdf = isPaymentReceipt && isAdjusted ? currentRemainingBalance() : remainingBalance();
   doc.setFontSize(11);
   doc.text('Balance remaining',22,y);
   doc.text('$'+Number(remainingPdf).toLocaleString(),188,y,{align:'right'}); y+=14;
 
   // Honest footer (no false permit/inspection completion claim)
   doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(MUTE[0],MUTE[1],MUTE[2]);
-  var foot=doc.splitTextToSize(isRefund
+  var foot=doc.splitTextToSize(isAdjusted
+    ? 'This receipt preserves the original payment and shows the current invoice balance after a recorded reversal or refund. Questions? Text Key at (864) 863-7800.'
+    : isRefund
     ? 'This receipt confirms your payment was refunded in full. Depending on your bank, the refund can take 5 to 10 business days to appear back on your statement. Questions? Text Key at (864) 863-7800.'
-    : (isDeposit
-    ? 'This receipt confirms your deposit was received for your generator inlet install. The permit and county inspection are handled by Backup Power Pro. I will text you to set your install date, and the remaining balance is due once the work is done. Questions? Text Key at (864) 863-7800.'
-    : 'This receipt confirms payment received in full for your generator inlet install. The permit and county inspection are handled by Backup Power Pro; there is nothing for you to file. Questions? Text Key at (864) 863-7800.'),170);
+    : (paidInFull
+    ? 'This receipt confirms the payment shown above. This invoice is paid in full. Questions? Text Key at (864) 863-7800.'
+    : 'This receipt confirms the payment shown above. The remaining balance is shown on this receipt. Questions? Text Key at (864) 863-7800.'),170);
   doc.text(foot,20,y);
 
   doc.save('BPP-Receipt-'+(receiptNum||'paid')+'.pdf');
@@ -529,29 +583,36 @@ function downloadReceiptPDF(){
 function renderReceipt(){
   var name=INV.contact_name||'';
   var firstName=firstNameOf(name);
-  var total=invoiceTotal();
+  var total=paymentAmount();
   var paid=fmtDate(INV.paid_at);
   var method=INV.payment_method||'';
   var isDeposit = INV.notes==='deposit';
-  var receiptNum = INV.id ? String(INV.id).slice(0,8).toUpperCase()
+  var isPaymentReceipt=!!RECEIPT_PAYMENT;
+  var paidInFull=isPaymentReceipt ? RECEIPT_PAYMENT.paid_in_full===true : !isDeposit;
+  var receiptNum = RECEIPT_PAYMENT && RECEIPT_PAYMENT.document_number ? String(RECEIPT_PAYMENT.document_number)
+    : RECEIPT_PAYMENT && RECEIPT_PAYMENT.receipt_token ? String(RECEIPT_PAYMENT.receipt_token).replace(/-/g,'').slice(0,8).toUpperCase()
+    : RECEIPT_PAYMENT && RECEIPT_PAYMENT.id ? String(RECEIPT_PAYMENT.id).slice(0,8).toUpperCase()
+    : INV.id ? String(INV.id).slice(0,8).toUpperCase()
     : (new URLSearchParams(window.location.search).get('token')||'').slice(0,8).toUpperCase();
+  var provenance=document.getElementById('paymentProvenance');
+  if(provenance) provenance.textContent = method ? ('Payment method: '+method) : 'Payment method shown above';
 
   // Hero greeting (deposit-aware: a deposit receipt must never claim paid in full)
   var hero=document.getElementById('hero-title');
-  if(hero) hero.textContent = isDeposit
-    ? (firstName ? ('Thank you, '+firstName+'. Deposit received.') : 'Thank you. Deposit received.')
-    : (firstName ? ("You're all set, "+firstName+'. Paid in full.') : "You're all set. Paid in full.");
+  if(hero) hero.textContent = paidInFull
+    ? (firstName ? ('Thank you, '+firstName+'. Paid in full.') : 'Thank you. Paid in full.')
+    : (firstName ? ('Thank you, '+firstName+'. Payment received.') : 'Thank you. Payment received.');
 
   // Deposit vs paid-in-full. A deposit means the install is NOT done yet, so the
   // brand pill, subtitle, title, balance line, and the post-install sections
   // (what-you-own / when-the-grid-drops) must not assert completion or $0 owed.
-  document.title = (isDeposit ? 'Deposit received' : 'Paid in full') + ', your receipt | Backup Power Pro';
+  document.title = (paidInFull ? 'Paid in full' : 'Payment received') + ', your receipt | Backup Power Pro';
   var pill=document.getElementById('paid-pill');
-  if(pill) pill.innerHTML = '&#10003; ' + (isDeposit ? 'Deposit received' : 'Paid in full');
+  if(pill) pill.innerHTML = '&#10003; ' + (paidInFull ? 'Paid in full' : 'Payment received');
   var heroSub=document.getElementById('hero-sub');
-  if(heroSub) heroSub.textContent = isDeposit
-    ? 'Your deposit is in, thank you. I handle the permit and the county inspection. I will text you to set your install date, and the remaining balance is due once the work is done.'
-    : 'Your generator inlet install is done and now paid in full. Nothing else is owed. I handle the permit and the county inspection from here, so there is nothing left on your plate.';
+  if(heroSub) heroSub.textContent = paidInFull
+    ? 'This invoice is paid in full. Nothing remains due on this invoice.'
+    : 'We received your payment of '+fmt(total)+'. Your remaining balance is '+fmt(remainingBalance())+'.';
   // Deposit receipts must show the HONEST remaining balance (sibling of the
   // receipt-deposit email), never hide the row and never claim $0 owed.
   var balanceRow=document.getElementById('balance-row');
@@ -559,10 +620,10 @@ function renderReceipt(){
   var balanceAmt=document.getElementById('balance-amt');
   if(balanceRow){
     var jobTotal = PROP ? Number(PROP.signed_total != null ? PROP.signed_total : PROP.total) : 0;
-    var remaining = isDeposit && jobTotal > 0 ? Math.max(0, Math.round((jobTotal - total) * 100) / 100) : 0;
+    var remaining = isPaymentReceipt ? remainingBalance() : (isDeposit && jobTotal > 0 ? Math.max(0, Math.round((jobTotal - total) * 100) / 100) : 0);
     // Only show remaining when we can compute it from the linked proposal.
     // Never invent $0 owed on a deposit when the job total is unknown.
-    if(isDeposit && jobTotal <= 0){
+    if(!isPaymentReceipt && isDeposit && jobTotal <= 0){
       balanceRow.style.display = 'none';
     } else {
       balanceRow.style.display = '';
@@ -576,26 +637,27 @@ function renderReceipt(){
       }
     }
   }
+  var isGenericInvoice=String(INV.creator_version||'').toLowerCase()==='v4';
   var ownRow=document.getElementById('own-row');
-  if(ownRow) ownRow.style.display = isDeposit ? 'none' : '';
+  if(ownRow) ownRow.style.display = (isDeposit||isPaymentReceipt||isGenericInvoice) ? 'none' : '';
   var gridRow=document.getElementById('grid-row');
-  if(gridRow) gridRow.style.display = isDeposit ? 'none' : '';
+  if(gridRow) gridRow.style.display = (isDeposit||isPaymentReceipt||isGenericInvoice) ? 'none' : '';
   var keepNote=document.getElementById('keep-note');
-  if(keepNote) keepNote.textContent = isDeposit
-    ? 'Save this. It is your record that your deposit was received. I handle the permit and the county inspection, and I will text you to set your install date.'
-    : 'Save this. It is your record that the install is done and paid in full, with the permit and county inspection that I handled for you. Whenever you need the details, they are all right here.';
+  if(keepNote) keepNote.textContent = paidInFull
+    ? 'Save this. It is your record that this invoice was paid in full.'
+    : 'Save this. It is your record of this payment and the remaining invoice balance.';
+  var referralNote=document.getElementById('referral-note');
+  if(referralNote && (isGenericInvoice||isPaymentReceipt)) referralNote.textContent='Questions about this payment or invoice? Text me and I will help.';
 
   // Sign-off greeting (keeps the existing copy, just personalizes the name)
   var signoff=document.getElementById('signoff');
-  if(signoff) signoff.textContent = isDeposit
-    ? (firstName ? ('Talk soon, '+firstName+'. I will be in touch to set your install date.') : 'Talk soon. I will be in touch to set your install date.')
-    : (firstName ? ('Glad your home is ready, '+firstName+'. Stay warm when the next one hits.') : 'Glad your home is ready. Stay warm when the next one hits.');
+  if(signoff) signoff.textContent = firstName ? ('Thank you, '+firstName+'.') : 'Thank you.';
 
   // ── REFUND OVERRIDES (S6): applied last so they win over paid/deposit copy.
   // A refunded customer must see the truth, never "you're all set" + forward
   // install promises that no longer apply.
   var rf=refundTotals();
-  if(rf.full){
+  if(rf.full && !isPaymentReceipt){
     document.title='Refund issued, your receipt | Backup Power Pro';
     if(hero) hero.textContent = firstName ? (firstName+', your refund has been issued.') : 'Your refund has been issued.';
     if(pill) pill.innerHTML = 'Refund issued';
@@ -605,9 +667,15 @@ function renderReceipt(){
     if(gridRow) gridRow.style.display='none';
     if(keepNote) keepNote.textContent = 'Save this. It is your record that your payment of '+fmt(rf.refunded)+' was refunded in full.';
     if(signoff) signoff.textContent = firstName ? ('Take care, '+firstName+'. If plans change down the road, you know where to find me.') : 'Take care. If plans change down the road, you know where to find me.';
-  } else if(rf.partial){
-    if(pill) pill.innerHTML = '&#10003; Paid, partial refund issued';
-    if(heroSub && heroSub.textContent) heroSub.textContent = heroSub.textContent + ' Note: '+fmt(rf.refunded)+' of this payment has been refunded, so your net paid is '+fmt(Math.max(0, rf.paidSum - rf.refunded))+'.';
+  } else if((rf.partial||rf.full) && isPaymentReceipt){
+    var currentRemaining=currentRemainingBalance();
+    if(pill) pill.innerHTML = 'Payment adjusted';
+    if(hero) hero.textContent = firstName ? (firstName+', this payment was adjusted.') : 'This payment was adjusted.';
+    if(heroSub) heroSub.textContent = fmt(rf.refunded)+' of the original '+fmt(total)+' payment was reversed or refunded. The current invoice balance is '+fmt(currentRemaining)+'. The original payment record remains below.';
+    if(balanceRow) balanceRow.style.display='';
+    if(balanceLabel) balanceLabel.textContent='Current balance remaining';
+    if(balanceAmt) balanceAmt.textContent=fmt(currentRemaining);
+    if(keepNote) keepNote.textContent='Save this. It shows the original payment and the current adjustment.';
   }
 
   // Billed-to block (name / address / phone / email)
@@ -661,7 +729,7 @@ function renderReceipt(){
       ? ('Refund of '+fmt(rf.refunded)+' issued. ')
       : rf.partial
         ? ('Paid, with '+fmt(rf.refunded)+' refunded. ')
-        : (isDeposit ? 'Deposit received. ' : 'Generator inlet install, done and paid in full. ');
+        : (paidInFull ? 'Paid in full. ' : 'Payment received. ');
     summary.innerHTML = head + 'Questions on this receipt? Text Key at <a href="sms:+18648637800" class="dm-ink" style="color:#0b1f3b;font-weight:600;text-decoration:none;">(864) 863-7800</a>.';
   }
 
@@ -673,7 +741,7 @@ function renderReceipt(){
     } else {
       var preParts=['Payment of '+fmt(total)+' received'];
       if(paid) preParts.push('on '+ (function(){ try{ return new Date(INV.paid_at).toLocaleDateString('en-US',{month:'long',day:'numeric'}); }catch(e){ return ''; } })());
-      pre.textContent = preParts.join(' ')+(isDeposit ? '. Deposit received, thank you. I will text you to set your install date.' : (rf.partial ? ('. '+fmt(rf.refunded)+' of it was refunded.') : '. Generator inlet install, done and paid in full. Nothing else is owed.'));
+      pre.textContent = preParts.join(' ')+(paidInFull ? '. This invoice is paid in full.' : '. Remaining balance: '+fmt(remainingBalance())+'.');
     }
   }
 

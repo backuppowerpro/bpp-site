@@ -17,12 +17,10 @@
   var preview = main.querySelector("[data-photo-preview]");
   var previewImage = main.querySelector("[data-preview-image]");
   var previewClose = main.querySelector("[data-preview-close]");
-  var previewReplace = main.querySelector("[data-preview-replace]");
   var photos = [];
   var panelConfirmed = false;
   var nextIndex = 1;
   var sending = false;
-  var previewPhoto = null;
 
   var file = document.createElement("input");
   file.type = "file";
@@ -30,12 +28,6 @@
   file.multiple = true;
   file.hidden = true;
   document.body.appendChild(file);
-
-  var replacementFile = document.createElement("input");
-  replacementFile.type = "file";
-  replacementFile.accept = "image/*";
-  replacementFile.hidden = true;
-  document.body.appendChild(replacementFile);
 
   function escapeHtml(value) {
     return String(value == null ? "" : value).replace(/[&<>"']/g, function (character) {
@@ -51,20 +43,6 @@
 
   function hasUsefulPanelSet() {
     return panelConfirmed && photos.some(function (photo) { return photo.status === "done"; });
-  }
-
-  function hasAuthoritativePanelPhoto(value, hasSavedPhoto) {
-    var state = value && value.quote_walk_v2 || value || {};
-    var blockers = Array.isArray(state.blockers)
-      ? state.blockers
-      : state.readiness && Array.isArray(state.readiness.input_blockers)
-        ? state.readiness.input_blockers
-        : null;
-    return Boolean(
-      hasSavedPhoto
-      && blockers
-      && blockers.indexOf("panel_photo") === -1
-    );
   }
 
   function render() {
@@ -111,7 +89,7 @@
     }).then(function (value) {
       photo.mediaId = value && value.media_receipt_id || null;
       photo.status = "done";
-      panelConfirmed = hasAuthoritativePanelPhoto(value, true);
+      panelConfirmed = Boolean(value && value.quote_walk_v2 && value.quote_walk_v2.panel_photo_confirmed);
       WALK.ph("walk_v2_photo_uploaded", { role: photo.role });
       render();
     }).catch(function () {
@@ -174,16 +152,13 @@
       return;
     }
     if (previewButton) {
-      previewPhoto = photo;
       previewImage.src = photo.dataUrl;
       preview.showModal();
       return;
     }
     removeServerPhoto(photo).then(function (value) {
       photos = photos.filter(function (item) { return item !== photo; });
-      panelConfirmed = hasAuthoritativePanelPhoto(value, photos.some(function (item) {
-        return item.status === "done";
-      }));
+      panelConfirmed = Boolean(value && value.quote_walk_v2 && value.quote_walk_v2.panel_photo_confirmed);
       render();
     }).catch(function () {
       hint.textContent = "That photo could not be removed. Try again.";
@@ -194,41 +169,8 @@
     preview.close();
   });
 
-  previewReplace.addEventListener("click", function () {
-    if (!previewPhoto || previewPhoto.status === "uploading") return;
-    replacementFile.click();
-  });
-
-  replacementFile.addEventListener("change", function () {
-    var selected = replacementFile.files && replacementFile.files[0];
-    replacementFile.value = "";
-    var photo = previewPhoto;
-    if (!selected || !photo) return;
-    if (selected.type && selected.type.indexOf("image/") !== 0) {
-      hint.textContent = "That file is not a photo. Choose an image.";
-      return;
-    }
-    if (selected.size > 40 * 1024 * 1024) {
-      hint.textContent = "That photo is too large. Choose a smaller image.";
-      return;
-    }
-    WALK.resizeImage(selected, 1600).then(function (dataUrl) {
-      return removeServerPhoto(photo).then(function () {
-        photo.idx = nextIndex++;
-        photo.name = selected.name || "photo";
-        photo.dataUrl = dataUrl;
-        photo.mediaId = null;
-        preview.close();
-        send(photo);
-      });
-    }).catch(function () {
-      hint.textContent = "That photo could not be replaced. Try again.";
-    });
-  });
-
   preview.addEventListener("close", function () {
     previewImage.removeAttribute("src");
-    previewPhoto = null;
   });
 
   cta.addEventListener("click", function () {
@@ -262,10 +204,9 @@
 
   WALK.view(t).then(function (value) {
     var state = value.quote_walk_v2 || {};
-    var sequentialEntry = new URLSearchParams(window.location.search).get("sequence") === "1";
     var connectionAnswered = (Array.isArray(state.observed_connections) && state.observed_connections.length)
       || value.connection_status === "pending_access";
-    if (!sequentialEntry && (!connectionAnswered || !value.confirmed_panel_room || !state.distance_band)) {
+    if (!connectionAnswered || !value.confirmed_panel_room || !state.distance_band) {
       WALK.routeFromState(t, value);
       return;
     }
@@ -280,7 +221,7 @@
         status: "done"
       };
     });
-    panelConfirmed = hasAuthoritativePanelPhoto(value, photos.length > 0);
+    panelConfirmed = state.panel_photo_confirmed === true;
     nextIndex = photos.length + 1;
     render();
   }).catch(function () {

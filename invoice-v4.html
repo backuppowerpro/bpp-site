@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex">
 <meta name="referrer" content="no-referrer">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://*.supabase.co; form-action 'self';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https://*.supabase.co; connect-src 'self' https://*.supabase.co; form-action 'self';">
 <script>document.documentElement.className += ' js'</script>
 <title>Invoice | Backup Power Pro</title>
 <link rel="stylesheet" href="assets/css/bpp-money-fonts.css?v=20260808a">
@@ -23,6 +23,9 @@
 .inv-to{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);font-size:13px;color:var(--text2);line-height:1.55}
 .inv-to .lbl{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:4px}
 .inv-to b{color:var(--text);font-weight:700;font-size:14px}
+.invoice-home{display:none;margin-top:14px;border-radius:var(--r-sm);overflow:hidden;background:var(--navy);aspect-ratio:16/7}
+.invoice-home.ready{display:block}
+.invoice-home img{display:block;width:100%;height:100%;object-fit:cover}
 
 /* amount-due hero */
 .due-lbl{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
@@ -60,10 +63,11 @@
 .state-spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--navy);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 16px}
 @keyframes spin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.state-spin{animation:none}}
-@media (max-width:350px){
+@media (max-width:480px){
+  .brand-bar{flex-wrap:wrap}
   .brand-bar{padding-left:12px;padding-right:12px;gap:8px}
-  .brand-bar img{max-width:calc(100% - 90px);height:auto;max-height:25px;object-fit:contain;object-position:left}
-  .brand-bar .badge{max-width:none;font-size:9px;padding-left:8px;padding-right:8px;white-space:nowrap}
+  .brand-bar img{max-width:100%;height:auto;max-height:25px;object-fit:contain;object-position:left}
+  .brand-bar .badge{max-width:100%;margin-left:auto;font-size:9px;padding-left:8px;padding-right:8px;white-space:normal;overflow-wrap:anywhere;text-align:right}
 }
 .paid-banner{background:var(--green);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:30px 24px;text-align:center;color:#fff;margin-bottom:var(--card-gap)}
 .paid-banner .paid-check{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
@@ -191,7 +195,7 @@ async function loadInvoice(token){
   // invoice number badge in the brand bar
   var badge=document.getElementById('inv-num-badge');
   if(badge){
-    var num = INV.id ? String(INV.id).slice(0,6) : (new URLSearchParams(window.location.search).get('token')||'').slice(0,6);
+    var num = INV.document_number || (INV.id ? String(INV.id).slice(0,6) : (new URLSearchParams(window.location.search).get('token')||'').slice(0,6));
     badge.textContent = num ? 'Invoice #'+num : 'Invoice';
   }
 
@@ -201,9 +205,11 @@ async function loadInvoice(token){
   // checkout fn now also refuses these server-side).
   var invoiceStatus=String(INV.status||'').toLowerCase();
   var _closed=['cancelled','voided','refunded','declined','void'];
-  var _payable=['sent','unpaid','viewed','overdue'];
+  var _payable=['sent','unpaid','viewed','overdue','partial'];
   if(_closed.indexOf(invoiceStatus)>-1){
-    showState('Invoice cancelled.','This invoice has been cancelled and is no longer available for payment. Please contact (864) 863-7800 if you have questions.');
+    if(invoiceStatus==='refunded') showState('Invoice refunded.','Payments on this invoice were refunded. No payment is due. Please contact (864) 863-7800 if you have questions.');
+    else if(invoiceStatus==='voided'||invoiceStatus==='void') showState('Invoice voided.','This invoice was voided. No payment is due on it. Please contact (864) 863-7800 if you have questions.');
+    else showState('Invoice cancelled.','This invoice has been cancelled and is no longer available for payment. Please contact (864) 863-7800 if you have questions.');
   } else if(invoiceStatus==='paid'){
     renderPaid();
   } else if(_payable.indexOf(invoiceStatus)>-1 || IS_PREVIEW){
@@ -230,11 +236,36 @@ function lineItemsHtml(){
 function invoiceTotal(){
   return Number(INV.total);
 }
+function invoiceRemaining(){
+  var remaining=Number(INV.amount_remaining);
+  return Number.isFinite(remaining) ? Math.max(0,remaining) : invoiceTotal();
+}
+function homeImageHtml(){
+  return INV.contact_address?'<div class="invoice-home" id="invoice-home"><img id="invoice-home-img" alt="Home at the service address"></div>':'';
+}
+function loadHomeImage(){
+  var wrap=document.getElementById('invoice-home');
+  var img=document.getElementById('invoice-home-img');
+  var token=new URLSearchParams(window.location.search).get('token');
+  if(!wrap||!img||!token) return;
+  img.addEventListener('load',function(){wrap.classList.add('ready');},{once:true});
+  img.addEventListener('error',function(){wrap.remove();},{once:true});
+  img.src=SUPABASE_URL+'/functions/v1/streetview-hero?i='+encodeURIComponent(token);
+}
 
 // ── ORIGINAL AGREEMENT (from linked approved proposal) ──────────────
 function agreementHtml(){
   if(!LINKED_PROPOSAL || LINKED_PROPOSAL.status!=='Approved') return '';
   var LP=LINKED_PROPOSAL;
+  if(LP.approval_source==='operator_recorded'){
+    var acceptedTime=LP.accepted_at?fmtDate(LP.accepted_at):'';
+    var channel=String(LP.approval_channel||'').replace('_',' ');
+    return '<div class="card pad">'+
+      '<h2 class="sec">Approval record</h2>'+
+      '<div class="inv-note">Customer approval was recorded by Backup Power Pro'+(acceptedTime?' on '+esc(acceptedTime):'')+(channel?' after approval by '+esc(channel):'')+'. This is an operator record, not an electronic signature or card authorization.</div>'+
+    '</div>';
+  }
+  if(!LP.signed_at || !LP.signer_name) return '';
   var signedTime = LP.signed_at
     ? (function(){ try{ return new Date(LP.signed_at).toLocaleString('en-US',{month:'long',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit',hour12:true}); }catch(e){ return ''; } })()
     : '';
@@ -260,22 +291,28 @@ function agreementHtml(){
 // ── RENDER PAYABLE (unpaid / balance due) ───────────────────────────
 function renderPayable(){
   var total=invoiceTotal();
+  var remaining=invoiceRemaining();
+  var paid=Math.max(0,Number(INV.amount_paid)||0);
   var page=document.getElementById('page');
   var name=INV.contact_name||'';
   var firstName=(name.trim().split(/\s+/)[0])||'';
   var addr=INV.contact_address||'';
   var issued=fmtDate(INV.created_at);
   var isDeposit=INV.notes==='deposit'||(INV.line_items||[]).some(function(item){return /deposit/i.test(String(item&&item.name||''));});
-  var statusLabel=isDeposit?'Deposit due':'Balance due';
+  var isStandalone=!INV.proposal_id;
+  var statusLabel=isDeposit?'Deposit due':'Amount due';
+  var dueDate=fmtDate(INV.due_at);
   var dueWhen=isDeposit
     ? 'Project deposit due after proposal approval. It is applied to your project total.'
-    : 'Project balance shown on this invoice. Due according to your agreed project schedule.';
+    : (INV.payment_terms||'Due upon receipt')+(dueDate?' · Due '+dueDate:'');
 
   var note = INV.notes && INV.notes!=='deposit' && INV.notes!=='full_payment'
     ? esc(INV.notes)
     : (firstName?esc(firstName)+', ':'')+(isDeposit
       ? 'this is the deposit for the installation we agreed to. It is part of your project total, not an added fee. Thank you for trusting me with your home.'
-      : 'this is the balance on the install we agreed to, no surprises and nothing added. Thank you for trusting me with your home.');
+      : (isStandalone
+        ? 'this invoice reflects the items listed below. Thank you for choosing Backup Power Pro.'
+        : 'this is the balance on the project we agreed to, with the details listed below. Thank you for trusting me with your home.'));
 
   page.innerHTML =
     // HEADER
@@ -292,15 +329,15 @@ function renderPayable(){
         '<b>'+esc(name)+'</b>'+(addr?'<br>'+esc(addr):'')+
         (INV.contact_phone?'<br>'+esc(INV.contact_phone):'')+
         (INV.contact_email?'<br>'+esc(INV.contact_email):'')+
-      '</div>'+
+      '</div>'+homeImageHtml()+
     '</div>'+
 
     // AMOUNT DUE
     '<div class="card pad">'+
       '<div class="due-lbl">Amount due</div>'+
-      '<div class="due-amt">'+fmt(total)+'</div>'+
+      '<div class="due-amt">'+fmt(remaining)+'</div>'+
       '<div class="due-when">'+dueWhen+'</div>'+
-      '<button class="btn-gold pay-cta" id="pay-btn" type="button" data-amount="'+fmt(total)+'">Pay '+fmt(total)+'</button>'+
+      '<button class="btn-gold pay-cta" id="pay-btn" type="button" data-amount="'+fmt(remaining)+'">Pay '+fmt(remaining)+'</button>'+
       '<div class="pay-sub">Secure payment by bank transfer or card. Once it clears, your receipt is ready on this same link, and Key can email it to you.</div>'+
     '</div>'+
 
@@ -308,7 +345,9 @@ function renderPayable(){
     '<div class="card pad">'+
       '<h2 class="sec">What this covers</h2>'+
       lineItemsHtml()+
-      '<div class="li total"><div class="li-name">Total due</div><div class="li-amt">'+fmt(total)+'</div></div>'+
+      '<div class="li total"><div class="li-name">Invoice total</div><div class="li-amt">'+fmt(total)+'</div></div>'+
+      (paid>0?'<div class="li"><div class="li-name">Payments received</div><div class="li-amt credit">-'+fmt(paid)+'</div></div>':'')+
+      '<div class="li total"><div class="li-name">Balance due</div><div class="li-amt">'+fmt(remaining)+'</div></div>'+
     '</div>'+
 
     // NOTE FROM KEY
@@ -322,6 +361,7 @@ function renderPayable(){
     '<div class="inv-foot">Backup Power Pro by Key Electric &middot; Greenville, Spartanburg &amp; Pickens counties<br>Questions on this invoice? Text Key at <b>(864) 863-7800</b></div>';
 
   var btn=document.getElementById('pay-btn');
+  loadHomeImage();
   if(btn&&IS_PREVIEW){
     btn.disabled=true;
     btn.textContent='Preview only, payment disabled';
@@ -387,7 +427,7 @@ function renderPaid(){
         '<b>'+esc(name)+'</b>'+(addr?'<br>'+esc(addr):'')+
         (INV.contact_phone?'<br>'+esc(INV.contact_phone):'')+
         (INV.contact_email?'<br>'+esc(INV.contact_email):'')+
-      '</div>'+
+      '</div>'+homeImageHtml()+
     '</div>'+
 
     // PAYMENT DETAILS
@@ -412,6 +452,7 @@ function renderPaid(){
 
     '<div class="inv-foot">Keep this '+(isRefund?'for your records':('receipt for your records'+(isDeposit?'':' and your insurance company')))+'.<br>Backup Power Pro by Key Electric &middot; Questions? Text Key at <b>(864) 863-7800</b></div>';
 
+  loadHomeImage();
   revealCards();
 }
 

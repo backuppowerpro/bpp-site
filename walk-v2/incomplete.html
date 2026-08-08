@@ -4,8 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="robots" content="noindex,nofollow,noarchive" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-85BhBFkdhUeJW2EYdCR44ap30MVHvy2ywDH26B5cK4s='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-+6Ffm1vrZYa4Vi2tMkHenmNSEHhXCrI5AmZspoSkIew='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; form-action 'self'; frame-src 'none'" />
-<script src="/walk-v2/token-bootstrap.js"></script>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-wMaDVVq6BM07VRVtgBm5ZhoOMM1zHf8ct1f1gzIfNWU='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-+6Ffm1vrZYa4Vi2tMkHenmNSEHhXCrI5AmZspoSkIew='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; form-action 'self'; frame-src 'none'" />
 <title>Saved Quote Walk | Backup Power Pro</title>
 <style>
 :root {
@@ -129,7 +128,8 @@ h1 { margin:0 0 8px; color:var(--navy); font-family:var(--head); font-size:22px;
       button.addEventListener('click', load);
     } else {
       button.addEventListener('click', function () {
-        WALK.go(target, t, { recovery: '1' });
+        var query = new URLSearchParams({ t: t, recovery: '1' });
+        window.location.href = '/walk-v2/' + target + '?' + query.toString();
       });
     }
     card.appendChild(visual);
@@ -155,7 +155,8 @@ h1 { margin:0 0 8px; color:var(--navy); font-family:var(--head); font-size:22px;
       load(false);
       return;
     }
-    WALK.go(target, t, { recovery: '1' });
+    var query = new URLSearchParams({ t: t, recovery: '1' });
+    window.location.href = '/walk-v2/' + target + '?' + query.toString();
   }
   function unique(values) {
     return values.filter(function (value, index) { return values.indexOf(value) === index; });
@@ -167,7 +168,7 @@ h1 { margin:0 0 8px; color:var(--navy); font-family:var(--head); font-size:22px;
       ? readiness.input_blockers.map(String)
       : (Array.isArray(state.blockers) ? state.blockers.map(String) : []));
     if (state.service_area_status === 'verified_out_of_area') {
-      WALK.go('index.html', t, { area: 'out' });
+      window.location.replace('/walk-v2/index.html?area=out&t=' + encodeURIComponent(t));
       return;
     }
     if (!blockers.length) {

@@ -4,8 +4,7 @@
 <meta name="referrer" content="strict-origin-when-cross-origin">
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-wygnGpICbMppymZ/+XZT8Vgnv0wtsjTA4zJ1JolzPtc=' 'sha256-5V0i3duCeK56PWKnEGRixbV+nARhJewv2lZ3TGm4piw='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-vJTGL1d96TSIuABuUIQ8TUdUz5v/h9tVLGK35mlVJQ0='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
-<script src="/walk-v2/token-bootstrap.js"></script>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://us.i.posthog.com https://us-assets.i.posthog.com 'sha256-wygnGpICbMppymZ/+XZT8Vgnv0wtsjTA4zJ1JolzPtc=' 'sha256-LogzJyYafMHB5BO0ZOsYy2OZrfH2WOm+dGxmIQJMlv4='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-wQgAf60QRUXJ3N/EdTAMcHduU8nLVlqx9RuMPxvYpJ4='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co https://us.i.posthog.com https://us-assets.i.posthog.com https://*.posthog.com; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
 <title>Backup Power Pro · Thank You</title>
 <link rel="icon" href="/favicon.png" type="image/png" />
@@ -520,6 +519,75 @@
     cursor: not-allowed;
   }
 
+  /* sent confirmation */
+  .sent {
+    display: none;
+    background: var(--navy);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-md);
+    padding: 22px;
+    color: #fff;
+  }
+  .sent.show { display: block; animation: rise 360ms var(--ease) both; }
+  @media (prefers-reduced-motion: reduce) { .sent.show { animation: none; } }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .sent .sh {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin-bottom: 10px;
+  }
+  .sent .si {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: var(--gold);
+    color: var(--navy);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .sent .si svg { width: 16px; height: 16px; stroke-width: 2.6; }
+  .sent h2 {
+    font-family: var(--head);
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: #fff;
+    margin: 0;
+  }
+  .sent p {
+    font-size: 14px;
+    line-height: 1.6;
+    color: rgba(255,255,255,0.82);
+    margin: 0 0 10px;
+  }
+  .sent .guide-link {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    color: var(--gold);
+    font-family: var(--head);
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(255,186,0,0.55);
+    margin-bottom: 12px;
+  }
+  .sent .ksig {
+    font-family: var(--script);
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--gold);
+    transform: rotate(-1.5deg);
+    display: block;
+    margin: 4px 0 0;
+  }
+
   /* ================= 6. closing line ================= */
   .closing {
     display: flex;
@@ -587,6 +655,7 @@
     .state-label { display: none; }
   }
 </style>
+<script>!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+" (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);posthog.init('phc_qoA51lePZqXYtPJYkrIpdA4U8iMDJ79L1kje7r4pD4O',{api_host:'https://us.i.posthog.com',property_denylist:['$current_url','$initial_current_url','$referrer','$initial_referrer'],sanitize_properties:function(p){for(var k in p){var v=p[k];if(typeof v==='string'&&v.indexOf('http')===0&&v.indexOf('?')>-1){try{var u=new URL(v);p[k]=u.origin+u.pathname;}catch(e){p[k]=v.split('?')[0];}}}return p;},person_profiles:'identified_only',capture_pageview:true,capture_pageleave:true,enable_heatmaps:true,capture_dead_clicks:true})</script>
 <link rel="stylesheet" href="/walk-v2/mobile-canvas.css" />
 </head>
 <body>
@@ -643,6 +712,10 @@
           </ul>
         </section>
 
+        <section class="sent show rv" style="--rvd: 230ms;" data-earned-guide="">
+          <div class="sh"><span class="si"><svg viewBox="0 0 16 16"><path d="M3 8.5l3 3L13 4"></path></svg></span><h2>Your outage-prep guide is ready</h2></div>
+          <a class="guide-link" data-guide-link="" href="" target="_blank" rel="noopener">Open your outage-prep guide</a>
+        </section>
       </div>
     </div>
 
@@ -700,7 +773,10 @@
     var acceptedCurrent = acceptedSnapshot
       && acceptedSnapshot.status === 'available'
       && acceptedSnapshot.snapshot_id === v2State.accepted_range_snapshot_id;
-    if (!acceptedCurrent) {
+    var guideHref = acceptedCurrent && v2State.guide_earned && acceptedSnapshot.guide
+      ? String(acceptedSnapshot.guide.href || '')
+      : '';
+    if (!acceptedCurrent || guideHref !== '/storm-ready-guide/BPP-Storm-Ready-Guide.pdf') {
       WALK.go('range.html', t);
       return;
     }
@@ -709,6 +785,7 @@
     num.textContent = dollars(acceptedSnapshot.low_cents) + ' to ' + dollars(acceptedSnapshot.high_cents);
     num.style.display = '';
     follow.style.display = '';
+    main.querySelector('[data-guide-link]').href = guideHref;
     reviewLine.textContent = 'Your range and setup are accepted';
     reviewSub.textContent = '';
     reviewSub.style.display = 'none';

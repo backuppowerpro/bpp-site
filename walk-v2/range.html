@@ -2,8 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-idHgnqUxHWAL8TBzMrGuf24wUeE3vbTvctw5KjNTfzk='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-CNMCW5s+z77mlkreNMeKswDrfMJfKYwPLESYlLZ2rN0='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://reowtzedjflwmlptupbk.supabase.co; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
-<script src="/walk-v2/token-bootstrap.js"></script>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-jsFPEjwXLHyVq9EkVcVGz1W0v/yLUjSZ0ufwOBsn3PA='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-CNMCW5s+z77mlkreNMeKswDrfMJfKYwPLESYlLZ2rN0='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://reowtzedjflwmlptupbk.supabase.co; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
 <meta name="robots" content="noindex, nofollow" />
 <title>Your project range | Backup Power Pro</title>
@@ -234,10 +233,6 @@
         <strong>I will provide my own approved compatible cord</strong>
         <small>The revised range will remove the compatible cord from the included scope.</small>
       </button>
-      <button class="choice hidden" type="button" data-alt-cord-restore="">
-        <strong>Include the approved compatible cord again</strong>
-        <small>The revised range will restore the cord and return to the approved range for this setup.</small>
-      </button>
       <button class="choice" type="button" data-no-alternative="">
         <strong>None of these options work for me</strong>
         <small>Finish here without requesting a proposal.</small>
@@ -312,14 +307,6 @@
   }
   function money(cents) { return '$' + Math.round(Number(cents) / 100).toLocaleString('en-US'); }
   function v2() { return view && view.quote_walk_v2 || {}; }
-  function panelRecapLabel(state, panels) {
-    if (panels.length === 1) return '1 panel';
-    if (panels.length > 1) return panels.length + ' panels';
-    if (state.panel_inventory_status === 'multiple_unsure_main'
-        || state.panel_location === 'More than one panel') return 'More than one';
-    if (state.panel_inventory_status === 'single_complete') return '1 panel';
-    return 'Confirmed';
-  }
   function safeImageHref(value) {
     try {
       var url = new URL(String(value || ''), window.location.origin);
@@ -373,7 +360,7 @@
     var panels = Array.isArray(v2().panels) ? v2().panels : [];
     var media = Array.isArray(v2().media) ? v2().media : [];
     main.querySelector('[data-recap-connections]').textContent = observed.map(function (amp) { return amp + ' Amp'; }).join(' and ');
-    main.querySelector('[data-recap-panels]').textContent = panelRecapLabel(v2(), panels);
+    main.querySelector('[data-recap-panels]').textContent = panels.length === 1 ? '1 panel' : panels.length + ' panels';
     main.querySelector('[data-recap-distance]').textContent = DISTANCE_LABELS[v2().distance_band] || 'Confirmed';
     main.querySelector('[data-recap-photos]').textContent = media.length + ' received';
     main.querySelector('[data-path-distance]').textContent = DISTANCE_LABELS[v2().distance_band] || 'Confirmed path';
@@ -411,8 +398,6 @@
       revisionMessage = 'Revised setup: The connection path changed to ' + (DISTANCE_LABELS[snapshot.distance_band] || 'the newly selected shorter path') + '. This saved path produced the revised range.';
     } else if (snapshot.revision_reason === 'cord_removed') {
       revisionMessage = 'Revised setup: You will provide the approved compatible cord. The cord is not included in this range.';
-    } else if (snapshot.revision_reason === 'cord_restored') {
-      revisionMessage = 'Revised setup: The approved compatible cord is included again.';
     } else if (snapshot.revision_reason === 'return_to_50') {
       revisionMessage = 'Revised setup: You returned to the 50 Amp installation. Both observed connections remain saved.';
     }
@@ -430,8 +415,6 @@
     show(main.querySelector('[data-not-fit-terminal]'), notFitClosed);
     show(main.querySelector('[data-alt-30]'), observed.indexOf('30') !== -1 && observed.indexOf('50') !== -1 && v2().pricing_basis === '50');
     show(main.querySelector('[data-alt-50]'), observed.indexOf('30') !== -1 && observed.indexOf('50') !== -1 && v2().pricing_basis === '30');
-    show(main.querySelector('[data-alt-cord]'), snapshot.cord_included !== false);
-    show(main.querySelector('[data-alt-cord-restore]'), snapshot.cord_included === false);
     if (v2().accepted_range_snapshot_id) {
       finalizeHandoff();
     }
@@ -471,13 +454,9 @@
       return;
     }
     finalizing = true;
-    loading.textContent = 'Saving your current setup...';
-    loading.classList.remove('hidden');
-    WALK.stateAction(t, 'handoff', {}).then(function () {
+    stateAction('handoff', {}).then(function () {
       WALK.go('thankyou.html', t);
     }).catch(function () {
-      loading.classList.add('hidden');
-      fail('That change did not save. Your prior range remains current. Try again.');
       finalizing = false;
     });
   }
@@ -530,11 +509,6 @@
   main.querySelector('[data-alt-cord]').addEventListener('click', function () {
     WALK.confirm(t, { cord_included: false, revision_reason: 'cord_removed' })
       .then(function () { return stateAction('create_range', { revision_reason: 'cord_removed' }); })
-      .catch(function () {});
-  });
-  main.querySelector('[data-alt-cord-restore]').addEventListener('click', function () {
-    WALK.confirm(t, { cord_included: true, revision_reason: 'cord_restored' })
-      .then(function () { return stateAction('create_range', { revision_reason: 'cord_restored' }); })
       .catch(function () {});
   });
   main.querySelector('[data-no-alternative]').addEventListener('click', function () {

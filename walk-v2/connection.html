@@ -3,8 +3,7 @@
 <head>
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-bE1MT6uMXn0HUf6v965B+KSJ3E2sNYtBs9AgpPVptCs='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-GpMzzuUIqq4mzpbYS+Aq+F67vQmjr9YXOohNvVwg/yM='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
-<script src="/walk-v2/token-bootstrap.js"></script>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://us.i.posthog.com https://us-assets.i.posthog.com 'sha256-s74a+KGGQVsbWHh+n4/t7lRxpn5fk+KqgubeWemXNKI=' 'sha256-+GwhxNYyjNRDgjo1ZDRYsQ9yHo/PJ8M8TGhc7sjkSBw='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-GpMzzuUIqq4mzpbYS+Aq+F67vQmjr9YXOohNvVwg/yM='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co https://us.i.posthog.com https://us-assets.i.posthog.com https://*.posthog.com; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
 <title>Backup Power Pro · Quote Walk · Generator Connection</title>
 <link rel="icon" href="/favicon.png" type="image/png" />
@@ -138,17 +137,7 @@
   var saving = false;
   var blockedAtLoad = false;
   var expanded = true;
-  var choicesReady = false;
   WALK.ph('walk_v2_screen_view', { screen: 'connection' });
-
-  function setChoiceReadiness(ready) {
-    choicesReady = ready;
-    main.setAttribute('aria-busy', ready ? 'false' : 'true');
-    main.querySelectorAll('[data-status]').forEach(function (button) {
-      button.disabled = !ready;
-    });
-  }
-  setChoiceReadiness(false);
 
   function isCompatible(status) {
     return status === 'confirmed_30' || status === 'confirmed_50';
@@ -187,11 +176,10 @@
       button.setAttribute('aria-pressed', pressed ? 'true' : 'false');
     });
     setCompact(selectedException, bringContinue);
-    submit.disabled = !choicesReady || !(selectedCompatible.length || selectedException);
+    submit.disabled = !(selectedCompatible.length || selectedException);
     error.style.display = 'none';
   }
   function select(status, bringContinue) {
-    if (!choicesReady) return;
     if (isCompatible(status)) {
       selectedException = '';
       var index = selectedCompatible.indexOf(status);
@@ -211,7 +199,7 @@
   var backBtn = main.querySelector('[data-back]');
   if (backBtn) backBtn.addEventListener('click', function () {
     WALK.ph('walk_v2_back_tap', { from: 'connection' });
-    WALK.go('index.html', t, { edit: 'details' });
+    window.location.href = '/walk-v2/?edit=details&t=' + encodeURIComponent(t);
   });
   changeAnswer.addEventListener('click', function () {
     expanded = true;
@@ -311,12 +299,8 @@
     });
     if (!editMode && !recoveryMode && !selectedCompatible.length && status === 'pending_access') selectedException = status;
     expanded = !(selectedCompatible.length || selectedException);
-    setChoiceReadiness(true);
     renderSelection(false);
-  }).catch(function () {
-    setChoiceReadiness(true);
-    renderSelection(false);
-  });
+  }).catch(function () {});
 })();
 </script>
 </body>

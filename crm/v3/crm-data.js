@@ -3,7 +3,6 @@ import {
   consumeQuoteWalkV2HandoffReceipt,
   fetchQuoteWalkV2OperatorReceipt,
   fetchQuoteWalkV2ReceiptMap,
-  markQuoteWalkV2OperatorNotificationSeen,
   quoteWalkV2OperatorDisplay,
   quoteWalkV2OperatorProjection,
   quoteWalkV2QuoteDeskState,
@@ -45,33 +44,9 @@ const TEST_MODE = (function () {
     // ONLY localhost / 127.0.0.1. backuppowerpro.com can never match, so
     // production always falls through to the real Supabase client + SignInGate.
     var local = (h === 'localhost' || h === '127.0.0.1');
-    var browserFixture = new URLSearchParams(location.search).get('test') === '1';
-    // The native simulator has no useful query-string entry point. Its test
-    // build sets this flag before Ionic imports crm-data.js, and remains
-    // triple-contained: compile-time opt-in, Capacitor's localhost origin,
-    // and the capacitor protocol. A normal native build cannot reach it.
-    var simulatorFixture = window.__BPP_SIM_TEST__ === true && location.protocol === 'capacitor:';
-    return local && (browserFixture || simulatorFixture);
+    return local && new URLSearchParams(location.search).get('test') === '1';
   } catch (e) { return false; }
 })();
-
-// Test-only failure seam. It is usable only with the localhost-only
-// `?test=1` harness and proves that a cached operator list never renders as
-// a fake new account when the live contacts read is unavailable.
-const TEST_CONTACTS_FAILURE = (function () {
-  if (!TEST_MODE) return false;
-  try { return new URLSearchParams(location.search).get('contacts-fail') === '1'; }
-  catch (_) { return false; }
-})();
-
-// Native Simulator fixtures need renderable local media. A public Storage URL
-// is useful for browser interception, but it deliberately does not exist in a
-// side-effect-free simulator build. Keep these data URLs behind the explicit
-// simulator flag so a normal CRM session can never display fixture media.
-var SIM_FIXTURE_MEDIA = window.__BPP_SIM_TEST__ === true ? {
-  first: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="240" height="160" viewBox="0 0 240 160"><rect width="240" height="160" fill="#e5e7eb"/><rect x="78" y="14" width="84" height="132" rx="6" fill="#374151"/><rect x="89" y="28" width="62" height="34" fill="#9ca3af"/><path d="M89 83h62M89 105h62M110 62v72M130 62v72" stroke="#f9fafb" stroke-width="5"/></svg>'),
-  second: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="240" height="160" viewBox="0 0 240 160"><rect width="240" height="160" fill="#f5f0e6"/><path d="M38 32h164M38 58h164M38 84h164M38 110h164M38 136h164" stroke="#c7b48a" stroke-width="3"/><path d="M62 30v110M126 30v110" stroke="#9b7b45" stroke-width="3"/><text x="74" y="79" font-size="16" fill="#374151">Panel notes</text></svg>'),
-} : null;
 
 // No-op Supabase stub: every query chain resolves to {data:[],error:null} so
 // writes succeed silently, realtime channels are inert, edge fns no-op, and
@@ -1051,32 +1026,8 @@ const _draftGenInFlight = new Set();
 
 // Flow C: latest pre-read for a contact (the Price Brief row's data).
 // Read-only via the operator policy; returns null when none exists, so
-// callers render nothing for pre-Flow-C contacts. Cache both completed and
-// in-flight reads for this app session: contact siblings must share one stable
-// answer, not visibly fill themselves in after an operator pans to a tab.
-var _preReadCache = new Map();
-
-function fetchPreRead(contactId) {
-  var key = String(contactId || '');
-  if (!key) return Promise.resolve(null);
-  if (_preReadCache.has(key)) return Promise.resolve(_preReadCache.get(key));
-  var request = fetchPreReadFresh(contactId).then(function (data) {
-    _preReadCache.set(key, data || null);
-    return data || null;
-  }).catch(function () {
-    _preReadCache.set(key, null);
-    return null;
-  });
-  _preReadCache.set(key, request);
-  return request;
-}
-
-function peekPreRead(contactId) {
-  var cached = _preReadCache.get(String(contactId || ''));
-  return cached && typeof cached.then !== 'function' ? cached : null;
-}
-
-async function fetchPreReadFresh(contactId) {
+// callers render nothing for pre-Flow-C contacts.
+async function fetchPreRead(contactId) {
   // TEST_MODE serves the synthetic fixture for this contact (the detail page's
   // walk verdict + quote-desk read); production falls through to the real query.
   if (TEST_MODE) return (window.CRM && window.CRM.__testPreReads && window.CRM.__testPreReads[contactId]) || null;
@@ -1084,7 +1035,7 @@ async function fetchPreReadFresh(contactId) {
   try {
     var q = await window.CRM.__db
       .from('property_pre_reads')
-      .select('id, token, confidence, subdivision, predicted_panel_room, clone_contact_id, confirmed_panel_room, confirmed_generator_spot, customer_run_ft_estimate, distance_band, photo_received_at, photo_read, save_later_requested_at, first_viewed_at, view_count, range_low_cents, range_high_cents, gift_requested_at, thankyou_at, completion_notified_at, connection_status, generator_ownership_status, generator_needed_active')
+      .select('token, confidence, subdivision, predicted_panel_room, clone_contact_id, confirmed_panel_room, confirmed_generator_spot, customer_run_ft_estimate, distance_band, photo_received_at, photo_read, save_later_requested_at, first_viewed_at, view_count, range_low_cents, range_high_cents, gift_requested_at, thankyou_at, completion_notified_at')
       .eq('contact_id', contactId)
       .order('created_at', { ascending: false })
       .limit(1)
@@ -1101,30 +1052,7 @@ async function fetchPreReadFresh(contactId) {
 // the native Ionic list calls this; the bespoke CRM boot path is untouched.
 // Read-only via the operator policy; any failure yields {} (rows just show no
 // walk verdict). Latest-per-contact wins via the created_at desc order.
-var _preReadsBulkCache = null;
-var _preReadsBulkPromise = null;
-
-function fetchPreReadsBulk(force) {
-  if (!force && _preReadsBulkCache) return Promise.resolve(_preReadsBulkCache);
-  if (!force && _preReadsBulkPromise) return _preReadsBulkPromise;
-  var request = fetchPreReadsBulkFresh().then(function (map) {
-    _preReadsBulkCache = map || {};
-    return _preReadsBulkCache;
-  }).catch(function () {
-    _preReadsBulkCache = {};
-    return _preReadsBulkCache;
-  }).finally(function () {
-    if (_preReadsBulkPromise === request) _preReadsBulkPromise = null;
-  });
-  _preReadsBulkPromise = request;
-  return request;
-}
-
-function peekPreReadsBulk() {
-  return _preReadsBulkCache;
-}
-
-async function fetchPreReadsBulkFresh() {
+async function fetchPreReadsBulk() {
   // TEST_MODE serves synthetic fixtures (the real per-contact query is stubbed
   // to [] by __makeStubDb); production always falls through to the real query.
   if (TEST_MODE) return (window.CRM && window.CRM.__testPreReads) || {};
@@ -1132,7 +1060,7 @@ async function fetchPreReadsBulkFresh() {
   try {
     var q = await window.CRM.__db
       .from('property_pre_reads')
-      .select('id, contact_id, confirmed_panel_room, confirmed_generator_spot, customer_run_ft_estimate, distance_band, photo_received_at, gift_requested_at, thankyou_at, completion_notified_at, connection_status, generator_ownership_status, generator_needed_active, created_at')
+      .select('contact_id, confirmed_panel_room, confirmed_generator_spot, customer_run_ft_estimate, distance_band, photo_received_at, gift_requested_at, thankyou_at, completion_notified_at, created_at')
       .order('created_at', { ascending: false })
       .limit(1000);
     if (q.error || !q.data) return {};
@@ -1149,7 +1077,7 @@ var _quoteWalkV2ReceiptPromise = null;
 
 async function fetchQuoteWalkV2Receipts(force) {
   if (!force && _quoteWalkV2ReceiptPromise) return _quoteWalkV2ReceiptPromise;
-  var request = fetchPreReadsBulk(force).then(function (preReads) {
+  var request = fetchPreReadsBulk().then(function (preReads) {
     return fetchQuoteWalkV2ReceiptMap(window.CRM && window.CRM.__db, preReads);
   }).then(function (receipts) {
     window.CRM.quoteWalkV2Receipts = receipts || {};
@@ -1201,24 +1129,6 @@ async function fetchQuoteWalkV2ReceiptForContact(contactId, force) {
   return receipt;
 }
 
-async function markQuoteWalkV2NotificationSeen(contactId) {
-  var contactKey = String(contactId || '');
-  if (!contactKey) return { ok: false, error: 'contact_id_missing' };
-  var receipt = window.CRM.quoteWalkV2Receipts
-    ? window.CRM.quoteWalkV2Receipts[contactKey]
-    : null;
-  if (!receipt || receipt.error) {
-    receipt = await fetchQuoteWalkV2ReceiptForContact(contactKey, true);
-  }
-  var result = await markQuoteWalkV2OperatorNotificationSeen(
-    window.CRM && window.CRM.__db,
-    receipt
-  );
-  if (!result.ok || result.skipped) return result;
-  var refreshed = await fetchQuoteWalkV2ReceiptForContact(contactKey, true);
-  return { ok: true, notification: result.notification, receipt: refreshed };
-}
-
 async function claimQuoteWalkV2Handoff(contact) {
   if (!contact || !contact.id) return { ok: false, error: 'No contact selected' };
   if (contact.do_not_contact) {
@@ -1237,26 +1147,18 @@ async function claimQuoteWalkV2Handoff(contact) {
     receipt
   );
   if (result.ok) {
-    var refreshed = await fetchQuoteWalkV2ReceiptForContact(contact.id, true);
-    if (refreshed && refreshed.error) {
-      window.CRM.quoteWalkV2Receipts = Object.assign(
-        {},
-        window.CRM.quoteWalkV2Receipts || {},
-        {
-          [String(contact.id)]: Object.assign({}, receipt, {
-            handoff_status: 'claimed',
-            handoff: Object.assign({}, receipt.handoff || {}, {
-              status: 'claimed',
-              claimed_at: result.claimed_at || null,
-              read_only_history: true,
-            }),
-          }),
-        }
-      );
-      window.dispatchEvent(new CustomEvent('crm-data-changed', {
-        detail: { table: 'quote_walk_v2_quote_handoffs', contact_id: contact.id },
-      }));
-    }
+    window.CRM.quoteWalkV2Receipts = Object.assign(
+      {},
+      window.CRM.quoteWalkV2Receipts || {},
+      {
+        [String(contact.id)]: Object.assign({}, receipt, {
+          handoff_status: 'claimed',
+        }),
+      }
+    );
+    window.dispatchEvent(new CustomEvent('crm-data-changed', {
+      detail: { table: 'quote_walk_v2_quote_handoffs', contact_id: contact.id },
+    }));
   }
   return result;
 }
@@ -1298,23 +1200,6 @@ function _quoteDeskRunFt(contact, preRead) {
 // (same inputs as generateDraftProposal). Fall back to walk range midpoint
 // when the engine is unavailable. Always a SUGGESTION; Key edits before send.
 function suggestFirmQuote(contact, preRead) {
-  if (!preRead || preRead.generator_needed_active
-      || (preRead.connection_status !== 'confirmed_30' && preRead.connection_status !== 'confirmed_50')) {
-    return {
-      ready: false,
-      missingFacts: ['generator connection'],
-      dollars: null,
-      amp: null,
-      lengthFt: null,
-      runFt: null,
-      distanceUnconfirmed: true,
-      rangeLow: null,
-      rangeHigh: null,
-      source: null,
-      hasPhoto: !!(preRead && preRead.photo_received_at),
-      distanceBand: (preRead && preRead.distance_band) || null,
-    };
-  }
   var amp = _quoteDeskAmp(contact, preRead);
   var run = _quoteDeskRunFt(contact, preRead);
   var missingFacts = [];
@@ -2170,24 +2055,6 @@ let __paidByInvoice = {}; // { [invoice_id]: paidCents }
 // Individual COMPLETED payment rows per invoice, so the operator Refund action can
 // target a SPECIFIC payment (refund-payment takes a payment_id). { [invoice_id]: [rows] }.
 let __paymentsByInvoice = {};
-function applyPaidRows(data) {
-  const next = {};
-  const rows = {};
-  for (const p of (data || [])) {
-    if (!p.invoice_id) continue;
-    if (String(p.status || '').toLowerCase() === 'completed') {
-      const net = (Number(p.amount) || 0) - (Number(p.refunded_amount) || 0);
-      next[p.invoice_id] = (next[p.invoice_id] || 0) + Math.round(net * 100);
-    }
-    (rows[p.invoice_id] = rows[p.invoice_id] || []).push({
-      id: p.id, proposal_id: p.proposal_id || null,
-      amount: Number(p.amount) || 0, refunded_amount: Number(p.refunded_amount) || 0,
-      status: p.status,
-    });
-  }
-  __paidByInvoice = next;
-  __paymentsByInvoice = rows;
-}
 async function loadPaidByInvoice() {
   try {
     // NOTE: select ONLY live columns here. pay_method/discount_amount come from the
@@ -2198,10 +2065,28 @@ async function loadPaidByInvoice() {
     // the CRM can surface an honest "bank transfer retry" affordance, but only COMPLETED
     // rows count toward paid_cents.
     const { data, error } = await __db.from('payments')
-      .select('id, invoice_id, proposal_id, amount, refunded_amount, status')
+      .select('id, invoice_id, proposal_id, amount, refunded_amount, status, receipt_token, receipt_document_number, received_at, method, record_source')
       .in('status', ['completed', 'processing', 'failed']).limit(5000);
     if (error) { console.warn('[CRM] payments sum load failed:', error.message); return; }
-    applyPaidRows(data);
+    const next = {};
+    const rows = {};
+    for (const p of (data || [])) {
+      if (!p.invoice_id) continue;
+      if (String(p.status || '').toLowerCase() === 'completed') {
+        const net = (Number(p.amount) || 0) - (Number(p.refunded_amount) || 0);
+        next[p.invoice_id] = (next[p.invoice_id] || 0) + Math.round(net * 100);
+      }
+      (rows[p.invoice_id] = rows[p.invoice_id] || []).push({
+        id: p.id, proposal_id: p.proposal_id || null,
+        amount: Number(p.amount) || 0, refunded_amount: Number(p.refunded_amount) || 0,
+        status: p.status, receipt_token: p.receipt_token || null,
+        document_number: p.receipt_document_number || null,
+        received_at: p.received_at || null, method: p.method || null,
+        record_source: p.record_source || null,
+      });
+    }
+    __paidByInvoice = next;
+    __paymentsByInvoice = rows;
   } catch (e) { console.warn('[CRM] payments sum load error:', e.message); }
 }
 
@@ -2222,6 +2107,7 @@ function mapProposal(r) {
   return {
     id: r.id,
     token: r.token || null,
+    document_number: r.document_number || null,
     contact_id: r.contact_id,
     tier: r.pricing_tier || (dollars >= 1497 ? 'premium_plus' : dollars >= 1297 ? 'premium' : 'standard'),
     amount_cents: readCents(r),
@@ -2253,6 +2139,10 @@ function mapProposal(r) {
     superseded_by: r.superseded_by || null,
     viewed_at: r.viewed_at || null,
     approved_at: r.signed_at || null,
+    signature_revision: Number(r.signature_revision || 1),
+    approval_source: r.approval_source || null,
+    accepted_at: r.accepted_at || null,
+    approval_channel: r.approval_channel || null,
     label: r.amp_type ? `Generator inlet, ${r.amp_type}A` : 'Generator inlet',
     // V3 fields, exposed so the editor can rehydrate without a refetch.
     creator_version: r.creator_version || 'v2',
@@ -2305,6 +2195,7 @@ function mapInvoice(r) {
   return {
     id: r.id,
     token: r.token || null,
+    document_number: r.document_number || null,
     contact_id: r.contact_id,
     proposal_id: r.proposal_id || null,
     amount_cents: cents,
@@ -2325,6 +2216,8 @@ function mapInvoice(r) {
     // V3 invoice fields, line_items + creator_version exposed so editor can rehydrate.
     line_items: Array.isArray(r.line_items) ? r.line_items : [],
     creator_version: r.creator_version || 'v2',
+    due_at: r.due_at || null,
+    payment_terms: r.payment_terms || (String(r.creator_version || '').toLowerCase() === 'v4' ? 'Due upon receipt' : null),
   };
 }
 
@@ -2577,12 +2470,9 @@ window.CRM = {
   isQuoteDeskReady,
   proposalHasFirmFacts,
   fetchPreRead,
-  peekPreRead,
   fetchPreReadsBulk,
-  peekPreReadsBulk,
   fetchQuoteWalkV2Receipts,
   fetchQuoteWalkV2ReceiptForContact,
-  markQuoteWalkV2NotificationSeen,
   claimQuoteWalkV2Handoff,
   quoteWalkV2ReceiptVerdict,
   quoteWalkV2QuoteDeskState,
@@ -2664,52 +2554,6 @@ async function __fetchDncPhoneSet(db) {
   return { data: null, error: { message: 'DNC safety list exceeded pagination guard' } };
 }
 
-// A temporary iOS network failure must never make a real operator account
-// look like a genuinely empty account. Keep the last verified contact and
-// DNC snapshot for read-only continuity. While it is displayed,
-// contactsLoadFailed remains true, so customer actions remain fail-closed
-// until the live safety read succeeds again.
-const CONTACT_SNAPSHOT_KEY = 'bpp_v3_contacts_snapshot_v1';
-
-function __readContactSnapshot() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(CONTACT_SNAPSHOT_KEY) || 'null');
-    if (!saved || saved.version !== 1 || !Array.isArray(saved.contacts) || saved.contacts.length === 0) return null;
-    if (!saved.contacts.every(c => c && c.id)) return null;
-    return {
-      contacts: saved.contacts,
-      dncPhones: Array.isArray(saved.dncPhones) ? saved.dncPhones : [],
-    };
-  } catch (_) {
-    return null;
-  }
-}
-
-function __saveContactSnapshot(contacts, dncPhones) {
-  try {
-    localStorage.setItem(CONTACT_SNAPSHOT_KEY, JSON.stringify({
-      version: 1,
-      savedAt: Date.now(),
-      contacts: Array.isArray(contacts) ? contacts : [],
-      dncPhones: Array.isArray(dncPhones) ? dncPhones : [],
-    }));
-  } catch (_) {
-    // Snapshot storage is a continuity improvement, never a hard dependency.
-  }
-}
-
-function __showCachedContacts(snapshot, detail) {
-  if (!snapshot) return false;
-  CRM.contacts = snapshot.contacts;
-  CRM.dncPhones = snapshot.dncPhones;
-  CRM.contactsFromSnapshot = true;
-  CRM.contactsLoadFailed = true;
-  CRM.authed = true;
-  CRM.loaded = true;
-  window.dispatchEvent(new CustomEvent('crm-data-ready', { detail: Object.assign({ authed: true, cached: true }, detail || {}) }));
-  return true;
-}
-
 function __loadTestFixtures() {
   var nowMs = Date.now();
   var iso = function (d, h, m) { var x = new Date(nowMs); x.setDate(x.getDate() + d); x.setHours(h || 9, m || 0, 0, 0); return x.toISOString(); };
@@ -2731,7 +2575,6 @@ function __loadTestFixtures() {
     { id:'t-carl',   name:'Carl Rhodes',    phone:'+18645550107', email:'carl@example.test',  address:'14 Pineview Rd Duncan SC 29334',      stage:'quoted',  amperage:'',   assigned_installer:'',         do_not_contact:true,  archived:false, channel:'meta',      created_at: ago(60*24*12) },
   ];
   CRM.contactsLoadFailed = false;
-  CRM.contactsFromSnapshot = false;
   CRM.dncPhones = __dncPhoneSet(CRM.contacts);
   // Synthetic property_pre_reads (TEST_MODE only) so the walk-verdict badges +
   // the Active-lens walk filter are visually exercisable without real walk
@@ -2863,30 +2706,6 @@ function __loadTestFixtures() {
     // apps rather than leaving the MMS branch untested (critic, increment E).
     { id:'t-m7', contact_id:'t-eric', direction:'inbound', body:'', created_at: ago(60*5), sender_role:'customer', kind:'mms', read_at: ago(60*2) },
   ];
-  CRM.__testMmsAttachments = {
-    't-m7': [{
-      storage_path: null,
-      content_type: 'image/jpeg',
-      size_bytes: 1024,
-      source_url: SIM_FIXTURE_MEDIA ? SIM_FIXTURE_MEDIA.first : 'https://reowtzedjflwmlptupbk.supabase.co/storage/v1/object/public/message-media/mms/fixture-customer-photo.jpg',
-    }],
-  };
-  // A second customer photo that is only present in the durable gallery
-  // exercises the receiver handoff: it must appear beside the thread
-  // attachment rather than disappearing because it has no attached fixture
-  // message in this test session.
-  CRM.contactPhotos = [
-    { id:'t-cp1', contact_id:'t-eric', url:SIM_FIXTURE_MEDIA ? SIM_FIXTURE_MEDIA.first : 'https://reowtzedjflwmlptupbk.supabase.co/storage/v1/object/public/message-media/mms/fixture-customer-photo-gallery.jpg', caption:'Texted in by customer' },
-    // Same object through a query-decorated URL, the production shape when a
-    // receiver and a refreshed gallery disagree on URL form. It must not add
-    // a second tile.
-    { id:'t-cp2', contact_id:'t-eric', url:SIM_FIXTURE_MEDIA ? SIM_FIXTURE_MEDIA.first + '#receiver-copy' : 'https://reowtzedjflwmlptupbk.supabase.co/storage/v1/object/public/message-media/mms/fixture-customer-photo-gallery.jpg?download=1', caption:'Duplicate transport row' },
-    // A legacy double-copy can occupy two different storage paths. The gallery
-    // must compare image bytes as a last display-only safety net, not merely
-    // the URL or filename.
-    { id:'t-cp3', contact_id:'t-eric', url:SIM_FIXTURE_MEDIA ? SIM_FIXTURE_MEDIA.first + '#legacy-copy' : 'https://reowtzedjflwmlptupbk.supabase.co/storage/v1/object/public/message-media/mms/legacy-copy/fixture-customer-photo-gallery.jpg', caption:'Duplicate legacy copy' },
-    { id:'t-cp4', contact_id:'t-eric', url:SIM_FIXTURE_MEDIA ? SIM_FIXTURE_MEDIA.second : 'https://reowtzedjflwmlptupbk.supabase.co/storage/v1/object/public/message-media/mms/fixture-customer-photo-second.jpg', caption:'A different customer photo' },
-  ];
   CRM.calls = [
     { id:'t-c1', contact_id:'t-eric', direction:'inbound', started_at: ago(60*26), duration_sec:184, status:'completed', from_phone:'+18645550101', to_phone:'+18648637800', notes:null, ai_summary:'Confirmed install time and asked about cord length.' },
     // Ionic Calls increment F fixtures (read-only exercise): t-c2 is a
@@ -3000,22 +2819,7 @@ function __loadTestFixtures() {
 }
 
 async function loadLiveData() {
-  if (TEST_MODE) {
-    if (TEST_CONTACTS_FAILURE) {
-      if (!__showCachedContacts(__readContactSnapshot(), { testContactsFailure: true })) {
-        CRM.contacts = [];
-        CRM.dncPhones = [];
-        CRM.contactsFromSnapshot = false;
-        CRM.contactsLoadFailed = true;
-        CRM.authed = true;
-        CRM.loaded = true;
-        window.dispatchEvent(new CustomEvent('crm-data-ready', { detail: { authed: true, testContactsFailure: true } }));
-      }
-      return;
-    }
-    __loadTestFixtures();
-    return;
-  }
+  if (TEST_MODE) { __loadTestFixtures(); return; }
   if (__loadInFlight) return __loadInFlight;
   __loadInFlight = (async () => {
     try { await _loadLiveDataInner(); } finally { __loadInFlight = null; }
@@ -3024,7 +2828,6 @@ async function loadLiveData() {
 }
 
 async function _loadLiveDataInner() {
-  window.__bppBootMark?.('live data load started');
   if (!__db) {
     console.warn('[CRM] supabase-js not loaded, staying in empty state');
     return;
@@ -3036,16 +2839,7 @@ async function _loadLiveDataInner() {
   }
   __realtimeChannels = [];
 
-  // A Capacitor WebView can occasionally leave session restoration pending
-  // forever after the OS suspends the app. Bound this one bootstrap boundary
-  // so the operator gets a recoverable signed-out state instead of an endless
-  // loading spinner. The table reads below already have their own timeouts.
-  const sessionResult = await Promise.race([
-    __db.auth.getSession(),
-    new Promise((_, reject) => setTimeout(() => reject(new Error('Session restoration timed out after 8000ms')), 8000)),
-  ]);
-  const { data: { session } } = sessionResult;
-  window.__bppBootMark?.('session available');
+  const { data: { session } } = await __db.auth.getSession();
   if (!session) {
     window.CRM.authed = false;
     window.CRM.loaded = true;
@@ -3053,14 +2847,6 @@ async function _loadLiveDataInner() {
     return;
   }
   window.CRM.authed = true;
-
-  // Restore a previously verified list while the fresh live read runs. This
-  // is deliberately read-only: the normal safety gate remains closed until
-  // contacts and the DNC list both arrive from the server.
-  const cachedContacts = __readContactSnapshot();
-  if (cachedContacts) {
-    __showCachedContacts(cachedContacts);
-  }
 
   const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(); // 90 days back
 
@@ -3077,7 +2863,7 @@ async function _loadLiveDataInner() {
   const fetchTable = (queryBuilder, label) =>
     withTimeout(queryBuilder, 8000, label).catch(e => ({ data: null, error: e }));
 
-  const [contactsR, eventsR, proposalsR, invoicesR, messagesR, stageHistoryR, permitsR, materialsR, callsR, jobPhotosR, contactPhotosR, readinessR, dncR, paymentsR, installersR, linesR] = await Promise.all([
+  const [contactsR, eventsR, proposalsR, invoicesR, messagesR, stageHistoryR, permitsR, materialsR, callsR, jobPhotosR, readinessR, dncR] = await Promise.all([
     fetchTable(__db.from('contacts')
       .select(CONTACT_COLS)
       .order('created_at', { ascending: false })
@@ -3092,7 +2878,7 @@ async function _loadLiveDataInner() {
       .order('start_at', { ascending: true })
       .limit(500), 'calendar_events'),
     fetchTable(__db.from('proposals')
-      .select('id, token, contact_id, pricing_tier, total, signed_total, amp_type, selected_amp, status, copied_at, created_at, viewed_at, signed_at, sent_at, approved_at, creator_version, length_ft, include_cord, include_inlet, include_permit, pom_offered, pom_accepted, require_deposit, deposit_rate, extra_line_items, discount_type, discount_value, notes, superseded_at, superseded_by')
+      .select('id, token, document_number, contact_id, pricing_tier, total, signed_total, amp_type, selected_amp, status, copied_at, created_at, viewed_at, signed_at, sent_at, approved_at, creator_version, length_ft, include_cord, include_inlet, include_permit, pom_offered, pom_accepted, require_deposit, deposit_rate, extra_line_items, discount_type, discount_value, notes, superseded_at, superseded_by, signature_revision, approval_source, accepted_at, approval_channel')
       .order('created_at', { ascending: false })
       .limit(500), 'proposals'),
     fetchTable(__db.from('invoices')
@@ -3100,7 +2886,7 @@ async function _loadLiveDataInner() {
 // NO `kind` / `sent_at` / `viewed_at` columns. mapInvoice derives them:
 // kind from a $-amount heuristic, sent_at from created_at, viewed_at = null.
 // If those columns ever get added, expand the SELECT and the mapper.
-'id, token, contact_id, proposal_id, total, status, created_at, paid_at, payment_method, line_items, creator_version')
+'id, token, document_number, contact_id, proposal_id, total, status, created_at, due_at, payment_terms, paid_at, payment_method, line_items, creator_version')
       .order('created_at', { ascending: false })
       .limit(500), 'invoices'),
     fetchTable(__db.from('messages')
@@ -3144,13 +2930,6 @@ async function _loadLiveDataInner() {
       .select('id, contact_id, url, storage_path, caption, uploaded_by, uploaded_at, annotated, photo_kind')
       .order('uploaded_at', { ascending: false })
       .limit(1000), 'job_photos'),
-    // Customer photos are written by the inbound MMS and Quote Walk
-    // receivers. They are a separate durable gallery from job photos and
-    // must be loaded directly so a successful upload is not lost when a
-    // thread attachment read is delayed or legacy message metadata is sparse.
-    fetchTable(__db.from('contact_photos')
-      .select('id, contact_id, url, caption')
-      .limit(1000), 'contact_photos'),
     // job_readiness (Operating Model 2026 build #2): net-new-state-only rows
     // (Key's permit verification, parts-shipped stamp, AI date suggestion).
     // Rows are lazy; most contacts have none. advanceJobNext derives the
@@ -3160,46 +2939,23 @@ async function _loadLiveDataInner() {
       .limit(500), 'job_readiness'),
     withTimeout(__fetchDncPhoneSet(__db), 8000, 'DNC phone safety')
       .catch(e => ({ data: null, error: e })),
-    fetchTable(__db.from('payments')
-      .select('id, invoice_id, proposal_id, amount, refunded_amount, status')
-      .in('status', ['completed', 'processing', 'failed']).limit(5000), 'payments'),
-    fetchTable(__db.from('installer_tokens')
-      .select('installer_name').is('revoked_at', null), 'installer roster'),
-    fetchTable(__db.from('twilio_lines')
-      .select('id, phone, label, color, is_default, active, sort_order')
-      .order('sort_order', { ascending: true }), 'phone lines'),
   ]);
-  window.__bppBootMark?.('initial data batch settled');
 
   // Surface any per-table failure once, quietly, in the console, not as a
   // blocking toast. The user sees a working app with whatever loaded.
   const tableErrors = [
     ['contacts', contactsR], ['events', eventsR], ['proposals', proposalsR],
     ['invoices', invoicesR], ['messages', messagesR], ['stage_history', stageHistoryR],
-    ['permits', permitsR], ['materials', materialsR], ['calls', callsR], ['contact photos', contactPhotosR], ['DNC phone safety', dncR],
-    ['payments', paymentsR], ['installer roster', installersR], ['phone lines', linesR],
+    ['permits', permitsR], ['materials', materialsR], ['calls', callsR], ['DNC phone safety', dncR],
   ].filter(([, r]) => r.error).map(([n, r]) => `${n}: ${r.error.message || r.error}`);
   if (tableErrors.length) console.warn('[CRM] partial load:', tableErrors);
 
-  const contactsLive = !contactsR.error && !dncR.error;
-  window.CRM.contactsLoadFailed = !contactsLive;
-  if (contactsLive) {
-    window.CRM.dncPhones = dncR.data || [];
-    window.CRM.contacts = (contactsR.data || []).map(mapContact).filter(c => !c.archived);
-    window.CRM.contactsFromSnapshot = false;
-    __saveContactSnapshot(window.CRM.contacts, window.CRM.dncPhones);
-  } else if (cachedContacts) {
-    // Do not replace a known customer list with [] and make this look like a
-    // new account. It remains visibly stale and outbound actions are blocked.
-    __showCachedContacts(cachedContacts, { partialLoadFailure: true });
-  } else {
-    window.CRM.dncPhones = [];
-    window.CRM.contacts = [];
-    window.CRM.contactsFromSnapshot = false;
-  }
+  window.CRM.contactsLoadFailed = !!contactsR.error || !!dncR.error;
+  window.CRM.dncPhones = dncR.data || [];
+  window.CRM.contacts  = (contactsR.data  || []).map(mapContact).filter(c => !c.archived);
   window.CRM.events    = (eventsR.data    || []).map(mapEvent);
   window.CRM.proposals = (proposalsR.data || []).map(mapProposal);
-  applyPaidRows(paymentsR.data || []);
+  await loadPaidByInvoice();
   window.CRM.invoices  = (invoicesR.data  || []).map(mapInvoice);
   window.CRM.messages  = (messagesR.data  || []).map(mapMessage);
   window.CRM.stageHistory = stageHistoryR.data || [];
@@ -3207,18 +2963,31 @@ async function _loadLiveDataInner() {
   window.CRM.materials = (materialsR.data || []).map(mapMaterial);
   window.CRM.calls     = applyLocalListened((callsR.data || []).map(mapCall));
   window.CRM.jobPhotos = (jobPhotosR.data || []);
-  window.CRM.contactPhotos = (contactPhotosR.data || []);
   window.CRM.readiness = (readinessR.data || []);
   window.CRM.loaded = true;
 
-  // Optional operator metadata shares the same bounded initial batch. A slow
-  // roster or line registry can no longer delay the primary Contacts/Messages UI.
-  window.CRM.installers = [...new Set((installersR.data || []).map(r => r.installer_name).filter(Boolean))].sort();
-  window.CRM.lines = linesR.data || [];
+  // Active installer roster, names from installer_tokens (non-revoked).
+  // Used by the AssignInstaller picker to autocomplete; free-text still
+  // works so Key can type a new sub name and we create the token later.
+  try {
+    const { data: instData } = await __db.from('installer_tokens')
+      .select('installer_name').is('revoked_at', null);
+    window.CRM.installers = [...new Set((instData || []).map(r => r.installer_name).filter(Boolean))].sort();
+  } catch { window.CRM.installers = []; }
 
-  console.log(`[CRM] loaded ${CRM.contacts.length} contacts, ${CRM.events.length} events, ${CRM.proposals.length} proposals, ${CRM.invoices.length} invoices, ${CRM.messages.length} messages, ${CRM.stageHistory.length} stage transitions, ${CRM.permits.length} permits, ${CRM.materials.length} materials, ${CRM.calls.length} calls, ${CRM.jobPhotos.length} job photos, ${CRM.contactPhotos.length} customer photos, ${CRM.installers.length} installers`);
+  // Twilio line registry (multi-line messaging, 2026-06-20). Each row = one BPP
+  // number {phone, label, color}. The colored avatar ring (Calls + Messaging
+  // tabs) reads color from here via window.lineColorFor(contact.current_line).
+  // RLS allows authenticated select; any failure defaults to [] (no ring).
+  try {
+    const { data: linesData } = await __db.from('twilio_lines')
+      .select('id, phone, label, color, is_default, active, sort_order')
+      .order('sort_order', { ascending: true });
+    window.CRM.lines = (linesData || []);
+  } catch { window.CRM.lines = []; }
+
+  console.log(`[CRM] loaded ${CRM.contacts.length} contacts, ${CRM.events.length} events, ${CRM.proposals.length} proposals, ${CRM.invoices.length} invoices, ${CRM.messages.length} messages, ${CRM.stageHistory.length} stage transitions, ${CRM.permits.length} permits, ${CRM.materials.length} materials, ${CRM.calls.length} calls, ${CRM.jobPhotos.length} job photos, ${CRM.installers.length} installers`);
   window.dispatchEvent(new CustomEvent('crm-data-ready', { detail: { authed: true } }));
-  window.__bppBootMark?.('CRM ready');
 
   // Realtime, re-fetch the whole table on any change. The lists are small
   // enough (under 500 rows) that a full refresh is simpler than a delta
@@ -3241,8 +3010,6 @@ async function _loadLiveDataInner() {
         window.CRM.contactsLoadFailed = false;
         window.CRM.dncPhones = dncResult.data || [];
         window.CRM.contacts = (data || []).map(mapContact).filter(c => !c.archived);
-        window.CRM.contactsFromSnapshot = false;
-        __saveContactSnapshot(window.CRM.contacts, window.CRM.dncPhones);
         window.dispatchEvent(new CustomEvent('crm-data-changed', { detail: { table: 'contacts' } }));
       } catch (e) {
         window.CRM.contactsLoadFailed = true;
@@ -3281,7 +3048,7 @@ async function _loadLiveDataInner() {
 // NO `kind` / `sent_at` / `viewed_at` columns. mapInvoice derives them:
 // kind from a $-amount heuristic, sent_at from created_at, viewed_at = null.
 // If those columns ever get added, expand the SELECT and the mapper.
-'id, token, contact_id, proposal_id, total, status, created_at, paid_at, payment_method, line_items, creator_version')
+'id, token, document_number, contact_id, proposal_id, total, status, created_at, due_at, payment_terms, paid_at, payment_method, line_items, creator_version')
           .order('created_at', { ascending: false }).limit(500);
         if (error) { console.warn('[CRM] realtime invoices refetch failed:', error.message); return; }
         await loadPaidByInvoice();
@@ -3316,7 +3083,7 @@ async function _loadLiveDataInner() {
         // re-rendered with default values, and Key's customizations
         // appeared to vanish until full reload.
         const { data, error } = await __db.from('proposals')
-          .select('id, token, contact_id, pricing_tier, total, signed_total, amp_type, selected_amp, status, copied_at, created_at, viewed_at, signed_at, sent_at, approved_at, creator_version, length_ft, include_cord, include_inlet, include_permit, pom_offered, pom_accepted, require_deposit, deposit_rate, extra_line_items, discount_type, discount_value, notes, superseded_at, superseded_by')
+          .select('id, token, document_number, contact_id, pricing_tier, total, signed_total, amp_type, selected_amp, status, copied_at, created_at, viewed_at, signed_at, sent_at, approved_at, creator_version, length_ft, include_cord, include_inlet, include_permit, pom_offered, pom_accepted, require_deposit, deposit_rate, extra_line_items, discount_type, discount_value, notes, superseded_at, superseded_by, signature_revision, approval_source, accepted_at, approval_channel')
           .order('created_at', { ascending: false }).limit(500);
         if (error) { console.warn('[CRM] realtime proposals refetch failed:', error.message); return; }
         window.CRM.proposals = (data || []).map(mapProposal);
@@ -3427,21 +3194,6 @@ async function _loadLiveDataInner() {
     })
     .subscribe());
 
-  // New customer images arrive through the webhook after Twilio has already
-  // acknowledged the text. Refresh this gallery independently so an open
-  // contact gains every copied image without an app restart.
-  __realtimeChannels.push(__db.channel('v3-contact-photos')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'contact_photos' }, async () => {
-      try {
-        const { data, error } = await __db.from('contact_photos')
-          .select('id, contact_id, url, caption').limit(1000);
-        if (error) { console.warn('[CRM] realtime contact_photos refetch failed:', error.message); return; }
-        window.CRM.contactPhotos = data || [];
-        window.dispatchEvent(new CustomEvent('crm-data-changed', { detail: { table: 'contact_photos' } }));
-      } catch (e) { console.warn('[CRM] realtime contact_photos handler error:', e.message); }
-    })
-    .subscribe());
-
 }
 
 // Lightweight refetch (no resubscribing) for online/focus reconciliation.
@@ -3451,7 +3203,7 @@ async function refetchAll() {
   if (!__db || !window.CRM.authed) return;
   const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
   try {
-    const [c, e, p, i, m, jp, cp, dnc] = await Promise.all([
+    const [c, e, p, i, m, jp, dnc] = await Promise.all([
       // THIRD fetch path: must use the same CONTACT_COLS as initial load +
       // realtime, or the fields it omits null out on every focus/online
       // refetch (the ai_summary card vanished this way, review 2026-06-10).
@@ -3461,15 +3213,14 @@ async function refetchAll() {
       // + V3 creator columns (length_ft, include_*, pom_*, deposit,
       // line items, discount, notes) would blank them when the user
       // comes back to the tab after a brief disconnect.
-      __db.from('proposals').select('id, token, contact_id, pricing_tier, total, signed_total, amp_type, selected_amp, status, copied_at, created_at, viewed_at, signed_at, sent_at, approved_at, creator_version, length_ft, include_cord, include_inlet, include_permit, pom_offered, pom_accepted, require_deposit, deposit_rate, extra_line_items, discount_type, discount_value, notes, superseded_at, superseded_by').order('created_at', { ascending: false }).limit(500),
+      __db.from('proposals').select('id, token, document_number, contact_id, pricing_tier, total, signed_total, amp_type, selected_amp, status, copied_at, created_at, viewed_at, signed_at, sent_at, approved_at, creator_version, length_ft, include_cord, include_inlet, include_permit, pom_offered, pom_accepted, require_deposit, deposit_rate, extra_line_items, discount_type, discount_value, notes, superseded_at, superseded_by, signature_revision, approval_source, accepted_at, approval_channel').order('created_at', { ascending: false }).limit(500),
       __db.from('invoices').select(// Schema notes (verified empirically 2026-05-01): the invoices table has
 // NO `kind` / `sent_at` / `viewed_at` columns. mapInvoice derives them:
 // kind from a $-amount heuristic, sent_at from created_at, viewed_at = null.
 // If those columns ever get added, expand the SELECT and the mapper.
-'id, token, contact_id, proposal_id, total, status, created_at, paid_at, payment_method, line_items, creator_version').order('created_at', { ascending: false }).limit(500),
+'id, token, document_number, contact_id, proposal_id, total, status, created_at, due_at, payment_terms, paid_at, payment_method, line_items, creator_version').order('created_at', { ascending: false }).limit(500),
       __db.from('messages').select(MSG_COLS).gte('created_at', since).order('created_at', { ascending: false }).limit(2000),
       __db.from('job_photos').select('id, contact_id, url, storage_path, caption, uploaded_by, uploaded_at, annotated, photo_kind').order('uploaded_at', { ascending: false }).limit(1000),
-      __db.from('contact_photos').select('id, contact_id, url, caption').limit(1000),
       __fetchDncPhoneSet(__db),
     ]);
     if (c.error || dnc.error) {
@@ -3480,15 +3231,12 @@ async function refetchAll() {
       window.CRM.contactsLoadFailed = false;
       window.CRM.dncPhones = dnc.data || [];
       window.CRM.contacts = c.data.map(mapContact).filter(x => !x.archived);
-      window.CRM.contactsFromSnapshot = false;
-      __saveContactSnapshot(window.CRM.contacts, window.CRM.dncPhones);
     }
     if (e.data) window.CRM.events = e.data.map(mapEvent);
     if (p.data) window.CRM.proposals = p.data.map(mapProposal);
     if (i.data) { await loadPaidByInvoice(); window.CRM.invoices = i.data.map(mapInvoice); }
     if (m.data) window.CRM.messages = applyLocalReads(m.data.map(mapMessage));
     if (jp.data) window.CRM.jobPhotos = jp.data;
-    if (cp.data) window.CRM.contactPhotos = cp.data;
     window.dispatchEvent(new CustomEvent('crm-data-changed', { detail: { table: 'all' } }));
   } catch (err) {
     window.CRM.contactsLoadFailed = true;

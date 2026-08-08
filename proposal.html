@@ -516,6 +516,9 @@ window.addEventListener('DOMContentLoaded', async () => {
     return;
   }
   P = data;
+  // The public DTO intentionally does not echo bearer capabilities. The
+  // customer page already owns this token from its URL.
+  P.token = token;
   // FORWARD CUTOVER (2026-06-09): new-standard proposals (deposit_rate other
   // than the legacy 50%) render on the new proposal page. Existing 50%
   // proposals stay on this proven page so their locked terms never shift.

@@ -3266,6 +3266,7 @@ function JobSheet({ ev, contact, durMin, onClose, onReschedule, onSetInstaller, 
 // Mixed list of proposals + invoices, sorted by sent_at desc.
 function FinanceList({ proposals, invoices, contacts, events = [], onOpen, activeContactId }) {
   const [view, setView] = React.useState('all'); // 'all' | 'invoices' | 'proposals'
+  const [reconBusy, setReconBusy] = React.useState(false);
   const getContact = id => contacts.find(c=>c.id===id);
   const pinned = window.usePinned ? window.usePinned() : new Set();
 
@@ -3406,6 +3407,40 @@ function FinanceList({ proposals, invoices, contacts, events = [], onOpen, activ
     const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,'+encodeURIComponent(csv); a.download = 'key-finance.csv'; a.click();
   };
 
+  const exportReconciliation = async () => {
+    if (reconBusy || !window.CRM?.__invokeFn) return;
+    setReconBusy(true);
+    try {
+      const { data, error } = await window.CRM.__invokeFn('record-payment', { body: { action:'reconciliation_report' } });
+      if (error || !data?.ok) {
+        window.showToast?.('Money audit failed: ' + (error?.message || data?.error || 'unknown'));
+        return;
+      }
+      if (!data.issue_count) {
+        window.showToast?.('Money audit passed. No ledger mismatches found.');
+        return;
+      }
+      const rows = [
+        ['Invoice','Contact','Invoice status','Invoice total','Net paid','Raw remaining','Issue'],
+        ...data.issues.map(i => [i.invoice_document_number || i.invoice_id, i.contact_name || '', i.invoice_status,
+          i.invoice_total, i.net_paid, i.raw_remaining, i.reconciliation_state]),
+      ];
+      const escapeCell = (val) => {
+        let s = val == null ? '' : String(val);
+        if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+        return '"' + s.replace(/"/g, '""') + '"';
+      };
+      const csv = '\ufeff' + rows.map(row => row.map(escapeCell).join(',')).join('\n');
+      const a = document.createElement('a');
+      a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+      a.download = 'bpp-money-reconciliation.csv';
+      a.click();
+      window.showToast?.(`${data.issue_count} money audit issue${data.issue_count === 1 ? '' : 's'} exported.`);
+    } finally {
+      setReconBusy(false);
+    }
+  };
+
   const [quickQuoteOpen, setQuickQuoteOpen] = React.useState(false);
 
   return (
@@ -3422,6 +3457,12 @@ function FinanceList({ proposals, invoices, contacts, events = [], onOpen, activ
       }}>
         <span style={{ fontSize:12, fontWeight:700, color:'#8a93a6', letterSpacing:'0.06em', textTransform:'uppercase' }}>Money</span>
         <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+          <button onClick={exportReconciliation} disabled={reconBusy} style={{
+            minHeight:36, padding:'0 12px', border:'1px solid rgba(27,43,75,0.15)',
+            background:'transparent', color:NAVY, borderRadius:100,
+            fontFamily:'inherit', fontSize:13, fontWeight:600, cursor:reconBusy?'wait':'pointer',
+            opacity:reconBusy?0.6:1,
+          }}>{reconBusy ? 'Auditing...' : 'Audit money'}</button>
           <button onClick={exportCSV} style={{
             minHeight:36, padding:'0 12px', border:'1px solid rgba(27,43,75,0.15)',
             background:'transparent', color:NAVY, borderRadius:100,
@@ -3568,38 +3609,13 @@ function FinanceList({ proposals, invoices, contacts, events = [], onOpen, activ
           // Subline omits the word "invoice": the row already renders a standalone
           // INVOICE pill, so "Deposit invoice" next to [INVOICE] read it twice.
           const itemLabel = item._kind === 'proposal' ? item.label : capitalize(item.kind);
-          // 2026-05-26: inline mark-paid button on Finance lens.
-          // Key collected some invoices out-of-band (Venmo/cash/check);
-          // this lets him flip status from the list without navigating
-          // through to the contact. Optimistic update + 5-second undo
-          // mirrors the in-contact markPaid handler.
+          // Payment truth is ledger-backed. This shortcut opens the contact's
+          // money controls, where amount and method are recorded atomically.
           const isUnpaidInvoice = item._kind !== 'proposal'
             && (item.status === 'sent' || item.status === 'viewed' || isInvoiceOverdue(item, installedSet));
-          const onMarkPaid = async (e) => {
+          const onRecordPayment = (e) => {
             e.stopPropagation();
-            if (!window.CRM?.__db) return;
-            const inv = (window.CRM.invoices || []).find(x => x.id === item.id) || item;
-            const prevStatus = inv.status;
-            const prevPaidAt = inv.paid_at;
-            const nowIso = new Date().toISOString();
-            inv.status = 'paid'; inv.paid_at = nowIso;
-            window.dispatchEvent(new CustomEvent('crm-data-changed'));
-            const { error } = await window.CRM.__db.from('invoices').update({ status: 'paid', paid_at: nowIso }).eq('id', inv.id);
-            if (error) {
-              inv.status = prevStatus; inv.paid_at = prevPaidAt;
-              window.dispatchEvent(new CustomEvent('crm-data-changed'));
-              window.showToast?.(`Mark paid failed: ${error.message}`);
-              return;
-            }
-            window.showToast?.(`Marked ${contactName(c)} paid`, {
-              undo: async () => {
-                const liveNow = (window.CRM.invoices || []).find(x => x.id === inv.id) || inv;
-                liveNow.status = prevStatus; liveNow.paid_at = prevPaidAt;
-                window.dispatchEvent(new CustomEvent('crm-data-changed'));
-                await window.CRM.__db.from('invoices').update({ status: prevStatus, paid_at: prevPaidAt }).eq('id', inv.id);
-              },
-              duration: 5000,
-            });
+            onOpen(item.contact_id, 'finance', item.id);
           };
           return (
             <div key={item.id} role="button" tabIndex={0}
@@ -3637,8 +3653,8 @@ function FinanceList({ proposals, invoices, contacts, events = [], onOpen, activ
               {isUnpaidInvoice && (
                 <button
                   type="button"
-                  onClick={onMarkPaid}
-                  title="Mark invoice paid"
+                  onClick={onRecordPayment}
+                  title="Open payment controls"
                   style={{
                     flexShrink:0, minHeight:44, padding:'0 12px', borderRadius:8,
                     background:'#10b981', color:'white', border:'none',
@@ -3646,7 +3662,7 @@ function FinanceList({ proposals, invoices, contacts, events = [], onOpen, activ
                     fontFamily:'inherit', fontSize:13, fontWeight:700, whiteSpace:'nowrap',
                   }}
                 >
-                  ✓ Mark paid
+                  Record payment
                 </button>
               )}
             </div>
@@ -4331,16 +4347,6 @@ const CALL_PALETTE = {
 function CallsList({ calls, contacts, onOpen, activeContactId }) {
   const getContact = id => contacts.find(c => c.id === id);
   const pinned = window.usePinned ? window.usePinned() : new Set();
-  const [selectedCall, setSelectedCall] = React.useState(null);
-  const callTriggerRef = React.useRef(null);
-  const openCallDetail = (call, trigger) => {
-    callTriggerRef.current = trigger || document.activeElement;
-    setSelectedCall(call);
-  };
-  const closeCallDetail = () => {
-    setSelectedCall(null);
-    requestAnimationFrame(() => callTriggerRef.current?.focus?.());
-  };
 
   // Pinned-first: contacts you've starred surface to the top of every
   // calls slice (today / missed / voicemails / all). Within each pin
@@ -4488,7 +4494,7 @@ function CallsList({ calls, contacts, onOpen, activeContactId }) {
             return (
               <div key={cl.id} style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
                 <span style={{ fontSize:13, fontWeight:600, color:'#991B1B', flex:1 }}>{contactName(c)} · {formatPhone(c?.phone)}</span>
-                <button onClick={(e)=>openCallDetail(cl,e.currentTarget)} style={{ fontSize:11, fontWeight:700, color:'white', background:'#991B1B', border:'none', borderRadius:6, padding:'4px 10px', minHeight:44, cursor:'pointer', fontFamily:'inherit' }}>Open</button>
+                <button onClick={()=>onOpen(cl.contact_id,'calls')} style={{ fontSize:11, fontWeight:700, color:'white', background:'#991B1B', border:'none', borderRadius:6, padding:'4px 10px', minHeight:44, cursor:'pointer', fontFamily:'inherit' }}>Open</button>
               </div>
             );
           })}
@@ -4500,7 +4506,7 @@ function CallsList({ calls, contacts, onOpen, activeContactId }) {
           {voicemails.map(cl => {
             const c = getContact(cl.contact_id);
             return (
-              <button key={cl.id} data-call-event-id={cl.id} onClick={(e)=>openCallDetail(cl,e.currentTarget)} style={{ width:'100%', minHeight:44, background:'white', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:10, padding:'13px 18px', borderBottom:'1px solid #F5F5F3', textAlign:'left' }}>
+              <button key={cl.id} onClick={()=>onOpen(cl.contact_id,'calls')} style={{ width:'100%', background: activeContactId===cl.contact_id?'#FFFBEB':'white', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:10, padding:'13px 18px', borderBottom:'1px solid #F5F5F3', textAlign:'left', boxShadow: activeContactId===cl.contact_id?'inset 2px 0 0 '+GOLD:'none' }}>
                 <div style={{ width:40,height:40,borderRadius:'50%',background:'#EDE9FE',display:'flex',alignItems:'center',justifyContent:'center',color:'#7C3AED',flexShrink:0 }}><div style={{width:18,height:18}}>{Icons.voicemail}</div></div>
                 <div style={{ flex:1, minWidth:0 }}>
                   <div style={{ display:'flex', alignItems:'center', gap:5 }}>
@@ -4578,7 +4584,7 @@ function CallsList({ calls, contacts, onOpen, activeContactId }) {
           return (
             // CM-29: same capped entrance cascade as the inbox; `backwards` fill keeps
             // the press-scale, gated off during an active call search.
-            <button key={cl.id} data-call-event-id={cl.id} onClick={(e)=>openCallDetail(cl,e.currentTarget)} style={{ width:'100%', minHeight:44, background:'white', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:10, padding:'13px 18px', borderBottom:'1px solid #F5F5F3', textAlign:'left',
+            <button key={cl.id} onClick={()=>onOpen(cl.contact_id,'calls')} style={{ width:'100%', background: activeContactId===cl.contact_id?'#FFFBEB':'white', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:10, padding:'13px 18px', borderBottom:'1px solid #F5F5F3', textAlign:'left',
               animation: (!searchingCalls && i < 6) ? `bpp-fade-up 200ms cubic-bezier(0.2,0.8,0.3,1) ${i * 32}ms backwards` : undefined }}>
               <div style={{ position:'relative', flexShrink:0 }}>
                 <div style={{ width:40,height:40,borderRadius:'50%',background: hasVm?'#EDE9FE':isSpam?'#f3f4f6':p.bg,display:'flex',alignItems:'center',justifyContent:'center',color: hasVm?'#7C3AED':isSpam?'#6b7280':p.color }}>
@@ -4663,7 +4669,7 @@ function CallsList({ calls, contacts, onOpen, activeContactId }) {
           onChange={v => { setDial(v); if (filterQuery !== null && v !== filterQuery) { setFilterQuery(null); if (filter !== 'all') setFilter('all'); } }}
           onClear={() => { setDial(''); setFilter('all'); setFilterQuery(null); }}
           onClose={closeSearch}
-          onEnter={() => { const first = searchedVisible[0]; if (searchingCalls && first) { openCallDetail(first, document.activeElement); closeSearch(); } }}
+          onEnter={() => { const first = searchedVisible[0]; if (searchingCalls && first && first.contact_id) { onOpen(first.contact_id, 'calls'); closeSearch(); } }}
           filters={filterOpts}
           activeFilter={filter}
           onFilter={applyCallFilter}
@@ -4671,69 +4677,6 @@ function CallsList({ calls, contacts, onOpen, activeContactId }) {
           setFilterOpen={setPickerOpen}
         />
       )}
-      {selectedCall && window.ModalShell && (() => {
-        const cl = selectedCall;
-        const c = getContact(cl.contact_id);
-        const direction = cl.direction === 'out' ? 'Outgoing' : cl.direction === 'missed' ? 'Missed' : 'Incoming';
-        const source = cl.from_phone ? formatPhone(cl.from_phone) : 'Not available';
-        const destination = cl.to_phone ? formatPhone(cl.to_phone) : 'Not available';
-        const callbackPhone = cl.direction === 'out' ? cl.to_phone : cl.from_phone;
-        const detailRows = [
-          ['Contact', c ? contactName(c) : 'Unknown contact'],
-          ['Direction', direction],
-          ['Status', cl.status || 'Not available'],
-          ['Time', cl.started_at ? new Date(cl.started_at).toLocaleString() : 'Not available'],
-          ['Duration', formatDuration(cl.voicemail_duration || cl.duration_sec)],
-          ['From', source],
-          ['To', destination],
-        ];
-        const openDialer = () => {
-          const returnFocus = callTriggerRef.current;
-          setSelectedCall(null);
-          setTimeout(() => window.dispatchEvent(new CustomEvent('crm-open-keypad', {
-            detail: { seedDial: callbackPhone || '', returnFocus },
-          })), 0);
-        };
-        return (
-          <window.ModalShell
-            open={true}
-            onClose={closeCallDetail}
-            title="Call details"
-            footer={callbackPhone ? (
-              <button type="button" onClick={openDialer} style={{ width:'100%', minHeight:44, border:0, borderRadius:8, background:GOLD, color:NAVY, fontSize:14, fontWeight:700, fontFamily:'inherit', cursor:'pointer' }}>
-                Call back
-              </button>
-            ) : null}
-          >
-            <div data-call-detail-id={cl.id} role="dialog" aria-label="Call details">
-              {detailRows.map(([label, value]) => (
-                <div key={label} style={{ display:'grid', gridTemplateColumns:'92px minmax(0,1fr)', gap:12, padding:'9px 0', borderBottom:'1px solid #F1F2F4', fontSize:13 }}>
-                  <span style={{ color:MUTED, fontWeight:600 }}>{label}</span>
-                  <span style={{ color:NAVY, overflowWrap:'anywhere' }}>{value}</span>
-                </div>
-              ))}
-              {(cl.transcript || cl.voicemail_transcript) && (
-                <div style={{ paddingTop:14 }}>
-                  <div style={{ fontSize:12, fontWeight:700, color:MUTED, marginBottom:5 }}>Transcript</div>
-                  <div style={{ fontSize:13, lineHeight:1.5, color:NAVY, whiteSpace:'pre-wrap' }}>{cl.transcript || cl.voicemail_transcript}</div>
-                </div>
-              )}
-              {cl.ai_summary && (
-                <div style={{ paddingTop:14 }}>
-                  <div style={{ fontSize:12, fontWeight:700, color:MUTED, marginBottom:5 }}>AI summary</div>
-                  <div style={{ fontSize:13, lineHeight:1.5, color:NAVY, whiteSpace:'pre-wrap' }}>{cl.ai_summary}</div>
-                </div>
-              )}
-              {cl.notes && (
-                <div style={{ paddingTop:14 }}>
-                  <div style={{ fontSize:12, fontWeight:700, color:MUTED, marginBottom:5 }}>Notes</div>
-                  <div style={{ fontSize:13, lineHeight:1.5, color:NAVY, whiteSpace:'pre-wrap' }}>{cl.notes}</div>
-                </div>
-              )}
-            </div>
-          </window.ModalShell>
-        );
-      })()}
     </div>
   );
 }

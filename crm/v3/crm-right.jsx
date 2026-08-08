@@ -6001,8 +6001,8 @@ function MoneyCard({ firstName, tierText, dueAmount, totalAmount, paidAmount, pa
 
   // RECORD PAYMENT sheet
   if (sheet) {
-    const methods = ['Cash', 'Card (offline)', 'Check', 'Paid elsewhere'];
-    const icons = { Cash: '💵', 'Card (offline)': '💳', Check: '🧾', 'Paid elsewhere': '💸' };
+    const methods = ['Cash', 'External card payment', 'Check', 'Other external payment'];
+    const icons = { Cash: '💵', 'External card payment': '💳', Check: '🧾', 'Other external payment': '💸' };
     const chip = (m) => ({
       minHeight: 48, borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit', fontSize: 14, fontWeight: 700,
       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
@@ -6029,7 +6029,7 @@ function MoneyCard({ firstName, tierText, dueAmount, totalAmount, paidAmount, pa
         <button style={{ ...navyBtn, opacity: busy || amtNum <= 0 ? 0.6 : 1 }} disabled={busy || amtNum <= 0}
           onClick={async () => { setBusy(true); const ok = await onRecord(amtNum, method); setBusy(false); if (ok) setSheet(false); }}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-          {busy ? 'Recording...' : 'Mark ' + money(amtNum) + ' paid'}
+          {busy ? 'Recording...' : 'Record ' + money(amtNum) + ' payment'}
         </button>
         <div style={{ textAlign: 'center', marginTop: 10 }}>
           <button onClick={() => setSheet(false)} style={{ background: 'none', border: 'none', color: MUT, fontSize: 13, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', minHeight: 44, padding: '0 16px' }}>Cancel</button>
@@ -6091,10 +6091,10 @@ function MoneyCard({ firstName, tierText, dueAmount, totalAmount, paidAmount, pa
       ) : (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '6px 0 2px' }}>
           <span style={{ ...moneyBig, fontSize: 40, lineHeight: 1.05 }}>{money(dueAmount)}</span>
-          <button onClick={() => { setEditVal(String(totalAmount ?? dueAmount ?? '')); setEditing(true); }} aria-label="Edit price" title="Edit price"
+          {onEdit && <button onClick={() => { setEditVal(String(totalAmount ?? dueAmount ?? '')); setEditing(true); }} aria-label="Edit price" title="Edit price"
             style={{ width: 44, height: 44, borderRadius: 8, background: 'transparent', border: 'none', cursor: 'pointer', color: MUT, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-          </button>
+          </button>}
         </div>
       )}
       <div style={{ fontSize: 13, color: MUT, marginBottom: 16 }}>{[partial ? (money(paidAmount) + ' of ' + money(totalAmount) + ' paid') : null, tierText, signedWhen].filter(Boolean).join('  ·  ')}</div>
@@ -6135,6 +6135,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
   // modals stay open across re-renders from realtime updates.
   const [proposalModalOpen, setProposalModalOpen] = React.useState(false);
   const [invoiceModalOpen,  setInvoiceModalOpen]  = React.useState(false);
+  const [receiptModalOpen,  setReceiptModalOpen]  = React.useState(false);
   // V3: edit-mode targets (id only - we look up the row at render time so
   // realtime updates flow through automatically).
   const [editingProposalId, setEditingProposalId] = React.useState(null);
@@ -6171,48 +6172,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
     return () => window.removeEventListener('crm-open-new-proposal', onOpen);
   }, [contact.id]);
 
-  // Mark paid - manual override for cash/check payments. Optimistic; rolls
-  // back if the DB update fails.
   const markingRef = React.useRef(new Set());
-  const markPaid = async (inv) => {
-    if (markingRef.current.has(inv.id)) return;
-    markingRef.current.add(inv.id);
-    try {
-      const now = new Date().toISOString();
-      // Look up the live invoice by id - `inv` may be a stale closure if
-      // realtime swapped the array between when the row rendered and now.
-      const live = (CRM.invoices || []).find(x => x.id === inv.id) || inv;
-      const prevStatus = live.status;
-      const prevPaidAt = live.paid_at;
-      // Optimistic update so the pill flips immediately.
-      live.status = 'paid'; live.paid_at = now;
-      window.dispatchEvent(new CustomEvent('crm-data-changed'));
-      const { error } = await CRM.__db.from('invoices').update({ status: 'paid', paid_at: now }).eq('id', inv.id);
-      if (error) {
-        live.status = prevStatus; live.paid_at = prevPaidAt;
-        window.dispatchEvent(new CustomEvent('crm-data-changed'));
-        window.showToast?.(`Mark paid failed: ${error.message}`);
-        return;
-      }
-      // 5-second undo - fat-finger insurance. Pattern matches archiveJob.
-      // Re-resolve the live invoice on undo because realtime may have
-      // swapped CRM.invoices since the optimistic mutation.
-      window.showToast?.('Marked paid', {
-        undo: async () => {
-          const liveNow = (CRM.invoices || []).find(x => x.id === inv.id) || live;
-          liveNow.status = prevStatus; liveNow.paid_at = prevPaidAt;
-          window.dispatchEvent(new CustomEvent('crm-data-changed'));
-          if (CRM.__db) {
-            const { error: undoErr } = await CRM.__db.from('invoices').update({ status: prevStatus, paid_at: prevPaidAt }).eq('id', inv.id);
-            if (undoErr) window.showToast?.(`Undo failed: ${undoErr.message}`);
-          }
-        },
-        duration: 5000,
-      });
-    } finally {
-      markingRef.current.delete(inv.id);
-    }
-  };
 
   const tierLabel = t => t === 'premium_plus' ? 'Premium+' : t === 'premium' ? 'Premium' : 'Standard';
 
@@ -6252,29 +6212,59 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
   // (or "cancelled" if your schema uses that). Uses 'voided' to align
   // with the FIN_PILL palette below.
   const voidInvoice = async (inv) => {
-    if (!CRM.__db) return;
+    if (!CRM.__invokeFn) return;
     if (markingRef.current.has('void:' + inv.id)) return;
     markingRef.current.add('void:' + inv.id);
     const live = (CRM.invoices || []).find(x => x.id === inv.id) || inv;
-    const prev = live.status;
-    live.status = 'voided';
-    window.dispatchEvent(new CustomEvent('crm-data-changed'));
-    const { error } = await CRM.__db.from('invoices').update({ status: 'voided' }).eq('id', inv.id);
-    if (error) {
-      live.status = prev;
-      window.dispatchEvent(new CustomEvent('crm-data-changed'));
-      window.showToast?.(`Void failed: ${error.message}`);
+    const { data, error } = await CRM.__invokeFn('record-payment', { body: {
+      action: 'void_invoice', invoice_id: inv.id,
+      reason: 'Operator voided invoice', idempotency_key: crypto.randomUUID(),
+    } });
+    markingRef.current.delete('void:' + inv.id);
+    if (error || !data?.ok) {
+      window.showToast?.(`Void failed: ${error?.message || data?.error || 'unknown'}`);
       return;
     }
-    window.showToast?.('Invoice voided', {
-      undo: async () => {
-        const liveNow = (CRM.invoices || []).find(x => x.id === inv.id) || live;
-        liveNow.status = prev;
-        window.dispatchEvent(new CustomEvent('crm-data-changed'));
-        if (CRM.__db) await CRM.__db.from('invoices').update({ status: prev }).eq('id', inv.id);
-      },
-      duration: 5000,
+    live.status = 'voided';
+    window.dispatchEvent(new CustomEvent('crm-data-changed'));
+    window.showToast?.('Invoice voided');
+  };
+
+  const recordOfflineApproval = async (proposal) => {
+    if (!CRM.__invokeFn || !proposal) return;
+    const rawChannel = window.prompt('How did the customer approve? Enter phone, text, email, or in person.', 'phone');
+    if (rawChannel == null) return;
+    const channelMap = { phone:'phone', text:'text', email:'email', 'in person':'in_person', in_person:'in_person' };
+    const channel = channelMap[String(rawChannel).trim().toLowerCase()];
+    if (!channel) { window.showToast?.('Use phone, text, email, or in person'); return; }
+    const note = window.prompt('Approval note or reference. Optional.', '') || '';
+    const ok = await window.confirmAction?.({
+      title:'Record customer approval?',
+      body:'This records an offline approval. It is not an electronic signature, card authorization, or payment.',
+      confirmLabel:'Record approval',
     });
+    if (!ok) return;
+    const storageKey = `bpp-offline-approval:${proposal.id}:${proposal.signature_revision || 1}:${channel}:${note}`;
+    let idempotencyKey = '';
+    try { idempotencyKey = localStorage.getItem(storageKey) || ''; } catch (_) {}
+    if (!idempotencyKey) {
+      idempotencyKey = crypto.randomUUID();
+      try { localStorage.setItem(storageKey, idempotencyKey); } catch (_) {}
+    }
+    const { data, error } = await CRM.__invokeFn('proposal-mutate', { body: {
+      action:'record_offline_approval', proposal_id:proposal.id,
+      proposal_revision:Number(proposal.signature_revision || 1),
+      approval_channel:channel, note, idempotency_key:idempotencyKey,
+    } });
+    if (error || !data?.ok) {
+      window.showToast?.(`Approval failed: ${error?.message || data?.error || 'unknown'}`);
+      return;
+    }
+    try { localStorage.removeItem(storageKey); } catch (_) {}
+    proposal.status = String(data.status || 'Signed').toLowerCase();
+    proposal.approval_source = 'operator_recorded';
+    window.dispatchEvent(new CustomEvent('crm-data-changed'));
+    window.showToast?.('Customer approval recorded');
   };
 
   // V3: bring a cancelled proposal back to life. The 5-second undo on
@@ -6307,53 +6297,40 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
     window.showToast?.('Proposal revived');
   };
   const reviveInvoice = async (inv) => {
-    if (!CRM.__db) return;
+    if (!CRM.__invokeFn) return;
     if (markingRef.current.has('revive:'+inv.id)) return;
     markingRef.current.add('revive:'+inv.id);
     const live = (CRM.invoices || []).find(x => x.id === inv.id) || inv;
-    const prev = live.status;
-    live.status = 'sent';
-    window.dispatchEvent(new CustomEvent('crm-data-changed'));
-    const { error } = await CRM.__db.from('invoices')
-      .update({ status: 'unpaid' })
-      .eq('id', inv.id)
-      // 'cancelled' is the RETIRED v1 CRM's word for a killed invoice (v3 writes
-      // 'voided'). Two legacy 'cancelled' rows exist; include them so the revive
-      // UPDATE matches and they are no longer stranded.
-      .in('status', ['voided', 'refunded', 'cancelled', 'Voided', 'Refunded', 'Cancelled']);
+    const { data, error } = await CRM.__invokeFn('record-payment', { body: {
+      action: 'reopen_invoice', invoice_id: inv.id,
+      reason: 'Operator reopened invoice', idempotency_key: crypto.randomUUID(),
+    } });
     markingRef.current.delete('revive:'+inv.id);
-    if (error) {
-      live.status = prev;
-      window.dispatchEvent(new CustomEvent('crm-data-changed'));
-      window.showToast?.(`Revive failed: ${error.message}`);
+    if (error || !data?.ok) {
+      window.showToast?.(`Revive failed: ${error?.message || data?.error || 'unknown'}`);
       return;
     }
+    live.status = 'sent';
+    window.dispatchEvent(new CustomEvent('crm-data-changed'));
     window.showToast?.('Invoice revived');
   };
 
-  // V3: hard delete (distinct from cancel/void which is reversible). Used
-  // for proposals/invoices Key created by mistake or wants gone entirely.
+  // Hard delete is reserved for untouched drafts. The service RPC row-locks
+  // and refuses any issued document or document with money history.
   const deleteProposal = async (prop) => {
-    if (!CRM.__db) return;
+    if (!CRM.__invokeFn) return;
     const ok = await window.confirmAction?.({
       title: 'Delete this proposal?',
-      body: 'This permanently removes the proposal and breaks the customer link. Cannot be undone. Use Cancel instead if you might need it back.',
+      body: 'This permanently removes an untouched draft. Issued proposals must be cancelled so their history stays intact.',
       confirmLabel: 'Delete permanently',
       destructive: true,
     });
     if (!ok) return;
-    // The proposals table has a self-referential FK (superseded_by) created by
-    // the auto-supersede trigger when a newer proposal lands for the same
-    // contact. Postgres rejects deletes that leave dangling references, so
-    // we clear the FK on any rows pointing at us BEFORE deleting. SET NULL
-    // matches the auto-supersede semantics - the old proposal is just no
-    // longer marked as superseded by anything.
-    await CRM.__db.from('proposals').update({ superseded_by: null }).eq('superseded_by', prop.id);
-    // Same treatment for invoices that point at this proposal: keep the
-    // invoice (it may have been sent / paid) but detach the link.
-    await CRM.__db.from('invoices').update({ proposal_id: null }).eq('proposal_id', prop.id);
-    const { error } = await CRM.__db.from('proposals').delete().eq('id', prop.id);
-    if (error) { window.showToast?.(`Delete failed: ${error.message}`); return; }
+    const { data, error } = await CRM.__invokeFn('record-payment', { body: {
+      action: 'delete_draft', document_type: 'proposal', document_id: prop.id,
+      idempotency_key: crypto.randomUUID(),
+    } });
+    if (error || !data?.ok) { window.showToast?.(`Delete refused: ${error?.message || data?.error || 'unknown'}`); return; }
     const arr = CRM.proposals || [];
     const idx = arr.findIndex(x => x.id === prop.id);
     if (idx >= 0) arr.splice(idx, 1);
@@ -6361,16 +6338,19 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
     window.showToast?.('Proposal deleted');
   };
   const deleteInvoice = async (inv) => {
-    if (!CRM.__db) return;
+    if (!CRM.__invokeFn) return;
     const ok = await window.confirmAction?.({
       title: 'Delete this invoice?',
-      body: 'This permanently removes the invoice and breaks the customer link. Cannot be undone. Use Void instead if you might need it back.',
+      body: 'This permanently removes an untouched draft. Issued invoices must be voided so their history stays intact.',
       confirmLabel: 'Delete permanently',
       destructive: true,
     });
     if (!ok) return;
-    const { error } = await CRM.__db.from('invoices').delete().eq('id', inv.id);
-    if (error) { window.showToast?.(`Delete failed: ${error.message}`); return; }
+    const { data, error } = await CRM.__invokeFn('record-payment', { body: {
+      action: 'delete_draft', document_type: 'invoice', document_id: inv.id,
+      idempotency_key: crypto.randomUUID(),
+    } });
+    if (error || !data?.ok) { window.showToast?.(`Delete refused: ${error?.message || data?.error || 'unknown'}`); return; }
     const arr = CRM.invoices || [];
     const idx = arr.findIndex(x => x.id === inv.id);
     if (idx >= 0) arr.splice(idx, 1);
@@ -6391,7 +6371,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
   // misleading "An email is already in progress" toast that reads like a failure
   // while the first send proceeds fine (audit 2026-06-22 [19]).
   const [sendingEmail, setSendingEmail] = React.useState(false);
-  const emailDoc = async ({ template, contact_id, proposal, invoice }) => {
+  const emailDoc = async ({ template, contact_id, proposal, invoice, payment }) => {
     if (!contact?.email) { window.showToast?.('No email on contact, add one first'); return; }
     // In-flight guard: a double-tap must not fire two identical customer emails
     // (irreversible). Set before the confirm so a second tap is blocked at once;
@@ -6411,7 +6391,9 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
     // so url=null (the templates carry no link var for them).
     const isBalanceReceipt = template === 'receipt-deposit' || template === 'receipt-partial';
     const url = template === 'receipt'
-      ? (invoice?.token ? `https://backuppowerpro.com/receipt.html?token=${invoice.token}` : null)
+      ? (payment?.receipt_token
+        ? `https://backuppowerpro.com/receipt.html?receipt=${encodeURIComponent(payment.receipt_token)}`
+        : (invoice?.token ? `https://backuppowerpro.com/receipt.html?token=${invoice.token}` : null))
       : isBalanceReceipt ? null
       : (proposal ? proposalUrl(proposal) : (invoice ? invoiceUrl(invoice) : null));
     const total = (proposal?.amount_cents || invoice?.amount_cents || 0) / 100;
@@ -6421,7 +6403,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
     const SUBJECTS = {
       proposal:    `Your generator inlet quote from Backup Power Pro`,
       invoice:     `Invoice from Backup Power Pro`,
-      receipt:     `Paid in full, your receipt from Backup Power Pro`,
+      receipt:     `Payment receipt from Backup Power Pro`,
       'receipt-deposit': `Deposit received, your install is booked`,
       'receipt-partial': `Payment received, your updated balance`,
       'refund-receipt': `Your refund from Backup Power Pro`,
@@ -6437,11 +6419,10 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
       amp_type: proposal?.amp_type || '30',
       first_name: firstName,
     };
-    // Bind a real, stable document number so the email never shows the sample
-    // "BPP-2026-0142". Same 8-char id scheme the receipt uses, so an invoice and
-    // its paid receipt share one number (continuity for the customer).
+    // Prefer the server-assigned public number. Historical documents retain a
+    // short legacy reference without altering their stored bytes.
     if (template === 'invoice' && invoice) {
-      variables.invoice_num = (invoice.id || '').slice(0, 8).toUpperCase();
+      variables.invoice_num = invoice.document_number || (invoice.id || '').slice(0, 8).toUpperCase();
       // Balance-aware total: once money is in (paid_cents > 0, cumulative net
       // of refunds, loaded in crm-data.js), the invoice email's "Pay {{total}}
       // securely" carries the REMAINING balance, never the full job price
@@ -6454,14 +6435,31 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
         variables.total = fmtC(Math.max(0, totalC - paidC));
       }
     }
-    if (template === 'proposal' && proposal) variables.quote_num = (proposal.id || '').slice(0, 8).toUpperCase();
+    if (template === 'proposal' && proposal) variables.quote_num = proposal.document_number || (proposal.id || '').slice(0, 8).toUpperCase();
     // Receipt-specific facts the receipt template binds. Derived from the
     // invoice row exactly as receipt-comp.html does, so the email matches the
     // view page (receipt number = first 8 of the id, uppercased).
     if (template === 'receipt' && invoice) {
-      variables.receipt_num = (invoice.id || '').slice(0, 8).toUpperCase();
-      variables.paid_date = invoice.paid_at ? formatDate(invoice.paid_at, { month:'long', day:'numeric', year:'numeric' }) : '';
-      variables.payment_method = invoice.payment_method || '';
+      const receiptToken = payment?.receipt_token ? String(payment.receipt_token).replace(/-/g, '') : '';
+      variables.receipt_num = payment?.document_number || (receiptToken
+        ? receiptToken.slice(0, 8).toUpperCase()
+        : (invoice.id || '').slice(0, 8).toUpperCase());
+      variables.paid_date = payment?.received_at
+        ? formatDate(payment.received_at, { month:'long', day:'numeric', year:'numeric' })
+        : (invoice.paid_at ? formatDate(invoice.paid_at, { month:'long', day:'numeric', year:'numeric' }) : '');
+      variables.payment_method = payment?.method || invoice.payment_method || '';
+      variables.receipt_url = url || '';
+      if (payment) {
+        const paymentC = Math.round((Number(payment.amount) || 0) * 100);
+        const remaining = payment.remaining_after != null
+          ? Number(payment.remaining_after)
+          : Math.max(0, ((invoice.amount_cents || 0) - (invoice.paid_cents || 0)) / 100);
+        variables.total = '$' + (paymentC / 100).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+        variables.balance_remaining = '$' + Number(remaining).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+      } else {
+        const remainingC = Math.max(0, (invoice.amount_cents || 0) - (invoice.paid_cents || 0));
+        variables.balance_remaining = '$' + (remainingC / 100).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+      }
     }
     // Deposit/partial receipts show the HONEST remaining balance, never $0.
     // All numbers come from the invoice aggregate: amount_cents (job total) and
@@ -6477,7 +6475,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
       variables.amount_paid = fmtC(paidC);
       variables.paid_to_date = fmtC(paidC);
       variables.balance_remaining = fmtC(balC);
-      variables.receipt_num = (invoice.id || '').slice(0, 8).toUpperCase();
+      variables.receipt_num = invoice.document_number || (invoice.id || '').slice(0, 8).toUpperCase();
       variables.paid_date = formatDate(invoice.paid_at || new Date().toISOString(), { month:'long', day:'numeric', year:'numeric' });
       variables.payment_method = invoice.payment_method || '';
     }
@@ -6518,7 +6516,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
     // catastrophic mistakes (wrong email, wrong amount, wrong document); the
     // link opens the customer page the email mirrors for a full-content check.
     const TPL_LABEL = {
-      proposal: 'quote', invoice: 'invoice', receipt: 'paid-in-full receipt',
+      proposal: 'quote', invoice: 'invoice', receipt: 'payment receipt',
       'receipt-deposit': 'deposit receipt', 'receipt-partial': 'balance receipt',
       'refund-receipt': 'refund receipt', 'ach-failed': 'bank-transfer retry notice',
       'permit-approved': 'permit-approved note', completion: 'completion note', review: 'review request',
@@ -6535,6 +6533,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
     const amountVal = isRefundReceipt ? sendVariables.refund_amount
       : isAchFailed ? sendVariables.amount
       : isBalanceReceipt ? sendVariables.balance_remaining
+      : template === 'receipt' ? sendVariables.total
       : template === 'invoice' ? sendVariables.total
       : (total ? '$' + total.toLocaleString() : null);
     // #202 durable half: fetch the exact rendered email HTML via dry_run
@@ -6646,6 +6645,8 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
     overdue:   { bg:'#fef2f2', color:'#991b1b', label:'Overdue' },
     approved:  { bg:'#f0fdf4', color:'#16a34a', label:'Approved' },
     signed:    { bg:'#fff8e1', color:'#8a5a00', label:'Signed' },
+    approved_offline: { bg:'#f0fdf4', color:'#16a34a', label:'Offline approved' },
+    accepted_offline: { bg:'#fff8e1', color:'#8a5a00', label:'Offline, deposit due' },
     declined:  { bg:'#f3f4f6', color:'#6b7280', label:'Cancelled', struck:true },
     // Some legacy v1/v2 rows write `cancelled` instead of `declined`
     // (proposals) or `voided` (invoices). Treat them as the same surface
@@ -6854,7 +6855,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
     window.open(linkUrl + sep + 'preview=1', '_blank', 'noopener,noreferrer');
   };
 
-  const FinanceRow = ({ left, money, status, activity, linkUrl, proposal, onMarkPaid, onCancel, onVoid, onEdit, onDelete, onEmail, onRevive, onRefund, divided, kind = 'head', paidDate }) => {
+  const FinanceRow = ({ left, money, status, pillStatus, activity, linkUrl, proposal, paymentReceipts, onRecordReversal, onEmailPaymentReceipt, onMarkPaid, onOfflineApprove, onCancel, onVoid, onEdit, onDelete, onEmail, onRevive, onRefund, divided, kind = 'head', paidDate }) => {
     // 40px on touch (Apple HIG = 44; 40 keeps the row visually compact
     // while staying above the "frustration threshold" Material flags at
     // 48px). Cursor-driven desktop is fine at 32 - but the inline style
@@ -6901,12 +6902,35 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
       (showSend && linkUrl && onMarkPaid) && { label:'Send link', onClick:() => sendLink(linkUrl, false, proposal) },
       (showCopy && linkUrl) && { label:'Copy link', onClick:() => copyLink(linkUrl, proposal) },
       (showView && linkUrl) && { label:'View as customer', onClick:() => viewAsCustomer(linkUrl) },
+      ...(paymentReceipts || []).map(payment => ({
+        label:`Open ${formatMoneyCents(Math.round(Number(payment.amount || 0) * 100))} payment receipt`,
+        onClick:() => window.open(`https://backuppowerpro.com/receipt.html?receipt=${encodeURIComponent(payment.receipt_token)}`, '_blank', 'noopener,noreferrer'),
+      })),
+      ...(paymentReceipts || []).map(payment => ({
+        label:`Copy ${formatMoneyCents(Math.round(Number(payment.amount || 0) * 100))} payment receipt link`,
+        onClick:async () => {
+          const receiptUrl = `https://backuppowerpro.com/receipt.html?receipt=${encodeURIComponent(payment.receipt_token)}`;
+          const copied = await window.copyText(receiptUrl);
+          window.showToast?.(copied ? 'Payment receipt link copied' : 'Copy failed');
+        },
+      })),
+      ...(paymentReceipts || []).map(payment => ({
+        label:`Email ${formatMoneyCents(Math.round(Number(payment.amount || 0) * 100))} payment receipt`,
+        onClick:() => onEmailPaymentReceipt?.(payment),
+      })),
+      ...(paymentReceipts || []).filter(payment => payment.record_source === 'operator_recorded'
+        && Number(payment.amount || 0) - Number(payment.refunded_amount || 0) > 0.005)
+        .map(payment => ({
+          label:`Record reversal for ${formatMoneyCents(Math.round(Number(payment.amount || 0) * 100))} payment`,
+          tone:'danger', onClick:() => onRecordReversal?.(payment),
+        })),
       onEmail && { label: sendingEmail ? 'Sending…' : 'Email', onClick:onEmail, disabled: sendingEmail },
+      onOfflineApprove && { label:'Record customer approval', onClick:onOfflineApprove },
       onEdit && { label:'Edit', onClick:onEdit },
       onRevive && { label:'Revive', onClick:onRevive, tone:'good' },
       (onCancel || onVoid || onRefund || onDelete) && { divider:true },
       onCancel && { label:'Cancel proposal', tone:'danger', onClick: confirmThen({ title:'Cancel this proposal?', body:'The customer\'s link will show "Cancelled". You can undo within 5 seconds.', confirmLabel:'Cancel proposal', destructive:true }, onCancel) },
-      onVoid && { label:'Void invoice', tone:'danger', onClick: confirmThen({ title:'Void this invoice?', body:'The customer\'s link will show "Voided". You can undo within 5 seconds.', confirmLabel:'Void invoice', destructive:true }, onVoid) },
+      onVoid && { label:'Void invoice', tone:'danger', onClick: confirmThen({ title:'Void this invoice?', body:'The customer\'s link will show "Voided". Invoices with collected funds cannot be voided.', confirmLabel:'Void invoice', destructive:true }, onVoid) },
       // Refund opens the RefundPanel (amount + 6-digit 2FA before any money returns),
       // so no pre-confirm here, the panel IS the gate.
       onRefund && { label:'Refund payment', tone:'danger', onClick: onRefund },
@@ -6947,7 +6971,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
         }}>
           <span style={{ flex:1, minWidth:0, fontSize:13, fontWeight:600, color:'#5a6478', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{left}</span>
           <span style={moneyStyle(13)}>{money}</span>
-          <Pill status={status} />
+          <Pill status={pillStatus || status} />
           {paidDate && <span style={{ fontFamily:"'JetBrains Mono', monospace", fontSize:11, color:'#8a93a6', flexShrink:0 }}>{paidDate}</span>}
           {primaryBtn}
           <FinanceOverflowMenu items={overflowItems} />
@@ -6965,7 +6989,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
         <div style={{ display:'flex', alignItems:'center', gap:10, minWidth:0 }}>
           <span style={{ flex:1, minWidth:0, fontSize:15, fontWeight:700, color:NAVY, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{left}</span>
           <span style={moneyStyle(15)}>{money}</span>
-          <Pill status={status} />
+          <Pill status={pillStatus || status} />
           <FinanceOverflowMenu items={overflowItems} />
         </div>
         {activity && (
@@ -7003,6 +7027,45 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
   const [chargeCardFor, setChargeCardFor] = React.useState(null);
   // The specific completed payment the operator is refunding (opens RefundPanel).
   const [refundFor, setRefundFor] = React.useState(null);
+  const manualReversalInFlight = React.useRef(new Set());
+
+  const recordManualReversal = async (payment) => {
+    if (manualReversalInFlight.current.has(payment.id)) return;
+    const available = Math.max(0, Number(payment.amount || 0) - Number(payment.refunded_amount || 0));
+    const amount = Number(window.prompt(`Amount already reversed outside BPP, up to $${available.toFixed(2)}`));
+    if (!(amount > 0) || amount > available + 0.005) { window.showToast?.('Enter a valid reversal amount'); return; }
+    const reason = String(window.prompt('Reason for the reversal') || '').trim();
+    if (reason.length < 3) { window.showToast?.('A reason is required'); return; }
+    const externalReference = String(window.prompt('External reference, optional') || '').trim();
+    const confirmed = await window.confirmAction?.({
+      title:'Confirm external reversal',
+      body:'Confirm the cash return, check cancellation, or external card refund was already completed. BPP will only record it.',
+      confirmLabel:'Record reversal', destructive:true,
+    });
+    if (!confirmed) return;
+    const semantic = JSON.stringify([payment.id, amount, reason, externalReference]);
+    const storageKey = `bpp-payment-adjustment:${semantic}`;
+    let key = null;
+    try { key = localStorage.getItem(storageKey); } catch (_) {}
+    if (!key) {
+      key = crypto.randomUUID();
+      try { localStorage.setItem(storageKey, key); } catch (_) {}
+    }
+    manualReversalInFlight.current.add(payment.id);
+    try {
+      const { data, error } = await CRM.__invokeFn('record-payment', { body: {
+        action:'adjust_payment', payment_id:payment.id, amount,
+        adjustment_type:'reversal', reason, external_reference:externalReference || null,
+        external_action_confirmed:true, idempotency_key:key,
+      } });
+      if (error || !data?.ok) { window.showToast?.(`Reversal failed: ${error?.message || data?.error || 'unknown'}`); return; }
+      try { localStorage.removeItem(storageKey); } catch (_) {}
+      window.dispatchEvent(new CustomEvent('crm-data-changed'));
+      window.showToast?.('Payment reversal recorded');
+    } finally {
+      manualReversalInFlight.current.delete(payment.id);
+    }
+  };
 
   const DealCard = ({ proposal, invoices, moneyManaged }) => {
     const showInvoiceComposer = proposal && composeInvoiceFor === proposal.id;
@@ -7031,16 +7094,20 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
       }}>
         {proposal && (
           <FinanceRow
-            left={tierLabel(proposal.tier)}
+            left={[proposal.document_number, tierLabel(proposal.tier)].filter(Boolean).join(' · ')}
             money={formatMoneyCents(proposal.amount_cents)}
             status={proposal.status}
+            pillStatus={proposal.approval_source === 'operator_recorded'
+              ? (proposal.status === 'approved' ? 'approved_offline' : (proposal.status === 'signed' ? 'accepted_offline' : proposal.status))
+              : proposal.status}
             activity={propActivity(proposal)}
             linkUrl={proposalUrl(proposal)}
             proposal={proposal}
+            onOfflineApprove={['sent','viewed'].includes(proposal.status) ? () => recordOfflineApproval(proposal) : null}
             onCancel={proposal.status === 'sent' || proposal.status === 'viewed' ? () => cancelProposal(proposal) : null}
             onRevive={['declined','cancelled','expired'].includes(proposal.status) ? () => reviveProposal(proposal) : null}
-            onEdit={['draft','sent','viewed'].includes(proposal.status) ? () => { setProposalModalOpen(false); setEditingProposalId(proposal.id); } : null}
-            onDelete={['draft','sent','viewed','declined','cancelled','expired'].includes(proposal.status) ? () => deleteProposal(proposal) : null}
+            onEdit={['draft','created'].includes(String(proposal.status || '').toLowerCase()) ? () => { setProposalModalOpen(false); setEditingProposalId(proposal.id); } : null}
+            onDelete={['draft','created'].includes(String(proposal.status || '').toLowerCase()) ? () => deleteProposal(proposal) : null}
             // send-email is built + deployed; emailDoc gates each send behind
             // a Key-confirm modal and passes trigger_source crm_v3_*. Only
             // offer the button on a proposal that actually has a customer
@@ -7118,16 +7185,19 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
           <FinanceRow
             key={inv.id}
             kind="inv"
-            left={capitalize(inv.kind)}
+            left={[inv.document_number, capitalize(inv.kind)].filter(Boolean).join(' · ')}
             money={formatMoneyCents(inv.amount_cents)}
             status={inv.status}
             activity={invActivity(inv)}
             paidDate={inv.paid_at ? fmtShort(inv.paid_at) : null}
+            paymentReceipts={(inv.payments || []).filter(payment => payment.receipt_token && payment.status === 'completed')}
+            onRecordReversal={recordManualReversal}
+            onEmailPaymentReceipt={(payment) => emailDoc({ template:'receipt', contact_id:contact.id, invoice:inv, payment })}
             linkUrl={invoiceUrl(inv)}
             divided
-            onMarkPaid={['sent','viewed','overdue'].includes(inv.status) ? () => markPaid(inv) : null}
+            onMarkPaid={null}
             onVoid={['sent','viewed','overdue'].includes(inv.status) ? () => voidInvoice(inv) : null}
-            onRevive={['voided','refunded','cancelled'].includes(inv.status) ? () => reviveInvoice(inv) : null}
+            onRevive={['voided','cancelled'].includes(inv.status) ? () => reviveInvoice(inv) : null}
             onRefund={(() => {
               // Only a PAID invoice with a completed, not-fully-refunded payment that
               // carries a proposal_id (the 2FA code is issued per proposal) can refund.
@@ -7136,14 +7206,16 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
                 && ((Number(pp.amount) || 0) - (Number(pp.refunded_amount) || 0)) > 0.005);
               return p ? () => setRefundFor(p) : null;
             })()}
-            onEdit={['draft','sent','viewed','overdue'].includes(inv.status) ? () => { setInvoiceModalOpen(false); setEditingInvoiceId(inv.id); } : null}
-            onDelete={['draft','sent','viewed','overdue','voided','refunded','cancelled'].includes(inv.status) ? () => deleteInvoice(inv) : null}
+            onEdit={String(inv.status || '').toLowerCase() === 'draft' ? () => { setInvoiceModalOpen(false); setEditingInvoiceId(inv.id); } : null}
+            onDelete={String(inv.status || '').toLowerCase() === 'draft' ? () => deleteInvoice(inv) : null}
             // send-email is built; emailDoc confirms with Key + passes
             // trigger_source crm_v3_*. Function 503s until RESEND_API_KEY set.
             // A PAID invoice gets a receipt instead of an invoice email (the
             // invoice email carries a Pay button, wrong for an already-paid
             // invoice). Drafts with no token offer no Email.
-            onEmail={!invoiceUrl(inv) ? null : (inv.status === 'paid' ? () => emailDoc({ template: 'receipt', contact_id: contact.id, invoice: inv }) : (['voided','refunded','cancelled'].includes(inv.status) ? null : () => emailDoc({ template: 'invoice', contact_id: contact.id, invoice: inv })))}
+            onEmail={!invoiceUrl(inv) ? null : (inv.status === 'paid'
+              ? (String(inv.creator_version || '').toLowerCase() === 'v4' ? null : () => emailDoc({ template:'receipt', contact_id:contact.id, invoice:inv }))
+              : (['voided','refunded','cancelled'].includes(inv.status) ? null : () => emailDoc({ template:'invoice', contact_id:contact.id, invoice:inv })))}
           />
         ))}
         {refundFor && (
@@ -7206,23 +7278,29 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
   // record-payment edge fn. Never charges a card; reversible (void in Documents).
   const recordPaymentNow = async (amountDollars, method) => {
     if (!moneyProposal) return false;
-    // UI labels can be clearer than the ledger enum; map before the edge call.
-    const methodApi = method === 'Card (offline)' ? 'Card'
-      : method === 'Paid elsewhere' ? 'Other'
-      : method;
+    const methodApi = method;
     const attemptId = `${liveInv?.id || moneyProposal.id}:${amountDollars}:${methodApi}`;
-    window.__bppPaymentAttemptKeys = window.__bppPaymentAttemptKeys || new Map();
-    const attemptKeys = window.__bppPaymentAttemptKeys;
-    const idempotencyKey = attemptKeys.get(attemptId)
-      || (crypto.randomUUID ? crypto.randomUUID() : `payment_${Date.now()}_${Math.random().toString(36).slice(2)}`);
-    attemptKeys.set(attemptId, idempotencyKey);
+    const storageKey = `bpp-payment:${attemptId}`;
+    let attempt = null;
+    try { attempt = JSON.parse(localStorage.getItem(storageKey) || 'null'); } catch (_) {}
+    if (!attempt) {
+      attempt = {
+        key: crypto.randomUUID ? crypto.randomUUID() : `payment_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+        receivedAt: new Date().toISOString(),
+      };
+      try { localStorage.setItem(storageKey, JSON.stringify(attempt)); } catch (_) {}
+    }
     try {
       const { data, error } = await CRM.__invokeFn('record-payment', {
-        body: { proposal_id: moneyProposal.id, invoice_id: liveInv?.id || undefined, amount: amountDollars, method: methodApi, idempotency_key: idempotencyKey },
+        body: {
+          proposal_id: moneyProposal.id, invoice_id: liveInv?.id || undefined,
+          amount: amountDollars, method: methodApi,
+          received_at: attempt.receivedAt, idempotency_key: attempt.key,
+        },
       });
       if (error || (data && data.ok === false)) { window.showToast?.(`Record failed: ${error?.message || data?.error || 'unknown'}`); return false; }
-      attemptKeys.delete(attemptId);
-      window.showToast?.(`Recorded ${method} payment` + (moneyProposal?.status === 'signed' ? '. Still Signed until deposit Approved path runs' : ''));
+      try { localStorage.removeItem(storageKey); } catch (_) {}
+      window.showToast?.(`Recorded ${method} payment`);
       window.dispatchEvent(new CustomEvent('crm-data-changed'));
       return true;
     } catch (e) { window.showToast?.(`Record failed: ${e.message}`); return false; }
@@ -7249,8 +7327,17 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
         const items = Array.isArray(liveInv.line_items) && liveInv.line_items.length
           ? liveInv.line_items.map((x, i) => i === 0 ? { ...x, amount: newDollars } : x)
           : [{ id: 'li_' + Math.random().toString(36).slice(2, 8), kind: 'item', name: 'Final balance', amount: newDollars, checked: true }];
-        const { error } = await CRM.__db.from('invoices').update({ total: newDollars, line_items: items }).eq('id', liveInv.id);
-        if (error) { window.showToast?.(`Price update failed: ${error.message}`); return; }
+        const semantic = JSON.stringify([liveInv.id, newDollars, items, liveInv.due_at || null, liveInv.payment_terms || 'Due upon receipt']);
+        const storageKey = `bpp-draft-invoice-update:${semantic}`;
+        let key = localStorage.getItem(storageKey);
+        if (!key) { key = crypto.randomUUID(); localStorage.setItem(storageKey, key); }
+        const { data, error } = await CRM.__invokeFn('record-payment', { body: {
+          action: 'update_draft_invoice', invoice_id: liveInv.id,
+          amount: newDollars, line_items: items, due_at: liveInv.due_at || null,
+          payment_terms: liveInv.payment_terms || 'Due upon receipt', idempotency_key: key,
+        } });
+        if (error || !data?.ok) { window.showToast?.(`Price update refused: ${error?.message || data?.error || 'unknown'}`); return; }
+        localStorage.removeItem(storageKey);
       } else if (moneyProposal?.id) {
         const { error } = await CRM.__db.from('invoices').insert({
           contact_id: contact.id,
@@ -7262,7 +7349,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
           line_items: [{ id: 'li_' + Math.random().toString(36).slice(2, 8), kind: 'item', name: 'Final balance', amount: newDollars, checked: true }],
           total: newDollars,
           status: 'unpaid',
-          creator_version: 'v3',
+          creator_version: 'v4',
         });
         if (error) { window.showToast?.(`Price update failed: ${error.message}`); return; }
       }
@@ -7284,7 +7371,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
         liveInv && invoiceUrl(liveInv) && { label: sendingEmail ? 'Sending…' : 'Email invoice', onClick: () => emailDoc({ template: 'invoice', contact_id: contact.id, invoice: liveInv }), disabled: sendingEmail },
         // Booking-tone deposit receipt, only once a deposit/partial is actually in
         // (isPartial = paid > 0 but balance remains). Shows the honest remaining balance.
-        liveInv && isPartial && { label: sendingEmail ? 'Sending…' : 'Send deposit receipt', onClick: () => emailDoc({ template: 'receipt-deposit', contact_id: contact.id, invoice: liveInv }), disabled: sendingEmail },
+        liveInv && isPartial && String(liveInv.creator_version || '').toLowerCase() !== 'v4' && { label: sendingEmail ? 'Sending…' : 'Send deposit receipt', onClick: () => emailDoc({ template: 'receipt-deposit', contact_id: contact.id, invoice: liveInv }), disabled: sendingEmail },
         // Bank-transfer retry: ONLY when this invoice has a status='failed' payment
         // (the webhook flips the ACH row to failed). Never offered otherwise, so it can
         // never tell a customer their transfer failed when none did.
@@ -7308,9 +7395,11 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
           paidMethod={liveInv?.payment_method || null}
           paidDate={liveInv?.paid_at ? fmtShort(liveInv.paid_at) : null}
           onRecord={recordPaymentNow}
-          onEdit={editMoneyPrice}
+          onEdit={!liveInv || String(liveInv.status || '').toLowerCase() === 'draft' ? editMoneyPrice : null}
           onSendReceipt={() => liveInv && emailDoc({ template: 'receipt', contact_id: contact.id, invoice: liveInv })}
-          onSendPartialReceipt={() => liveInv && emailDoc({ template: 'receipt-partial', contact_id: contact.id, invoice: liveInv })}
+          onSendPartialReceipt={liveInv && String(liveInv.creator_version || '').toLowerCase() !== 'v4'
+            ? () => emailDoc({ template: 'receipt-partial', contact_id: contact.id, invoice: liveInv })
+            : null}
           sending={sendingEmail}
           overflow={moneyOverflow}
           awaitingDeposit={isAwaitingDeposit}
@@ -7325,20 +7414,26 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
           standalone invoice (no proposal link) if no approved proposal
           is in scope; if there IS one, the per-card "Generate invoice"
           button inside that DealCard is the better path. */}
-      {!proposalModalOpen && !invoiceModalOpen && (
+      {!proposalModalOpen && !invoiceModalOpen && !receiptModalOpen && (
         <div style={{ display:'flex', gap:8, marginBottom:12 }}>
-          <button onClick={() => { setInvoiceModalOpen(false); setProposalModalOpen(true); }} style={{
+          <button onClick={() => { setInvoiceModalOpen(false); setReceiptModalOpen(false); setProposalModalOpen(true); }} style={{
             flex:1, height:44, borderRadius:8,
             background:GOLD, color:NAVY, border:'none',
             fontSize:13, fontWeight:700, fontFamily:'inherit', cursor:'pointer',
             display:'flex', alignItems:'center', justifyContent:'center', gap:6,
           }}>+ New proposal</button>
-          <button onClick={() => { setProposalModalOpen(false); setInvoiceModalOpen(true); }} style={{
+          <button onClick={() => { setProposalModalOpen(false); setReceiptModalOpen(false); setInvoiceModalOpen(true); }} style={{
             flex:1, height:44, borderRadius:8,
             background:'white', color:NAVY, border:'1px solid rgba(11,31,59,0.15)',
             fontSize:13, fontWeight:600, fontFamily:'inherit', cursor:'pointer',
             display:'flex', alignItems:'center', justifyContent:'center', gap:6,
           }}>+ New invoice</button>
+          <button onClick={() => { setProposalModalOpen(false); setInvoiceModalOpen(false); setReceiptModalOpen(true); }} style={{
+            flex:1, height:44, borderRadius:8,
+            background:'white', color:NAVY, border:'1px solid rgba(11,31,59,0.15)',
+            fontSize:13, fontWeight:600, fontFamily:'inherit', cursor:'pointer',
+            display:'flex', alignItems:'center', justifyContent:'center', gap:6,
+          }}>+ New receipt</button>
         </div>
       )}
 
@@ -7357,6 +7452,17 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
           invoices={invoices}
           onClose={() => setInvoiceModalOpen(false)}
           inline
+        />
+      )}
+
+      {receiptModalOpen && (
+        <NewInvoiceModal
+          contact={contact}
+          latestSignedProposal={null}
+          invoices={invoices}
+          onClose={() => setReceiptModalOpen(false)}
+          inline
+          receiptMode
         />
       )}
 
@@ -7395,7 +7501,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
         );
       })()}
 
-      {dealCards.length === 0 && !proposalModalOpen && !invoiceModalOpen && (
+      {dealCards.length === 0 && !proposalModalOpen && !invoiceModalOpen && !receiptModalOpen && (
         <div style={{ padding:'48px 24px', textAlign:'center', color:MUTED, fontSize:13 }}>Use the buttons above to send a proposal or invoice.</div>
       )}
     </div>
@@ -10551,7 +10657,7 @@ function NewProposalModal({ contact, onClose, inline = false, editingProposal = 
         contact_email:   contact.email   || '',
         contact_phone:   contact.phone   || '',
         contact_address: contact.address || '',
-        creator_version: 'v3',
+        creator_version: isEdit ? (ep.creator_version || 'v3') : 'v4',
         amp_type:        amp,
         selected_amp:    amp,
         length_ft:       lengthFt,
@@ -10591,7 +10697,8 @@ function NewProposalModal({ contact, onClose, inline = false, editingProposal = 
       };
       let data, error;
       if (isEdit) {
-        ({ data, error } = await CRM.__db.from('proposals').update(payload).eq('id', ep.id).select().single());
+        ({ data, error } = await CRM.__db.from('proposals').update(payload).eq('id', ep.id)
+          .in('status', ['Created', 'Draft', 'draft']).select().single());
       } else {
         // Initial status 'Created' (renders as Draft pill via mapProposal). The
         // Send button on the FinanceRow is the trigger for SMS dispatch - Create
@@ -10615,8 +10722,8 @@ function NewProposalModal({ contact, onClose, inline = false, editingProposal = 
           } catch (_) { /* non-fatal - supersede is a hygiene win, not critical */ }
         }
       }
-      if (error || !data) {
-        window.showToast?.(`${isEdit ? 'Update' : 'Create'} failed: ${error?.message || 'unknown'}`);
+      if (error || !data || data.ok === false) {
+        window.showToast?.(`${isEdit ? 'Update' : 'Create'} failed: ${error?.message || data?.error || 'unknown'}`);
         setBusy(false);
         return;
       }
@@ -10935,9 +11042,10 @@ function NewProposalModal({ contact, onClose, inline = false, editingProposal = 
 // no deposit toggle (per Key's spec). Type picker (Deposit/Final/Balance)
 // is a one-click preset that pre-fills line items; Key can then add /
 // remove / reorder / discount before sending.
-function NewInvoiceModal({ contact, latestSignedProposal, invoices, onClose, inline = false, editingInvoice = null }) {
+function NewInvoiceModal({ contact, latestSignedProposal, invoices, onClose, inline = false, editingInvoice = null, receiptMode = false }) {
   const isEdit = !!editingInvoice;
   const ei = editingInvoice || {};
+  const usesV4Terms = !isEdit || String(ei.creator_version || '').toLowerCase() === 'v4';
 
   const proposalTotal = (latestSignedProposal?.amount_cents || 0) / 100;
   const billedSum = invoices
@@ -10973,6 +11081,20 @@ function NewInvoiceModal({ contact, latestSignedProposal, invoices, onClose, inl
     return [];
   });
   const [busy, setBusy] = React.useState(false);
+  const [paymentMethod, setPaymentMethod] = React.useState('Cash');
+  const [paymentNote, setPaymentNote] = React.useState('');
+  const [dueAt, setDueAt] = React.useState(() => {
+    if (isEdit && ei.due_at) return String(ei.due_at).slice(0, 10);
+    const now = new Date();
+    return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  });
+  const [paymentTerms, setPaymentTerms] = React.useState(() => (
+    isEdit && ei.payment_terms ? ei.payment_terms : 'Due upon receipt'
+  ));
+  const [receivedAt, setReceivedAt] = React.useState(() => {
+    const now = new Date();
+    return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  });
   const [dragIdx, setDragIdx] = React.useState(null);
   // ref shadow so onDrop reads the live value, not the stale closure value.
   // React state updates from onDragStart aren't visible to onDrop's render
@@ -10983,13 +11105,13 @@ function NewInvoiceModal({ contact, latestSignedProposal, invoices, onClose, inl
     let t = 0;
     for (const li of lineItems) {
       if (li.kind === 'discount') {
-        if (li.discountType === 'percent') t -= Math.round(t * (Number(li.amount) || 0) / 100);
+        if (li.discountType === 'percent') t -= t * (Number(li.amount) || 0) / 100;
         else                                 t -= Number(li.amount) || 0;
       } else {
         t += Number(li.amount) || 0;
       }
     }
-    return Math.max(0, Math.round(t));
+    return Math.max(0, Math.round(t * 100) / 100);
   }, [lineItems]);
 
   const hasDiscount = lineItems.some(li => li.kind === 'discount');
@@ -11030,7 +11152,11 @@ function NewInvoiceModal({ contact, latestSignedProposal, invoices, onClose, inl
       window.showToast?.('Total must be greater than 0');
       return;
     }
-    if (!isEdit && contact.do_not_contact) {
+    if (receiptMode && (!receivedAt || Number.isNaN(new Date(receivedAt).getTime()))) {
+      window.showToast?.('Choose when the payment was received');
+      return;
+    }
+    if (!isEdit && !receiptMode && contact.do_not_contact) {
       window.showToast?.('Marked do not contact, cannot send');
       return;
     }
@@ -11054,13 +11180,50 @@ function NewInvoiceModal({ contact, latestSignedProposal, invoices, onClose, inl
         contact_email:   contact.email   || '',
         contact_phone:   contact.phone   || '',
         contact_address: contact.address || '',
-        creator_version: 'v3',
+        creator_version: isEdit ? (ei.creator_version || 'v3') : 'v4',
         line_items: storedItems,
         total,
       };
+      if (!receiptMode && usesV4Terms) {
+        payload.due_at = dueAt ? new Date(`${dueAt}T23:59:59`).toISOString() : null;
+        payload.payment_terms = paymentTerms.trim() || 'Due upon receipt';
+      }
       let data, error;
-      if (isEdit) {
-        ({ data, error } = await CRM.__db.from('invoices').update(payload).eq('id', ei.id).select().single());
+      if (receiptMode) {
+        const receivedAtIso = new Date(receivedAt).toISOString();
+        const semantic = JSON.stringify([contact.id, storedItems, total, paymentMethod, paymentNote, receivedAtIso]);
+        const storageKey = `bpp-standalone-receipt:${semantic}`;
+        let attempt = null;
+        try { attempt = JSON.parse(localStorage.getItem(storageKey) || 'null'); } catch (_) {}
+        if (!attempt) {
+          attempt = { key: crypto.randomUUID() };
+          try { localStorage.setItem(storageKey, JSON.stringify(attempt)); } catch (_) {}
+        }
+        ({ data, error } = await CRM.__invokeFn('record-payment', { body: {
+          standalone: {
+            contact_id:contact.id, contact_name:contact.name || '', contact_email:contact.email || '',
+            contact_phone:contact.phone || '', contact_address:contact.address || '', line_items:storedItems,
+          },
+          amount:total, method:paymentMethod, note:paymentNote,
+          received_at:receivedAtIso, idempotency_key:attempt.key,
+        } }));
+        if (!error && data?.ok) {
+          try { localStorage.removeItem(storageKey); } catch (_) {}
+        }
+      } else if (isEdit) {
+        const semantic = JSON.stringify([ei.id, payload.total, payload.line_items, payload.due_at || null, payload.payment_terms || null]);
+        const storageKey = `bpp-draft-invoice-update:${semantic}`;
+        let key = localStorage.getItem(storageKey);
+        if (!key) { key = crypto.randomUUID(); localStorage.setItem(storageKey, key); }
+        ({ data, error } = await CRM.__invokeFn('record-payment', { body: {
+          action: 'update_draft_invoice', invoice_id: ei.id, amount: payload.total,
+          line_items: payload.line_items, due_at: payload.due_at || null,
+          payment_terms: payload.payment_terms || 'Due upon receipt', idempotency_key: key,
+        } }));
+        if (!error && data?.ok) {
+          try { localStorage.removeItem(storageKey); } catch (_) {}
+          data = { ...ei, ...payload, ...data };
+        }
       } else {
         // Initial status 'draft' so the invoice doesn't surface as a live
         // bill before Key actually sends it. The Send button on the
@@ -11079,12 +11242,14 @@ function NewInvoiceModal({ contact, latestSignedProposal, invoices, onClose, inl
       // crm-data.js) so the optimistic row can never drift from the
       // canonical shape (the hand-rolled copy here used a $1,500 kind
       // cutoff that diverged from mapInvoice's 90%-of-proposal rule).
-      const mapped = mapInvoice(data);
+      const mapped = receiptMode ? null : mapInvoice(data);
       const arr = (window.CRM.invoices = window.CRM.invoices || []);
-      const idx = arr.findIndex(i => i.id === mapped.id);
-      if (idx >= 0) arr[idx] = mapped; else arr.unshift(mapped);
+      if (mapped) {
+        const idx = arr.findIndex(i => i.id === mapped.id);
+        if (idx >= 0) arr[idx] = mapped; else arr.unshift(mapped);
+      }
       window.dispatchEvent(new CustomEvent('crm-data-changed'));
-      window.showToast?.(isEdit ? 'Invoice updated' : 'Invoice created');
+      window.showToast?.(receiptMode ? 'Payment receipt created' : (isEdit ? 'Invoice updated' : 'Invoice created'));
       onClose();
     } catch (e) {
       window.showToast?.(`Failed: ${e.message || e}`);
@@ -11198,7 +11363,7 @@ function NewInvoiceModal({ contact, latestSignedProposal, invoices, onClose, inl
           <span style={{ fontSize:12, color:'#666' }}>Linked to approved proposal</span>
           <span style={{ fontSize:12, fontWeight:600, color:NAVY, fontFamily:"'JetBrains Mono','DM Mono',monospace" }}>{fmt$(proposalTotal)}</span>
         </div>
-      ) : !isEdit && (
+      ) : !isEdit && !receiptMode && (
         <div style={{ padding:'8px 12px', background:'#FFFBEB', border:'1px solid #FDE68A', borderRadius:8, fontSize:12, color:'#92400E', marginBottom:18 }}>
           No approved proposal. Use Balance preset for custom amount.
         </div>
@@ -11209,7 +11374,7 @@ function NewInvoiceModal({ contact, latestSignedProposal, invoices, onClose, inl
           expression so what the pill says is exactly what the tap fills.
           No pressed state: presets are momentary actions, not a stored
           invoice field. */}
-      {!isEdit && (
+      {!isEdit && !receiptMode && (
         <div className="cm2-zone">
           <p className="cm2-zlabel">Type</p>
           <div className="cm2-type-row">
@@ -11239,22 +11404,51 @@ function NewInvoiceModal({ contact, latestSignedProposal, invoices, onClose, inl
         )}
         <div className="cm2-add-pair">
           <button type="button" className="cm2-ghost" onClick={addItem}>{PLUS_SVG}Line item</button>
-          <button type="button" className="cm2-ghost" onClick={addDiscount} disabled={hasDiscount}>{PLUS_SVG}Discount</button>
+          {!receiptMode && <button type="button" className="cm2-ghost" onClick={addDiscount} disabled={hasDiscount}>{PLUS_SVG}Discount</button>}
         </div>
       </div>
+      {!receiptMode && usesV4Terms && (
+        <div className="cm2-zone" style={{ marginTop:18 }}>
+          <p className="cm2-zlabel">Payment terms</p>
+          <input value={paymentTerms} onChange={(e) => setPaymentTerms(e.target.value)} maxLength={160}
+            placeholder="Due upon receipt" aria-label="Payment terms"
+            style={{ width:'100%', minHeight:44, border:'1px solid #d9dee8', borderRadius:8, padding:'0 12px', fontSize:16, boxSizing:'border-box', marginBottom:10 }} />
+          <input type="date" value={dueAt} onChange={(e) => setDueAt(e.target.value)} aria-label="Invoice due date"
+            style={{ width:'100%', minHeight:44, border:'1px solid #d9dee8', borderRadius:8, padding:'0 12px', fontSize:16, boxSizing:'border-box' }} />
+        </div>
+      )}
+      {receiptMode && (
+        <div className="cm2-zone" style={{ marginTop:18 }}>
+          <p className="cm2-zlabel">Payment</p>
+          <div style={{ padding:'10px 12px', background:'#f5f7fa', borderRadius:8, color:'#5a6478', fontSize:12, lineHeight:1.45, marginBottom:10 }}>
+            This records money already received and creates a receipt. It does not charge or collect payment.
+          </div>
+          <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}
+            style={{ width:'100%', minHeight:44, border:'1px solid #d9dee8', borderRadius:8, padding:'0 12px', fontSize:16, background:'white', marginBottom:10 }}>
+            {['Cash','External card payment','Check','Other external payment'].map(method => <option key={method}>{method}</option>)}
+          </select>
+          <input type="datetime-local" value={receivedAt} onChange={(e) => setReceivedAt(e.target.value)}
+            aria-label="Payment received at"
+            style={{ width:'100%', minHeight:44, border:'1px solid #d9dee8', borderRadius:8, padding:'0 12px', fontSize:16, boxSizing:'border-box', marginBottom:10 }} />
+          <input value={paymentNote} onChange={(e) => setPaymentNote(e.target.value)}
+            placeholder="Payment note or reference (optional)" aria-label="Payment note"
+            style={{ width:'100%', minHeight:44, border:'1px solid #d9dee8', borderRadius:8, padding:'0 12px', fontSize:16, boxSizing:'border-box' }} />
+        </div>
+      )}
     </div>
   );
 
   // THE NUMBER: total (18px mono) + single gold CTA. Disabled logic
   // identical to the old footer button (busy / DNC / non-positive total).
-  const ctaDisabled = busy || (!isEdit && contact.do_not_contact) || total <= 0;
+  const ctaDisabled = busy || (!isEdit && !receiptMode && contact.do_not_contact) || total <= 0
+    || (receiptMode && !receivedAt) || (!receiptMode && usesV4Terms && (!dueAt || !paymentTerms.trim()));
   const numberBar = (flat) => (
     <div className={'cm2-numbar' + (flat ? ' cm2-flat' : ' cm2-inline')}>
       <span className="cm2-nw">
         <span className="cm2-total">{fmt$(total)}</span>
       </span>
       <button type="button" className="cm2-cta" onClick={submit} disabled={ctaDisabled}>
-        {busy ? (isEdit ? 'Saving…' : 'Creating…') : (isEdit ? 'Save changes' : 'Create invoice')}
+        {busy ? (isEdit ? 'Saving…' : 'Creating…') : (receiptMode ? 'Create payment receipt' : (isEdit ? 'Save changes' : 'Create invoice'))}
       </button>
     </div>
   );
@@ -11268,7 +11462,7 @@ function NewInvoiceModal({ contact, latestSignedProposal, invoices, onClose, inl
         <div style={{ display:'flex', alignItems:'center', gap:10, padding:'14px 16px 12px', borderBottom:'1px solid rgba(27,43,75,0.08)' }}>
           <div style={{ flex:1, minWidth:0 }}>
             <div style={{ fontSize:17, fontWeight:800, letterSpacing:'-0.01em', color:NAVY }}>
-              {isEdit ? 'Edit invoice' : (latestSignedProposal ? 'Generate invoice' : 'New invoice')}
+              {receiptMode ? 'New receipt' : (isEdit ? 'Edit invoice' : (latestSignedProposal ? 'Generate invoice' : 'New invoice'))}
             </div>
             <div style={{ fontSize:12, color:'#5a6478', marginTop:1, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{contact.name || formatPhone(contact.phone)}</div>
           </div>
@@ -11288,7 +11482,7 @@ function NewInvoiceModal({ contact, latestSignedProposal, invoices, onClose, inl
     <ModalShell
       open={true}
       onClose={onClose}
-      title={`${isEdit ? 'Edit invoice' : 'New invoice'}: ${contact.name || formatPhone(contact.phone)}`}
+      title={`${receiptMode ? 'New receipt' : (isEdit ? 'Edit invoice' : 'New invoice')}: ${contact.name || formatPhone(contact.phone)}`}
       footer={numberBar(true)}
     >
       {formBody}

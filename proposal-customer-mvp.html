@@ -109,7 +109,8 @@
     .recommendation-byline strong{display:block;color:var(--plan-navy);font:800 14px/1.28 Outfit,sans-serif}
     .good-through{
       display:inline-flex;align-items:center;min-height:28px;margin-top:10px;padding:4px 11px;border-radius:999px;
-      background:#f1f3f6;color:var(--plan-navy);font:800 10px/1 Outfit,sans-serif;white-space:nowrap;
+      background:#f1f3f6;color:var(--plan-navy);font:800 10px/1.3 Outfit,sans-serif;white-space:normal;
+      max-width:100%;overflow-wrap:anywhere;
     }
     .recommendation-copy{
       margin:0 20px;padding:13px 0 15px;
@@ -778,7 +779,12 @@
           var prepared=proposal.sent_at||proposal.created_at;
           var expires=proposal.expires_at?new Date(proposal.expires_at):(prepared?new Date(new Date(prepared).getTime()+14*86400000):null);
           var valid=document.querySelector('.good-through');
-          if(valid&&expires&&!isNaN(expires.getTime())) valid.textContent='Valid through '+expires.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+          if(valid){
+            var validParts=[];
+            if(fixture.document_number) validParts.push(String(fixture.document_number));
+            if(expires&&!isNaN(expires.getTime())) validParts.push('Valid through '+expires.toLocaleDateString('en-US',{month:'short',day:'numeric'}));
+            if(validParts.length) valid.textContent=validParts.join(' · ');
+          }
         }
       }
       function renderMoney(){
@@ -932,6 +938,7 @@
         }
         return {
           customerName:String(row.contact_name||'Homeowner'),customerAddress:String(row.contact_address||''),amp:amp,
+          document_number:row.document_number||null,
           total:Number(row.signed_total!=null?row.signed_total:row.total)||0,requireDeposit:row.require_deposit!==false,
           depositRate:Number(row.deposit_rate!=null?row.deposit_rate:.20),pomOffered:row.pom_offered!==false,
           aiSummary:'',notes:String(row.notes||''),lineItems:lines,systemSubtotals:(function(){var x={};x[amp]=standard;return x;})(),
@@ -1033,14 +1040,19 @@
       function routeProposal(row){
         var status=String(row.status||'').toLowerCase();
         if(status==='cancelled'||status==='declined') return stateView('This proposal is closed','This proposal has been cancelled. Call Key at (864) 863-7800 if you have questions.','<a class="state-action" href="tel:+18648637800">Call Key</a>');
-        if(status==='approved') return stateView('You are all set','Your proposal is approved and your payment method is on file. Key will contact you to confirm the next step.');
+        if(status==='approved') return row.approval_source==='operator_recorded'
+          ? stateView('You are all set','Key recorded your approval from '+String(row.approval_channel||'your conversation').replace('_',' ')+'. No electronic signature or card authorization was created. Key will contact you to confirm the next step.')
+          : stateView('You are all set','Your proposal is approved and your payment method is on file. Key will contact you to confirm the next step.');
         if(status==='signed'){
           if(/[?&]deposit_paid=1/.test(window.location.search)) return stateView('Payment submitted','Stripe is confirming your deposit now. This page will show the confirmed status after processing.');
           if(/[?&]card_saved=1/.test(window.location.search)) return stateView('Card saved','Your payment method was saved securely. No payment was collected today. Key will contact you about the next step.');
           proposal=row;fixture=proposalFixture(row);
           var due=fixture.requireDeposit===false?0:Math.round(Number(row.signed_total||row.total||0)*Number(fixture.depositRate||0));
           var label=fixture.requireDeposit===false?'Save my card':'Pay '+money(due)+' deposit';
-          stateView('One quick step left',fixture.requireDeposit===false?'Your proposal is signed. Save a card securely to finish your approval.':'Your proposal is signed. Complete the deposit to finish your approval.','<button class="state-action" id="resumeCheckout" type="button">'+escapeHtml(label)+'</button>');
+          var signedCopy=row.approval_source==='operator_recorded'
+            ? (fixture.requireDeposit===false?'Key recorded your approval. Save a card securely to finish the payment setup.':'Key recorded your approval. Complete the deposit to move the project forward. No electronic signature or card authorization was created by the approval record.')
+            : (fixture.requireDeposit===false?'Your proposal is signed. Save a card securely to finish your approval.':'Your proposal is signed. Complete the deposit to finish your approval.');
+          stateView('One quick step left',signedCopy,'<button class="state-action" id="resumeCheckout" type="button">'+escapeHtml(label)+'</button>');
           document.getElementById('resumeCheckout').addEventListener('click',function(){var button=this;button.textContent='Opening secure payment...';checkout(button).catch(function(){button.disabled=false;button.textContent='Try again';});});
           return;
         }

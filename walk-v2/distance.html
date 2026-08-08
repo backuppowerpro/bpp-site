@@ -4,8 +4,7 @@
 <meta name="referrer" content="strict-origin-when-cross-origin">
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-wygnGpICbMppymZ/+XZT8Vgnv0wtsjTA4zJ1JolzPtc=' 'sha256-/8VzyP0DcjwqIWqNFUMCkO1DTQ2XWb6UrRk36pWu84o='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-79EA0Z7tOgJx/57ELeHbp0LMplLGf3/Fv468aggOIt4='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
-<script src="/walk-v2/token-bootstrap.js"></script>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://us.i.posthog.com https://us-assets.i.posthog.com 'sha256-wygnGpICbMppymZ/+XZT8Vgnv0wtsjTA4zJ1JolzPtc=' 'sha256-dmvgTFHZiY8jklgNMP3FWE2e3wNcaP+4OCogZR6+RvI=' 'sha256-OzGNL6G0Jthf0vZeeSfFwRz248bKoyayOL3hJJIjaE0='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-79EA0Z7tOgJx/57ELeHbp0LMplLGf3/Fv468aggOIt4='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co https://us.i.posthog.com https://us-assets.i.posthog.com https://*.posthog.com; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
 <title>Backup Power Pro · Quote Walk · Step 2</title>
 <link rel="icon" href="/favicon.png" type="image/png" />
@@ -513,6 +512,7 @@
     .state-label { display: none; }
   }
 </style>
+<script>!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+" (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);posthog.init('phc_qoA51lePZqXYtPJYkrIpdA4U8iMDJ79L1kje7r4pD4O',{api_host:'https://us.i.posthog.com',property_denylist:['$current_url','$initial_current_url','$referrer','$initial_referrer'],sanitize_properties:function(p){for(var k in p){var v=p[k];if(typeof v==='string'&&v.indexOf('http')===0&&v.indexOf('?')>-1){try{var u=new URL(v);p[k]=u.origin+u.pathname;}catch(e){p[k]=v.split('?')[0];}}}return p;},person_profiles:'identified_only',capture_pageview:true,capture_pageleave:true,enable_heatmaps:true,capture_dead_clicks:true})</script>
 <link rel="stylesheet" href="/walk-v2/mobile-canvas.css" />
 </head>
 <body>
@@ -648,9 +648,7 @@
   var cordImage = main.querySelector('[data-cord-image]');
   var BAND_API = { 'About 5 ft': 'about_5', '5-10 ft': '5_10', '10-20 ft': '10_20', '20-40 ft': '20_40', 'Over 40 ft': 'over_40', 'Not sure': 'not_sure' };
   var API_BAND = {}; Object.keys(BAND_API).forEach(function (k) { API_BAND[BAND_API[k]] = k; });
-  var DISTANCE_ORDER = { about_5: 1, '5_10': 2, '10_20': 3, '20_40': 4, over_40: 5 };
   var selectedLabel = null, saving = false, navigated = false;
-  var priorDistanceBand = null, revisingCurrentRange = false;
 
   function paint(label, echoLine) {
     selectedLabel = label || null;
@@ -672,29 +670,18 @@
   }
 
   WALK.view(t).then(function (v) {
-    var params = new URLSearchParams(window.location.search);
-    var sequentialEntry = params.get('sequence') === '1';
     /* Self-correcting entry guard: only fires when a PRIOR step is unanswered
        (panel location here). A forwarded / hand-edited deep link straight to this
        page would otherwise let an incomplete walk finalize and skip Key's "ready
        to price" ping. routeFromState bounces to the first unanswered step. It does
        NOT bounce when location is already answered, so normal flow and Back-nav
        are untouched (no self-redirect, the landing already runs this same guard). */
-    if (!sequentialEntry && !v.confirmed_panel_room) { WALK.routeFromState(t, v); return; }
+    if (!v.confirmed_panel_room) { WALK.routeFromState(t, v); return; }
     cordImage.src = '/assets/product-images/cord-30amp.jpg';
+    var params = new URLSearchParams(window.location.search);
     var editMode = params.get('edit') === '1';
     var recoveryMode = params.get('recovery') === '1';
     var savedDistance = v.distance_band && API_BAND[v.distance_band];
-    var state = v.quote_walk_v2 || {};
-    priorDistanceBand = state.distance_band || v.distance_band || null;
-    revisingCurrentRange = editMode && Boolean(state.current_range_snapshot_id);
-    if (revisingCurrentRange && DISTANCE_ORDER[priorDistanceBand]) {
-      main.querySelectorAll('[data-dist]').forEach(function (card) {
-        var candidate = BAND_API[card.getAttribute('data-dist')];
-        card.hidden = !DISTANCE_ORDER[candidate]
-          || DISTANCE_ORDER[candidate] >= DISTANCE_ORDER[priorDistanceBand];
-      });
-    }
     var pendingDistance = savedDistance === 'Not sure';
     if (!editMode && savedDistance && !(recoveryMode && pendingDistance)) paint(savedDistance, false);
   }).catch(function () { /* the welcome-back preselect is best-effort; a transient read failure must NOT strip the token and bounce a mid-walk customer to a blank form. The step works without it. */ });
@@ -717,11 +704,7 @@
   main.querySelector('[data-continue]').addEventListener('click', function () {
     if (!selectedLabel || saving) return;
     saving = true;
-    var answers = { distance_band: BAND_API[selectedLabel] };
-    if (revisingCurrentRange && answers.distance_band !== priorDistanceBand) {
-      answers.revision_reason = 'shorter_distance';
-    }
-    WALK.confirm(t, answers)
+    WALK.confirm(t, { distance_band: BAND_API[selectedLabel] })
       .then(function () {
         navigated = true;
         var recovery = new URLSearchParams(window.location.search).get('recovery') === '1';
@@ -732,7 +715,7 @@
             WALK.go('incomplete.html', t);
           });
         } else {
-          WALK.go('photos.html', t, { sequence: '1' });
+          WALK.go('photos.html', t);
         }
       })
       .catch(function () {
