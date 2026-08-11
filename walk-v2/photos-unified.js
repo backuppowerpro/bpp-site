@@ -23,6 +23,7 @@
   var nextIndex = 1;
   var sending = false;
   var previewPhoto = null;
+  var uploadQueue = Promise.resolve();
 
   var file = document.createElement("input");
   file.type = "file";
@@ -104,7 +105,7 @@
   function send(photo) {
     photo.status = "uploading";
     render();
-    WALK.photo(t, photo.dataUrl, photo.idx, {
+    return WALK.photo(t, photo.dataUrl, photo.idx, {
       role: "setup_photo",
       panel_id: null,
       synthetic_name: photo.name
@@ -119,6 +120,17 @@
       WALK.ph("walk_v2_photo_upload_failed", { role: photo.role });
       render();
     });
+  }
+
+  function enqueue(photo) {
+    uploadQueue = uploadQueue.then(function () {
+      if (photo.cancelled) return null;
+      return send(photo);
+    }, function () {
+      if (photo.cancelled) return null;
+      return send(photo);
+    });
+    return uploadQueue;
   }
 
   function addFile(selected) {
@@ -139,10 +151,11 @@
         role: "setup_photo",
         dataUrl: dataUrl,
         mediaId: null,
+        cancelled: false,
         status: "uploading"
       };
       photos.push(photo);
-      send(photo);
+      enqueue(photo);
     }).catch(function () {
       hint.textContent = "That photo would not open. Choose another image.";
     });
@@ -170,7 +183,8 @@
     var photo = photos.find(function (item) { return item.localId === id; });
     if (!photo) return;
     if (retry) {
-      send(photo);
+      photo.cancelled = false;
+      enqueue(photo);
       return;
     }
     if (previewButton) {
@@ -179,6 +193,7 @@
       preview.showModal();
       return;
     }
+    photo.cancelled = true;
     removeServerPhoto(photo).then(function (value) {
       photos = photos.filter(function (item) { return item !== photo; });
       panelConfirmed = hasAuthoritativePanelPhoto(value, photos.some(function (item) {
@@ -218,8 +233,9 @@
         photo.name = selected.name || "photo";
         photo.dataUrl = dataUrl;
         photo.mediaId = null;
+        photo.cancelled = false;
         preview.close();
-        send(photo);
+        enqueue(photo);
       });
     }).catch(function () {
       hint.textContent = "That photo could not be replaced. Try again.";
@@ -277,6 +293,7 @@
         role: media.role,
         dataUrl: media.preview_href || "",
         mediaId: media.id,
+        cancelled: false,
         status: "done"
       };
     });
