@@ -12,10 +12,15 @@
   function setToken(value) {
     var next = /^[a-zA-Z0-9_-]{32,160}$/.test(String(value || '')) ? String(value) : '';
     try {
-      if (next) sessionStorage.setItem(TOKEN_STORAGE_KEY, next);
-      else sessionStorage.removeItem(TOKEN_STORAGE_KEY);
-    } catch (_) {}
-    return next;
+      if (next) {
+        sessionStorage.setItem(TOKEN_STORAGE_KEY, next);
+        return sessionStorage.getItem(TOKEN_STORAGE_KEY) === next ? next : '';
+      }
+      sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+      return '';
+    } catch (_) {
+      return '';
+    }
   }
   function token() {
     var t = '';
@@ -24,11 +29,14 @@
     return /^[a-zA-Z0-9_-]{32,160}$/.test(t) ? t : '';
   }
   function go(page, t, extra) {
-    setToken(t);
+    var retained = setToken(t);
     var params = new URLSearchParams();
     Object.keys(extra || {}).forEach(function (key) {
       if (extra[key] != null) params.set(key, String(extra[key]));
     });
+    if (/^[a-zA-Z0-9_-]{32,160}$/.test(String(t || '')) && retained !== t) {
+      params.set('t', t);
+    }
     var query = params.toString();
     var target = '/walk-v2/' + page + (query ? '?' + query : '');
     if (window.__QW_NAVIGATE__) window.__QW_NAVIGATE__(target);
@@ -214,8 +222,35 @@
     if (rail) rail.setAttribute('aria-label', labels.join('. ') + '.');
     return truth;
   }
-  function getJson(url) {
-    return fetch(url).then(function (r) {
+  function fetchWithTimeout(url, options, timeoutMs) {
+    var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var requestOptions = Object.assign({}, options || {});
+    if (ctrl) requestOptions.signal = ctrl.signal;
+    return new Promise(function (resolve, reject) {
+      var settled = false;
+      var timer = setTimeout(function () {
+        if (settled) return;
+        settled = true;
+        if (ctrl) ctrl.abort();
+        var error = new Error('request_timeout');
+        error.name = 'TimeoutError';
+        reject(error);
+      }, timeoutMs);
+      fetch(url, requestOptions).then(function (value) {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(value);
+      }, function (error) {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        reject(error);
+      });
+    });
+  }
+  function getJson(url, timeoutMs) {
+    return fetchWithTimeout(url, {}, timeoutMs || 12000).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (body) {
         if (!r.ok) {
           var error = new Error(body && body.error || 'http_' + r.status);
@@ -233,19 +268,16 @@
        and no recovery. Abort after timeoutMs so the promise rejects and the
        caller's .catch (e.g. photos.html flips the entry to "failed" -> Retry)
        can recover instead of hanging. Default 30s. */
-    var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
-    var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, timeoutMs || 30000) : null;
-    return fetch(url, {
+    return fetchWithTimeout(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
-      signal: ctrl ? ctrl.signal : undefined,
-    }).then(function (r) {
+    }, timeoutMs || 30000).then(function (r) {
       return r.json().then(function (j) {
         if (!r.ok) { var e = new Error(j && j.error || 'http_' + r.status); e.body = j; throw e; }
         return j;
       });
-    }).finally(function () { if (timer) clearTimeout(timer); });
+    });
   }
 
   window.WALK = {
@@ -276,12 +308,17 @@
       var stableRequestKey = null;
       function send(retried) {
         var state = readJourneyState(t);
-        var payload = Object.assign({ token: t }, fields);
-        if (state.version) {
-          payload.expected_version = state.version;
-          stableRequestKey = stableRequestKey || requestKey(t, 'save_answers', fields, state.version);
-          payload.request_key = stableRequestKey;
+        if (!state.version) {
+          return getJson(BASE + '/pre-read-view?token=' + encodeURIComponent(t))
+            .then(function (value) {
+              rememberJourneyState(t, value);
+              return send(retried);
+            });
         }
+        var payload = Object.assign({ token: t }, fields);
+        payload.expected_version = state.version;
+        stableRequestKey = stableRequestKey || requestKey(t, 'save_answers', fields, state.version);
+        payload.request_key = stableRequestKey;
         return postJson(BASE + '/pre-read-confirm', payload).then(function (value) {
           rememberJourneyState(t, value);
           if (typeof document !== 'undefined') paintProgress(document, value);
@@ -355,6 +392,13 @@
             return getJson(BASE + '/pre-read-view?token=' + encodeURIComponent(t))
               .then(function (value) {
                 rememberJourneyState(t, value);
+                if (action === 'accept_range' || action === 'handoff') {
+                  var staleAuthorization = new Error('stale_customer_authorization');
+                  staleAuthorization.code = 'stale_customer_authorization';
+                  staleAuthorization.body = { error: 'stale_customer_authorization' };
+                  staleAuthorization.currentState = value;
+                  throw staleAuthorization;
+                }
                 return send(true);
               });
           }
@@ -421,12 +465,11 @@
     /* address auto-suggest via Mapbox Geocoding, the same provider the rest of
        BPP uses (quote.html, m/, pre-read). Publishable pk. token, US addresses,
        biased to Greenville. Returns {description} so the dropdown render is shared. */
-    addrSuggest: function (q) {
+    addrSuggest: function (q, timeoutMs) {
       var MB = 'pk.eyJ1Ijoia2V5ZWxlY3RyaWN1cHN0YXRlIiwiYSI6ImNtcm8zZ3NkeTFodmgyeG9hY284Z3F4YXcifQ.3mLKvFGpDEdkjEMQNVQhmg';
       var url = 'https://api.mapbox.com/geocoding/v5/mapbox.places/' + encodeURIComponent(q)
         + '.json?access_token=' + MB + '&country=us&types=address&autocomplete=true&limit=5&proximity=-82.3940,34.8526';
-      return fetch(url)
-        .then(function (r) { return r.ok ? r.json() : { features: [] }; })
+      return getJson(url, timeoutMs || 8000)
         .then(function (d) { return (d.features || []).map(function (f) {
           /* pull structured city/state/zip from the Mapbox feature context so the
              contact + pre_read carry them (the every-detail rule), not just the
@@ -464,6 +507,18 @@
         .catch(function () { return []; });
     },
     newLead: function (payload) { return postJson(BASE + '/quo-ai-new-lead', payload); },
+    submitLead: function (payload, timeoutMs) {
+      return fetchWithTimeout(BASE + '/quo-ai-new-lead', {
+        method: 'POST',
+        keepalive: true,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }, timeoutMs || 20000).then(function (response) {
+        return response.json().catch(function () { return {}; }).then(function (body) {
+          return { ok: response.ok, status: response.status, body: body };
+        });
+      });
+    },
     /* Thank-you finalize: tells the backend the customer finished the walk UI
        (including photo-deferred). Fires the opener when SMS_AUTO_ENABLED. */
     markThankyou: function (t) {
@@ -597,5 +652,8 @@
       window.visualViewport.addEventListener('resize', syncAddressDropViewport, { passive: true });
       window.visualViewport.addEventListener('scroll', syncAddressDropViewport, { passive: true });
     }
+  }
+  if (typeof window.BPPQuoteWalkMarkReady === 'function') {
+    window.BPPQuoteWalkMarkReady();
   }
 })();

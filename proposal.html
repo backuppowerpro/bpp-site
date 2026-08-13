@@ -311,6 +311,8 @@ html,body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:va
 .preview-bar-dot{width:7px;height:7px;border-radius:50%;background:#1c1003;opacity:.5;flex-shrink:0}
 .preview-watermark{position:fixed;inset:0;pointer-events:none;z-index:99998;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .preview-watermark span{font-family:'Outfit',sans-serif;font-size:clamp(60px,14vw,120px);font-weight:900;color:rgba(11,31,59,.045);letter-spacing:.1em;text-transform:uppercase;transform:rotate(-35deg);white-space:nowrap;user-select:none}
+body.preview-mode .sign-card{display:none!important}
+body.preview-mode a.approve-btn[href],body.preview-mode button[onclick^="payDeposit"]{display:none!important}
 /* ── FOOTER ─────────────────────────────────────────── */
 .site-footer{text-align:center;padding:28px 24px 24px;font-size:12px;color:var(--text3);border-top:1px solid var(--border);margin-top:20px}
 .site-footer a{color:var(--text3);text-decoration:none}
@@ -351,12 +353,12 @@ html,body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:va
      click the Pay Deposit button, whether they bounce. Combined with
      proposals.view_count + stripe-webhook capture('deposit_paid') we get
      the full funnel from ad click → quote viewed → deposit paid. -->
-<script>!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+" (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);posthog.init('phc_qoA51lePZqXYtPJYkrIpdA4U8iMDJ79L1kje7r4pD4O',{api_host:'https://us.i.posthog.com',person_profiles:'identified_only',session_recording:{recordCrossOriginIframes:false,maskAllInputs:true},capture_pageview:true,capture_pageleave:true,enable_heatmaps:true,capture_dead_clicks:true})</script>
+<script>window.__BPP_MONEY_PREVIEW__=new URLSearchParams(window.location.search).get('preview')==='1';if(!window.__BPP_MONEY_PREVIEW__){!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+" (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);posthog.init('phc_qoA51lePZqXYtPJYkrIpdA4U8iMDJ79L1kje7r4pD4O',{api_host:'https://us.i.posthog.com',person_profiles:'identified_only',session_recording:{recordCrossOriginIframes:false,maskAllInputs:true},capture_pageview:true,capture_pageleave:true,enable_heatmaps:true,capture_dead_clicks:true});}</script>
 <script>
   // Tag this pageview with proposal context so PostHog can group all events
   // from this customer's quote session together.
   (function() {
-    if (typeof posthog === 'undefined') return;
+    if (window.__BPP_MONEY_PREVIEW__ || typeof posthog === 'undefined') return;
     var token = new URLSearchParams(window.location.search).get('token') || '';
     posthog.register({ page_type: 'proposal', proposal_token: token.slice(0, 8) });
     // Track time-on-page milestones, helps us spot where customers stall
@@ -395,6 +397,7 @@ html,body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:va
 <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.jpg">
 </head>
 <body>
+<noscript><div class="preview-bar" data-preview-banner="true">Preview unavailable, JavaScript is off, no customer action can occur</div><div class="preview-watermark" data-preview-watermark="true" aria-hidden="true"><span>Preview unavailable</span></div><div style="max-width:620px;margin:70px auto 24px;padding:18px;border:1px solid #ffba00;border-radius:14px;background:#fff8e6;color:#0b1f3b;text-align:center;font:600 16px/1.55 system-ui,sans-serif;">This proposal did not load. Turn on JavaScript and reload, or call (864) 863-7800.</div></noscript>
 
 <header class="site-header">
   <img src="/assets/images/logo-white-v2.png" alt="Backup Power Pro" style="height:32px;">
@@ -415,14 +418,11 @@ html,body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:va
   <div class="cred-license">SC Electrical Contractor License #2942 &nbsp;&middot;&nbsp; Fully Licensed &amp; Insured</div>
 </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0" integrity="sha384-wgi7s9Y2xefdDru3II6Xb11y/YNoKVbuydTikWejwId9z2xRd8SveCTrJjj/QAnH" crossorigin="anonymous"></script>
 <script>
 
 const SUPABASE_URL = 'https://reowtzedjflwmlptupbk.supabase.co';
 // Publishable key (migrated 2026-04-23 off the leaked anon JWT).
 const SUPABASE_KEY = 'sb_publishable_4tYd9eFAYCTjnoKl1hbBBg_yyO9-vMB';
-const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
 let P = null;
 let chosenAmp = null;
 let surgeOn = false;
@@ -432,10 +432,131 @@ let ackScope = false;
 let ackSafety = false;
 let isPreview = false;
 let selectedPayFull = false;
+let signStatusUncertain = false;
+let approvedCheckoutOpening = false;
+let depositCancellationUnconfirmed = true;
+let depositAuthorizationWasReset = false;
+const AUTHORIZATION_GATE_TIMEOUT_MS = 4000;
+let authorizationGateState = 'pending';
+let authorizationGateInFlight = null;
+let authorizationGateToken = '';
+let authorizationFactsRendered = false;
+let authorizationFullRedoPending = false;
+function previewModeActive() {
+  return isPreview || new URLSearchParams(window.location.search).get('preview') === '1';
+}
+function authorizationGateReady() {
+  return authorizationGateState === 'ready';
+}
+function setAuthorizationGateState(state) {
+  authorizationGateState = state;
+  depositCancellationUnconfirmed = state !== 'ready';
+  document.body.dataset.authorizationGate = state;
+  syncAuthorizationGateUI();
+}
+function setAuthorizationControlLocked(control, locked) {
+  if (locked) {
+    if (!control.hasAttribute('data-authorization-gate-locked')) {
+      control.setAttribute('data-authorization-gate-locked', 'true');
+      control.setAttribute('data-authorization-was-disabled', control.disabled ? 'true' : 'false');
+      control.setAttribute('data-authorization-tabindex', control.getAttribute('tabindex') || '');
+      if (control.tagName === 'A' && control.hasAttribute('href')) {
+        control.setAttribute('data-authorization-href', control.getAttribute('href'));
+      }
+    }
+    if ('disabled' in control) control.disabled = true;
+    control.setAttribute('aria-disabled', 'true');
+    if (control.tagName === 'A') control.removeAttribute('href');
+    control.setAttribute('tabindex', '-1');
+    return;
+  }
+  if (!control.hasAttribute('data-authorization-gate-locked')) return;
+  if ('disabled' in control) control.disabled = control.getAttribute('data-authorization-was-disabled') === 'true';
+  if (control.hasAttribute('data-authorization-href')) control.setAttribute('href', control.getAttribute('data-authorization-href'));
+  const priorTabIndex = control.getAttribute('data-authorization-tabindex');
+  if (priorTabIndex) control.setAttribute('tabindex', priorTabIndex);
+  else control.removeAttribute('tabindex');
+  control.removeAttribute('aria-disabled');
+  control.removeAttribute('data-authorization-gate-locked');
+  control.removeAttribute('data-authorization-was-disabled');
+  control.removeAttribute('data-authorization-tabindex');
+  control.removeAttribute('data-authorization-href');
+}
+function syncAuthorizationGateNotice(target) {
+  let notice = document.querySelector('[data-authorization-gate-status]');
+  if (authorizationGateState === 'ready' || authorizationGateState === 'preview' || !target) {
+    if (notice) notice.remove();
+    return;
+  }
+  if (!notice) {
+    notice = document.createElement('div');
+    notice.className = 'card';
+    notice.setAttribute('data-authorization-gate-status', 'true');
+    notice.style.cssText = 'padding:18px 20px;text-align:center;border:1px solid var(--border);';
+    target.parentNode.insertBefore(notice, target);
+  }
+  if (notice.dataset.authorizationGateState === authorizationGateState) return;
+  notice.dataset.authorizationGateState = authorizationGateState;
+  notice.innerHTML = '';
+  const message = document.createElement('p');
+  message.style.cssText = 'margin:0;color:var(--text2);font-size:13px;line-height:1.55';
+  message.textContent = authorizationGateState === 'failed'
+    ? 'Payment attempt needs attention. We could not confirm the previous payment attempt. Your proposal details remain available, but acceptance and payment stay locked.'
+    : 'Confirming that this proposal is ready for a new acceptance.';
+  notice.appendChild(message);
+  if (authorizationGateState === 'failed') {
+    const retry = document.createElement('button');
+    retry.type = 'button';
+    retry.className = 'approve-btn';
+    retry.setAttribute('data-authorization-gate-retry', 'true');
+    retry.textContent = 'Retry authorization check';
+    retry.addEventListener('click', () => beginAuthorizationGate(authorizationGateToken));
+    notice.appendChild(retry);
+  }
+}
+function syncAuthorizationGateUI() {
+  const locked = !authorizationGateReady();
+  document.body.dataset.authorizationGate = authorizationGateState;
+  const panel = document.getElementById('sign-section');
+  if (panel) {
+    if (locked) {
+      if (!panel.hasAttribute('data-authorization-gate-inert')) {
+        panel.setAttribute('data-authorization-gate-inert', panel.hasAttribute('inert') ? 'true' : 'false');
+      }
+      panel.setAttribute('inert', '');
+      if (authorizationGateState === 'pending') panel.setAttribute('aria-busy', 'true');
+      else panel.removeAttribute('aria-busy');
+    } else if (panel.hasAttribute('data-authorization-gate-inert')) {
+      if (panel.getAttribute('data-authorization-gate-inert') === 'false') panel.removeAttribute('inert');
+      panel.removeAttribute('data-authorization-gate-inert');
+      panel.removeAttribute('aria-busy');
+    }
+  }
+  const selector = '#approve-btn,[onclick^="payDeposit"],#checkPaymentTruth,#checkPaymentStatus,[data-authorization-action="payment"]';
+  document.querySelectorAll(selector).forEach((control) => setAuthorizationControlLocked(control, locked));
+  const action = document.querySelector(selector);
+  syncAuthorizationGateNotice(panel || (action && action.closest('.state-wrap')) || action);
+  if (!locked) validateForm();
+}
+function installPreviewChrome() {
+  if (!isPreview || document.querySelector('[data-preview-banner="true"]')) return;
+  document.body.classList.add('preview-mode');
+  document.body.insertAdjacentHTML('afterbegin',
+    `<div class="preview-bar" data-preview-banner="true"><div class="preview-bar-dot"></div>Preview Mode, Not Sent to Client, Read Only<div class="preview-bar-dot"></div></div>
+     <div class="preview-watermark" data-preview-watermark="true" aria-hidden="true"><span>Preview</span></div>`
+  );
+  const bar = document.querySelector('.preview-bar');
+  const header = document.querySelector('.site-header');
+  if (bar && header) header.style.marginTop = bar.offsetHeight + 'px';
+}
 
 // ── INIT ─────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
-  const token = new URLSearchParams(window.location.search).get('token');
+  const params = new URLSearchParams(window.location.search);
+  isPreview = params.get('preview') === '1';
+  setAuthorizationGateState(isPreview ? 'preview' : 'pending');
+  installPreviewChrome();
+  const token = params.get('token');
   if (!token) { showError('Proposal link not found.', 'This isn\'t the personal link Key texted you. Text or call Key at (864) 863-7800 and he will send a fresh one.'); return; }
   // Fetch proposal + profile context in parallel. Context is non-critical,
   // proposal renders fine if the fetch fails. Context is ONLY used for
@@ -462,11 +583,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // time we use it for variant copy. If not, render with default copy.
   // Worst case: customer sees the proposal in ~max(1.7s, 2s) instead
   // of ~3.4s. Best case: when context is hot/cached, ~1.7s.
-  const ctxPromise = fetch(`${SUPABASE_URL}/functions/v1/proposal-context?token=${encodeURIComponent(token)}`, {
-    headers: { 'Authorization': `Bearer ${SUPABASE_KEY}` },
-    signal: ctrl.signal,
-  }).then(r => r.ok ? r.json() : null).catch(() => null);
-  const proposalRes = await fetch(`${SUPABASE_URL}/functions/v1/proposal-view?token=${encodeURIComponent(token)}`, {
+  const proposalPromise = fetch(`${SUPABASE_URL}/functions/v1/proposal-view?token=${encodeURIComponent(token)}`, {
     headers: { 'Authorization': `Bearer ${SUPABASE_KEY}` },
     signal: ctrl.signal,
   }).then(async r => {
@@ -475,17 +592,24 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (r.status === 410) return { _superseded: true, ...(await r.json().catch(() => ({}))) };
     return { proposal: null };
   }).catch((e) => ({ proposal: null, _aborted: e?.name === 'AbortError' }));
+  const ctxPromise = fetch(`${SUPABASE_URL}/functions/v1/proposal-context?token=${encodeURIComponent(token)}`, {
+    headers: { 'Authorization': `Bearer ${SUPABASE_KEY}` },
+    signal: ctrl.signal,
+  }).then(r => r.ok ? r.json() : null).catch(() => null);
+  const ctxDeadline = new Promise(resolve => setTimeout(() => resolve(null), 2000));
+  beginAuthorizationGate(token);
+  const proposalRes = await proposalPromise;
   // Race context against a 2s deadline. Don't block the render past that.
   const ctxRes = await Promise.race([
     ctxPromise,
-    new Promise(resolve => setTimeout(() => resolve(null), 2000)),
+    ctxDeadline,
   ]);
   clearTimeout(timer);
 
   // Superseded quote, newer one exists for this customer
   if (proposalRes?._superseded) {
     const latestToken = proposalRes.latest_token;
-    const latestUrl = latestToken ? `/proposal.html?token=${encodeURIComponent(latestToken)}` : null;
+    const latestUrl = latestToken ? proposalUrlForToken(latestToken) : null;
     document.getElementById('main').innerHTML =
       '<div style="text-align:center;padding:60px 20px;max-width:420px;margin:0 auto">' +
         '<div style="font-size:48px;margin-bottom:16px">📄</div>' +
@@ -544,16 +668,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
   }
   window.__bpp_ctx = ctxRes || {}; // exposed for downstream reads
-  isPreview = new URLSearchParams(window.location.search).get('preview') === '1';
   if (!isPreview) trackView(token);
-  if (isPreview) {
-    document.body.insertAdjacentHTML('afterbegin',
-      `<div class="preview-bar"><div class="preview-bar-dot"></div>Preview Mode, Not Sent to Client<div class="preview-bar-dot"></div></div>
-       <div class="preview-watermark"><span>Preview</span></div>`
-    );
-    const _bar = document.querySelector('.preview-bar');
-    document.querySelector('.site-header').style.marginTop = _bar.offsetHeight + 'px';
-  }
   // Closed states must never render a signable quote. The exact-match 'Cancelled'
   // check missed the lowercase 'cancelled' + 'declined' the CRM actually writes,
   // so a killed proposal invited the customer to sign and then errored at the CTA
@@ -561,6 +676,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // check). Normalize once and gate on both, before any signable routing.
   var _pstatus = String(P.status || '').toLowerCase();
   if (_pstatus === 'cancelled' || _pstatus === 'declined') {
+    if (hasCheckoutReturnHint()) scrubCheckoutReturnHints(false);
     document.getElementById('main').innerHTML = '<div style="text-align:center;padding:60px 20px"><div style="font-size:48px;margin-bottom:16px">🚫</div><div style="font-family:Outfit,sans-serif;font-size:22px;font-weight:800;color:var(--navy);margin-bottom:8px">Proposal Closed</div><div style="font-size:14px;color:var(--text3);max-width:360px;margin:0 auto">This proposal is no longer active. Please contact Backup Power Pro at <a href="tel:8648637800" style="color:var(--blue);font-weight:600">(864) 863-7800</a> if you have questions.</div></div>';
     return;
   }
@@ -570,12 +686,27 @@ window.addEventListener('DOMContentLoaded', async () => {
   // paying lands back on the deposit ask on every revisit instead of the blank
   // sign form. This is the Curtis-gap recovery surface (he viewed 16x, never paid).
   if (P.status === 'Approved') { renderApproved(); }
-  else if (P.status === 'Signed' && P.require_deposit !== false) { renderApproved(); }
-  else { renderProposal(); }
+  else if (!isPreview && !authorizationFullRedoPending && P.require_deposit !== false && hasCheckoutReturnHint()
+      && ['sent', 'viewed', 'copied'].includes(String(P.status || '').toLowerCase())) { reconcileCheckoutReturn(P); }
+  else if (String(P.status || '').toLowerCase() === 'signed' && !isPreview && !authorizationFullRedoPending && hasCheckoutReturnHint()) { reconcileCheckoutReturn(P); }
+  else if (String(P.status || '').toLowerCase() === 'signed') { renderApproved(); }
+  else {
+    renderProposal();
+    if (authorizationFullRedoPending) {
+      resetDepositAcceptanceAuthorization('Closing the previous payment attempt. This proposal has not been accepted.');
+    }
+    const acceptanceRetry = consumeDepositAcceptanceRetry();
+    if (depositAuthorizationWasReset || acceptanceRetry) {
+      depositAuthorizationWasReset = false;
+      resetDepositAcceptanceAuthorization('Payment was not confirmed, so this proposal was not accepted. Review it, check each acknowledgment, enter your name, and accept again.');
+    }
+  }
+  syncAuthorizationGateUI();
 });
 
 // ── VIEW TRACKING ────────────────────────────────────────────
 async function trackView(token) {
+  if (previewModeActive()) return;
   try {
     await fetch(`${SUPABASE_URL}/functions/v1/proposal-mutate`, {
       method: 'POST',
@@ -614,45 +745,32 @@ function calcTotal(amp) {
 function fmt(n) { return '$' + Number(n).toLocaleString('en-US'); }
 
 // ── PROPERTY PHOTO BANNER ────────────────────────────────────
-const _SV_KEY = 'AIzaSyB0xWm71ZDzS7ei5-vFx15rNP_lR1ZKbJs';
-
 async function renderPropertyBanner() {
   const wrap = document.getElementById('property-banner-wrap');
   if (!wrap) return;
-  const addr = P.contact_address;
-  if (!addr) return; // no address, skip entirely, show nothing
-  try {
-    const r = await fetch(`https://maps.googleapis.com/maps/api/streetview/metadata?location=${encodeURIComponent(addr)}&key=${_SV_KEY}`);
-    const d = await r.json();
-    if (d.status !== 'OK') return; // no coverage, skip entirely, show nothing
-    // Camera aiming (Key 2026-07-17, "my house was out of view"): aim at the
-    // best rooftop coordinate we hold via streetview-hero (walk geocode, or
-    // Google Geocoding once enabled). Any failure keeps Google's default aim.
-    let aim = '&fov=80&pitch=5';
-    try {
-      const tok = new URLSearchParams(window.location.search).get('token');
-      if (tok) {
-        const ar = await fetch(`${SUPABASE_URL}/functions/v1/streetview-hero?t=${encodeURIComponent(tok)}`, { headers: { Authorization: `Bearer ${SUPABASE_KEY}` } });
-        const a = await ar.json();
-        // Aimed shots also go pitch 0 (level): the old +5 tilt rendered
-        // below-grade houses as trees + sky.
-        if (a && a.ok && typeof a.heading === 'number') aim = `&heading=${a.heading}&fov=${a.fov || 70}&pitch=${typeof a.pitch === 'number' ? a.pitch : 0}`;
-      }
-    } catch (_) { /* default aim */ }
-    const img = document.createElement('img');
-    img.alt = 'Your home';
-    img.id = 'banner-photo';
-    img.src = `https://maps.googleapis.com/maps/api/streetview?size=640x480&scale=2&location=${encodeURIComponent(addr)}${aim}&source=outdoor&key=${_SV_KEY}`;
+  wrap.innerHTML = '';
+  const addr = String(P.contact_address || '').trim();
+  const token = new URLSearchParams(window.location.search).get('token');
+  if (!token) return;
+
+  const img = document.createElement('img');
+  img.alt = 'Property at the installation address';
+  img.id = 'banner-photo';
+  img.onload = function() {
+    if (!wrap.isConnected) return;
     const titleCase = s => (s||'').replace(/\w\S*/g, t => t.charAt(0).toUpperCase()+t.substr(1).toLowerCase());
     const displayName = titleCase(P.contact_name || '');
     const gradHtml = `<div class="property-banner-grad"></div>`;
     const forTagHtml = displayName ? `<div class="property-banner-for-tag"><span class="property-banner-for-text">Prepared for ${esc(displayName)}</span></div>` : '';
-    const labelHtml = `<div class="property-banner-label"><div class="property-banner-eyebrow">📍 Your Installation Address</div><div class="property-banner-addr">${esc(addr)}</div></div>`;
+    const labelHtml = addr ? `<div class="property-banner-label"><div class="property-banner-eyebrow">📍 Your Installation Address</div><div class="property-banner-addr">${esc(addr)}</div></div>` : '';
     wrap.innerHTML = `<div class="property-banner"></div>`;
     const bannerEl = wrap.querySelector('.property-banner');
+    if (!bannerEl) return;
     bannerEl.appendChild(img);
     bannerEl.insertAdjacentHTML('beforeend', gradHtml + forTagHtml + labelHtml);
-  } catch(e) {}
+  };
+  img.onerror = function() { if (wrap.isConnected) wrap.innerHTML = ''; };
+  img.src = `${SUPABASE_URL}/functions/v1/streetview-hero?t=${encodeURIComponent(token)}`;
 }
 
 // ── SCROLL REVEAL ────────────────────────────────────────────
@@ -682,8 +800,13 @@ function launchConfetti() {
   showCelebrationModal();
 }
 
+let celebrationReturnFocus = null;
+let celebrationBackground = [];
+let celebrationKeyHandler = null;
+
 function showCelebrationModal() {
   const firstName = (P.contact_name || '').trim().split(/\s+/)[0] || 'there';
+  celebrationReturnFocus = document.activeElement;
 
   const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
   document.body.style.paddingRight = scrollbarWidth + 'px';
@@ -691,6 +814,7 @@ function showCelebrationModal() {
 
   const backdrop = document.createElement('div');
   backdrop.id = 'congrats-backdrop';
+  backdrop.setAttribute('aria-hidden', 'true');
   backdrop.style.cssText = 'position:fixed;inset:0;background:rgba(11,31,59,0);z-index:9999;transition:background .35s ease;cursor:pointer';
   backdrop.addEventListener('click', closeCelebrationModal);
   document.body.appendChild(backdrop);
@@ -698,17 +822,35 @@ function showCelebrationModal() {
 
   const modal = document.createElement('div');
   modal.id = 'congrats-modal';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-labelledby', 'congrats-title');
+  modal.setAttribute('aria-describedby', 'congrats-description');
+  modal.setAttribute('tabindex', '-1');
   modal.style.cssText = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:10000;padding:20px;pointer-events:none';
   modal.innerHTML = `
-    <div id="congrats-card" style="background:#fff;border-radius:18px;padding:36px 28px 28px;max-width:340px;width:100%;text-align:center;pointer-events:all;box-shadow:0 24px 64px rgba(11,31,59,.22);transform:translateY(12px);opacity:0;transition:transform .4s ease,opacity .35s ease">
+    <div id="congrats-card" role="document" style="background:#fff;border-radius:18px;padding:36px 28px 28px;max-width:340px;width:100%;text-align:center;pointer-events:all;box-shadow:0 24px 64px rgba(11,31,59,.22);transform:translateY(12px);opacity:0;transition:transform .4s ease,opacity .35s ease">
       <div style="width:52px;height:52px;border-radius:50%;background:#ffba00;color:#0b1f3b;display:flex;align-items:center;justify-content:center;margin:0 auto 18px">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
       </div>
-      <div style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;color:#0b1f3b;margin-bottom:10px;letter-spacing:-.02em;line-height:1.2">You're set, ${esc(firstName)}.</div>
-      <div style="font-size:14px;color:#4d5a6e;line-height:1.6;margin:0">I've got your approval. Next I'll file the permit and text you to lock the install date.</div>
-      <div style="font-size:12px;color:#94a3b8;margin-top:20px">Tap anywhere to continue</div>
+      <div id="congrats-title" style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;color:#0b1f3b;margin-bottom:10px;letter-spacing:-.02em;line-height:1.2">You're set, ${esc(firstName)}.</div>
+      <div id="congrats-description" style="font-size:14px;color:#4d5a6e;line-height:1.6;margin:0">I've got your approval. Next I'll file the permit and text you to lock the install date.</div>
+      <div style="font-size:12px;color:#94a3b8;margin-top:20px">Tap anywhere, or press Escape, to continue</div>
     </div>`;
+  modal.addEventListener('click', closeCelebrationModal);
   document.body.appendChild(modal);
+  celebrationBackground = [];
+  Array.from(document.body.children).forEach((node) => {
+    if (node === backdrop || node === modal || node.tagName === 'SCRIPT') return;
+    celebrationBackground.push({ node, wasInert: node.hasAttribute('inert') });
+    node.setAttribute('inert', '');
+  });
+  celebrationKeyHandler = (event) => {
+    if (event.key === 'Escape') closeCelebrationModal();
+    if (event.key === 'Tab') { event.preventDefault(); modal.focus(); }
+  };
+  document.addEventListener('keydown', celebrationKeyHandler);
+  modal.focus();
   requestAnimationFrame(() => {
     const card = modal.querySelector('#congrats-card');
     requestAnimationFrame(() => { card.style.transform = 'translateY(0)'; card.style.opacity = '1'; });
@@ -736,6 +878,15 @@ function closeCelebrationModal() {
   }
   document.body.style.overflow = '';
   document.body.style.paddingRight = '';
+  celebrationBackground.forEach(({ node, wasInert }) => { if (!wasInert) node.removeAttribute('inert'); });
+  celebrationBackground = [];
+  if (celebrationKeyHandler) document.removeEventListener('keydown', celebrationKeyHandler);
+  celebrationKeyHandler = null;
+  if (celebrationReturnFocus && !celebrationReturnFocus.disabled && celebrationReturnFocus.focus) celebrationReturnFocus.focus();
+  else {
+    const main = document.getElementById('main');
+    if (main) { main.setAttribute('tabindex', '-1'); main.focus(); }
+  }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -1174,7 +1325,7 @@ function renderProposal() {
         <div style="margin-top:22px;padding-top:18px;border-top:1px solid var(--border)">
           <label class="form-label" for="signer-name" style="font-size:13px;margin-bottom:6px;letter-spacing:0;text-transform:none;font-weight:600;color:var(--navy)">Your full name <span class="req">*</span></label>
           <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.5" id="signer-hint">Typing your name confirms this proposal.</p>
-          <input class="name-input" id="signer-name" type="text" placeholder="Full name" autocomplete="name" value="${esc(P.contact_name || '')}" oninput="validateForm();updateSigPreview()" aria-required="true" aria-describedby="signer-hint">
+          <input class="name-input" id="signer-name" type="text" placeholder="Full name" autocomplete="name" value="" oninput="validateForm();updateSigPreview()" aria-required="true" aria-describedby="signer-hint">
           <div class="sig-preview" id="sig-preview"></div>
           <div class="name-hint" style="text-align:center">Legally binding electronic signature under the ESIGN Act.</div>
         </div>
@@ -1209,6 +1360,8 @@ function renderProposal() {
   // Hero entrance
   const hero = document.querySelector('.hero-card');
   if (hero) { hero.style.cssText += ';opacity:0;transform:translateY(28px)'; requestAnimationFrame(() => { hero.style.transition = 'opacity .7s ease, transform .7s ease'; hero.style.opacity = '1'; hero.style.transform = 'translateY(0)'; }); }
+  authorizationFactsRendered = true;
+  syncAuthorizationGateUI();
 }
 
 // ── ACK ROW WIRING ───────────────────────────────────────────
@@ -1422,14 +1575,14 @@ function validateForm() {
   const btn = document.getElementById('approve-btn');
   if (btn) {
     if (btn.dataset.expired === '1') { btn.disabled = true; return; }
-    btn.disabled = !(name.length >= 2 && ackScope && ackSafety);
+    btn.disabled = !authorizationGateReady() || depositCancellationUnconfirmed || !(name.length >= 2 && ackScope && ackSafety);
   }
 }
 
 // ── PERSIST SELECTIONS (debounced) ───────────────────────────
 let _saveSelectionsTimer = null;
 function saveSelections() {
-  if (!P?.token) return;
+  if (previewModeActive() || !P?.token) return;
   clearTimeout(_saveSelectionsTimer);
   _saveSelectionsTimer = setTimeout(async () => {
     try {
@@ -1487,9 +1640,12 @@ function updateApproveBtn() {
 
 // ── DEPOSIT PAYMENT (called from approved state) ─────────────
 async function payDeposit(payFull = false) {
+  if (previewModeActive() || !authorizationGateReady() || approvedCheckoutOpening) return;
+  approvedCheckoutOpening = true;
   const btnId = payFull ? '[onclick="payDeposit(true)"]' : '[onclick="payDeposit()"]';
   const btn = document.querySelector(btnId);
-  if (btn) { btn.disabled = true; btn.textContent = 'Redirecting...'; }
+  document.querySelectorAll('[onclick="payDeposit()"],[onclick="payDeposit(true)"]').forEach((control) => { control.disabled = true; });
+  if (btn) btn.textContent = 'Redirecting...';
   try {
     const resp = await fetch(`${SUPABASE_URL}/functions/v1/proposal-deposit-checkout`, {
       method: 'POST',
@@ -1497,25 +1653,577 @@ async function payDeposit(payFull = false) {
       body: JSON.stringify({ proposal_token: P.token, pay_full: payFull }),
     });
     const result = await resp.json();
-    if (result.url) { window.location.href = result.url; return; }
+    let target = null;
+    try {
+      const url = new URL(result.url);
+      if (url.protocol === 'https:' && (url.hostname === 'checkout.stripe.com' || url.hostname.endsWith('.stripe.com'))) target = url.href;
+    } catch {}
+    if (resp.ok && target) { window.location.href = target; return; }
     alert('Payment error: ' + (result.error || 'Unknown error'));
   } catch(e) { alert('Network error, please call (864) 863-7800.'); }
+  approvedCheckoutOpening = false;
+  document.querySelectorAll('[onclick="payDeposit()"],[onclick="payDeposit(true)"]').forEach((control) => { control.disabled = isPreview; });
   if (btn) {
     btn.disabled = false;
     btn.textContent = payFull
-      ? `Pay $${Math.round(P.total||0).toLocaleString()} in Full →`
-      : `Pay $${Math.round((P.total||0)*0.5).toLocaleString()} Deposit Now →`;
+      ? `Pay $${Math.round(P.signed_total??P.total??0).toLocaleString()} in Full`
+      : `Pay $${Math.round((P.signed_total??P.total??0)*Number(P.deposit_rate??0.20)).toLocaleString()} Deposit`;
   }
 }
 
 // ── APPROVE ──────────────────────────────────────────────────
 let approving = false;
+function resetSignedCheckoutButton(btn) {
+  btn.disabled = false;
+  approving = false;
+  btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span id="approve-btn-label">Try secure payment again</span>';
+}
+
+function resetUnsignedApprovalButton(btn) {
+  const total = calcTotal(chosenAmp);
+  const depositRate = Number(P?.deposit_rate ?? 0.20);
+  const deposit = Math.round(total * depositRate);
+  const label = P.require_deposit === false
+    ? `Confirm &amp; Lock Price, ${fmt(total)}`
+    : (selectedPayFull ? `Confirm &amp; Pay ${fmt(total)} in Full` : `Confirm &amp; Pay ${fmt(deposit)} Deposit`);
+  btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span id="approve-btn-label">${label}</span>`;
+  validateForm();
+}
+
+function resetDepositAcceptanceAuthorization(message) {
+  approving = false;
+  signStatusUncertain = false;
+  selectedPayFull = false;
+  ackScope = false;
+  ackSafety = false;
+  renderProposal();
+  const signer = document.getElementById('signer-name');
+  if (signer) signer.value = '';
+  updateSigPreview();
+  updateAckVisual('ack-row-scope', 'ack-box-scope', false);
+  updateAckVisual('ack-row-safety', 'ack-box-safety', false);
+  validateForm();
+  const err = document.getElementById('approve-err');
+  if (err) err.textContent = message || 'Payment was not confirmed. Review the proposal, check each acknowledgment, enter your name, and accept again.';
+}
+
+async function openPendingDepositCheckout(acceptanceAttemptId) {
+  if (previewModeActive() || !authorizationGateReady()) return;
+  rememberPendingDepositAcceptance(P.token, acceptanceAttemptId);
+  const resp = await fetch(`${SUPABASE_URL}/functions/v1/proposal-deposit-checkout`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_KEY}` },
+    body: JSON.stringify({
+      proposal_token: P.token,
+      pay_full: selectedPayFull,
+      acceptance_attempt_id: acceptanceAttemptId,
+    }),
+  });
+  const result = await resp.json().catch(() => ({}));
+  if (!resp.ok || result.error || !result.url) throw new Error(result.error || 'Could not start secure payment.');
+  let target = null;
+  try {
+    const url = new URL(result.url);
+    if (url.protocol === 'https:' && (url.hostname === 'checkout.stripe.com' || url.hostname.endsWith('.stripe.com'))) target = url.href;
+  } catch {}
+  if (!target) throw new Error('Payment setup returned a bad redirect.');
+  window.location.href = target;
+}
+
+async function openSignedCheckout(btn) {
+  if (previewModeActive() || !authorizationGateReady()) return;
+  const err = document.getElementById('approve-err');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner-large" style="width:20px;height:20px;border-width:2.5px;margin:0"></div> Redirecting to payment...';
+  try {
+    const resp = await fetch(`${SUPABASE_URL}/functions/v1/proposal-deposit-checkout`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_KEY}` },
+      body: JSON.stringify({ proposal_token: P.token, pay_full: selectedPayFull }),
+    });
+    const result = await resp.json().catch(() => ({}));
+    if (!resp.ok || result.error || !result.url) throw new Error(result.error || 'Could not start secure payment.');
+    let target = null;
+    try {
+      const url = new URL(result.url);
+      if (url.protocol === 'https:' && (url.hostname === 'checkout.stripe.com' || url.hostname.endsWith('.stripe.com'))) target = url.href;
+    } catch {}
+    if (!target) throw new Error('Payment setup returned a bad redirect.');
+    window.location.href = target;
+  } catch (_) {
+    err.textContent = 'Your proposal is signed. Secure payment did not open. Try the payment step again or call (864) 863-7800.';
+    resetSignedCheckoutButton(btn);
+  }
+}
+
+async function retrySignedCheckout() {
+  if (previewModeActive() || !authorizationGateReady() || approving || !P) return;
+  const btn = document.getElementById('approve-btn');
+  const err = document.getElementById('approve-err');
+  if (!btn || !err) return;
+  approving = true;
+  err.textContent = '';
+  await openSignedCheckout(btn);
+}
+
+async function readAuthoritativeProposal() {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 6000);
+  try {
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/proposal-view?token=${encodeURIComponent(P.token)}`, {
+      headers: { 'Authorization': `Bearer ${SUPABASE_KEY}` },
+      cache: 'no-store',
+      signal: controller.signal,
+    });
+    const data = await response.json().catch(() => ({}));
+    if (response.status === 410) return { __superseded: true, latest_token: data.latest_token || null };
+    if (!response.ok || !data.proposal) throw new Error('status unavailable');
+    return data.proposal;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function hasCheckoutReturnHint() {
+  return /[?&](deposit_paid|card_saved|payment_check|acceptance_cancel)=1(?:&|$)/.test(window.location.search);
+}
+
+const ACCEPTANCE_ATTEMPT_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+function pendingDepositStorageKey(token) { return `bpp:pending-deposit-acceptance:${token}`; }
+function rememberPendingDepositAcceptance(token, attemptId) {
+  if (!token || !ACCEPTANCE_ATTEMPT_RE.test(String(attemptId || ''))) return;
+  try { sessionStorage.setItem(pendingDepositStorageKey(token), String(attemptId)); } catch (_) {}
+}
+function storedPendingDepositAcceptance(token) {
+  try {
+    const value = sessionStorage.getItem(pendingDepositStorageKey(token)) || '';
+    return ACCEPTANCE_ATTEMPT_RE.test(value) ? value : null;
+  } catch (_) { return null; }
+}
+function forgetPendingDepositAcceptance(token, attemptId) {
+  try {
+    const key = pendingDepositStorageKey(token);
+    const current = sessionStorage.getItem(key);
+    if (!attemptId || current === String(attemptId)) sessionStorage.removeItem(key);
+  } catch (_) {}
+}
+async function terminatePendingDepositAcceptance(token, attemptId, signal) {
+  if (!token || !ACCEPTANCE_ATTEMPT_RE.test(String(attemptId || ''))) throw new Error('invalid acceptance attempt');
+  depositCancellationUnconfirmed = true;
+  validateForm();
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/proposal-deposit-checkout`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_KEY}` },
+    body: JSON.stringify({
+      action: 'cancel_pending_acceptance',
+      proposal_token: token,
+      acceptance_attempt_id: attemptId,
+    }),
+    signal,
+  });
+  const result = await response.json().catch(() => ({}));
+  const finalizationPending = result?.acceptance_pending === true
+    || result?.payment_confirmed === true
+    || result?.reconciliation_required === true;
+  if (!response.ok || result?.ok !== true
+      || (result.accepted !== true
+        && result.authorization_reset_required !== true
+        && !finalizationPending)) {
+    throw new Error(result?.error || 'acceptance cancellation was not confirmed');
+  }
+  if (finalizationPending && result.accepted !== true) {
+    depositCancellationUnconfirmed = true;
+    throw new Error('payment finalization is pending');
+  }
+  forgetPendingDepositAcceptance(token, attemptId);
+  depositCancellationUnconfirmed = false;
+  return result;
+}
+async function terminateActivePendingDepositAcceptance(token, signal) {
+  depositCancellationUnconfirmed = true;
+  validateForm();
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/proposal-deposit-checkout`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_KEY}` },
+    body: JSON.stringify({ action: 'cancel_active_pending_acceptance', proposal_token: token }),
+    signal,
+  });
+  const result = await response.json().catch(() => ({}));
+  const finalizationPending = result?.acceptance_pending === true
+    || result?.payment_confirmed === true
+    || result?.reconciliation_required === true;
+  if (!response.ok || result?.ok !== true
+      || (result.active === true
+        && result.accepted !== true
+        && result.authorization_reset_required !== true
+        && !finalizationPending)) {
+    throw new Error(result?.error || 'active acceptance status was not confirmed');
+  }
+  if (finalizationPending && result.accepted !== true) {
+    depositCancellationUnconfirmed = true;
+    throw new Error('payment finalization is pending');
+  }
+  depositCancellationUnconfirmed = false;
+  if (result.authorization_reset_required === true) depositAuthorizationWasReset = true;
+  return result;
+}
+async function checkPendingDepositAcceptance(token, attemptId) {
+  if (!token || !ACCEPTANCE_ATTEMPT_RE.test(String(attemptId || ''))) {
+    throw new Error('acceptance attempt status is unavailable');
+  }
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/proposal-deposit-checkout`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_KEY}` },
+    body: JSON.stringify({
+      action: 'check_pending_acceptance',
+      proposal_token: token,
+      acceptance_attempt_id: attemptId,
+    }),
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok || result?.ok !== true) {
+    throw new Error(result?.error || 'acceptance status was not confirmed');
+  }
+  return result;
+}
+async function settlePendingDepositAcceptanceBeforeLoad(token, signal) {
+  if (previewModeActive()) return null;
+  const params = new URLSearchParams(window.location.search);
+  const queryAttempt = params.get('acceptance_attempt_id') || '';
+  const validQueryAttempt = ACCEPTANCE_ATTEMPT_RE.test(queryAttempt) ? queryAttempt : null;
+  const paidReturn = params.get('deposit_paid') === '1' || params.get('payment_check') === '1';
+  if (paidReturn) {
+    if (validQueryAttempt) rememberPendingDepositAcceptance(token, validQueryAttempt);
+    return null;
+  }
+  const cancelReturn = params.get('acceptance_cancel') === '1';
+  if (cancelReturn && !validQueryAttempt) throw new Error('missing acceptance attempt');
+  const attemptId = validQueryAttempt || storedPendingDepositAcceptance(token);
+  if (!attemptId) return terminateActivePendingDepositAcceptance(token, signal);
+  const result = await terminatePendingDepositAcceptance(token, attemptId, signal);
+  if (result.authorization_reset_required === true) depositAuthorizationWasReset = true;
+  scrubCheckoutReturnHints(false);
+  return result;
+}
+
+async function runAuthorizationGate(token) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), AUTHORIZATION_GATE_TIMEOUT_MS);
+  try {
+    return await settlePendingDepositAcceptanceBeforeLoad(token, controller.signal);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function beginAuthorizationGate(token) {
+  authorizationGateToken = token || authorizationGateToken;
+  if (previewModeActive()) {
+    setAuthorizationGateState('preview');
+    return Promise.resolve(null);
+  }
+  if (!authorizationGateToken || authorizationGateInFlight) return authorizationGateInFlight || Promise.resolve(null);
+  const gateParams = new URLSearchParams(window.location.search);
+  const gatePaidReturn = gateParams.get('deposit_paid') === '1' || gateParams.get('payment_check') === '1';
+  const gateAttempt = gateParams.get('acceptance_attempt_id') || storedPendingDepositAcceptance(authorizationGateToken);
+  if (!gatePaidReturn && (gateParams.get('acceptance_cancel') === '1' || ACCEPTANCE_ATTEMPT_RE.test(String(gateAttempt || '')))) {
+    authorizationFullRedoPending = true;
+  }
+  setAuthorizationGateState('pending');
+  const attempt = runAuthorizationGate(authorizationGateToken).then((result) => {
+    if (result?.accepted === true) {
+      window.location.reload();
+      return result;
+    }
+    if (result?.authorization_reset_required === true && authorizationFactsRendered && P && document.getElementById('approve-btn')) {
+      depositAuthorizationWasReset = false;
+      resetDepositAcceptanceAuthorization('Payment was not confirmed, so this proposal was not accepted. Review it, check each acknowledgment, enter your name, and accept again.');
+    }
+    setAuthorizationGateState('ready');
+    return result;
+  }).catch(() => {
+    setAuthorizationGateState('failed');
+    return null;
+  }).finally(() => {
+    if (authorizationGateInFlight === attempt) authorizationGateInFlight = null;
+  });
+  authorizationGateInFlight = attempt;
+  return attempt;
+}
+
+function proposalUrlForToken(token) {
+  const params = new URLSearchParams(window.location.search);
+  params.set('token', token);
+  params.delete('deposit_paid');
+  params.delete('card_saved');
+  params.delete('payment_check');
+  params.delete('acceptance_cancel');
+  params.delete('acceptance_attempt_id');
+  if (isPreview || params.get('preview') === '1') params.set('preview', '1');
+  else params.delete('preview');
+  const query = params.toString();
+  return `/proposal.html${query ? `?${query}` : ''}`;
+}
+
+function depositAcceptanceRetryUrl(token) {
+  const next = new URLSearchParams(window.location.search);
+  next.set('token', token);
+  next.delete('deposit_paid');
+  next.delete('card_saved');
+  next.delete('payment_check');
+  next.delete('acceptance_cancel');
+  next.delete('acceptance_attempt_id');
+  next.set('acceptance_retry', '1');
+  return `${window.location.pathname}?${next.toString()}`;
+}
+
+function consumeDepositAcceptanceRetry() {
+  const next = new URLSearchParams(window.location.search);
+  if (next.get('acceptance_retry') !== '1') return false;
+  next.delete('acceptance_retry');
+  const query = next.toString();
+  history.replaceState(null, '', `${window.location.pathname}${query ? `?${query}` : ''}`);
+  return true;
+}
+
+function scrubCheckoutReturnHints(keepChecking = false) {
+  const params = new URLSearchParams(window.location.search);
+  params.delete('deposit_paid');
+  params.delete('card_saved');
+  params.delete('acceptance_cancel');
+  params.delete('acceptance_attempt_id');
+  if (keepChecking) params.set('payment_check', '1');
+  else params.delete('payment_check');
+  const query = params.toString();
+  history.replaceState(null, '', `${window.location.pathname}${query ? `?${query}` : ''}`);
+}
+
+function approvedPaymentTruthConfirmed(row) {
+  const state = row?.payment_state;
+  if (!state || typeof state !== 'object') return false;
+  if (row.require_deposit === false) return state.kind === 'setup' && state.status === 'card_saved';
+  if (state.kind === 'full_payment') {
+    return state.status === 'paid'
+      && state.paid_in_full === true
+      && state.invoice_paid_in_full === true
+      && Number(state.project_remaining) === 0;
+  }
+  return state.kind === 'deposit'
+    && state.status === 'paid'
+    && state.invoice_paid_in_full === true;
+}
+
+async function showCheckoutReturnPending() {
+  const status = String(P?.status || '').toLowerCase();
+  if (P?.require_deposit !== false && ['sent', 'viewed', 'copied'].includes(status)) {
+    const params = new URLSearchParams(window.location.search);
+    const attemptId = params.get('acceptance_attempt_id') || storedPendingDepositAcceptance(P.token);
+    try {
+      if (!ACCEPTANCE_ATTEMPT_RE.test(String(attemptId || ''))) {
+        throw new Error('acceptance attempt status is unavailable');
+      }
+      const result = await checkPendingDepositAcceptance(P.token, attemptId);
+      if (result.accepted === true) { window.location.reload(); return; }
+      if (result.authorization_reset_required === true) {
+        forgetPendingDepositAcceptance(P.token, attemptId);
+        window.location.replace(depositAcceptanceRetryUrl(P.token));
+        return;
+      }
+      scrubCheckoutReturnHints(true);
+      showError(
+        result.payment_confirmed === true ? 'Final approval is still processing' : 'Payment status needs confirmation',
+        result.payment_confirmed === true
+          ? 'The secure payment provider reports this payment completed, but the proposal is not accepted until the server finishes the approval record. Check again in a moment or call Key if this remains.'
+          : 'The server has not confirmed a completed payment or proposal acceptance. This proposal is not accepted. Check again in a moment or call Key if this remains.',
+        { label: 'Check payment status', onClick: () => reconcileCheckoutReturn(P) }
+      );
+    } catch (_) {
+      scrubCheckoutReturnHints(true);
+      depositCancellationUnconfirmed = true;
+      showError(
+        'Payment status needs confirmation',
+        'We could not safely confirm the previous payment attempt. This proposal is not accepted, and a new acceptance is blocked to prevent a duplicate payment. Refresh to check again, or call Key at (864) 863-7800.',
+        { label: 'Check payment status', onClick: () => reconcileCheckoutReturn(P) }
+      );
+    }
+    return;
+  }
+  scrubCheckoutReturnHints(true);
+  showError(
+    'Checking payment status',
+    'The secure payment page returned here, but the server has not confirmed the result yet. No payment or saved card is being claimed until that confirmation arrives.',
+    { label: 'Check payment status', onClick: () => reconcileCheckoutReturn(P) }
+  );
+}
+
+function reconcileCheckoutReturn(initialRow) {
+  P = initialRow || P;
+  showError('Checking payment status', 'The secure payment page returned here. We are checking the server before showing any payment or saved-card result.');
+  const delays = [0, 300, 900, 1800];
+  let attempt = 0;
+  const check = () => {
+    if (attempt >= delays.length) { showCheckoutReturnPending(); return; }
+    const delay = delays[attempt++];
+    window.setTimeout(async () => {
+      try {
+        const row = await readAuthoritativeProposal();
+        if (row?.__superseded) {
+          scrubCheckoutReturnHints(false);
+          const latest = row.latest_token;
+          const action = latest && /^[a-zA-Z0-9-]{8,64}$/.test(latest)
+            ? { label: 'View your current quote', href: proposalUrlForToken(latest) }
+            : null;
+          showError('This quote was updated', 'A newer version of this quote is available. Review that version before continuing.', action);
+          return;
+        }
+        const token = P.token;
+        P = { ...row, token: row.token || token };
+        const status = String(P.status || '').toLowerCase();
+        if (status === 'approved' && approvedPaymentTruthConfirmed(P)) { scrubCheckoutReturnHints(false); renderApproved(); return; }
+        if (terminalProposalStatus(status)) { scrubCheckoutReturnHints(false); showClosedProposal(P); return; }
+        if (status === 'signed' && P.payment_state?.status === 'partial') { scrubCheckoutReturnHints(false); renderApproved(); return; }
+        check();
+      } catch (_) {
+        check();
+      }
+    }, delay);
+  };
+  check();
+}
+
+function proposalRevision(row) {
+  const value = Number(row?.signature_revision);
+  return Number.isFinite(value) ? value : null;
+}
+
+function terminalProposalStatus(status) {
+  return ['cancelled', 'canceled', 'declined', 'expired', 'superseded'].includes(status);
+}
+
+function showClosedProposal(row) {
+  P = row;
+  if (hasCheckoutReturnHint()) scrubCheckoutReturnHints(false);
+  const expired = String(row?.status || '').toLowerCase() === 'expired';
+  showError(
+    expired ? 'This quote has expired' : 'Proposal closed',
+    expired
+      ? 'This proposal cannot be signed. Please contact (864) 863-7800 for a refreshed quote.'
+      : 'This proposal is no longer active. Please contact (864) 863-7800 if you have questions.'
+  );
+}
+
+function resetAuthorizationForRevisedContract(row) {
+  approving = false;
+  signStatusUncertain = false;
+  P = row;
+  selectedPayFull = false;
+  ackScope = false;
+  ackSafety = false;
+  renderProposal();
+  const signer = document.getElementById('signer-name');
+  if (signer) signer.value = '';
+  updateSigPreview();
+  updateAckVisual('ack-row-scope', 'ack-box-scope', false);
+  updateAckVisual('ack-row-safety', 'ack-box-safety', false);
+  validateForm();
+  const err = document.getElementById('approve-err');
+  const label = document.getElementById('approve-btn-label');
+  if (err) err.textContent = 'This proposal changed. Review the current scope and price, then acknowledge and sign the revised proposal.';
+  if (label) label.textContent = 'Review revised proposal';
+}
+
+async function reconcileSignFailure(btn, err) {
+  btn.disabled = true;
+  btn.textContent = 'Checking signing status...';
+  try {
+    const row = await readAuthoritativeProposal();
+    if (row?.__superseded) {
+      approving = false;
+      signStatusUncertain = false;
+      const latest = row.latest_token;
+      const action = latest && /^[a-zA-Z0-9-]{8,64}$/.test(latest)
+        ? { label: 'View your current quote', href: proposalUrlForToken(latest) }
+        : null;
+      showError('This quote was updated', 'A newer version of this quote is available. Review that version before signing.', action);
+      return;
+    }
+    const token = P.token;
+    const priorRevision = proposalRevision(P);
+    // Rendering adds derived compatibility fields to P. Replace the snapshot
+    // so a sparse authoritative reread cannot retain stale terms from the
+    // prior revision.
+    P = { ...row, token: row.token || token };
+    const status = String(P.status || '').toLowerCase();
+    signStatusUncertain = false;
+    approving = false;
+    if (status === 'approved') {
+      renderApproved();
+      return;
+    }
+    if (status === 'signed') {
+      if (P.require_deposit !== false) {
+        if (hasCheckoutReturnHint()) scrubCheckoutReturnHints(false);
+        showError(
+          'Proposal not accepted',
+          'Payment was not confirmed, so this proposal was not accepted. Ask Key for a refreshed proposal, then review it, check each acknowledgment, enter your name, and accept again.',
+          { label: 'Call Key', href: 'tel:+18648637800' }
+        );
+        return;
+      }
+      if (priorRevision !== proposalRevision(P)) {
+        renderApproved();
+        return;
+      }
+      resetSignedCheckoutButton(btn);
+      err.textContent = 'Your proposal is signed. Continue with the secure payment step.';
+      return;
+    }
+    if (terminalProposalStatus(status)) {
+      showClosedProposal(P);
+      return;
+    }
+    if (priorRevision !== proposalRevision(P)) {
+      resetAuthorizationForRevisedContract(P);
+      return;
+    }
+    resetUnsignedApprovalButton(btn);
+    err.textContent = 'We confirmed your signature was not saved. Your entries are still here, and you can try again.';
+  } catch (_) {
+    signStatusUncertain = true;
+    approving = false;
+    btn.disabled = false;
+    btn.innerHTML = '<span id="approve-btn-label">Check signing status</span>';
+    err.textContent = 'We could not confirm whether your signature was saved. Check its status before trying again, or call (864) 863-7800.';
+  }
+}
+
 async function approveProposal() {
-  if (isPreview) { launchConfetti(); return; }
-  if (approving) return;
-  const name = document.getElementById('signer-name').value.trim();
   const err = document.getElementById('approve-err');
   const btn = document.getElementById('approve-btn');
+  if (previewModeActive()) {
+    err.textContent = 'Preview mode is read only. Nothing was approved, signed, or paid.';
+    return;
+  }
+  if (approving) return;
+  if (!authorizationGateReady() || depositCancellationUnconfirmed) {
+    err.textContent = 'The previous payment attempt must be confirmed before you can accept again. Use the authorization retry above, or call (864) 863-7800.';
+    return;
+  }
+  if (signStatusUncertain) {
+    approving = true;
+    err.textContent = '';
+    await reconcileSignFailure(btn, err);
+    return;
+  }
+  // The no-deposit card-setup contract keeps its existing Signed retry. A
+  // deposit-required proposal must never reuse an earlier signature without a
+  // paid deposit, so historical Signed rows fail closed instead.
+  if (String(P?.status || '').toLowerCase() === 'signed') {
+    if (P.require_deposit === false) { await retrySignedCheckout(); return; }
+    resetDepositAcceptanceAuthorization('Payment was not confirmed, so this proposal is not accepted. Review and accept again after the proposal is refreshed. If this message remains, call (864) 863-7800.');
+    return;
+  }
+  const name = document.getElementById('signer-name').value.trim();
   if (!name || !ackScope || !ackSafety) { err.textContent = 'Please complete all fields above.'; return; }
   approving = true;
   btn.disabled = true;
@@ -1527,6 +2235,9 @@ async function approveProposal() {
   // omits ip_address here; the authoritative IP is on the row.
   const termsSnapshot = JSON.stringify({ proposal_id: P.id, proposal_token: P.token, contact_name: P.contact_name, contact_address: P.contact_address, selected_amp: chosenAmp, selected_surge: surgeOn, surge_price: surgeOn ? (P.surge_price || 446) : 0, pricing: getPrice(chosenAmp), total, scope_acknowledged: true, safety_acknowledged: true, signer_name: name, signed_at: new Date().toISOString(), user_agent: navigator.userAgent });
   let signErrMsg = null;
+  let signResult = null;
+  const depositRequired = P.require_deposit !== false;
+  const acceptanceRequestKey = crypto.randomUUID();
   try {
     const signRes = await fetch(`${SUPABASE_URL}/functions/v1/proposal-mutate`, {
       method: 'POST',
@@ -1547,63 +2258,92 @@ async function approveProposal() {
         // The server floors this at ampBase, so a tampered-low value cannot undercharge.
         signed_total: total,
         approved_terms_snapshot: termsSnapshot,
+        acceptance_request_key: acceptanceRequestKey,
+        pay_full: !!selectedPayFull,
       }),
     });
-    if (!signRes.ok) {
-      const j = await signRes.json().catch(() => ({}));
-      signErrMsg = j?.error || `HTTP ${signRes.status}`;
-    }
+    signResult = await signRes.json().catch(() => ({}));
+    if (!signRes.ok) signErrMsg = signResult?.error || `HTTP ${signRes.status}`;
   } catch (e) { signErrMsg = 'Network error'; }
-  if (signErrMsg) { err.textContent = 'Something went wrong. Please try again or call (864) 863-7800.'; btn.disabled = false; approving = false; updateApproveBtn(); return; }
+  if (signErrMsg) {
+    if (depositRequired) {
+      try {
+        const termination = await terminateActivePendingDepositAcceptance(P.token);
+        if (termination.accepted === true) { window.location.reload(); return; }
+        const row = await readAuthoritativeProposal();
+        if (row?.__superseded) {
+          approving = false;
+          signStatusUncertain = false;
+          const latest = row.latest_token;
+          const action = latest && /^[a-zA-Z0-9-]{8,64}$/.test(latest)
+            ? { label: 'View your current quote', href: proposalUrlForToken(latest) }
+            : null;
+          showError('This quote was updated', 'A newer version of this quote is available. Review that version before accepting.', action);
+          return;
+        }
+        const token = P.token;
+        const priorRevision = proposalRevision(P);
+        P = { ...row, token: row.token || token };
+        if (String(P.status || '').toLowerCase() === 'approved' && approvedPaymentTruthConfirmed(P)) {
+          renderApproved();
+          return;
+        }
+        const status = String(P.status || '').toLowerCase();
+        if (terminalProposalStatus(status)) { showClosedProposal(P); return; }
+        if (status === 'signed') {
+          showError(
+            'Proposal not accepted',
+            'Payment was not confirmed, so this proposal was not accepted. Ask Key for a refreshed proposal, then review it, check each acknowledgment, enter your name, and accept again.',
+            { label: 'Call Key', href: 'tel:+18648637800' }
+          );
+          return;
+        }
+        if (priorRevision !== proposalRevision(P)) {
+          resetAuthorizationForRevisedContract(P);
+          return;
+        }
+        resetDepositAcceptanceAuthorization();
+      } catch (_) {
+        resetDepositAcceptanceAuthorization('We could not safely close the previous payment attempt. Refresh to try again, or call (864) 863-7800. This proposal has not been accepted.');
+        depositCancellationUnconfirmed = true;
+        validateForm();
+      }
+      return;
+    }
+    await reconcileSignFailure(btn, err);
+    return;
+  }
+  if (depositRequired) {
+    const attemptId = String(signResult?.acceptance_attempt_id || '');
+    if (signResult?.pending_payment !== true || !/^[0-9a-f-]{36}$/i.test(attemptId)) {
+      resetDepositAcceptanceAuthorization();
+      return;
+    }
+    btn.innerHTML = '<div class="spinner-large" style="width:20px;height:20px;border-width:2.5px;margin:0"></div> Opening secure payment...';
+    try {
+      await openPendingDepositCheckout(attemptId);
+    } catch (_) {
+      try {
+        const result = await terminatePendingDepositAcceptance(P.token, attemptId);
+        if (result.accepted === true) { window.location.reload(); return; }
+        resetDepositAcceptanceAuthorization();
+      } catch (_) {
+        resetDepositAcceptanceAuthorization('We could not safely close the previous payment attempt. Refresh to try again, or call (864) 863-7800. This proposal has not been accepted.');
+        depositCancellationUnconfirmed = true;
+        validateForm();
+      }
+    }
+    return;
+  }
   // Reflect the SERVER truth: signing sets status='Signed', NOT 'Approved'. Only a
   // paid deposit (via the stripe-webhook) grants 'Approved'. Setting 'Approved' here
   // was a local display lie that let the post-sign UI claim approval before any money
   // was collected. Keep it 'Signed' so any re-render shows the honest deposit ask.
-  P.status = 'Signed'; P.signer_name = name; P.signed_at = new Date().toISOString(); P.selected_amp = chosenAmp; P.selected_surge = surgeOn; P.selected_pom = pomOn; P.total = total;
+  P.status = 'Signed'; P.signer_name = name; P.signed_at = new Date().toISOString(); P.selected_amp = chosenAmp; P.selected_surge = surgeOn; P.selected_pom = pomOn; P.signed_total = total; P.total = total;
 
-  const requireDeposit = P.require_deposit !== false;
-  if (requireDeposit) {
-    btn.innerHTML = '<div class="spinner-large" style="width:20px;height:20px;border-width:2.5px;margin:0"></div> Redirecting to payment...';
-    const resetBtn = () => {
-      btn.disabled = false; approving = false;
-      const depositRate = Number(P?.deposit_rate ?? 0.20);
-  const depositAmt = Math.round(total * depositRate);
-      btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> <span id="approve-btn-label">${selectedPayFull ? `Confirm &amp; Pay ${fmt(total)} in Full` : `Confirm &amp; Pay ${fmt(depositAmt)} Deposit`}</span>`;
-    };
-    try {
-      const resp = await fetch(`${SUPABASE_URL}/functions/v1/proposal-deposit-checkout`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_KEY}` },
-        body: JSON.stringify({ proposal_token: P.token, pay_full: selectedPayFull }),
-      });
-      const result = await resp.json();
-      if (result.error || !result.url) {
-        err.textContent = 'Payment setup failed: ' + (result.error || 'Unknown error');
-        resetBtn(); return;
-      }
-      // Validate the redirect URL server response, only Stripe's own
-      // domains are acceptable. Prevents a compromised edge function
-      // from redirecting to javascript:... or a Stripe look-alike.
-      let target = null;
-      try {
-        const u = new URL(result.url);
-        if (u.protocol === 'https:' && (u.hostname === 'checkout.stripe.com' || u.hostname.endsWith('.stripe.com'))) {
-          target = u.href;
-        }
-      } catch {}
-      if (!target) {
-        err.textContent = 'Payment setup returned a bad redirect. Please try again or call (864) 863-7800.';
-        resetBtn(); return;
-      }
-      window.location.href = target;
-    } catch (fetchErr) {
-      err.textContent = 'Network error, please try again or call (864) 863-7800.';
-      resetBtn();
-    }
-  } else {
-    launchConfetti();
-    setTimeout(() => renderApproved(), 800);
-  }
+  // Every signed proposal must complete the server-authorized checkout setup.
+  // When no deposit is due this securely stores the payment method for $0 today.
+  await openSignedCheckout(btn);
 }
 
 // ── APPROVED STATE ───────────────────────────────────────────
@@ -1615,12 +2355,77 @@ function renderApproved() {
   window.scrollTo(0, 0);
   renderPropertyBanner && setTimeout(renderPropertyBanner, 100);
   const requireDeposit = P.require_deposit !== false;
-  const depositPaid = new URLSearchParams(window.location.search).get('deposit_paid') === '1';
+  const proposalStatus = String(P.status || '').toLowerCase();
+  if (proposalStatus === 'signed' && requireDeposit) {
+    if (hasCheckoutReturnHint()) scrubCheckoutReturnHints(false);
+    showError(
+      'Proposal not accepted',
+      'Payment was not confirmed, so this proposal was not accepted. Ask Key for a refreshed proposal, then review it, check each acknowledgment, enter your name, and accept again.',
+      { label: 'Call Key', href: 'tel:+18648637800' }
+    );
+    return;
+  }
+  if (hasCheckoutReturnHint() && String(P.status || '').toLowerCase() === 'approved') scrubCheckoutReturnHints(false);
+  if (P.approval_source === 'operator_recorded') {
+    const action = P.payment_action;
+    const channel = esc(String(P.approval_channel || 'your conversation').replace('_', ' '));
+    const actionHTML = !isPreview && action?.kind === 'invoice' && action?.href
+      ? `<a class="approve-btn" data-authorization-action="payment" href="${esc(action.href)}">${esc(action.label || 'Open secure deposit invoice')}</a>`
+      : '';
+    document.getElementById('main').innerHTML = `
+      <div class="state-wrap">
+        <h2>Approval recorded</h2>
+        <p>Key recorded your approval from ${channel}. No electronic signature or card authorization was created.</p>
+        <p>${actionHTML ? 'Use the separate secure invoice below for the deposit.' : 'Key will contact you to confirm the next step.'}</p>
+        ${actionHTML}
+      </div>`;
+    return;
+  }
+  if (P.payment_action?.kind === 'invoice' && P.payment_action?.href) {
+    const paymentKind = P.payment_state?.kind === 'full_payment' ? 'project payment' : 'deposit';
+    const fallbackLabel = P.payment_state?.kind === 'full_payment'
+      ? 'Open secure payment invoice'
+      : 'Open secure deposit invoice';
+    const actionHTML = !isPreview
+      ? `<a class="approve-btn" data-authorization-action="payment" href="${esc(P.payment_action.href)}">${esc(P.payment_action.label || fallbackLabel)}</a>`
+      : '';
+    document.getElementById('main').innerHTML = `
+      <div class="state-wrap">
+        <h2>One payment step remains</h2>
+        <p>${P.payment_state?.status === 'partial' ? `Part of this ${paymentKind} is already recorded. ` : ''}Use the secure invoice for the exact remaining balance.${isPreview ? ' Preview mode cannot open payment.' : ''}</p>
+        ${actionHTML}
+      </div>`;
+    return;
+  }
+  const paymentFlowStatus = P.payment_state && typeof P.payment_state === 'object' ? P.payment_state.status : null;
+  if ((proposalStatus === 'approved' && !approvedPaymentTruthConfirmed(P))
+      || (proposalStatus === 'signed' && paymentFlowStatus !== 'not_started')) {
+    if (hasCheckoutReturnHint()) scrubCheckoutReturnHints(true);
+    showError(
+      'Payment status needs confirmation',
+      'Your proposal approval is recorded, but the payment ledger is not available or does not agree yet. No payment or saved card is being claimed until the server confirms it.',
+      { label: 'Check payment status', onClick: () => reconcileCheckoutReturn(P) }
+    );
+    return;
+  }
+  if (proposalStatus === 'approved' && hasCheckoutReturnHint()) scrubCheckoutReturnHints(false);
+  const paymentState = P.payment_state && typeof P.payment_state === 'object' ? P.payment_state : {};
+  const depositPaid = paymentState.kind === 'deposit' && paymentState.status === 'paid';
+  const fullPaymentPaid = paymentState.kind === 'full_payment' && paymentState.status === 'paid' && paymentState.paid_in_full === true;
+  const paymentConfirmed = depositPaid || fullPaymentPaid || (paymentState.kind === 'setup' && paymentState.status === 'card_saved');
   const signedDate = P.signed_at ? new Date(P.signed_at).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) : '';
   const signedTime = P.signed_at ? new Date(P.signed_at).toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }) : '';
-  const total = P.total || 0;
+  const total = Number(P.signed_total ?? P.total ?? 0);
   const depositRate = Number(P?.deposit_rate ?? 0.20);
   const depositAmt = Math.round(total * depositRate);
+  const projectRemaining = Number.isFinite(Number(paymentState.project_remaining)) ? Number(paymentState.project_remaining) : Math.max(total - Number(paymentState.net_paid || 0), 0);
+  const installationPaymentCopy = fullPaymentPaid
+    ? 'Your project is paid in full. No project balance is due.'
+    : (depositPaid
+      ? `${fmt(projectRemaining)} remains for the project and is due upon completion.`
+      : (requireDeposit
+        ? `After the deposit, ${fmt(Math.max(total - depositAmt, 0))} is due upon completion.`
+        : 'Payment is due upon completion.'));
   const ampLabel = P.selected_amp === '50' ? '50 Amp' : '30 Amp';
   const pr = getPrice(P.selected_amp || P.amp_type || '30');
   let pricingRowsHtml = '';
@@ -1689,7 +2494,7 @@ function renderApproved() {
           : true;
         if (!checked || !(ci.title || ci.price)) return;
         pricingRowsHtml += priceRow(ci.title || 'Additional service', null, fmt(ci.price || 0));
-      });
+});
     }
   } else {
     pricingRowsHtml += `<tr><td class="price-item-name">Base installation</td><td>${fmt(pr.base || P.price_base || 0)}</td></tr>`;
@@ -1709,20 +2514,20 @@ function renderApproved() {
   document.getElementById('main').innerHTML = `
     <div id="property-banner-wrap"></div>
 
-    ${requireDeposit && !depositPaid && P.status === 'Signed' ? `
+    ${!paymentConfirmed && String(P.status || '').toLowerCase() === 'signed' ? `
     <div style="background:var(--navy);border-radius:16px;padding:28px 22px;text-align:center;color:#fff;margin-bottom:16px">
       <div style="font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;margin-bottom:8px;letter-spacing:-.02em">One quiet step left</div>
-      <p style="font-size:14px;opacity:.85;margin-bottom:22px;line-height:1.55;max-width:30em;margin-left:auto;margin-right:auto">Your name is on it and the price is locked. Confirm with your deposit and I book the install.</p>
+      <p style="font-size:14px;opacity:.85;margin-bottom:22px;line-height:1.55;max-width:30em;margin-left:auto;margin-right:auto">${requireDeposit ? 'Your name is on it and the price is locked. Confirm with your deposit and I book the install.' : 'Your proposal is signed and your price is locked. Save your card securely to finish setup. You pay $0 today.'}</p>
       <div style="display:flex;flex-direction:column;gap:10px;max-width:320px;margin:0 auto">
-        <button onclick="payDeposit()" style="background:var(--gold);color:var(--navy);font-family:'Outfit',sans-serif;font-size:16px;font-weight:800;padding:14px 28px;border:none;border-radius:28px;cursor:pointer">Pay $${depositAmt.toLocaleString()} Deposit</button>
-        <button onclick="payDeposit(true)" style="background:transparent;color:#fff;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;padding:12px 24px;border:1.5px solid rgba(255,255,255,.35);border-radius:28px;cursor:pointer">Pay $${total.toLocaleString()} in Full</button>
+        <button onclick="payDeposit()" ${isPreview ? 'disabled aria-disabled="true"' : ''} style="background:var(--gold);color:var(--navy);font-family:'Outfit',sans-serif;font-size:16px;font-weight:800;padding:14px 28px;border:none;border-radius:28px;cursor:pointer">${isPreview ? 'Preview, payment disabled' : (requireDeposit ? `Pay $${depositAmt.toLocaleString()} Deposit` : 'Save my card securely')}</button>
+        ${requireDeposit ? `<button onclick="payDeposit(true)" ${isPreview ? 'disabled aria-disabled="true"' : ''} style="background:transparent;color:#fff;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;padding:12px 24px;border:1.5px solid rgba(255,255,255,.35);border-radius:28px;cursor:pointer">${isPreview ? 'Preview, payment disabled' : `Pay $${total.toLocaleString()} in Full`}</button>` : ''}
       </div>
-      <p style="font-size:11px;opacity:.7;margin-top:14px;line-height:1.5">Paying in full is optional. Beyond the deposit is fully refundable any time before install is completed.</p>
+      <p style="font-size:11px;opacity:.7;margin-top:14px;line-height:1.5">${requireDeposit ? 'Paying in full is optional. Beyond the deposit is fully refundable any time before install is completed.' : 'No payment is collected today. This securely saves the payment method authorized for this project.'}</p>
     </div>` : `
     <div class="approved-banner">
       <div class="approved-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
-      <h2>${depositPaid ? 'Deposit received. You\'re locked in.' : 'You\'re set.'}</h2>
-      <p>${depositPaid ? `Your $${depositAmt.toLocaleString()} deposit is confirmed. I'll text within 48 hours to schedule. Remaining balance due on install day.` : 'I\'ll text within 48 hours to lock your install date.'}</p>
+      <h2>${fullPaymentPaid ? 'Payment confirmed.' : (depositPaid ? 'Deposit received. You\'re locked in.' : 'You\'re set.')}</h2>
+      <p>${fullPaymentPaid ? 'Your project payment is confirmed. Key will text you to confirm the next project step.' : (depositPaid ? `Your ${fmt(Number(paymentState.net_paid || depositAmt))} deposit is confirmed. I'll text within 48 hours to schedule. ${fmt(projectRemaining)} remains for the project.` : 'Your proposal and payment setup are confirmed. Key will text you to confirm the next project step.')}</p>
     </div>`}
 
     <div class="card">
@@ -1732,8 +2537,8 @@ function renderApproved() {
       </div>
       <div class="card-body">
         <div class="next-step-item"><div class="next-step-num">1</div><div class="next-step-text"><strong>Key reaches out within 48 hours</strong><span>You'll get a text to confirm your date and answer any final questions.</span></div></div>
-        <div class="next-step-item"><div class="next-step-num">2</div><div class="next-step-text"><strong>We pull your permit</strong><span>We handle all paperwork with your local jurisdiction. Nothing for you to do.</span></div></div>
-        <div class="next-step-item"><div class="next-step-num">3</div><div class="next-step-text"><strong>Installation day, done in a day</strong><span>Me or one of my trusted install partners arrives, installs everything, cleans up, and walks you through your new system. Either way the work is held to my standard and county-inspected. ${requireDeposit ? `Remaining balance ($${(total - depositAmt).toLocaleString()}) due upon completion.` : 'Payment is due upon completion.'}</span></div></div>
+        ${P.include_permit !== false ? '<div class="next-step-item"><div class="next-step-num">2</div><div class="next-step-text"><strong>We coordinate the permit</strong><span>We handle the required local paperwork and inspection scheduling for this project.</span></div></div>' : ''}
+        <div class="next-step-item"><div class="next-step-num">3</div><div class="next-step-text"><strong>Installation day, done in a day</strong><span>Me or one of my trusted install partners arrives, installs everything, cleans up, and walks you through your new system. Either way the work is held to my standard and county-inspected. ${installationPaymentCopy}</span></div></div>
         <div class="next-step-item"><div class="next-step-num">4</div><div class="next-step-text"><strong>State electrical inspection</strong><span>We schedule and coordinate the inspection. You're officially code-compliant and outage-ready.</span></div></div>
         <div style="text-align:center;margin-top:16px;padding-top:16px">
           <div style="font-size:14px;color:var(--text2);margin-bottom:4px">Questions? Call or text Key anytime</div>
@@ -1777,9 +2582,12 @@ function renderApproved() {
           <tr class="price-total-row"><td>Total Approved</td><td><span class="total-badge">${fmt(total)}</span></td></tr>
           ${requireDeposit ? `
           <tr><td colspan="2" style="padding:0;border-bottom:none"><div style="border-top:2px dashed #e2e8f0;margin:4px 0"></div></td></tr>
-          ${depositPaid ? `
-          <tr><td class="price-item-name" style="color:var(--green)">✓ Deposit Paid</td><td style="color:var(--green);font-weight:700">−${fmt(depositAmt)}</td></tr>
-          <tr><td style="font-family:'Outfit',sans-serif;font-weight:800;font-size:16px;color:var(--navy);padding-top:6px">Balance Due on Install Day</td><td style="font-family:'Outfit',sans-serif;font-weight:800;font-size:16px;color:var(--navy);padding-top:6px">${fmt(total - depositAmt)}</td></tr>
+          ${fullPaymentPaid ? `
+          <tr><td class="price-item-name" style="color:var(--green)">✓ Project Paid in Full</td><td style="color:var(--green);font-weight:700">${fmt(Number(paymentState.net_paid || total))}</td></tr>
+          <tr><td style="font-family:'Outfit',sans-serif;font-weight:800;font-size:16px;color:var(--navy);padding-top:6px">Project Balance</td><td style="font-family:'Outfit',sans-serif;font-weight:800;font-size:16px;color:var(--navy);padding-top:6px">${fmt(projectRemaining)}</td></tr>
+          ` : depositPaid ? `
+          <tr><td class="price-item-name" style="color:var(--green)">✓ Deposit Paid</td><td style="color:var(--green);font-weight:700">−${fmt(Number(paymentState.net_paid || 0))}</td></tr>
+          <tr><td style="font-family:'Outfit',sans-serif;font-weight:800;font-size:16px;color:var(--navy);padding-top:6px">Project Balance</td><td style="font-family:'Outfit',sans-serif;font-weight:800;font-size:16px;color:var(--navy);padding-top:6px">${fmt(projectRemaining)}</td></tr>
           ` : `
           <tr><td class="price-item-name" style="color:var(--text3)">${Math.round(depositRate*100)}% Deposit Due Now</td><td style="color:var(--text3);font-weight:700">${fmt(depositAmt)}</td></tr>
           <tr><td class="price-item-name" style="color:var(--text3)">Balance Due on Install Day</td><td style="color:var(--text3);font-weight:700">${fmt(total - depositAmt)}</td></tr>
@@ -1838,18 +2646,25 @@ function renderApproved() {
   `;
 
   setTimeout(initScrollReveal, 100);
+  syncAuthorizationGateUI();
 }
 
 // ── PDF DOWNLOAD ─────────────────────────────────────────────
 let downloading = false;
 async function downloadPDF() {
   if (downloading) return;
+  if (!approvedPaymentTruthConfirmed(P)) {
+    showError('Payment status needs confirmation', 'The proposal PDF is available after the server confirms the payment or saved-card state. Check payment status or call (864) 863-7800.');
+    return;
+  }
   downloading = true;
   const dlBtn = document.querySelector('.dl-btn');
   if (dlBtn) { dlBtn.disabled = true; dlBtn.innerHTML = '<div class="spinner-large" style="width:18px;height:18px;border-width:2px;margin:0"></div> Generating PDF...'; }
   const signedDate = P.signed_at ? new Date(P.signed_at).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) : '';
   const createdDate = new Date(P.created_at).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-  const total = P.total || 0;
+  const total = Number(P.signed_total ?? P.total ?? 0);
+  const paymentState = P.payment_state && typeof P.payment_state === 'object' ? P.payment_state : {};
+  const projectRemaining = Number.isFinite(Number(paymentState.project_remaining)) ? Number(paymentState.project_remaining) : Math.max(total - Number(paymentState.net_paid || 0), 0);
   const ampLabel = P.selected_amp === '50' ? '50 Amp' : '30 Amp';
   const pr = getPrice(P.selected_amp || P.amp_type || '30');
   let pricingRows = '';
@@ -1897,7 +2712,7 @@ async function downloadPDF() {
     <div style="font-size:14px;font-weight:800;color:#0b1f3b;margin-bottom:10px">Pricing</div>
     <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:8px">${pricingRows}<tr style="border-top:2px solid #0b1f3b"><td style="padding:10px 0;font-weight:800;font-size:16px;color:#0b1f3b">Total</td><td style="padding:10px 0;font-weight:800;font-size:16px;color:#0b1f3b;text-align:right">${fmt(total)}</td></tr></table>
     ${P.notes ? '<div style="border-top:2px solid #e4e8f0;margin:12px 0"></div><div style="font-size:12px;font-weight:700;color:#0b1f3b;margin-bottom:6px">Notes from Key</div><div style="font-size:11px;color:#4a5568;line-height:1.6">' + esc(P.notes) + '</div>' : ''}
-    <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 14px;margin-top:16px;font-size:11px;color:#92400e;line-height:1.6"><strong>Payment Terms:</strong> ${P.require_deposit !== false ? (() => { const _r = Number(P?.deposit_rate ?? 0.20); const _d = Math.round(total*_r); return `${Math.round(_r*100)}% deposit ($${_d.toLocaleString()}) collected at booking. Remaining balance ($${(total-_d).toLocaleString()}) due upon completion of installation.`; })() : 'Full payment is due upon completion of installation.'}</div>
+    <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 14px;margin-top:16px;font-size:11px;color:#92400e;line-height:1.6"><strong>Payment Status:</strong> ${paymentState.kind === 'full_payment' && paymentState.status === 'paid' && paymentState.paid_in_full === true ? `Project payment confirmed. Remaining project balance ${fmt(projectRemaining)}.` : (paymentState.kind === 'deposit' && paymentState.status === 'paid' ? `Deposit payment ${fmt(Number(paymentState.net_paid || 0))} confirmed. Remaining project balance ${fmt(projectRemaining)}.` : (paymentState.kind === 'setup' && paymentState.status === 'card_saved' ? `Card setup confirmed. No payment was collected today. Project balance ${fmt(projectRemaining)}.` : 'Payment status unavailable.'))}</div>
     <div style="text-align:center;font-size:10px;color:#8a9ab5;border-top:1px solid #e4e8f0;padding-top:12px;margin-top:16px">Backup Power Pro · SC LIC #2942 · (864) 863-7800 · backuppowerpro.com</div>
   </div>`;
 
@@ -1955,7 +2770,7 @@ function initReviewCarousel() {
 }
 
 // ── ERROR ─────────────────────────────────────────────────────
-function showError(title, msg) {
+function showError(title, msg, action) {
   // Build via DOM APIs (not template literal innerHTML) so arbitrary
   // caller-provided HTML in title/msg is never evaluated. Future
   // contributors can pass DB-sourced error messages safely.
@@ -1966,8 +2781,30 @@ function showError(title, msg) {
   const h2 = document.createElement('h2'); h2.textContent = String(title || '');
   const p  = document.createElement('p');  p.textContent  = String(msg || '');
   wrap.appendChild(h2); wrap.appendChild(p);
+  if (action && typeof action === 'object' && action.label && (action.href || action.onClick)) {
+    const control = action.href ? document.createElement('a') : document.createElement('button');
+    control.className = 'approve-btn';
+    if (action.href) control.href = String(action.href);
+    else {
+      control.type = 'button';
+      control.setAttribute('data-authorization-action', 'payment');
+      control.addEventListener('click', action.onClick);
+    }
+    control.textContent = String(action.label);
+    wrap.appendChild(control);
+  }
   main.appendChild(wrap);
+  syncAuthorizationGateUI();
 }
+
+window.addEventListener('pageshow', (event) => {
+  if (!event.persisted || previewModeActive()) return;
+  const token = new URLSearchParams(window.location.search).get('token');
+  const attemptId = token && storedPendingDepositAcceptance(token);
+  if (!token || !attemptId || /[?&](deposit_paid|payment_check)=1(?:&|$)/.test(window.location.search)) return;
+  if (P) resetDepositAcceptanceAuthorization('Closing the previous payment attempt. This proposal has not been accepted.');
+  beginAuthorizationGate(token);
+});
 
 function esc(s) {
   if (!s) return '';

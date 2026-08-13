@@ -1,9 +1,10 @@
 <!doctype html>
-<html lang="en" class="qw-template-document-root">
+<html lang="en" class="no-js qw-template-document-root">
 <head>
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-gm2LrKUIVO+iOPvO3QUB9215td4ZvBqU5jo39dKlRFY='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-oy8BBmKR81N7mZJF/Mlkt18/mt1YBTZQMPYdlXc+IIY='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://reowtzedjflwmlptupbk.supabase.co; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-4JOu4dmjzTECJoiA5V2EHS9vVEbt1n9bRK9dIf5SlCc='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-oy8BBmKR81N7mZJF/Mlkt18/mt1YBTZQMPYdlXc+IIY='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://reowtzedjflwmlptupbk.supabase.co; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script src="/walk-v2/token-bootstrap.js"></script>
+<script src="/walk-v2/no-js-bootstrap.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
 <meta name="robots" content="noindex, nofollow" />
 <title>Your project range | Backup Power Pro</title>
@@ -139,8 +140,10 @@
   }
 </style>
 <link rel="stylesheet" href="/walk-v2/mobile-canvas.css?v=20260808d" />
+<link rel="stylesheet" href="/walk-v2/no-js-recovery.css" />
 </head>
 <body class="qw-template-document">
+<div class="qw-no-js-note qw-script-recovery" role="alert">JavaScript is required to review your current range. Your saved answers remain on file. Turn it on and reload, or call <a href="tel:+18648637800">(864) 863-7800</a>.</div>
 <div class="page qw-template-page qw-range-page" data-screen-label="Quote walk range acceptance">
   <header class="site-head">
     <a class="lockup" href="https://backuppowerpro.com" aria-label="Backup Power Pro" style="text-decoration:none;">
@@ -215,7 +218,6 @@
 
     <section class="notice hidden" data-revision-context="" role="status">
       <span data-revision-copy=""></span>
-      <button class="btn secondary hidden" type="button" data-restore-distance="">Use my original connection path</button>
       <button class="btn secondary hidden" type="button" data-restore-cord="">Add the compatible cord back</button>
     </section>
 
@@ -228,6 +230,7 @@
           <p class="scope-summary-copy" data-scope-summary-copy=""></p>
           <div class="scope-list" data-scope-list=""></div>
           <button class="btn" type="button" data-accept-bottom="">Yes, prepare my proposal</button>
+          <button class="btn hidden" type="button" data-retry-handoff="">Continue with this saved setup</button>
         </div>
         <button class="link-btn qw-secondary-action" type="button" data-no="">No, show me my options</button>
       </div>
@@ -298,8 +301,8 @@
   var proofCarousel = document.querySelector('[data-range-proof-carousel]');
   var revisionContext = main.querySelector('[data-revision-context]');
   var revisionCopy = main.querySelector('[data-revision-copy]');
-  var restoreDistance = main.querySelector('[data-restore-distance]');
   var restoreCord = main.querySelector('[data-restore-cord]');
+  var retryHandoff = main.querySelector('[data-retry-handoff]');
   var scopeSummaryCopy = main.querySelector('[data-scope-summary-copy]');
   var cordRemovalCopy = main.querySelector('[data-cord-removal-copy]');
   var scope = main.querySelector('[data-scope]');
@@ -309,6 +312,8 @@
   var view = null;
   var selectedDistance = null;
   var finalizing = false;
+  var reviewingAlternatives = true;
+  var handoffReviewRequired = false;
   var DISTANCES = [
     ['about_5', 'About 5 ft or less'],
     ['5_10', 'About 6 to 10 ft'],
@@ -455,9 +460,10 @@
       });
       return;
     }
+    var standardActionsAvailable = !v2().accepted_range_snapshot_id;
     document.querySelectorAll('[data-accept], [data-accept-bottom], [data-no]').forEach(function (button) {
-      button.classList.remove('hidden');
-      button.hidden = false;
+      button.classList.toggle('hidden', !standardActionsAvailable);
+      button.hidden = !standardActionsAvailable;
     });
     show(rangeCard.querySelector('[data-range-heading]'), true);
     show(rangeCard.querySelector('[data-accepted-heading]'), false);
@@ -489,23 +495,21 @@
       revisionMessage = 'Revised setup: You will provide the approved compatible cord. This range is ' + money(cordCredit(snapshot)) + ' lower.';
     } else if (snapshot.revision_reason === 'cord_restored') {
       revisionMessage = 'Revised setup: The approved compatible cord is included again, and the original range has been restored.';
-    } else if (snapshot.revision_reason === 'distance_restored') {
-      revisionMessage = 'Revised setup: Your original connection path of ' + (DISTANCE_LABELS[snapshot.distance_band] || 'the saved distance') + ' is restored. A fresh range was created for that setup.';
     }
     revisionCopy.textContent = revisionMessage;
-    restoreDistance.disabled = false;
     restoreCord.disabled = false;
-    show(restoreDistance, Boolean(v2().original_distance_band) && v2().distance_band !== v2().original_distance_band);
     show(restoreCord, snapshot.revision_reason === 'cord_removed' && snapshot.cord_included === false);
-    show(revisionContext, Boolean(revisionMessage) || !restoreDistance.classList.contains('hidden') || !restoreCord.classList.contains('hidden'));
+    show(revisionContext, Boolean(revisionMessage) || !restoreCord.classList.contains('hidden'));
     var notFitClosed = v2().not_fit_status === 'closed';
-    var editingOptions = !notFitClosed && v2().range_fit_answer === 'no' && !v2().accepted_range_snapshot_id;
+    var editingOptions = reviewingAlternatives && !notFitClosed && v2().range_fit_answer === 'no' && !v2().accepted_range_snapshot_id;
+    var awaitingHandoffReview = handoffReviewRequired && acceptedCurrent && v2().handoff_recorded !== true;
     document.querySelector('.qw-range-hero').classList.toggle('is-recovery', notFitClosed);
     show(rangeCard, !notFitClosed);
-    show(scope, !editingOptions && !notFitClosed && !v2().accepted_range_snapshot_id);
+    show(scope, !editingOptions && !notFitClosed && (!v2().accepted_range_snapshot_id || awaitingHandoffReview));
     var showAcceptance = !notFitClosed && !v2().accepted_range_snapshot_id && !editingOptions;
     show(proofCarousel, showAcceptance);
-    show(fitCard, showAcceptance);
+    show(fitCard, showAcceptance || awaitingHandoffReview);
+    show(retryHandoff, awaitingHandoffReview);
     if (showAcceptance && window.BPPRangeProofCarousel) {
       window.requestAnimationFrame(function () { window.BPPRangeProofCarousel.init(proofCarousel); });
     }
@@ -515,7 +519,7 @@
     show(main.querySelector('[data-alt-50]'), observed.indexOf('30') !== -1 && observed.indexOf('50') !== -1 && v2().pricing_basis === '30');
     show(main.querySelector('[data-alt-distance]'), DISTANCE_ORDER[v2().distance_band] > 1);
     if (v2().accepted_range_snapshot_id) {
-      finalizeHandoff();
+      finalizeHandoff(false);
     }
   }
   function refresh() {
@@ -526,7 +530,14 @@
     loading.classList.remove('hidden');
     return WALK.stateAction(t, action, payload || {}).then(refresh).catch(function (cause) {
       loading.classList.add('hidden');
-      var code = cause && cause.body && cause.body.error;
+      var code = cause && (cause.code || cause.body && cause.body.error);
+      if (code === 'stale_customer_authorization') {
+        if (cause.currentState) view = cause.currentState;
+        if (action === 'handoff') handoffReviewRequired = true;
+        render();
+        fail('Your saved setup changed. Review the current range, then tap the action again.');
+        throw cause;
+      }
       if (!localErrorOnly) {
         fail(code === 'readiness_incomplete'
           ? 'Your range is still locked because a required answer or photo is missing.'
@@ -548,12 +559,15 @@
     });
   }
 
-  function finalizeHandoff() {
+  function finalizeHandoff(explicitRetry) {
     if (finalizing) return;
+    if (handoffReviewRequired && explicitRetry !== true) return;
     if (v2().handoff_recorded === true) {
       render();
       return;
     }
+    handoffReviewRequired = false;
+    show(retryHandoff, false);
     finalizing = true;
     stateAction('handoff', {}).then(function () {
       finalizing = false;
@@ -579,6 +593,7 @@
   document.querySelectorAll('[data-accept], [data-accept-bottom]').forEach(function (button) {
     button.addEventListener('click', acceptCurrentRange);
   });
+  retryHandoff.addEventListener('click', function () { finalizeHandoff(true); });
   editPhone.addEventListener('click', function () {
     error.classList.add('hidden');
     phoneStatus.textContent = '';
@@ -626,22 +641,24 @@
     }).finally(function () { save.disabled = false; });
   });
   main.querySelector('[data-no]').addEventListener('click', function () {
+    reviewingAlternatives = true;
     WALK.confirm(t, { range_fit_answer: 'no' }).then(refresh).catch(function () { fail('That answer did not save. Try again.'); });
   });
   main.querySelector('[data-close-options]').addEventListener('click', function () {
-    WALK.confirm(t, { range_fit_answer: null }).then(refresh).catch(function () {
-      fail('That choice did not save. Your current range remains available. Try again.');
-    });
+    reviewingAlternatives = false;
+    render();
+    var accept = main.querySelector('[data-accept-bottom]');
+    if (accept) accept.focus();
   });
   main.querySelector('[data-alt-30]').addEventListener('click', function () {
     WALK.confirm(t, { pricing_basis: '30', revision_reason: 'both_to_30' })
       .then(function () { return stateAction('create_range', { revision_reason: 'both_to_30' }); })
-      .catch(function () {});
+      .catch(function () { fail('That revised setup did not save. Your current range remains available. Try again.'); });
   });
   main.querySelector('[data-alt-50]').addEventListener('click', function () {
     WALK.confirm(t, { pricing_basis: '50', revision_reason: 'return_to_50' })
       .then(function () { return stateAction('create_range', { revision_reason: 'return_to_50' }); })
-      .catch(function () {});
+      .catch(function () { fail('That revised setup did not save. Your current range remains available. Try again.'); });
   });
   main.querySelector('[data-alt-distance]').addEventListener('click', function () {
     options.classList.add('hidden');
@@ -658,18 +675,13 @@
   main.querySelector('[data-alt-cord]').addEventListener('click', function () {
     WALK.confirm(t, { cord_included: false, revision_reason: 'cord_removed' })
       .then(function () { return stateAction('create_range', { revision_reason: 'cord_removed' }); })
-      .catch(function () {});
+      .catch(function () { fail('That cord choice did not save. Your current range remains available. Try again.'); });
   });
   restoreCord.addEventListener('click', function () {
     restoreCord.disabled = true;
     WALK.confirm(t, { cord_included: true, revision_reason: 'cord_restored' })
       .then(function () { return stateAction('create_range', { revision_reason: 'cord_restored' }); })
       .catch(function () { restoreCord.disabled = false; });
-  });
-  restoreDistance.addEventListener('click', function () {
-    restoreDistance.disabled = true;
-    stateAction('restore_distance', {})
-      .catch(function () { restoreDistance.disabled = false; });
   });
   main.querySelector('[data-no-alternative]').addEventListener('click', function () {
     WALK.confirm(t, { not_fit_status: 'closed' })
@@ -690,7 +702,7 @@
     WALK.confirm(t, { distance_band: selectedDistance, revision_reason: 'shorter_distance' })
       .then(function () { return stateAction('create_range', { revision_reason: 'shorter_distance' }); })
       .then(function () { revision.classList.add('hidden'); selectedDistance = null; })
-      .catch(function () {});
+      .catch(function () { fail('That shorter path did not save. Your current range remains available. Try again.'); });
   });
   main.querySelector('[data-cancel-distance]').addEventListener('click', function () {
     revision.classList.add('hidden');

@@ -473,13 +473,17 @@ function Root() {
   // inbound, or an orphan null-contact_id row, lights the badge permanently with
   // no inbox row to open and no Mark-all-read to clear it (audit 2026-06-23 r4).
   const liveContactIds = new Set(CRM.contacts.filter(c => !c.archived).map(c => c.id));
+  const messagesReady = CRM.domainStatus?.messages?.state === 'ready';
+  const moneyReady = CRM.domainStatus?.money?.state === 'ready';
   const badgeCounts = {
-    messages: CRM.messages.filter(m => m.direction === 'in' && m.read_at == null && liveContactIds.has(m.contact_id)).length,
+    messages: messagesReady
+      ? CRM.messages.filter(m => m.direction === 'in' && m.read_at == null && liveContactIds.has(m.contact_id)).length
+      : 0,
     // Calls badge = unheard voicemails (listened_at == null). Otherwise
     // the badge stays lit forever and loses signal value.
     calls: CRM.calls.filter(c => c.voicemail_url && c.listened_at == null).length,
     calendar: CRM.events.filter(e => (e.start_at || '').slice(0,10) === todayStr && e.status === 'scheduled').length,
-    finance: CRM.invoices.filter(i => isInvoiceOverdue(i, installedSet)).length,
+    finance: moneyReady ? CRM.invoices.filter(i => isInvoiceOverdue(i, installedSet)).length : 0,
   };
   // Right navbar is per-contact, sharing the global object made every
   // contact's tab show 396 unread even when that contact had zero. Scope
@@ -488,20 +492,20 @@ function Root() {
   const contactBadgeCounts = React.useMemo(() => {
     if (!activeContact) return {};
     return {
-      messages: CRM.messages.filter(m =>
+      messages: messagesReady ? CRM.messages.filter(m =>
         m.contact_id === activeContact && m.direction === 'in' && m.read_at == null
-      ).length,
+      ).length : 0,
       calls: CRM.calls.filter(c =>
         c.contact_id === activeContact && c.voicemail_url && c.listened_at == null
       ).length,
       calendar: CRM.events.filter(e =>
         e.contact_id === activeContact && (e.start_at || '').slice(0,10) === todayStr && e.status === 'scheduled'
       ).length,
-      finance: CRM.invoices.filter(i =>
+      finance: moneyReady ? CRM.invoices.filter(i =>
         i.contact_id === activeContact && isInvoiceOverdue(i, installedSet)
-      ).length,
+      ).length : 0,
     };
-  }, [activeContact, bump, todayStr, installedSet]);
+  }, [activeContact, bump, todayStr, installedSet, messagesReady, moneyReady]);
 
   // Tapping a row opens the contact on the right, switches right tab to match context
   // Tab-bar long-press: hold the Calls icon -> jump to the Calls dialer with the
@@ -744,6 +748,23 @@ function Root() {
   // Sign-in form, surfaced when no Supabase session is active.
   if (!authed) {
     return <SignInGate />;
+  }
+
+  // The global safety gate is reserved for Contacts plus the phone-wide DNC
+  // list. Quote, money, Messages, and workspace failures are localized to the
+  // surfaces that consume them so a usable contact roster is never held back.
+  if (window.CRM?.criticalLoadFailed) {
+    return (
+      <div style={{ height:'100dvh', display:'flex', flexDirection:'column', gap:14, alignItems:'center', justifyContent:'center', background:'#f4f6f9', color:'#1B2B4B', fontFamily:'DM Sans', textAlign:'center', padding:24 }}>
+        <div style={{ fontSize:18, fontWeight:700 }}>CRM data did not fully load</div>
+        <div style={{ color:'#5b6576', fontSize:15, maxWidth:380, lineHeight:1.45 }}>
+          Contacts and the do-not-contact safety list are unavailable. Customer actions stay closed until both recover.
+        </div>
+        <button type="button" onClick={() => window.location.reload()} style={{ minHeight:44, padding:'0 18px', borderRadius:10, border:'1px solid #1B2B4B', background:'#fff', color:'#1B2B4B', fontFamily:'inherit', fontSize:15, fontWeight:700, cursor:'pointer' }}>
+          Try again
+        </button>
+      </div>
+    );
   }
 
   // ?canvas=1 forces the side-by-side mobile+desktop preview (useful when
@@ -1049,6 +1070,7 @@ function DialerPopup({ onClose, seed }) {
   // box; capDial truncates it so an over-long value can't re-hide digits on open.
   const [dial, setDial] = React.useState(() => capDial(seed));
   const [calling, setCalling] = React.useState(false);
+  const callingRef = React.useRef(false);
   const contacts = (window.CRM && window.CRM.contacts) || [];
 
   // Animate-out-then-close (Key 2026-06-21: no instant-vanish popups). The
@@ -1102,8 +1124,14 @@ function DialerPopup({ onClose, seed }) {
   // still block the call even when the first name/digit match was the non-DNC
   // twin (critic 2026-06-20, TCPA-relevant).
   const targetNorm = norm10(callTarget || '');
-  const matchDnc = !!targetNorm && contacts.some(c => c.do_not_contact && norm10(c.phone) === targetNorm);
-  const canCall = !!callTarget && !matchDnc;
+  const dncPhones = (window.CRM && Array.isArray(window.CRM.dncPhones)) ? window.CRM.dncPhones : [];
+  const matchDnc = !!targetNorm && (
+    contacts.some(c => c.do_not_contact && norm10(c.phone) === targetNorm)
+    || dncPhones.some(phone => norm10(phone) === targetNorm)
+  );
+  const safetyUnavailable = !!(window.CRM && window.CRM.contactsLoadFailed);
+  const outboundReleased = window.BPPVoice?.outboundReleased === true;
+  const canCall = outboundReleased && !!callTarget && !matchDnc && !safetyUnavailable;
 
   React.useEffect(() => {
     const onKey = e => { if (e.key === 'Escape') beginClose(); };
@@ -1112,11 +1140,25 @@ function DialerPopup({ onClose, seed }) {
   }, [onClose]);
 
   async function placeCall() {
-    if (!canCall || calling) return;  // guard the async window against a double-tap = double call
+    const currentDncPhones = (window.CRM && Array.isArray(window.CRM.dncPhones)) ? window.CRM.dncPhones : [];
+    const blockedNow = !!(window.CRM && window.CRM.contactsLoadFailed)
+      || (!!targetNorm && (
+        ((window.CRM && window.CRM.contacts) || []).some(c => c.do_not_contact && norm10(c.phone) === targetNorm)
+        || currentDncPhones.some(phone => norm10(phone) === targetNorm)
+      ));
+    if (!canCall || blockedNow || callingRef.current) return;
+    callingRef.current = true;
     setCalling(true);
-    const ok = window.BPPVoice ? await window.BPPVoice.call(callTarget, matchIsTarget ? dialMatch.name : null) : false;
-    if (!ok) window.location.href = 'tel:' + callTarget;
-    onClose();
+    try {
+      const ok = window.BPPVoice
+        ? await window.BPPVoice.call(callTarget, matchIsTarget ? dialMatch.name : null)
+        : false;
+      if (ok) onClose();
+      else window.showToast?.('Calling is not released yet.');
+    } finally {
+      callingRef.current = false;
+      setCalling(false);
+    }
   }
 
   // onMouseDown preventDefault on every key + Call so a tap never blurs the
@@ -1154,6 +1196,8 @@ function DialerPopup({ onClose, seed }) {
             the contact above isn't the matched-target one, so a disabled Call
             always names its reason. */}
         {matchDnc && <div style={{ fontSize: 12, fontWeight: 600, color: '#991B1B', marginBottom: 10 }}>Marked Do Not Contact</div>}
+        {safetyUnavailable && <div style={{ fontSize: 12, fontWeight: 600, color: '#991B1B', marginBottom: 10 }}>Calling unavailable until contacts finish loading</div>}
+        {!outboundReleased && <div style={{ fontSize: 12, fontWeight: 600, color: '#5a6478', marginBottom: 10 }}>Calling is not released yet</div>}
         {/* DP-1: inputMode="none" so focusing the field never raises the native
             iOS keyboard on top of the custom keypad (the keypad is the single
             entry affordance). autoFocus keeps the caret; the keys' onMouseDown
@@ -1186,7 +1230,7 @@ function DialerPopup({ onClose, seed }) {
         <button onMouseDown={e => e.preventDefault()} onClick={placeCall} disabled={!canCall || calling} aria-label="Call"
           style={{ width: '100%', height: 50, borderRadius: 10, border: 0, background: (canCall && !calling) ? GD : '#E5E7EB', color: (canCall && !calling) ? NV : '#9aa3b2', fontSize: 16, fontWeight: 700, fontFamily: 'inherit', cursor: (canCall && !calling) ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
           {window.Icons && window.Icons.calls && <span style={{ width: 18, height: 18, display: 'inline-flex' }}>{window.Icons.calls}</span>}
-          {calling ? 'Calling…' : 'Call'}
+          {calling ? 'Calling…' : (outboundReleased ? 'Call' : 'Calling unavailable')}
         </button>
       </div>
     </div>
@@ -1197,6 +1241,7 @@ function TabHoldHost({ onOpen }) {
   const [qq, setQq] = React.useState(false);
   const [dialer, setDialer] = React.useState(false);
   const [dialerSeed, setDialerSeed] = React.useState('');
+  const dialerReturnFocus = React.useRef(null);
   React.useEffect(() => {
     const onHold = e => {
       if (e.detail?.action === 'quickquote') setQq(true);
@@ -1207,7 +1252,11 @@ function TabHoldHost({ onOpen }) {
   // crm-open-keypad opens the dialer popup. Long-press Calls dispatches it with
   // no detail (empty dial); the "Open in dialer" row carries detail.seedDial.
   React.useEffect(() => {
-    const onKeypad = e => { setDialerSeed(e.detail?.seedDial || ''); setDialer(true); };
+    const onKeypad = e => {
+      dialerReturnFocus.current = e.detail?.returnFocus || document.activeElement;
+      setDialerSeed(e.detail?.seedDial || '');
+      setDialer(true);
+    };
     window.addEventListener('crm-open-keypad', onKeypad);
     return () => window.removeEventListener('crm-open-keypad', onKeypad);
   }, []);
@@ -1226,7 +1275,10 @@ function TabHoldHost({ onOpen }) {
           onOpen={(id, tab) => { setQq(false); if (onOpen) onOpen(id, tab); }}
         />
       )}
-      {dialer && <DialerPopup seed={dialerSeed} onClose={() => setDialer(false)} />}
+      {dialer && <DialerPopup seed={dialerSeed} onClose={() => {
+        setDialer(false);
+        requestAnimationFrame(() => dialerReturnFocus.current?.focus?.());
+      }} />}
     </React.Fragment>
   );
 }

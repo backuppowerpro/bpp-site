@@ -24,6 +24,9 @@
 .inv-to{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);font-size:13px;color:var(--text2);line-height:1.55}
 .inv-to .lbl{font-family:var(--font-display);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:4px}
 .inv-to b{color:var(--text);font-weight:700;font-size:14px}
+.invoice-home{display:none;margin-top:14px;border-radius:var(--r-sm);overflow:hidden;background:var(--navy);aspect-ratio:16/7}
+.invoice-home.ready{display:block}
+.invoice-home img{display:block;width:100%;height:100%;object-fit:cover}
 
 /* amount-due hero */
 .due-lbl{font-family:var(--font-display);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
@@ -61,13 +64,27 @@
 .state-spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--navy);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 16px}
 @keyframes spin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.state-spin{animation:none}}
+@media (max-width:480px){
+  .brand-bar{flex-wrap:wrap;padding-left:12px;padding-right:12px;gap:8px}
+  .brand-bar img{max-width:100%;height:auto;max-height:25px;object-fit:contain;object-position:left}
+  .brand-bar .badge{max-width:100%;margin-left:auto;font-size:9px;padding-left:8px;padding-right:8px;white-space:normal;overflow-wrap:anywhere;text-align:right}
+}
 .paid-banner{background:var(--green);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:30px 24px;text-align:center;color:#fff;margin-bottom:var(--card-gap)}
 .paid-banner .paid-check{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
 .paid-banner h2{font-family:var(--font-display);font-size:22px;font-weight:800;margin-bottom:6px}
 .paid-banner p{font-size:13.5px;opacity:.9;line-height:1.5}
+.preview-bar{position:fixed;top:0;left:0;right:0;z-index:99999;background:#f59e0b;color:#1c1003;font-family:var(--font-display);font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;text-align:center;padding:8px 16px;box-shadow:0 2px 12px rgba(0,0,0,.18)}
+.preview-bar[hidden],.preview-watermark[hidden]{display:none}
+.preview-watermark{position:fixed;inset:0;pointer-events:none;z-index:99998;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.preview-watermark span{font-family:var(--font-display);font-size:clamp(60px,14vw,120px);font-weight:900;color:rgba(11,31,59,.06);letter-spacing:.1em;text-transform:uppercase;transform:rotate(-35deg);white-space:nowrap;user-select:none}
+body.preview-mode{padding-top:34px}
+body.preview-mode #pay-btn{display:none!important}
 </style>
 </head>
 <body>
+<div class="preview-bar" id="preview-bar" data-preview-banner="true" hidden>Preview mode, not sent to client, read only</div>
+<div class="preview-watermark" id="preview-watermark" data-preview-watermark="true" aria-hidden="true" hidden><span>Preview</span></div>
+<noscript><div class="preview-bar" data-preview-banner="true">Preview unavailable, JavaScript is off, no customer action can occur</div><div class="preview-watermark" data-preview-watermark="true" aria-hidden="true"><span>Preview unavailable</span></div><div style="max-width:620px;margin:70px auto 24px;padding:18px;border:1px solid #ffba00;border-radius:14px;background:#fff8e6;color:#0b1f3b;text-align:center;font:600 16px/1.55 system-ui,sans-serif;">This invoice did not load. Turn on JavaScript and reload, or call (864) 863-7800.</div></noscript>
 
 <div class="brand-bar">
   <img src="assets/images/logo-white-v2.png" alt="Backup Power Pro">
@@ -94,6 +111,7 @@ var SUPABASE_KEY = 'sb_publishable_4tYd9eFAYCTjnoKl1hbBBg_yyO9-vMB';
 var INV = null;            // invoice record
 var LINKED_PROPOSAL = null;// linked proposal (if any)
 var PAYMENTS = [];         // whitelisted payment rows (card/bank, discount, refund) from invoice-view
+var IS_PREVIEW = new URLSearchParams(window.location.search).get('preview')==='1';
 
 // ── HELPERS ─────────────────────────────────────────────────────────
 function esc(s){ if(s===null||s===undefined) return ''; var d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; }
@@ -128,6 +146,11 @@ function showState(title,msg){
 
 // ── INIT ────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', function(){
+  if(IS_PREVIEW){
+    document.body.classList.add('preview-mode');
+    document.getElementById('preview-bar').hidden=false;
+    document.getElementById('preview-watermark').hidden=false;
+  }
   var token = new URLSearchParams(window.location.search).get('token');
   if(!token){ showState('Invoice not found.','This link is missing an invoice token. Please use the link we texted you, or contact (864) 863-7800.'); return; }
   loadInvoice(token);
@@ -141,7 +164,8 @@ async function loadInvoice(token){
   try{
     var ctrl=new AbortController();
     var timer=setTimeout(function(){ ctrl.abort(); }, 10000);
-    var res=await fetch(SUPABASE_URL+'/functions/v1/invoice-view?token='+encodeURIComponent(token),{
+    var preview=IS_PREVIEW?'&preview=1':'';
+    var res=await fetch(SUPABASE_URL+'/functions/v1/invoice-view?token='+encodeURIComponent(token)+preview,{
       headers:{ 'Authorization':'Bearer '+SUPABASE_KEY },
       signal:ctrl.signal,
       cache:'no-store',
@@ -178,17 +202,26 @@ async function loadInvoice(token){
     badge.textContent = num ? 'Invoice #'+num : 'Invoice';
   }
 
-  // Closed canon matches the CRM: v3 voids with 'voided' (legacy v1 wrote
-  // 'cancelled'). Only 'cancelled' was handled, so a VOIDED invoice rendered
-  // fully payable (2026-06-09 walkthrough finding, double-charge path; the
-  // checkout fn now also refuses these server-side).
-  var _closed=['cancelled','voided','refunded','declined','void'];
-  if(_closed.indexOf(String(INV.status||'').toLowerCase())>-1){
+  var invoiceStatus=String(INV.status||'').toLowerCase();
+  var payableStatuses=['sent','unpaid','viewed','overdue','open','partial'];
+  if(invoiceStatus==='refunded'){
+    showState('Invoice refunded.','Payments on this invoice were refunded. No payment is due. Please contact (864) 863-7800 if you have questions.');
+  } else if(invoiceStatus==='voided'||invoiceStatus==='void'){
+    showState('Invoice voided.','This invoice was voided. No payment is due on it. Please contact (864) 863-7800 if you have questions.');
+  } else if(invoiceStatus==='cancelled'||invoiceStatus==='declined'){
     showState('Invoice cancelled.','This invoice has been cancelled and is no longer available for payment. Please contact (864) 863-7800 if you have questions.');
-  } else if(INV.status==='paid'){
+  } else if(invoiceStatus==='paid'){
     renderPaid();
-  } else {
+  } else if(payableStatuses.indexOf(invoiceStatus)>-1 || IS_PREVIEW){
+    var remaining=invoiceRemaining();
+    var paid=Number(INV.amount_paid);
+    if(!Number.isFinite(remaining)||remaining<=0||!Number.isFinite(paid)||paid<0){
+      showState('Invoice not available.','The current balance could not be verified. Please refresh, or contact (864) 863-7800.');
+      return;
+    }
     renderPayable();
+  } else {
+    showState('Invoice not available.','This invoice has not been issued for payment. Please use the latest link from Key, or contact (864) 863-7800.');
   }
 }
 
@@ -210,6 +243,22 @@ function invoiceTotal(){
   var items=(INV.line_items||[]);
   if(INV.total!==null && INV.total!==undefined && INV.total!=='') return Number(INV.total);
   return items.reduce(function(s,li){ return s+Number(li.amount||0); },0);
+}
+function invoiceRemaining(){
+  var remaining=Number(INV.amount_remaining);
+  return Number.isFinite(remaining) ? Math.max(0,remaining) : NaN;
+}
+function homeImageHtml(){
+  return '<div class="invoice-home" id="invoice-home"><img id="invoice-home-img" alt="Home at the service address"></div>';
+}
+function loadHomeImage(){
+  var wrap=document.getElementById('invoice-home');
+  var img=document.getElementById('invoice-home-img');
+  var token=new URLSearchParams(window.location.search).get('token');
+  if(!wrap||!img||!token) return;
+  img.addEventListener('load',function(){wrap.classList.add('ready');},{once:true});
+  img.addEventListener('error',function(){wrap.remove();},{once:true});
+  img.src=SUPABASE_URL+'/functions/v1/streetview-hero?i='+encodeURIComponent(token);
 }
 
 // ── ORIGINAL AGREEMENT (from linked approved proposal) ──────────────
@@ -241,6 +290,9 @@ function agreementHtml(){
 // ── RENDER PAYABLE (unpaid / balance due) ───────────────────────────
 function renderPayable(){
   var total=invoiceTotal();
+  var remaining=invoiceRemaining();
+  var paid=Math.max(0,Number(INV.amount_paid)||0);
+  var hasPriorPayment=paid>0.005||remaining<total-0.005;
   var page=document.getElementById('page');
   var name=INV.contact_name||'';
   var firstName=(name.trim().split(/\s+/)[0])||'';
@@ -266,15 +318,15 @@ function renderPayable(){
         '<b>'+esc(name)+'</b>'+(addr?'<br>'+esc(addr):'')+
         (INV.contact_phone?'<br>'+esc(INV.contact_phone):'')+
         (INV.contact_email?'<br>'+esc(INV.contact_email):'')+
-      '</div>'+
+      '</div>'+homeImageHtml()+
     '</div>'+
 
     // AMOUNT DUE
     '<div class="card pad">'+
       '<div class="due-lbl">Amount due</div>'+
-      '<div class="due-amt">'+fmt(total)+'</div>'+
+      '<div class="due-amt">'+fmt(remaining)+'</div>'+
       '<div class="due-when">Balance for your completed install. Due on completion day, after your system is installed and working.</div>'+
-      '<button class="btn-gold pay-cta" id="pay-btn" type="button" data-amount="'+fmt(total)+'">Pay '+fmt(total)+'</button>'+
+      '<button class="btn-gold pay-cta" id="pay-btn" type="button" data-amount="'+fmt(remaining)+'">Pay '+fmt(remaining)+'</button>'+
       '<div class="pay-sub">Secure payment by bank transfer or card. Once it clears, your receipt is ready on this same link, and Key can email it to you.</div>'+
     '</div>'+
 
@@ -282,7 +334,9 @@ function renderPayable(){
     '<div class="card pad">'+
       '<h2 class="sec">What this covers</h2>'+
       lineItemsHtml()+
-      '<div class="li total"><div class="li-name">Total due</div><div class="li-amt">'+fmt(total)+'</div></div>'+
+      '<div class="li total"><div class="li-name">Invoice total</div><div class="li-amt">'+fmt(total)+'</div></div>'+
+      (hasPriorPayment?'<div class="li"><div class="li-name">Payments received</div><div class="li-amt credit">-'+fmt(paid)+'</div></div>':'')+
+      '<div class="li total"><div class="li-name">Balance due</div><div class="li-amt">'+fmt(remaining)+'</div></div>'+
     '</div>'+
 
     // NOTE FROM KEY
@@ -298,6 +352,7 @@ function renderPayable(){
   var btn=document.getElementById('pay-btn');
   if(btn) btn.addEventListener('click', payOnline);
 
+  loadHomeImage();
   revealCards();
 }
 
@@ -355,7 +410,7 @@ function renderPaid(){
         '<b>'+esc(name)+'</b>'+(addr?'<br>'+esc(addr):'')+
         (INV.contact_phone?'<br>'+esc(INV.contact_phone):'')+
         (INV.contact_email?'<br>'+esc(INV.contact_email):'')+
-      '</div>'+
+      '</div>'+homeImageHtml()+
     '</div>'+
 
     // PAYMENT DETAILS
@@ -380,6 +435,7 @@ function renderPaid(){
 
     '<div class="inv-foot">Keep this '+(isRefund?'for your records':('receipt for your records'+(isDeposit?'':' and your insurance company')))+'.<br>Backup Power Pro by Key Electric &middot; Questions? Text Key at <b>(864) 863-7800</b></div>';
 
+  loadHomeImage();
   revealCards();
 }
 
@@ -390,7 +446,7 @@ function renderPaid(){
 var STRIPE_CHECKOUT_HOSTS = ['checkout.stripe.com'];
 
 async function payOnline(){
-  if(new URLSearchParams(window.location.search).get('preview')==='1'){ showToast('Preview mode, payment is disabled.'); return; }
+  if(IS_PREVIEW||new URLSearchParams(window.location.search).get('preview')==='1'){ showToast('Preview mode, payment is disabled.'); return; }
   var btn=document.getElementById('pay-btn');
   var token=new URLSearchParams(window.location.search).get('token');
   if(!token){ showToast('Payment unavailable right now, call or text (864) 863-7800.'); return; }

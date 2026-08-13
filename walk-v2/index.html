@@ -6,9 +6,9 @@
 
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-SILzPhfLYZcCd4Tf0iA88+GJxTW0Ww/xsABc9z+kB/M=' 'sha256-G+RGGG/nS7Jz0Zp8ZGoJDT28GiNgr71xVKUjVbBKqLc=' 'sha256-CyZokA2CtmiDNgPMBMgwDybGngi/oE7042XVPWEk2Wk=' 'sha256-sv2SCDTigCHhsZJlPOBS0YFWG9AoiCHxyr/eomZxQGg='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-K2S09QqOYxExW92fGzlWi7bH8KOggn4Z0kGyDeRSRZ4=' 'sha256-0Iyyv4VKPnVS157Xktla6XdEbzCmufeHLHEeNrA4/ks=' 'sha256-M8iRdWV7mgh/H8ZrJIYj7+JApx46IWfGlaIDVtJ6UBk='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://api.mapbox.com https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-G+RGGG/nS7Jz0Zp8ZGoJDT28GiNgr71xVKUjVbBKqLc=' 'sha256-CyZokA2CtmiDNgPMBMgwDybGngi/oE7042XVPWEk2Wk=' 'sha256-uWsBjwcW3y13ao9nPHvlGwcun9dn5K89QCOM4eOHYBE='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-K2S09QqOYxExW92fGzlWi7bH8KOggn4Z0kGyDeRSRZ4=' 'sha256-0Iyyv4VKPnVS157Xktla6XdEbzCmufeHLHEeNrA4/ks=' 'sha256-M8iRdWV7mgh/H8ZrJIYj7+JApx46IWfGlaIDVtJ6UBk='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://api.mapbox.com https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script src="/walk-v2/token-bootstrap.js"></script>
-<script>/* flip no-js->js before paint so scroll-reveal hides content only when JS can reveal it; 5s failsafe reveals everything if the reveal script ever fails, so the form is never stuck invisible */(function(){var e=document.documentElement;e.classList.remove('no-js');e.classList.add('js');setTimeout(function(){try{var l=document.querySelectorAll('.rv:not(.in)');for(var i=0;i<l.length;i++)l[i].classList.add('in');}catch(x){}},5000);})();</script>
+<script src="/walk-v2/no-js-bootstrap.js"></script>
 <script>/* Entry mode + dynamic hero (Key 2026-07-01 / 2026-07-13 / paid fast lane 2026-07-13):
    src=home -> home hero
    src=city_<slug> -> city hero
@@ -946,8 +946,10 @@
   }
 </style>
 <link rel="stylesheet" href="/walk-v2/mobile-canvas.css?v=20260808d" />
+<link rel="stylesheet" href="/walk-v2/no-js-recovery.css" />
 </head>
 <body>
+<div class="qw-no-js-note qw-script-recovery" role="alert">JavaScript is required to start this Quote Walk. Turn it on and reload, or call <a href="tel:+18648637800">(864) 863-7800</a>.</div>
 <div class="stack" id="stack">
 
   <!-- ============ MAIN PAGE (mobile, interactive) ============ -->
@@ -1276,11 +1278,6 @@
         <!-- 4. form card -->
         <section class="form-card" id="quote-form">
           <h2 class="fc-title">First, a few quick details.</h2>
-          <noscript>
-            <div style="background:#fff8e6;border:1px solid #ffba00;border-radius:12px;padding:16px;margin-bottom:18px;color:#1b2b4b;font-size:16px;line-height:1.55;text-align:center;">
-              Turn on JavaScript, then reload this page to start your quote.
-            </div>
-          </noscript>
           <form autocomplete="off">
             <div class="fields">
               <div class="field">
@@ -1305,6 +1302,11 @@
 
             <!-- 5. submit row: consent is the tap on the gold button, never required -->
             <div class="submit-row">
+              <div data-resume-recovery hidden aria-live="polite">
+                <p data-resume-message style="font-size:15px;line-height:1.5;color:var(--text2,#4d5a6e);text-align:center;margin:0 0 14px;font-weight:600;">Picking up where you left off...</p>
+                <button class="cta" type="button" data-resume-retry hidden><span>Try saved link again</span></button>
+                <button class="qw-secondary-action" type="button" data-resume-new hidden style="width:100%;margin-top:10px;">Start a new Quote Walk</button>
+              </div>
               <p data-unconfirmed-address="" aria-live="polite" style="display:none; font-size:14px; line-height:1.5; color:var(--gold-ink, #8a5a00); text-align:center; margin:0 0 12px; font-weight:600;">Your address is saved exactly as entered. Continue with the setup questions. Your service area still needs to be verified before your project range or proposal can be prepared.</p>
               <button class="cta" type="submit" data-cta="" disabled="">
                 <span data-cta-label="">Start my quote</span>
@@ -1343,29 +1345,42 @@
   var areaBoundary = !!resumeT && landingParams.get('area') === 'out';
   var editDetails = !!resumeT && landingParams.get('edit') === 'details';
   if (resumeT && !areaBoundary && !editDetails) {
-    main.style.visibility = 'hidden';
-    var resumingMsg = document.createElement('p');
-    resumingMsg.textContent = 'One sec, picking up where you left off...';
-    resumingMsg.setAttribute('style', 'position:fixed;left:0;right:0;top:42%;margin:0;text-align:center;color:var(--faint,#9aa);font-size:15px;padding:0 24px');
-    document.body.appendChild(resumingMsg);
+    var resumeForm = main.querySelector('form');
+    var resumeFields = resumeForm && resumeForm.querySelector('.fields');
+    var resumeRecovery = main.querySelector('[data-resume-recovery]');
+    var resumeMessage = main.querySelector('[data-resume-message]');
+    var resumeRetry = main.querySelector('[data-resume-retry]');
+    var resumeNew = main.querySelector('[data-resume-new]');
+    var resumeSubmit = main.querySelector('.submit-row > .cta');
+    if (resumeFields) resumeFields.hidden = true;
+    if (resumeSubmit) resumeSubmit.hidden = true;
+    if (resumeRecovery) resumeRecovery.hidden = false;
+    main.setAttribute('aria-busy', 'true');
     WALK.ph('walk_v2_screen_view', { screen: 'landing_resume' });
-    WALK.view(resumeT).then(function (v) { WALK.routeFromState(resumeT, v); })
-      .catch(function (cause) {
-        resumingMsg.remove();
-        main.style.visibility = '';
-        var recovery = main.querySelector('[data-submit-error]');
-        if (recovery) {
-          recovery.setAttribute('data-return-recovery', '');
-          recovery.textContent = cause && (
-            cause.status === 410
-            || cause.body && cause.body.error === 'expired'
-          )
-            ? 'This saved link has expired. Start here to create a new Quote Walk.'
-            : 'This saved link has been replaced. Use your newest saved link, or start here again.';
-          recovery.style.display = '';
-        }
-        WALK.ph('walk_v2_screen_view', { screen: 'landing_return_recovery' });
-      });
+    function loadSavedWalk() {
+      if (resumeRetry) resumeRetry.disabled = true;
+      if (resumeMessage) resumeMessage.textContent = 'Picking up where you left off...';
+      main.setAttribute('aria-busy', 'true');
+      return WALK.view(resumeT).then(function (v) { WALK.routeFromState(resumeT, v); })
+        .catch(function (cause) {
+          main.removeAttribute('aria-busy');
+          if (resumeMessage) resumeMessage.textContent = cause && (
+              cause.status === 410
+              || cause.body && cause.body.error === 'expired'
+            )
+            ? 'This saved link has expired. Start a new Quote Walk below.'
+            : 'Your saved walk could not be loaded. Try the saved link again, or start a new Quote Walk.';
+          if (resumeRetry) { resumeRetry.hidden = false; resumeRetry.disabled = false; }
+          if (resumeNew) resumeNew.hidden = false;
+          WALK.ph('walk_v2_screen_view', { screen: 'landing_return_recovery' });
+        });
+    }
+    if (resumeRetry) resumeRetry.addEventListener('click', loadSavedWalk);
+    if (resumeNew) resumeNew.addEventListener('click', function () {
+      WALK.setToken('');
+      window.location.replace('/walk-v2/');
+    });
+    loadSavedWalk();
   } else {
     WALK.ph('walk_v2_screen_view', { screen: editDetails ? 'landing_edit' : 'landing' });
   }
@@ -1741,66 +1756,30 @@
       pageUrl: window.location.href, referrer: document.referrer || ''
     };
 
-    /* resilient delivery: the keepalive fetch below already survives page unload
-       (the beacon's only job) AND returns the pre_read token + delivered status,
-       so a parallel sendBeacon was pure redundancy that double-POSTed the lead
-       (a second contact in the rare concurrent-lookup race). keepalive covers
-       unload; the sync-XHR fallback covers a fetch throw. */
-    var body = JSON.stringify(payload);
-    var functionsBase = window.BPP_QUOTE_WALK_FUNCTIONS_BASE
-      || 'https://reowtzedjflwmlptupbk.supabase.co/functions/v1';
-    var url = functionsBase + '/quo-ai-new-lead';
+    /* One bounded keepalive request owns lead creation. The server serializes
+       retries by event identity. A timeout returns control to the visible retry
+       state instead of entering an unbounded synchronous fallback. */
     var delivered = false, tokenOut = null, serviceAreaStatus = '', savedAddressRefresh = false, failureMessage = '';
     try {
-      var resp = await fetch(url, { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: body });
-      delivered = resp.ok;
-      try {
-        var j = await resp.json();
-        if (resp.ok) {
-          if (j && j.skipped) {
-            delivered = false;
-            if (j.reason === 'do_not_contact') {
-              failureMessage = 'This mobile number is marked as opted out of texts. Use a different mobile number, or contact Backup Power Pro to update your text preference.';
-            }
+      var result = await WALK.submitLead(payload);
+      var j = result.body || {};
+      delivered = result.ok;
+      if (result.ok) {
+        if (j.skipped) {
+          delivered = false;
+          if (j.reason === 'do_not_contact') {
+            failureMessage = 'This mobile number is marked as opted out of texts. Use a different mobile number, or contact Backup Power Pro to update your text preference.';
           }
-          tokenOut = j && j.preReadToken || null;
-          serviceAreaStatus = j && j.service_area_status || '';
-          savedAddressRefresh = j && j.saved_address_refresh === true;
-        } else if (resp.status === 429) {
-          failureMessage = 'Too many tries too quickly. Wait one minute, then tap the button again.';
         }
-      } catch (_) {}
-      if (!delivered || !tokenOut) WALK.ph('lead_submit_failed', { status: resp.status, method: 'fetch', form: 'walkv2-landing' });
-    } catch (err) {
-      try {
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', url, false);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.send(body);
-        delivered = xhr.status >= 200 && xhr.status < 300;
-        /* parse the pre_read token from the fallback response too. Without this a
-           lead that delivered via XHR (after the keepalive fetch threw) would
-           dead-end at the "did not go through" alert below, because advancing into
-           the walk needs tokenOut and only the fetch path was reading it. */
-        try {
-          var fallbackBody = JSON.parse(xhr.responseText) || {};
-          if (delivered) {
-            if (fallbackBody.skipped) {
-              delivered = false;
-              if (fallbackBody.reason === 'do_not_contact') {
-                failureMessage = 'This mobile number is marked as opted out of texts. Use a different mobile number, or contact Backup Power Pro to update your text preference.';
-              }
-            }
-            tokenOut = fallbackBody.preReadToken || null;
-            serviceAreaStatus = fallbackBody.service_area_status || '';
-            savedAddressRefresh = fallbackBody.saved_address_refresh === true;
-          } else if (xhr.status === 429) {
-            failureMessage = 'Too many tries too quickly. Wait one minute, then tap the button again.';
-          }
-        } catch (_) {}
-      } catch (e2) {
-        WALK.ph('lead_submit_failed', { err: String(err).slice(0, 200), method: 'xhr-threw', form: 'walkv2-landing' });
+        tokenOut = j.preReadToken || null;
+        serviceAreaStatus = j.service_area_status || '';
+        savedAddressRefresh = j.saved_address_refresh === true;
+      } else if (result.status === 429) {
+        failureMessage = 'Too many tries too quickly. Wait one minute, then tap the button again.';
       }
+      if (!delivered || !tokenOut) WALK.ph('lead_submit_failed', { status: result.status, method: 'bounded-fetch', form: 'walkv2-landing' });
+    } catch (err) {
+      WALK.ph('lead_submit_failed', { err: String(err).slice(0, 200), method: 'bounded-fetch', form: 'walkv2-landing' });
     }
     if (delivered && tokenOut && !savedAddressRefresh && typeof fbq === 'function') { try { fbq('track', 'Lead', { content_name: 'walkv2-landing', content_category: 'generator-installation', value: 1200, currency: 'USD' }, { eventID: eventId }); } catch (_) {} }
     WALK.ph('walk_v2_submitted', { connection_status: 'unanswered', delivered: delivered });

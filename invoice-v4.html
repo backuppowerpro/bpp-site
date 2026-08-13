@@ -73,11 +73,19 @@
 .paid-banner .paid-check{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
 .paid-banner h2{font-family:var(--font-display);font-size:22px;font-weight:800;margin-bottom:6px}
 .paid-banner p{font-size:13.5px;opacity:.9;line-height:1.5}
+.preview-bar{position:fixed;top:0;left:0;right:0;z-index:99999;background:#f59e0b;color:#1c1003;font-family:var(--font-display);font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;text-align:center;padding:8px 16px;box-shadow:0 2px 12px rgba(0,0,0,.18)}
+.preview-bar[hidden],.preview-watermark[hidden]{display:none}
+.preview-watermark{position:fixed;inset:0;pointer-events:none;z-index:99998;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.preview-watermark span{font-family:var(--font-display);font-size:clamp(60px,14vw,120px);font-weight:900;color:rgba(11,31,59,.06);letter-spacing:.1em;text-transform:uppercase;transform:rotate(-35deg);white-space:nowrap;user-select:none}
+body.preview-mode{padding-top:34px}
+body.preview-mode #pay-btn{display:none!important}
 </style>
 </head>
 <body>
+<noscript><div class="preview-bar" data-preview-banner="true">Preview unavailable, JavaScript is off, no customer action can occur</div><div class="preview-watermark" data-preview-watermark="true" aria-hidden="true"><span>Preview unavailable</span></div><div style="max-width:620px;margin:70px auto 24px;padding:18px;border:1px solid #ffba00;border-radius:14px;background:#fff8e6;color:#0b1f3b;text-align:center;font:600 16px/1.55 system-ui,sans-serif;">This invoice did not load. Turn on JavaScript and reload, or call (864) 863-7800.</div></noscript>
 
-<div class="comp-flag" id="preview-flag" hidden>Preview mode, payment is disabled</div>
+<div class="preview-bar" id="preview-flag" data-preview-banner="true" hidden>Preview mode, not sent to client, read only</div>
+<div class="preview-watermark" id="preview-watermark" data-preview-watermark="true" aria-hidden="true" hidden><span>Preview</span></div>
 
 <div class="brand-bar">
   <img src="assets/images/logo-white-v2.png" alt="Backup Power Pro">
@@ -141,7 +149,11 @@ function showState(title,msg){
 window.addEventListener('DOMContentLoaded', function(){
   var params = new URLSearchParams(window.location.search);
   var token = params.get('token');
-  if(IS_PREVIEW) document.getElementById('preview-flag').hidden=false;
+  if(IS_PREVIEW){
+    document.body.classList.add('preview-mode');
+    document.getElementById('preview-flag').hidden=false;
+    document.getElementById('preview-watermark').hidden=false;
+  }
   if(!token){ showState('Invoice not found.','This link is missing an invoice token. Please use the link we texted you, or contact (864) 863-7800.'); return; }
   loadInvoice(token);
 });
@@ -154,7 +166,8 @@ async function loadInvoice(token){
   try{
     var ctrl=new AbortController();
     var timer=setTimeout(function(){ ctrl.abort(); }, 10000);
-    var res=await fetch(SUPABASE_URL+'/functions/v1/invoice-view?token='+encodeURIComponent(token),{
+    var preview=IS_PREVIEW?'&preview=1':'';
+    var res=await fetch(SUPABASE_URL+'/functions/v1/invoice-view?token='+encodeURIComponent(token)+preview,{
       headers:{ 'Authorization':'Bearer '+SUPABASE_KEY },
       signal:ctrl.signal,
       cache:'no-store',
@@ -241,7 +254,7 @@ function invoiceRemaining(){
   return Number.isFinite(remaining) ? Math.max(0,remaining) : invoiceTotal();
 }
 function homeImageHtml(){
-  return INV.contact_address?'<div class="invoice-home" id="invoice-home"><img id="invoice-home-img" alt="Home at the service address"></div>':'';
+  return '<div class="invoice-home" id="invoice-home"><img id="invoice-home-img" alt="Home at the service address"></div>';
 }
 function loadHomeImage(){
   var wrap=document.getElementById('invoice-home');
@@ -463,7 +476,7 @@ function renderPaid(){
 var STRIPE_CHECKOUT_HOSTS = ['checkout.stripe.com'];
 
 async function payOnline(){
-  if(IS_PREVIEW){ showToast('Preview mode, payment is disabled.'); return; }
+  if(IS_PREVIEW||new URLSearchParams(window.location.search).get('preview')==='1'){ showToast('Preview mode, payment is disabled.'); return; }
   var btn=document.getElementById('pay-btn');
   var token=new URLSearchParams(window.location.search).get('token');
   if(!token){ showToast('Payment unavailable right now, call or text (864) 863-7800.'); return; }

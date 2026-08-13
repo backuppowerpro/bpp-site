@@ -75,12 +75,13 @@ if (typeof window !== 'undefined') { window.smartMatch = smartMatch; window.boun
 
 function LeftPanel({ tab, onOpen, dncSet = new Set(), activeContactId }) {
   const { contacts, events, proposals, invoices, messages, calls } = CRM;
+  const messagesStatus = CRM.domainStatus?.messages || { state:'idle', error:null };
   return (
     <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', background: BG, minHeight:0, position:'relative' }}>
       {tab === 'contacts' && <ContactsList contacts={contacts} messages={messages} calls={calls} proposals={proposals} invoices={invoices} events={events} onOpen={onOpen} dncSet={dncSet} activeContactId={activeContactId} />}
       {tab === 'calendar' && <CalendarList events={events} contacts={contacts} onOpen={onOpen} activeContactId={activeContactId} />}
       {tab === 'finance'  && <FinanceList proposals={proposals} invoices={invoices} contacts={contacts} events={events} onOpen={onOpen} activeContactId={activeContactId} />}
-      {tab === 'messages' && <MessagesList messages={messages} calls={calls} contacts={contacts} onOpen={onOpen} dncSet={dncSet} activeContactId={activeContactId} />}
+      {tab === 'messages' && <MessagesList messages={messages} calls={calls} contacts={contacts} onOpen={onOpen} dncSet={dncSet} activeContactId={activeContactId} domainStatus={messagesStatus} />}
       {tab === 'calls'    && <CallsList calls={calls} contacts={contacts} onOpen={onOpen} activeContactId={activeContactId} />}
       {/* Subs command center (crm-subs-tab.jsx), operator-only 6th tab, opened
           by the Calendar long-press. Self-fetches from sub-admin-list, so it
@@ -167,22 +168,8 @@ function ContactAvatarHoverPreview({ contact, unread, dncSet, onOpen, size = 40 
   }, [open]);
 
   const heroAddress = contact.address;
-  // Pre-flight SV metadata once the popup opens so we never render
-  // Google's "Sorry, we have no imagery here" placeholder. Same cache
-  // pattern as ContactAvatar / HouseHero.
-  const [heroOk, setHeroOk] = React.useState(false);
-  React.useEffect(() => {
-    if (!open) return;
-    if (!heroAddress || !isAddressableStreet(heroAddress) || typeof window.checkSvImagery !== 'function') return;
-    let cancelled = false;
-    window.checkSvImagery(heroAddress).then(result => {
-      if (!cancelled) setHeroOk(result === 'ok');
-    });
-    return () => { cancelled = true; };
-  }, [open, heroAddress]);
-  const heroUrl = (heroOk && isAddressableStreet(heroAddress))
-    ? `https://maps.googleapis.com/maps/api/streetview?size=640x640&scale=2&location=${encodeURIComponent(heroAddress.trim())}&fov=80&pitch=2&source=outdoor&key=${SV_KEY}`
-    : null;
+  const propertyImage = useContactPropertyImage(open ? contact : null, open);
+  const heroUrl = propertyImage.status === 'ready' ? propertyImage.url : null;
 
   const handleOpenContact = (tab) => (e) => { e.stopPropagation(); cancelOpen(); onOpen(contact.id, tab); };
 
@@ -224,7 +211,14 @@ function ContactAvatarHoverPreview({ contact, unread, dncSet, onOpen, size = 40 
           }} />
           {heroUrl && (
             <div style={{ position:'relative', height:100, background:'#EBEBEA' }}>
-              <img src={heroUrl} alt="" loading="lazy" style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'50% 30%', filter:'saturate(1.18) contrast(1.04)', display:'block' }} />
+              <img
+                src={heroUrl}
+                alt=""
+                data-property-image-identity={propertyImage.propertyImageIdentity}
+                loading="lazy"
+                onError={propertyImage.reportPropertyImageFailure}
+                style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'50% 30%', filter:'saturate(1.18) contrast(1.04)', display:'block' }}
+              />
               <div style={{ position:'absolute', inset:0, background:'linear-gradient(180deg, rgba(0,0,0,0) 60%, rgba(0,0,0,0.72) 100%)', pointerEvents:'none' }} />
               <div style={{ position:'absolute', left:10, right:10, bottom:6, color:'white', fontSize:13, fontWeight:700, textShadow:'0 1px 2px rgba(0,0,0,0.6)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{contactName(contact)}</div>
             </div>
@@ -245,42 +239,15 @@ function ContactAvatarHoverPreview({ contact, unread, dncSet, onOpen, size = 40 
               <DriveTimeBadgeFromList address={heroAddress} contactId={contact.id} />
             </div>
             <div style={{ display:'flex', gap:5 }}>
-              {contact.phone ? (
-                (contact.do_not_contact || (dncSet && dncSet.has && dncSet.has(contact.id))) ? (
-                  // DNC gate (TCPA): a do_not_contact contact must not be one tap
-                  // from a dialed call, exactly like the contact-panel dial control.
-                  // The hover card had a live gold tel: link with no DNC check, the
-                  // sibling gate was simply missing here (audit 2026-06-23). Muted,
-                  // no tel: href, toasts why.
-                  <a
-                    onClick={(e)=>{ e.stopPropagation(); cancelOpen(); window.showToast?.('On do-not-contact, calls disabled'); }}
-                    aria-label="Calls disabled, this contact is on do not contact"
-                    style={{
-                      flex:1, minHeight:44, borderRadius:6, background:'#ECEEF1',
-                      color:'#5b6576', textDecoration:'none', fontSize:12, fontWeight:600,
-                      display:'inline-flex', alignItems:'center', justifyContent:'center', cursor:'not-allowed',
-                    }}
-                  >Call</a>
-                ) : (
-                <a
-                  href={`tel:${contact.phone}`}
-                  onClick={(e)=>{ e.stopPropagation(); cancelOpen(); }}
-                  style={{
-                    flex:1, minHeight:44, borderRadius:6, background: GOLD,
-                    color:NAVY, textDecoration:'none', fontSize:12, fontWeight:600,
-                    display:'inline-flex', alignItems:'center', justifyContent:'center',
-                  }}
-                >Call</a>
-                )
-              ) : (
-                // Disabled <button> not <a href={undefined}>, proper a11y
-                // (no keyboard focus, no aria-confusing element).
-                <button disabled aria-label="No phone number on file" style={{
+              <button
+                disabled
+                aria-label={contact.phone ? 'Calling is not released yet' : 'No phone number on file'}
+                style={{
                   flex:1, minHeight:44, borderRadius:6, background:'#EBEBEA',
                   color:NAVY, opacity:0.5, fontSize:12, fontWeight:600,
                   border:'none', cursor:'not-allowed', fontFamily:'inherit',
-                }}>Call</button>
-              )}
+                }}
+              >Call</button>
               <button
                 onClick={handleOpenContact('messages')}
                 style={{
@@ -867,6 +834,33 @@ function SearchDock({ inputId, value, onChange, onClear, onClose, onEnter, place
 }
 
 function ContactsList({ contacts, messages, calls, onOpen, dncSet = new Set(), activeContactId, proposals = [], invoices = [], events = [] }) {
+  const proposalsStatus = CRM.domainStatus?.proposals || { state:'idle', error:null };
+  const moneyStatus = CRM.domainStatus?.money || { state:'idle', error:null };
+  const messagesStatus = CRM.domainStatus?.messages || { state:'idle', error:null };
+  const workspaceStatus = CRM.domainStatus?.workspace || { state:'idle', error:null };
+  const commercialReady = proposalsStatus.state === 'ready' && moneyStatus.state === 'ready';
+  const messagesReady = messagesStatus.state === 'ready';
+  const workspaceReady = workspaceStatus.state === 'ready';
+  const rowFactsReady = commercialReady && messagesReady && workspaceReady;
+  const quoteDeskDataReady = proposalsStatus.state === 'ready' && messagesReady;
+  const commercialError = proposalsStatus.state === 'error' || moneyStatus.state === 'error';
+  const commercialTruth = commercialReady
+    ? ''
+    : commercialError
+      ? (proposalsStatus.state === 'error' && moneyStatus.state === 'error'
+          ? 'Quote and balance unavailable'
+          : proposalsStatus.state === 'error' ? 'Quote status unavailable' : 'Balance unavailable')
+      : (proposalsStatus.state !== 'ready' && moneyStatus.state !== 'ready'
+          ? 'Checking quote and balance...'
+          : proposalsStatus.state !== 'ready' ? 'Checking quote...' : 'Checking balance...');
+  const activityError = messagesStatus.state === 'error' || workspaceStatus.state === 'error';
+  const rowTruth = rowFactsReady
+    ? ''
+    : !commercialReady
+      ? commercialTruth
+      : activityError
+        ? 'Activity signals unavailable'
+        : 'Checking current activity...';
   const [search, setSearch] = React.useState('');
   const [stage, setStage] = React.useState('all');
   const [quotePreReads, setQuotePreReads] = React.useState(() => window.CRM?.peekPreReadsBulk?.() || {});
@@ -1416,32 +1410,32 @@ function ContactsList({ contacts, messages, calls, onOpen, dncSet = new Set(), a
 
   const primaryLensOpts = [
     { value:'all',         label:'All' },
-    ...(workQueueMap.size > 0 ? [{ value:'work_queue', label:'Work queue', count: workQueueMap.size }] : []),
+    ...(rowFactsReady && workQueueMap.size > 0 ? [{ value:'work_queue', label:'Work queue', count: workQueueMap.size }] : []),
     // Quote Desk always visible (CEO 2026-07-13): morning habit even when empty.
-    { value:'ready_to_quote', label:'Quote Desk', count: quoteDeskVisibleMap.size },
-    ...(rescueMap.size > 0 ? [{ value:'rescue', label:'Rescue', count: rescueMap.size }] : []),
-    ...(permitQueueMap.size > 0 ? [{ value:'permits', label:'Permits', count: permitQueueMap.size }] : []),
-    { value:'needs_reply', label:'Needs reply',   count: needsReplySet.size },
-    { value:'rotting',     label:'Rotting',       count: rottingSet.size },
+    { value:'ready_to_quote', label:'Quote Desk', count: quoteDeskDataReady ? quoteDeskVisibleMap.size : null },
+    ...(rowFactsReady && rescueMap.size > 0 ? [{ value:'rescue', label:'Rescue', count: rescueMap.size }] : []),
+    ...(workspaceReady && permitQueueMap.size > 0 ? [{ value:'permits', label:'Permits', count: permitQueueMap.size }] : []),
+    ...(messagesReady ? [{ value:'needs_reply', label:'Needs reply', count: needsReplySet.size }] : []),
+    ...(rowFactsReady ? [{ value:'rotting', label:'Rotting', count: rottingSet.size }] : []),
   ];
   const moreLensGroups = [
     // Money (Key 2026-07-10): the retired Finance tab, as filters. Each row
     // only shows when it has at least one contact; the active filter puts its
     // total at the top of the list.
-    { name:'Money', rows: [
+    { name:'Money', rows: commercialReady ? [
       ...(financeMaps.outstanding.size > 0 ? [{ value:'outstanding', label:'Outstanding', count: financeMaps.outstanding.size }] : []),
       ...(financeMaps.overdue.size    > 0 ? [{ value:'overdue',     label:'Overdue',     count: financeMaps.overdue.size }] : []),
       ...(financeMaps.unbilled.size   > 0 ? [{ value:'unbilled',    label:'Unbilled',    count: financeMaps.unbilled.size }] : []),
       ...(financeMaps.paid.size       > 0 ? [{ value:'paid',        label:'Paid',        count: financeMaps.paid.size }] : []),
-    ]},
+    ] : []},
     // Viewed-no-sign/Cold only render with at least one, same as their old
     // conditional chips. Cold is the parking lot for dead stage-1 leads
     // (30d+, never replied).
-    { name:'Signals', rows: [
+    { name:'Signals', rows: rowFactsReady ? [
       { value:'silent_new', label:'Silent leads', count: silentSet.size },
       ...(staleViewedSet.size > 0 ? [{ value:'stale_viewed', label:'Viewed no sign', count: staleViewedSet.size }] : []),
       ...(coldSet.size > 0 ? [{ value:'cold', label:'Cold', count: coldSet.size }] : []),
-    ]},
+    ] : []},
     { name:'Pipeline', rows: CRM.STAGE_ORDER.map(s => ({ value:s, label: STAGE_COLORS[s].label, count: stageCounts[s] })) },
     // Housekeeping rows only render with at least one; the whole group
     // disappears when both buckets are empty (ContactLensBar hides empty
@@ -1632,7 +1626,7 @@ function ContactsList({ contacts, messages, calls, onOpen, dncSet = new Set(), a
       // rescue queue index) and free-text search keep their own sort above and are
       // untouched. Pinned + recently-viewed still float, but WITHIN the urgency band
       // (they no longer jump the whole queue) , see plan §2.4 / §7 (Key to confirm).
-      const useTriage = !headHitSet && stage !== 'work_queue' && stage !== 'ready_to_quote' && stage !== 'rescue';
+      const useTriage = rowFactsReady && !headHitSet && stage !== 'work_queue' && stage !== 'ready_to_quote' && stage !== 'rescue';
       if (useTriage) {
         const ma = rowModelByContact.get(a.id), mb = rowModelByContact.get(b.id);
         const ta = ma ? ma.tier : 5, tb = mb ? mb.tier : 5;
@@ -1884,7 +1878,25 @@ function ContactsList({ contacts, messages, calls, onOpen, dncSet = new Set(), a
           ? 'linear-gradient(to bottom, transparent 0, #000 calc(env(safe-area-inset-top, 0px) + 18px))'
           : 'none',
       }} onRefresh={() => window.CRM?.__refetch?.()}>
-        {stage === 'ready_to_quote' && quoteDeskBlocked.length > 0 && (
+        {!commercialReady && stage === 'all' && (
+          <div role={commercialError ? 'alert' : 'status'} style={{ padding:'9px 16px', background:'#F8F8F6', borderBottom:'1px solid #e5e5e5', fontSize:12, fontWeight:600, color:MUTED }}>
+            {commercialTruth}. Contact names and addresses are ready now; quote and balance signals will appear only after they are current.
+          </div>
+        )}
+        {stage === 'ready_to_quote' && !quoteDeskDataReady && (
+          <div role={(proposalsStatus.state === 'error' || messagesStatus.state === 'error') ? 'alert' : 'status'} style={{ padding:'24px 16px', textAlign:'center', color:MUTED, lineHeight:1.45 }}>
+            <div style={{ fontSize:15, fontWeight:700, color:NAVY }}>{proposalsStatus.state === 'error' || messagesStatus.state === 'error' ? 'Quote Desk could not load' : 'Quote Desk is loading current quotes and messages...'}</div>
+            <div style={{ marginTop:6, fontSize:13 }}>The queue stays hidden until its quote and conversation facts are current.</div>
+            {(proposalsStatus.state === 'error' || messagesStatus.state === 'error') && <button type="button" onClick={() => window.location.reload()} style={{ marginTop:14, minHeight:44, padding:'0 16px', borderRadius:8, border:'1px solid rgba(27,43,75,.2)', background:'white', color:NAVY, fontFamily:'inherit', fontWeight:700, cursor:'pointer' }}>Try again</button>}
+          </div>
+        )}
+        {isFinanceLens && !commercialReady && (
+          <div role={commercialError ? 'alert' : 'status'} style={{ padding:'24px 16px', textAlign:'center', color:MUTED, lineHeight:1.45 }}>
+            <div style={{ fontSize:15, fontWeight:700, color:NAVY }}>{commercialTruth}</div>
+            <div style={{ marginTop:6, fontSize:13 }}>Money filters stay hidden until invoices, payments, and proposals agree.</div>
+          </div>
+        )}
+        {stage === 'ready_to_quote' && quoteDeskDataReady && quoteDeskBlocked.length > 0 && (
           <div style={{ padding:'10px 16px', background:'#FFFBEB', borderBottom:'1px solid #FDE68A' }}>
             <div style={{ fontSize:12, fontWeight:700, color:NAVY }}>
               {quoteDeskBlocked.length} {quoteDeskBlocked.length === 1 ? 'walk is' : 'walks are'} not ready
@@ -1913,7 +1925,7 @@ function ContactsList({ contacts, messages, calls, onOpen, dncSet = new Set(), a
               style={{ flexShrink:0, minHeight:36, padding:'0 14px', borderRadius:100, border:'1px solid rgba(27,43,75,0.15)', background:'white', color:NAVY, fontSize:13, fontWeight:600, fontFamily:'inherit', cursor:'pointer' }}>Clear</button>
           </div>
         )}
-        {filtered.length === 0 && (!search.trim() || search === lensQuery) && stage === 'ready_to_quote' && (
+        {quoteDeskDataReady && filtered.length === 0 && (!search.trim() || search === lensQuery) && stage === 'ready_to_quote' && (
           <div style={{ margin: '64px 20px', padding: '24px 16px', textAlign: 'center', color: MUTED }}>
             <div style={{ fontSize: 28, fontWeight: 600, letterSpacing: '-0.03em', color: NAVY }}>Clear</div>
             <div style={{ fontSize: 15, marginTop: 10, lineHeight: 1.4 }}>Walks land here.</div>
@@ -1925,7 +1937,7 @@ function ContactsList({ contacts, messages, calls, onOpen, dncSet = new Set(), a
               }}>All contacts</button>
           </div>
         )}
-        {filtered.length === 0 && (!search.trim() || search === lensQuery) && stage !== 'ready_to_quote' && (
+        {filtered.length === 0 && (!search.trim() || search === lensQuery) && stage !== 'ready_to_quote' && !(isFinanceLens && !commercialReady) && (
           // Audit 2026-06-19: an empty group/filter is no longer a dead-end , it
           // offers a one-tap way back to All so the operator is never stuck.
           <EmptyState icon="contacts"
@@ -1952,13 +1964,13 @@ function ContactsList({ contacts, messages, calls, onOpen, dncSet = new Set(), a
         )}
         {filtered.map(c => {
           const sc = STAGE_COLORS[c.stage];
-          const unread = hasUnread(c.id) || hasMissedCall(c.id);
+          const unread = messagesReady && (hasUnread(c.id) || hasMissedCall(c.id));
           const isPinned = pinned.has(c.id);
           const isPremium = c.pricing_tier === 'premium' || c.pricing_tier === 'premium_plus';
           const sig = signalMap.get(c.id) || {};
           const rm = rowModelByContact.get(c.id) || {};   // Comp A: next-move + accent
           const quoteDeskReceipt = quoteWalkV2Receipts[String(c.id)];
-          const quoteDeskLegacyReady = window.CRM?.isQuoteDeskReady?.(
+          const quoteDeskLegacyReady = quoteDeskDataReady && window.CRM?.isQuoteDeskReady?.(
             c, quotePreReads[c.id], proposals
           ) === true;
           const quoteDeskState = window.CRM?.quoteWalkV2QuoteDeskState?.(
@@ -1975,7 +1987,7 @@ function ContactsList({ contacts, messages, calls, onOpen, dncSet = new Set(), a
           // next-move + gold action (Key 2026-06-18, replaces the Working On
           // deck). Suppressed in bulk-select so the checkbox/long-press row
           // stays available for multi-select.
-          if (isPinned && !bulkMode) {
+          if (isPinned && !bulkMode && rowFactsReady) {
             return <ExpandedContactRow key={c.id} c={c} sig={sig} nextAction={nextActionByContact.get(c.id)} nr={needsReplySet.has(c.id)} isPinned={isPinned} active={activeContactId === c.id} dncSet={dncSet} isGoldElected={c.id === goldElectedId} onOpen={onOpen} onTogglePin={togglePin} />;
           }
           return (
@@ -2063,7 +2075,9 @@ function ContactsList({ contacts, messages, calls, onOpen, dncSet = new Set(), a
                 <div style={{ display:'flex', alignItems:'center', gap:6, minWidth:0 }}>
                   <span style={{ fontWeight:600, fontSize:14, color:NAVY, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', minWidth:0 }}>{contactName(c)}</span>
                   {(() => {
-                    const pill = contactPriorityPill(c, sig, needsReplySet.has(c.id), permitNotStarted(c));
+                    const pill = c.do_not_contact
+                      ? { label:'DNC', color:'#991B1B', bg:'#FEF2F2' }
+                      : rowFactsReady ? contactPriorityPill(c, sig, needsReplySet.has(c.id), permitNotStarted(c)) : null;
                     if (!pill) return null;
                     return <span style={{ fontSize:12, fontWeight:700, color:pill.color, background:pill.bg, padding:'1px 7px', borderRadius:20, flexShrink:0, whiteSpace:'nowrap' }}>{pill.label}</span>;
                   })()}
@@ -2074,7 +2088,7 @@ function ContactsList({ contacts, messages, calls, onOpen, dncSet = new Set(), a
                     MUTED for a calm "Follow up". Stage/city moved to avatar-hover +
                     the detail page. The .sub reason shows only on the expanded row. */}
                 <div style={{ fontSize:13, fontWeight:600, color: (rm.tier != null && rm.tier <= 4) ? NAVY : MUTED, marginTop:1, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
-                  {(rm.move && rm.move.label) || 'Follow up'}
+                  {rowTruth || ((rm.move && rm.move.label) || 'Follow up')}
                 </div>
               </div>
               {/* Cadence column: days since last touch, quiet mono number.
@@ -3972,7 +3986,7 @@ function QuickQuoteModal({ onClose, onOpen, contacts = [] }) {
 
 // ── Messages List ─────────────────────────────────────────────────
 // One row per contact = latest message for that contact, sorted by sent_at desc.
-function MessagesList({ messages, calls, contacts, onOpen, dncSet = new Set(), activeContactId }) {
+function MessagesList({ messages, calls, contacts, onOpen, dncSet = new Set(), activeContactId, domainStatus = { state:'idle', error:null } }) {
   // click-audit #7: when the inbox opens with unread inbound messages, default
   // to the Waiting filter so the operator lands on the threads that need a
   // reply instead of the full list. Lazy init (runs once per mount; the inbox
@@ -3980,6 +3994,7 @@ function MessagesList({ messages, calls, contacts, onOpen, dncSet = new Set(), a
   // can switch back to All; with zero unread it defaults to All as before.
   const [filter, setFilter] = React.useState('all');
   const [search, setSearch] = React.useState('');
+  const [markingAll, setMarkingAll] = React.useState(false);
   // Filter chips folded into a search-bar funnel picker (Key 2026-06-20),
   // reusing the Contacts pattern. filterQuery marks a pasted filter label so
   // the name/body matcher steps aside; pickerOpen drives the ContactLensBar.
@@ -4005,44 +4020,29 @@ function MessagesList({ messages, calls, contacts, onOpen, dncSet = new Set(), a
     return () => { window.removeEventListener('crm-scheduled-msg-changed', bump); window.removeEventListener('storage', bump); };
   }, []);
 
-  // Mark-all-read writes to DB so the next page load doesn't re-light the
-  // unread badges. We optimistically stamp every inbound unread message
-  // locally, then persist with a single bulk update. Rollback is acceptable
-  // given the badge state itself isn't load-bearing, the messages still
-  // open the same thread either way.
+  // Mark all is explicit, but each thread still receives its own authenticated
+  // server receipt. Local badges do not move ahead of durable truth.
   const markAllRead = async () => {
-    const now = new Date().toISOString();
-    const targets = (window.CRM?.messages || []).filter(m => m.direction === 'in' && m.read_at == null);
-    if (targets.length === 0) return;
-    const ids = targets.map(m => m.id);
-    targets.forEach(m => { m.read_at = now; });
-    window.dispatchEvent(new CustomEvent('crm-data-changed'));
-    // Re-resolve rows by id against the LIVE messages array before any DEFERRED
-    // write-back. The realtime channel replaces window.CRM.messages wholesale on
-    // every event, so the captured `targets` refs can be orphaned by an
-    // intervening refetch; the rollback/undo below must touch the live objects,
-    // not the dead ones, or the badge won't visually return (audit 2026-06-22 [12]).
-    const reapplyReadAt = (val) => {
-      const live = new Map((window.CRM?.messages || []).map(m => [m.id, m]));
-      ids.forEach(id => { const m = live.get(id); if (m) m.read_at = val; });
-    };
-    if (CRM.__db) {
-      const { error } = await CRM.__db.from('messages').update({ read_at: now }).in('id', ids);
-      if (error) {
-        // Roll back local stamps on persistent failure.
-        reapplyReadAt(null);
-        window.dispatchEvent(new CustomEvent('crm-data-changed'));
-        window.showToast?.(`Mark all read failed: ${error.message}`);
-        return;
-      }
+    if (markingAll) return;
+    const state = CRM.operatorCommunicationsState;
+    if (!state) {
+      window.showToast?.('Messages could not update. Try again.');
+      return;
     }
-    // Undo (audit 2026-06-19): read_at feeds several triage surfaces, so this
-    // one-tap bulk write gets its inverse. 6s so a field operator can reach it.
-    window.showToast?.('All marked read', { duration: 6000, undo: async () => {
-      reapplyReadAt(null);
-      window.dispatchEvent(new CustomEvent('crm-data-changed'));
-      if (CRM.__db) await CRM.__db.from('messages').update({ read_at: null }).in('id', ids);
-    } });
+    setMarkingAll(true);
+    try {
+      const result = await state.markAllThreadsRead();
+      if (result.total === 0) return;
+      if (result.ok) {
+        window.showToast?.('All marked read');
+      } else if (result.succeeded > 0) {
+        window.showToast?.(`${result.succeeded} threads updated. ${result.failed} could not update. Tap again to retry.`);
+      } else {
+        window.showToast?.('Messages could not update. Try again.');
+      }
+    } finally {
+      setMarkingAll(false);
+    }
   };
 
   // Index messages by contact_id once so building entries is O(messages)
@@ -4237,7 +4237,8 @@ function MessagesList({ messages, calls, contacts, onOpen, dncSet = new Set(), a
     <div style={{ display:'flex', flexDirection:'column', flex:1, minHeight:0 }}>
       {!searchOpen && (
         <PanelHeader title="Inbox" count={totalUnread > 0 ? `${totalUnread} unread` : null}
-          right={totalUnread > 0 ? <button onClick={markAllRead} style={{ fontSize:12, fontWeight:600, color:NAVY, background:'white', border:'1px solid rgba(11,31,59,0.15)', borderRadius:6, padding:'8px 12px', minHeight:44, cursor:'pointer', fontFamily:'inherit' }}>Mark all read</button> : null}
+          right={totalUnread > 0 ? <button onClick={markAllRead} disabled={markingAll} aria-busy={markingAll ? true : undefined}
+            style={{ fontSize:12, fontWeight:600, color:NAVY, background:'white', border:'1px solid rgba(11,31,59,0.15)', borderRadius:6, padding:'8px 12px', minHeight:44, cursor:markingAll?'wait':'pointer', opacity:markingAll?.65:1, fontFamily:'inherit' }}>{markingAll ? 'Updating...' : 'Mark all read'}</button> : null}
         />
       )}
       {/* Search moved OFF the top (Key 2026-07-10): the fixed top search bar is
@@ -4261,7 +4262,20 @@ function MessagesList({ messages, calls, contacts, onOpen, dncSet = new Set(), a
               style={{ flexShrink:0, minHeight:36, padding:'0 14px', borderRadius:100, border:'1px solid rgba(27,43,75,0.15)', background:'white', color:NAVY, fontSize:13, fontWeight:600, fontFamily:'inherit', cursor:'pointer' }}>Clear</button>
           </div>
         )}
-        {filtered.length === 0 && (
+        {(domainStatus.state === 'idle' || domainStatus.state === 'loading') && (
+          <div role="status" style={{ padding:'34px 20px', textAlign:'center', color:MUTED, lineHeight:1.45 }}>
+            <div style={{ fontSize:15, fontWeight:700, color:NAVY }}>Loading current conversations...</div>
+            <div style={{ marginTop:6, fontSize:13 }}>Unread counts and threads will appear together when they are current.</div>
+          </div>
+        )}
+        {domainStatus.state === 'error' && (
+          <div role="alert" style={{ padding:'34px 20px', textAlign:'center', color:MUTED, lineHeight:1.45 }}>
+            <div style={{ fontSize:15, fontWeight:700, color:NAVY }}>Messages could not load</div>
+            <div style={{ marginTop:6, fontSize:13 }}>The inbox is hidden so missing messages cannot look like no conversations.</div>
+            <button type="button" onClick={() => window.location.reload()} style={{ marginTop:14, minHeight:44, padding:'0 16px', borderRadius:8, border:'1px solid rgba(27,43,75,.2)', background:'white', color:NAVY, fontFamily:'inherit', fontWeight:700, cursor:'pointer' }}>Try again</button>
+          </div>
+        )}
+        {domainStatus.state === 'ready' && filtered.length === 0 && (
           // Filter-aware empty state (Key 2026-06-19 walk): the inbox auto-selects
           // "Waiting" when there are unread, then auto-marks-read, so the operator
           // can land on an empty Waiting filter. A bare "No threads match" reads as
@@ -4275,7 +4289,7 @@ function MessagesList({ messages, calls, contacts, onOpen, dncSet = new Set(), a
               ? <EmptyState icon="messages" text="No messages match your search" actionLabel="Clear search" onAction={() => setSearch('')} />
               : <EmptyState icon="messages" text="No conversations yet" />
         )}
-        {filtered.map(({contact, last, lastCall, hasVm, unread, lastFailed, scheduled, isUnknownNew}, i) => (
+        {domainStatus.state === 'ready' && filtered.map(({contact, last, lastCall, hasVm, unread, lastFailed, scheduled, isUnknownNew}, i) => (
           // CM-29: gentle entrance cascade capped to the first 6 rows. `backwards`
           // fill (NOT `both`) so after the rise the row reverts to its own style and
           // the global button:active press-scale still works; the delay lives in the
@@ -4347,6 +4361,16 @@ const CALL_PALETTE = {
 function CallsList({ calls, contacts, onOpen, activeContactId }) {
   const getContact = id => contacts.find(c => c.id === id);
   const pinned = window.usePinned ? window.usePinned() : new Set();
+  const [selectedCall, setSelectedCall] = React.useState(null);
+  const callTriggerRef = React.useRef(null);
+  const openCallDetail = (call, trigger) => {
+    callTriggerRef.current = trigger || document.activeElement;
+    setSelectedCall(call);
+  };
+  const closeCallDetail = () => {
+    setSelectedCall(null);
+    requestAnimationFrame(() => callTriggerRef.current?.focus?.());
+  };
 
   // Pinned-first: contacts you've starred surface to the top of every
   // calls slice (today / missed / voicemails / all). Within each pin
@@ -4494,7 +4518,7 @@ function CallsList({ calls, contacts, onOpen, activeContactId }) {
             return (
               <div key={cl.id} style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
                 <span style={{ fontSize:13, fontWeight:600, color:'#991B1B', flex:1 }}>{contactName(c)} · {formatPhone(c?.phone)}</span>
-                <button onClick={()=>onOpen(cl.contact_id,'calls')} style={{ fontSize:11, fontWeight:700, color:'white', background:'#991B1B', border:'none', borderRadius:6, padding:'4px 10px', minHeight:44, cursor:'pointer', fontFamily:'inherit' }}>Open</button>
+                <button onClick={(e)=>openCallDetail(cl,e.currentTarget)} style={{ fontSize:11, fontWeight:700, color:'white', background:'#991B1B', border:'none', borderRadius:6, padding:'4px 10px', minHeight:44, cursor:'pointer', fontFamily:'inherit' }}>Open</button>
               </div>
             );
           })}
@@ -4506,7 +4530,7 @@ function CallsList({ calls, contacts, onOpen, activeContactId }) {
           {voicemails.map(cl => {
             const c = getContact(cl.contact_id);
             return (
-              <button key={cl.id} onClick={()=>onOpen(cl.contact_id,'calls')} style={{ width:'100%', background: activeContactId===cl.contact_id?'#FFFBEB':'white', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:10, padding:'13px 18px', borderBottom:'1px solid #F5F5F3', textAlign:'left', boxShadow: activeContactId===cl.contact_id?'inset 2px 0 0 '+GOLD:'none' }}>
+              <button key={cl.id} data-call-event-id={cl.id} onClick={(e)=>openCallDetail(cl,e.currentTarget)} style={{ width:'100%', minHeight:44, background:'white', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:10, padding:'13px 18px', borderBottom:'1px solid #F5F5F3', textAlign:'left' }}>
                 <div style={{ width:40,height:40,borderRadius:'50%',background:'#EDE9FE',display:'flex',alignItems:'center',justifyContent:'center',color:'#7C3AED',flexShrink:0 }}><div style={{width:18,height:18}}>{Icons.voicemail}</div></div>
                 <div style={{ flex:1, minWidth:0 }}>
                   <div style={{ display:'flex', alignItems:'center', gap:5 }}>
@@ -4584,7 +4608,7 @@ function CallsList({ calls, contacts, onOpen, activeContactId }) {
           return (
             // CM-29: same capped entrance cascade as the inbox; `backwards` fill keeps
             // the press-scale, gated off during an active call search.
-            <button key={cl.id} onClick={()=>onOpen(cl.contact_id,'calls')} style={{ width:'100%', background: activeContactId===cl.contact_id?'#FFFBEB':'white', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:10, padding:'13px 18px', borderBottom:'1px solid #F5F5F3', textAlign:'left',
+            <button key={cl.id} data-call-event-id={cl.id} onClick={(e)=>openCallDetail(cl,e.currentTarget)} style={{ width:'100%', minHeight:44, background:'white', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:10, padding:'13px 18px', borderBottom:'1px solid #F5F5F3', textAlign:'left',
               animation: (!searchingCalls && i < 6) ? `bpp-fade-up 200ms cubic-bezier(0.2,0.8,0.3,1) ${i * 32}ms backwards` : undefined }}>
               <div style={{ position:'relative', flexShrink:0 }}>
                 <div style={{ width:40,height:40,borderRadius:'50%',background: hasVm?'#EDE9FE':isSpam?'#f3f4f6':p.bg,display:'flex',alignItems:'center',justifyContent:'center',color: hasVm?'#7C3AED':isSpam?'#6b7280':p.color }}>
@@ -4669,7 +4693,7 @@ function CallsList({ calls, contacts, onOpen, activeContactId }) {
           onChange={v => { setDial(v); if (filterQuery !== null && v !== filterQuery) { setFilterQuery(null); if (filter !== 'all') setFilter('all'); } }}
           onClear={() => { setDial(''); setFilter('all'); setFilterQuery(null); }}
           onClose={closeSearch}
-          onEnter={() => { const first = searchedVisible[0]; if (searchingCalls && first && first.contact_id) { onOpen(first.contact_id, 'calls'); closeSearch(); } }}
+          onEnter={() => { const first = searchedVisible[0]; if (searchingCalls && first) { openCallDetail(first, document.activeElement); closeSearch(); } }}
           filters={filterOpts}
           activeFilter={filter}
           onFilter={applyCallFilter}
@@ -4677,6 +4701,69 @@ function CallsList({ calls, contacts, onOpen, activeContactId }) {
           setFilterOpen={setPickerOpen}
         />
       )}
+      {selectedCall && window.ModalShell && (() => {
+        const cl = selectedCall;
+        const c = getContact(cl.contact_id);
+        const direction = cl.direction === 'out' ? 'Outgoing' : cl.direction === 'missed' ? 'Missed' : 'Incoming';
+        const source = cl.from_phone ? formatPhone(cl.from_phone) : 'Not available';
+        const destination = cl.to_phone ? formatPhone(cl.to_phone) : 'Not available';
+        const callbackPhone = cl.direction === 'out' ? cl.to_phone : cl.from_phone;
+        const detailRows = [
+          ['Contact', c ? contactName(c) : 'Unknown contact'],
+          ['Direction', direction],
+          ['Status', cl.status || 'Not available'],
+          ['Time', cl.started_at ? new Date(cl.started_at).toLocaleString() : 'Not available'],
+          ['Duration', formatDuration(cl.voicemail_duration || cl.duration_sec)],
+          ['From', source],
+          ['To', destination],
+        ];
+        const openDialer = () => {
+          const returnFocus = callTriggerRef.current;
+          setSelectedCall(null);
+          setTimeout(() => window.dispatchEvent(new CustomEvent('crm-open-keypad', {
+            detail: { seedDial: callbackPhone || '', returnFocus },
+          })), 0);
+        };
+        return (
+          <window.ModalShell
+            open={true}
+            onClose={closeCallDetail}
+            title="Call details"
+            footer={callbackPhone ? (
+              <button type="button" onClick={openDialer} style={{ width:'100%', minHeight:44, border:0, borderRadius:8, background:GOLD, color:NAVY, fontSize:14, fontWeight:700, fontFamily:'inherit', cursor:'pointer' }}>
+                Call back
+              </button>
+            ) : null}
+          >
+            <div data-call-detail-id={cl.id} role="dialog" aria-label="Call details">
+              {detailRows.map(([label, value]) => (
+                <div key={label} style={{ display:'grid', gridTemplateColumns:'92px minmax(0,1fr)', gap:12, padding:'9px 0', borderBottom:'1px solid #F1F2F4', fontSize:13 }}>
+                  <span style={{ color:MUTED, fontWeight:600 }}>{label}</span>
+                  <span style={{ color:NAVY, overflowWrap:'anywhere' }}>{value}</span>
+                </div>
+              ))}
+              {(cl.transcript || cl.voicemail_transcript) && (
+                <div style={{ paddingTop:14 }}>
+                  <div style={{ fontSize:12, fontWeight:700, color:MUTED, marginBottom:5 }}>Transcript</div>
+                  <div style={{ fontSize:13, lineHeight:1.5, color:NAVY, whiteSpace:'pre-wrap' }}>{cl.transcript || cl.voicemail_transcript}</div>
+                </div>
+              )}
+              {cl.ai_summary && (
+                <div style={{ paddingTop:14 }}>
+                  <div style={{ fontSize:12, fontWeight:700, color:MUTED, marginBottom:5 }}>AI summary</div>
+                  <div style={{ fontSize:13, lineHeight:1.5, color:NAVY, whiteSpace:'pre-wrap' }}>{cl.ai_summary}</div>
+                </div>
+              )}
+              {cl.notes && (
+                <div style={{ paddingTop:14 }}>
+                  <div style={{ fontSize:12, fontWeight:700, color:MUTED, marginBottom:5 }}>Notes</div>
+                  <div style={{ fontSize:13, lineHeight:1.5, color:NAVY, whiteSpace:'pre-wrap' }}>{cl.notes}</div>
+                </div>
+              )}
+            </div>
+          </window.ModalShell>
+        );
+      })()}
     </div>
   );
 }
