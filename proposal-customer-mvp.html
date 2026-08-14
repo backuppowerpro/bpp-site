@@ -1755,8 +1755,7 @@
       window.addEventListener('pageshow',function(event){
         if(!event.persisted||previewModeActive()||isLocalFixture)return;
         var token=new URLSearchParams(window.location.search).get('token');
-        var attemptId=token&&storedPendingDepositAcceptance(token);
-        if(!token||!attemptId||/[?&](deposit_paid|payment_check)=1(?:&|$)/.test(window.location.search))return;
+        if(!token||/[?&](deposit_paid|payment_check)=1(?:&|$)/.test(window.location.search))return;
         if(proposal)resetDepositAcceptanceAuthorization('Closing the previous payment attempt. This proposal has not been accepted.');
         beginAuthorizationGate(token);
       });
