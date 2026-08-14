@@ -561,7 +561,7 @@
           <span class="ack-copy">I understand the <a class="ack-link" href="#safety" data-info="safety">Generator Safety &amp; Compatibility</a>. I authorize <span id="agreementMoney">the $299 deposit today, saving this payment method, and a one-time $1,198 charge after installation. Key personally reviews that charge before it runs, and I can cancel this authorization before installation</span>.<small>This is not a subscription or recurring payment.</small></span>
         </label>
 
-        <input class="sig-input" id="signature" type="text" autocomplete="name" value="" aria-label="Signature. Tap to edit.">
+        <input class="sig-input" id="signature" type="text" autocomplete="name" value="Sample Homeowner" aria-label="Signature. Tap to edit.">
         <button class="approve" id="approveButton" type="button" disabled>Approve and pay $299</button>
         <div class="approval-error" id="approvalError" role="alert" aria-live="polite"></div>
         <div class="policies"><a href="#deposit-policy" data-info="deposit">Deposit and rescheduling policy</a><a href="#terms" data-info="terms">Terms</a><a href="#privacy" data-info="privacy">Privacy</a></div>
@@ -868,7 +868,11 @@
       function renderNote(){
         var note=String(fixture.notes||'').trim();
         var prefix=String(fixture.customerName||'Sample Homeowner').trim().split(/\s+/)[0]||'Sample';
-        if(!note) note='I reviewed your information and prepared the installation plan below.';
+        if(!note){
+          note='Based on your portable generator and the panel location you shared, I recommend the plan below. It gives you a permanent outdoor connection point and lets you choose any breaker in your panel within the generator\'s capacity. The complete price includes installation';
+          if(fixture.systemItems&&fixture.systemItems.permit&&fixture.systemItems.permit.included!==false) note+=', permit, and inspection';
+          note+='.';
+        }
         note=note.charAt(0).toLowerCase()+note.slice(1);
         document.getElementById('personalNoteText').textContent=prefix+', '+note;
       }
@@ -878,14 +882,13 @@
         document.getElementById('customerAddress').textContent=compactAddress(fixture.customerAddress);
         document.getElementById('compactProposalTitle').textContent=(name.split(/\s+/)[0]||'Your')+"'s proposal";
         var signature=document.getElementById('signature');
-        if(signature.dataset.edited!=='true') signature.value='';
+        if(signature.dataset.edited!=='true') signature.value=name;
         if(proposal){
           var prepared=proposal.sent_at||proposal.created_at;
           var expires=proposal.expires_at?new Date(proposal.expires_at):(prepared?new Date(new Date(prepared).getTime()+14*86400000):null);
           var valid=document.querySelector('.good-through');
           if(valid){
             var validParts=[];
-            if(fixture.document_number) validParts.push(String(fixture.document_number));
             if(expires&&!isNaN(expires.getTime())) validParts.push('Valid through '+expires.toLocaleDateString('en-US',{month:'short',day:'numeric'}));
             if(validParts.length) valid.textContent=validParts.join(' · ');
           }
