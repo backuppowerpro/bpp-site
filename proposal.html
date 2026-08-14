@@ -348,6 +348,31 @@ body.preview-mode a.approve-btn[href],body.preview-mode button[onclick^="payDepo
 }
 @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 </style>
+<script>
+(function normalizeWrappedProposalToken(){
+  var params=new URLSearchParams(window.location.search);
+  var token=params.get('token');
+  var wrappedKey='';
+  var ambiguous=false;
+  if(token===null){
+    params.forEach(function(value,key){
+      if(key!=='token'&&key.replace(/[\r\n]/g,'')==='token'){
+        if(wrappedKey){ambiguous=true;return;}
+        wrappedKey=key;
+        token=value;
+      }
+    });
+  }
+  var wrappedValue=typeof token==='string'&&/[\r\n]/.test(token);
+  if(ambiguous||(!wrappedKey&&!wrappedValue))return;
+  var canonicalToken=String(token).replace(/[\r\n]/g,'');
+  if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(canonicalToken))return;
+  if(wrappedKey)params.delete(wrappedKey);
+  params.set('token',canonicalToken);
+  var query=params.toString();
+  window.history.replaceState(null,'',window.location.pathname+(query?'?'+query:'')+window.location.hash);
+})();
+</script>
 <!-- PostHog, customer-facing proposal view tracking. Closes the growth
      loop: we can see how long customers spend on their quote, whether they
      click the Pay Deposit button, whether they bounce. Combined with
