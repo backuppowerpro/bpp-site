@@ -526,7 +526,7 @@ function syncAuthorizationGateNotice(target) {
   const message = document.createElement('p');
   message.style.cssText = 'margin:0;color:var(--text2);font-size:13px;line-height:1.55';
   message.textContent = authorizationGateState === 'failed'
-    ? 'Payment attempt needs attention. We could not confirm the previous payment attempt. Your proposal details remain available, but acceptance and payment stay locked.'
+    ? 'We could not confirm that this proposal is ready for a new acceptance. No approval or payment was submitted. Tap Retry to check again.'
     : 'Confirming that this proposal is ready for a new acceptance.';
   notice.appendChild(message);
   if (authorizationGateState === 'failed') {
