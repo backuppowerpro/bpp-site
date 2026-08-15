@@ -73,19 +73,16 @@
 .paid-banner .paid-check{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
 .paid-banner h2{font-family:var(--font-display);font-size:22px;font-weight:800;margin-bottom:6px}
 .paid-banner p{font-size:13.5px;opacity:.9;line-height:1.5}
-.preview-bar{position:fixed;top:0;left:0;right:0;z-index:99999;background:#f59e0b;color:#1c1003;font-family:var(--font-display);font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;text-align:center;padding:8px 16px;box-shadow:0 2px 12px rgba(0,0,0,.18)}
-.preview-bar[hidden],.preview-watermark[hidden]{display:none}
-.preview-watermark{position:fixed;inset:0;pointer-events:none;z-index:99998;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.preview-watermark span{font-family:var(--font-display);font-size:clamp(60px,14vw,120px);font-weight:900;color:rgba(11,31,59,.06);letter-spacing:.1em;text-transform:uppercase;transform:rotate(-35deg);white-space:nowrap;user-select:none}
-body.preview-mode{padding-top:34px}
-body.preview-mode #pay-btn{display:none!important}
+/* Navy notice: voided / refund / adjusted. Same banner bones as .paid-banner,
+   not the paid-in-full green. Reuse, no new visual language. */
+.notice-banner{background:var(--navy);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:30px 24px;text-align:center;color:#fff;margin-bottom:var(--card-gap)}
+.notice-banner h2{font-family:var(--font-display);font-size:22px;font-weight:800;margin-bottom:6px}
+.notice-banner p{font-size:13.5px;opacity:.9;line-height:1.5}
 </style>
 </head>
 <body>
-<noscript><div class="preview-bar" data-preview-banner="true">Preview unavailable, JavaScript is off, no customer action can occur</div><div class="preview-watermark" data-preview-watermark="true" aria-hidden="true"><span>Preview unavailable</span></div><div style="max-width:620px;margin:70px auto 24px;padding:18px;border:1px solid #ffba00;border-radius:14px;background:#fff8e6;color:#0b1f3b;text-align:center;font:600 16px/1.55 system-ui,sans-serif;">This invoice did not load. Turn on JavaScript and reload, or call (864) 863-7800.</div></noscript>
 
-<div class="preview-bar" id="preview-flag" data-preview-banner="true" hidden>Preview mode, not sent to client, read only</div>
-<div class="preview-watermark" id="preview-watermark" data-preview-watermark="true" aria-hidden="true" hidden><span>Preview</span></div>
+<div class="comp-flag" id="preview-flag" hidden>Preview mode, payment is disabled</div>
 
 <div class="brand-bar">
   <img src="assets/images/logo-white-v2.png" alt="Backup Power Pro">
@@ -131,6 +128,10 @@ function showToast(msg){
   requestAnimationFrame(function(){ _toast.classList.add('show'); _toastTimer=setTimeout(function(){ _toast.classList.remove('show'); },4000); });
 }
 
+function isClosedInvoice(inv){
+  return ['cancelled','voided','refunded','declined','void'].indexOf(String((inv&&inv.status)||'').toLowerCase())>-1;
+}
+
 function showState(title,msg){
   var page=document.getElementById('page');
   page.innerHTML='';
@@ -149,11 +150,7 @@ function showState(title,msg){
 window.addEventListener('DOMContentLoaded', function(){
   var params = new URLSearchParams(window.location.search);
   var token = params.get('token');
-  if(IS_PREVIEW){
-    document.body.classList.add('preview-mode');
-    document.getElementById('preview-flag').hidden=false;
-    document.getElementById('preview-watermark').hidden=false;
-  }
+  if(IS_PREVIEW) document.getElementById('preview-flag').hidden=false;
   if(!token){ showState('Invoice not found.','This link is missing an invoice token. Please use the link we texted you, or contact (864) 863-7800.'); return; }
   loadInvoice(token);
 });
@@ -166,8 +163,7 @@ async function loadInvoice(token){
   try{
     var ctrl=new AbortController();
     var timer=setTimeout(function(){ ctrl.abort(); }, 10000);
-    var preview=IS_PREVIEW?'&preview=1':'';
-    var res=await fetch(SUPABASE_URL+'/functions/v1/invoice-view?token='+encodeURIComponent(token)+preview,{
+    var res=await fetch(SUPABASE_URL+'/functions/v1/invoice-view?token='+encodeURIComponent(token),{
       headers:{ 'Authorization':'Bearer '+SUPABASE_KEY },
       signal:ctrl.signal,
       cache:'no-store',
@@ -217,11 +213,10 @@ async function loadInvoice(token){
   // fully payable (2026-06-09 walkthrough finding, double-charge path; the
   // checkout fn now also refuses these server-side).
   var invoiceStatus=String(INV.status||'').toLowerCase();
-  var _closed=['cancelled','voided','refunded','declined','void'];
   var _payable=['sent','unpaid','viewed','overdue','partial'];
-  if(_closed.indexOf(invoiceStatus)>-1){
+  if(isClosedInvoice(INV)){
     if(invoiceStatus==='refunded') showState('Invoice refunded.','Payments on this invoice were refunded. No payment is due. Please contact (864) 863-7800 if you have questions.');
-    else if(invoiceStatus==='voided'||invoiceStatus==='void') showState('Invoice voided.','This invoice was voided. No payment is due on it. Please contact (864) 863-7800 if you have questions.');
+    else if(invoiceStatus==='voided'||invoiceStatus==='void') renderVoided();
     else showState('Invoice cancelled.','This invoice has been cancelled and is no longer available for payment. Please contact (864) 863-7800 if you have questions.');
   } else if(invoiceStatus==='paid'){
     renderPaid();
@@ -249,12 +244,16 @@ function lineItemsHtml(){
 function invoiceTotal(){
   return Number(INV.total);
 }
+function voidedDate(){
+  // Only a date the payload already carries. Do not invent one from created_at.
+  return fmtDate(INV.voided_at || INV.voided_on || INV.cancelled_at || '');
+}
 function invoiceRemaining(){
   var remaining=Number(INV.amount_remaining);
   return Number.isFinite(remaining) ? Math.max(0,remaining) : invoiceTotal();
 }
 function homeImageHtml(){
-  return '<div class="invoice-home" id="invoice-home"><img id="invoice-home-img" alt="Home at the service address"></div>';
+  return INV.contact_address?'<div class="invoice-home" id="invoice-home"><img id="invoice-home-img" alt="Home at the service address"></div>':'';
 }
 function loadHomeImage(){
   var wrap=document.getElementById('invoice-home');
@@ -299,6 +298,51 @@ function agreementHtml(){
     '<div class="li"><div class="li-name">Safety instructions</div><div class="li-amt" style="font-weight:600;font-size:13px">'+(LP.safety_ack?'Acknowledged':'Not acknowledged')+'</div></div>'+
     '<div class="inv-foot" style="text-align:left;padding:12px 0 0;font-style:italic">Electronically signed under the ESIGN Act. This constitutes a binding agreement between the parties.</div>'+
   '</div>';
+}
+
+// ── RENDER VOIDED (recognizable document, no pay path) ──────────────
+function renderVoided(){
+  var total=invoiceTotal();
+  var page=document.getElementById('page');
+  var name=INV.contact_name||'';
+  var addr=INV.contact_address||'';
+  var issued=fmtDate(INV.created_at);
+  var voided=voidedDate();
+  var num=INV.document_number||'';
+
+  page.innerHTML =
+    '<div class="notice-banner">'+
+      '<h2>Invoice voided.</h2>'+
+      '<p>This invoice was voided. No payment is due on it. Please contact (864) 863-7800 if you have questions.</p>'+
+    '</div>'+
+
+    '<div class="card pad">'+
+      '<div class="inv-top">'+
+        '<div class="eyebrow" style="margin-bottom:0">Invoice</div>'+
+        '<span class="status warn">Voided</span>'+
+      '</div>'+
+      '<div class="inv-meta">'+
+        (num?'<span>Invoice <b>#'+esc(num)+'</b></span>':'')+
+        (issued?'<span>Issued <b>'+esc(issued)+'</b></span>':'')+
+        (voided?'<span>Voided <b>'+esc(voided)+'</b></span>':'')+
+      '</div>'+
+      '<div class="inv-to">'+
+        '<div class="lbl">Billed to</div>'+
+        '<b>'+esc(name)+'</b>'+(addr?'<br>'+esc(addr):'')+
+        (INV.contact_phone?'<br>'+esc(INV.contact_phone):'')+
+        (INV.contact_email?'<br>'+esc(INV.contact_email):'')+
+      '</div>'+
+    '</div>'+
+
+    '<div class="card pad">'+
+      '<div class="due-lbl">Original total</div>'+
+      '<div class="due-amt">'+fmt(total)+'</div>'+
+      '<div class="due-when">No payment is due on this invoice.</div>'+
+    '</div>'+
+
+    '<div class="inv-foot">Backup Power Pro by Key Electric &middot; Greenville, Spartanburg &amp; Pickens counties<br>Questions on this invoice? Text Key at <b>(864) 863-7800</b></div>';
+
+  revealCards();
 }
 
 // ── RENDER PAYABLE (unpaid / balance due) ───────────────────────────
@@ -411,25 +455,30 @@ function renderPaid(){
   var isPartialRefund = refunded > 0 && !isRefund;
   var netPaid = Math.max(0, Math.round((cashPaid - refunded)*100)/100);
 
-  page.innerHTML =
-    // PAID / REFUND BANNER
-    (isRefund
-    ? '<div class="paid-banner">'+
-        '<div class="paid-check"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>'+
+  var refundBanner = isRefund
+    ? '<div class="notice-banner">'+
         '<h2>Your refund has been issued</h2>'+
         '<p>Your payment of '+fmt(refunded)+' was refunded. Depending on your bank, it can take 5 to 10 business days to appear back on your statement. Questions? Text Key at (864) 863-7800.</p>'+
+      '</div>'
+    : (isPartialRefund
+    ? '<div class="notice-banner">'+
+        '<h2>A partial refund was issued</h2>'+
+        '<p>'+fmt(refunded)+' of your '+fmt(cashPaid)+' payment was refunded. Depending on your bank, it can take 5 to 10 business days to appear back on your statement. Questions? Text Key at (864) 863-7800.</p>'+
       '</div>'
     : '<div class="paid-banner">'+
         '<div class="paid-check"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>'+
         '<h2>Thank you for choosing Backup Power Pro</h2>'+
         '<p>'+(isDeposit?'Your deposit has been received and applied to your project total. Key will contact you about the next step.':'Your payment has been received. Thank you for choosing Backup Power Pro.')+'</p>'+
-      '</div>')+
+      '</div>');
+
+  page.innerHTML =
+    refundBanner+
 
     // HEADER
     '<div class="card pad">'+
       '<div class="inv-top">'+
         '<div class="eyebrow" style="margin-bottom:0">Receipt</div>'+
-        (isRefund?'<span class="status">Refunded</span>':(isPartialRefund?'<span class="status ok">Paid, partial refund</span>':'<span class="status ok">Paid</span>'))+
+        (isRefund?'<span class="status warn">Refunded</span>':(isPartialRefund?'<span class="status warn">Paid, partial refund</span>':'<span class="status ok">Paid</span>'))+
       '</div>'+
       '<div class="inv-meta">'+
         (issued?'<span>Issued <b>'+esc(issued)+'</b></span>':'')+
@@ -476,7 +525,11 @@ function renderPaid(){
 var STRIPE_CHECKOUT_HOSTS = ['checkout.stripe.com'];
 
 async function payOnline(){
-  if(IS_PREVIEW||new URLSearchParams(window.location.search).get('preview')==='1'){ showToast('Preview mode, payment is disabled.'); return; }
+  if(IS_PREVIEW){ showToast('Preview mode, payment is disabled.'); return; }
+  if(isClosedInvoice(INV)){
+    showToast('This invoice is not available for payment. Call or text (864) 863-7800.');
+    return;
+  }
   var btn=document.getElementById('pay-btn');
   var token=new URLSearchParams(window.location.search).get('token');
   if(!token){ showToast('Payment unavailable right now, call or text (864) 863-7800.'); return; }
@@ -514,7 +567,7 @@ function revealCards(){
   var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var sig=document.querySelector('.signature.sig-pen');
   function reveal(t){ t.classList.add('in'); if(!reduce && sig && t.contains(sig)) sig.classList.add('writing'); }
-  var els=document.querySelectorAll('.card, .paid-banner');
+  var els=document.querySelectorAll('.card, .paid-banner, .notice-banner');
   if(reduce || !('IntersectionObserver' in window)){ els.forEach(reveal); return; }
   var io=new IntersectionObserver(function(en){ en.forEach(function(e){ if(e.isIntersecting){ reveal(e.target); io.unobserve(e.target); } }); },{threshold:0,rootMargin:'0px 0px -15% 0px'});
   els.forEach(function(e){ io.observe(e); });

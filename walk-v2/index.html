@@ -6,9 +6,8 @@
 
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-G+RGGG/nS7Jz0Zp8ZGoJDT28GiNgr71xVKUjVbBKqLc=' 'sha256-CyZokA2CtmiDNgPMBMgwDybGngi/oE7042XVPWEk2Wk=' 'sha256-uWsBjwcW3y13ao9nPHvlGwcun9dn5K89QCOM4eOHYBE='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-K2S09QqOYxExW92fGzlWi7bH8KOggn4Z0kGyDeRSRZ4=' 'sha256-0Iyyv4VKPnVS157Xktla6XdEbzCmufeHLHEeNrA4/ks=' 'sha256-M8iRdWV7mgh/H8ZrJIYj7+JApx46IWfGlaIDVtJ6UBk='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://api.mapbox.com https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
-<script src="/walk-v2/token-bootstrap.js"></script>
-<script src="/walk-v2/no-js-bootstrap.js"></script>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://us.i.posthog.com https://us-assets.i.posthog.com https://connect.facebook.net 'sha256-SILzPhfLYZcCd4Tf0iA88+GJxTW0Ww/xsABc9z+kB/M=' 'sha256-G+RGGG/nS7Jz0Zp8ZGoJDT28GiNgr71xVKUjVbBKqLc=' 'sha256-wygnGpICbMppymZ/+XZT8Vgnv0wtsjTA4zJ1JolzPtc=' 'sha256-8D3LGBD86E4uSFC42nggO2UYeAOHJnZE1qO2PPhWGcM=' 'sha256-83cnzl8V2LDrqY08oQrKy9GF4ekGdl5OIAaFIHRBoKo=' 'sha256-hz4qGbeNFCvHsIMpdSIAtf2uPW5FLW626ZOdPQxGyR4='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-WrAreQj/0yCq+M7usW/J8Xm4XoJ2M6bde/luad6SyBc=' 'sha256-0Iyyv4VKPnVS157Xktla6XdEbzCmufeHLHEeNrA4/ks=' 'sha256-M8iRdWV7mgh/H8ZrJIYj7+JApx46IWfGlaIDVtJ6UBk='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://www.facebook.com; connect-src 'self' https://api.mapbox.com https://reowtzedjflwmlptupbk.supabase.co https://us.i.posthog.com https://us-assets.i.posthog.com https://*.posthog.com https://www.facebook.com; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<script>/* flip no-js->js before paint so scroll-reveal hides content only when JS can reveal it; 5s failsafe reveals everything if the reveal script ever fails, so the form is never stuck invisible */(function(){var e=document.documentElement;e.classList.remove('no-js');e.classList.add('js');setTimeout(function(){try{var l=document.querySelectorAll('.rv:not(.in)');for(var i=0;i<l.length;i++)l[i].classList.add('in');}catch(x){}},5000);})();</script>
 <script>/* Entry mode + dynamic hero (Key 2026-07-01 / 2026-07-13 / paid fast lane 2026-07-13):
    src=home -> home hero
    src=city_<slug> -> city hero
@@ -202,7 +201,23 @@
     background: var(--navy);
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    gap: 12px;
     padding: 0 20px;
+  }
+  .head-call {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 8px 2px;
+    color: var(--gold);
+    font-family: var(--head);
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.01em;
+    text-decoration: none;
+    white-space: nowrap;
   }
   .lockup {
     display: inline-flex;
@@ -341,95 +356,54 @@
     line-height: 1.6;
   }
   .hero .process strong { color: #fff; }
-  .proof-carousel {
-    position: relative;
-    padding: 14px 0 0;
+  .proof-band {
+    padding: 14px 18px 0;
     background: var(--page);
   }
-  .proof-track {
-    display: flex;
-    gap: 10px;
-    padding: 0 18px;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scroll-padding-inline: 18px;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-x: contain;
-    touch-action: pan-y;
-    cursor: grab;
+  .proof-photos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
   }
-  .proof-track.is-dragging { cursor: grabbing; }
-  .proof-track:focus-visible {
-    outline: 3px solid var(--gold);
-    outline-offset: -3px;
-    border-radius: 16px;
-  }
-  .proof-track::-webkit-scrollbar { display: none; }
-  .proof-slide {
-    flex: 0 0 calc(100% - 48px);
-    height: 184px;
-    display: flex;
-    position: relative;
+  .proof-photo {
+    margin: 0;
+    min-width: 0;
     overflow: hidden;
-    scroll-snap-align: center;
-    scroll-snap-stop: always;
-    border-radius: 16px;
-    background: #fff;
-    box-shadow: var(--shadow-sm), inset 0 0 0 1px rgba(11,31,59,.06);
+    border-radius: 14px;
+    background: #07172d;
+    box-shadow: var(--shadow-sm);
   }
-  .proof-slide .proof-image {
-    width: 61%;
-    height: 100%;
+  .proof-photo img {
+    display: block;
+    width: 100%;
+    height: 104px;
     object-fit: cover;
   }
-  .proof-slide .proof-copy {
-    display: flex;
-    flex: 1;
-    align-items: center;
-    padding: 13px 12px;
-    color: var(--navy);
-    font-size: 12px;
-    font-weight: 600;
-    line-height: 1.42;
+  .proof-reviews {
+    margin-top: 10px;
   }
-  .proof-slide--image .proof-image {
-    width: 100%;
-  }
-  .proof-slide--image {
-    background: transparent;
-    box-shadow: none;
-  }
-  .proof-slide--image .proof-copy {
-    position: absolute;
-    inset: auto 0 0;
+  .proof-card {
+    display: none;
     margin: 0;
-    min-height: 52px;
-    padding: 17px 16px 13px;
-    align-items: flex-end;
-    background: linear-gradient(180deg, transparent, rgba(7,23,45,.9));
-    color: #fff;
-    font-family: var(--head);
-    font-size: 15px;
-    font-weight: 700;
-    line-height: 1.2;
-  }
-  .proof-slide--review {
-    align-items: stretch;
+    border-radius: 16px;
     background: linear-gradient(160deg, #fff, #f5f7fb);
+    box-shadow: var(--shadow-sm), inset 0 0 0 1px rgba(11,31,59,.06);
   }
+  .proof-card.is-on { display: block; }
+  .proof-reviews.is-stack .proof-card {
+    display: block;
+  }
+  .proof-reviews.is-stack .proof-card + .proof-card { margin-top: 10px; }
   .proof-review {
     display: flex;
     min-width: 0;
-    flex: 1;
     flex-direction: column;
-    justify-content: center;
     margin: 0;
-    padding: 14px 18px 10px;
+    padding: 16px 18px 14px;
     color: var(--navy);
   }
   .proof-review::before {
-    content: "“";
+    content: "\201C";
     height: 20px;
     color: var(--gold);
     font-family: Georgia, serif;
@@ -438,36 +412,25 @@
     line-height: 1;
   }
   .proof-review p {
-    margin: 3px 0 0;
-    font-size: 12.5px;
+    margin: 6px 0 0;
+    font-size: 16px;
     font-weight: 600;
-    line-height: 1.4;
+    line-height: 1.45;
   }
   .proof-review .review-stars {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    margin-top: 2px;
+    margin-top: 4px;
     color: var(--gold);
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1;
     letter-spacing: .08em;
   }
   .proof-review cite {
-    margin-top: 5px;
+    margin-top: 10px;
     color: var(--muted);
-    font-size: 11.5px;
+    font-size: 13px;
     font-style: normal;
     font-weight: 750;
     line-height: 1.3;
-  }
-  @media (max-width: 340px) {
-    .proof-slide--image .proof-copy {
-      padding-right: 4px;
-      padding-left: 4px;
-      font-size: 14px;
-      letter-spacing: -0.01em;
-    }
   }
   .hero .photozone {
     position: relative;
@@ -541,8 +504,9 @@
     .hero .process { max-width: 48ch; }
     .hero .review { left: 22px; right: 22px; bottom: 20px; padding: 11px 13px; font-size: 13.5px; }
     .hero .cta { align-self: flex-start; width: auto; min-width: 300px; }
-    .proof-carousel { padding-right: 0; padding-left: 0; }
-    .proof-slide { flex-basis: calc(100% - 48px); }
+    .proof-band { padding-right: 42px; padding-left: 42px; }
+    .proof-photo img { height: 128px; }
+    .proof-review p { font-size: 16px; }
   }
 
   /* ================= body grid ================= */
@@ -649,12 +613,7 @@
     background: var(--card);
     border-radius: var(--r-md);
     box-shadow: var(--shadow-lift), inset 0 0 0 1px var(--edge-soft);
-    max-height: var(--addr-drop-max-height, min(420px, calc(100dvh - 24px)));
-    overflow-x: hidden;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
-    scroll-padding-block: 4px calc(4px + env(safe-area-inset-bottom));
+    overflow: hidden;
     padding: 4px;
   }
   .addr-drop.open { display: block; }
@@ -945,22 +904,34 @@
     .state-label { display: none; }
   }
 </style>
-<link rel="stylesheet" href="/walk-v2/mobile-canvas.css?v=20260808d" />
-<link rel="stylesheet" href="/walk-v2/no-js-recovery.css" />
+<script>!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+" (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);posthog.init('phc_qoA51lePZqXYtPJYkrIpdA4U8iMDJ79L1kje7r4pD4O',{api_host:'https://us.i.posthog.com',property_denylist:['$current_url','$initial_current_url','$referrer','$initial_referrer'],sanitize_properties:function(p){for(var k in p){var v=p[k];if(typeof v==='string'&&v.indexOf('http')===0&&v.indexOf('?')>-1){try{var u=new URL(v);p[k]=u.origin+u.pathname;}catch(e){p[k]=v.split('?')[0];}}}return p;},person_profiles:'identified_only',capture_pageview:true,capture_pageleave:true,enable_heatmaps:true,capture_dead_clicks:true})</script>
+<!-- Meta Pixel: walk is the lead form. Without init, fbq('track','Lead') on submit is a no-op
+     when ads land on /walk-v2/ (or get-quote /m stubs). CAPI Lead still fires server-side. -->
+<script>
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('init','1389648775800936');
+fbq('track','PageView');
+fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'generator-installation'});
+</script>
+<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1389648775800936&ev=PageView&noscript=1" alt=""/></noscript>
+<link rel="stylesheet" href="/walk-v2/mobile-canvas.css" />
 </head>
 <body>
-<div class="qw-no-js-note qw-script-recovery" role="alert">JavaScript is required to start this Quote Walk. Turn it on and reload, or call <a href="tel:+18648637800">(864) 863-7800</a>.</div>
 <div class="stack" id="stack">
 
   <!-- ============ MAIN PAGE (mobile, interactive) ============ -->
   <main class="page" id="mainPage" data-screen-label="Landing page (interactive, mobile)">
 
-    <div class="intro-card">
     <!-- 1. site header -->
     <header class="site-head">
       <a class="lockup" href="https://backuppowerpro.com" aria-label="Backup Power Pro" style="text-decoration:none;">
         <img src="/assets/images/logo-white-v2.png" alt="Backup Power Pro" style="height:28px;display:block;width:auto;" />
       </a>
+      <a class="head-call" href="tel:+18648637800">(864) 863-7800</a>
     </header>
 
     <!-- Claude Design checkpoint composition: promise and Key on navy, real
@@ -968,74 +939,65 @@
     <section class="hero" data-hv="integrated-a" aria-labelledby="hero-h1">
       <div class="textzone">
         <h1 id="hero-h1" data-hero-h1=""><span class="hero-line">Portable generator hookup.</span><span class="hero-line">Priced without a home visit.</span></h1>
+        <p class="sub">One hookup. Power what matters. Selected circuits, not the whole house.</p>
         <div class="identity">
           <span class="portrait" role="img" aria-label="Key Goodson"></span>
           <div>
             <strong>Key Goodson</strong>
             <span>Licensed Electrician</span>
-            <div class="identity-rating" role="img" aria-label="100 plus Google reviews, rated 4.9 out of 5">
-              <img src="/img/google-g-logo.webp" alt="" width="14" height="14" />
-              <em>100+</em><b aria-hidden="true">★★★★★</b><em>4.9</em>
-            </div>
+            <div class="identity-rating" role="img" aria-label="4.9 out of 5 on Google"><b aria-hidden="true">★★★★★</b><em>4.9</em></div>
           </div>
         </div>
         <p class="process">I’ll guide you through a few quick questions and ask for photos of your panel. Then I’ll review your setup myself and text you a complete proposal, so you know exactly what’s included before any work begins.</p>
       </div>
     </section>
-    </div>
-    <section class="proof-carousel" aria-label="Installed work and customer reviews">
-      <div class="proof-track" role="group" aria-roledescription="carousel" tabindex="0" data-proof-track="" data-autoplay-ms="8000" data-autoplay-paused="false">
-        <article class="proof-slide proof-slide--image" role="group" aria-roledescription="slide" aria-label="Carousel item 1 of 10" data-proof-slide="">
-          <img class="proof-image" src="/img/connected-generator-current.jpg" alt="Portable generator connected by a yellow cord to an outdoor home inlet" />
-          <p class="proof-copy">One hookup. Power what matters.</p>
-        </article>
-        <article class="proof-slide proof-slide--review" role="group" aria-roledescription="slide" aria-label="Carousel item 2 of 10" data-proof-slide="">
+    <section class="proof-band" aria-label="Installed work and customer reviews">
+      <div class="proof-photos">
+        <figure class="proof-photo">
+          <img src="/img/install-inlet-brick-hd.jpg" alt="Real BPP-installed metal outdoor connection box with a weather-rated cover on a brick wall" />
+        </figure>
+        <figure class="proof-photo">
+          <img src="/img/install-inlet-interlock.jpg" alt="Interlock kit installed inside the breaker panel" />
+        </figure>
+        <figure class="proof-photo">
+          <img src="/img/install-full-setup.jpg" alt="Portable generator hooked up to a home inlet" />
+        </figure>
+        <figure class="proof-photo">
+          <img src="/img/install-inlet-siding.jpg" alt="Outdoor generator inlet installed on house siding" />
+        </figure>
+      </div>
+      <div class="proof-reviews" data-proof-reviews="" aria-live="polite">
+        <article class="proof-card is-on" data-proof-card="">
           <blockquote class="proof-review">
-            <div class="review-stars" role="img" aria-label="5 star Google review"><img src="/img/google-g-logo.webp" alt="" width="13" height="13" />★★★★★</div>
-            <p>Installed a 50-amp Generator inlet box along with a panel interlock system in our home. I was impressed by Key’s attention to detail, professionalism, and organization.</p>
+            <div class="review-stars" role="img" aria-label="5 star Google review">★★★★★</div>
+            <p>Installed a 50-amp Generator inlet box along with a panel interlock system in our home. I was impressed by Key's attention to detail, professionalism, and organization.</p>
             <cite>Jim J. · Google review</cite>
           </blockquote>
         </article>
-        <article class="proof-slide proof-slide--image" role="group" aria-roledescription="slide" aria-label="Carousel item 3 of 10" data-proof-slide="">
-          <img class="proof-image" src="/img/essentials-powered-current.png" alt="A lit home, a cold refrigerator, and a phone charging at night" />
-          <p class="proof-copy">Keep your essentials on.</p>
-        </article>
-        <article class="proof-slide proof-slide--review" role="group" aria-roledescription="slide" aria-label="Carousel item 4 of 10" data-proof-slide="">
+        <article class="proof-card" data-proof-card="">
           <blockquote class="proof-review">
-            <div class="review-stars" role="img" aria-label="5 star Google review"><img src="/img/google-g-logo.webp" alt="" width="13" height="13" />★★★★★</div>
+            <div class="review-stars" role="img" aria-label="5 star Google review">★★★★★</div>
             <p>Oh my gosh these guys were absolutely fantastic. Everything went so smoothly and the finished work looks super professional.</p>
             <cite>Hallie L. · Google review</cite>
           </blockquote>
         </article>
-        <article class="proof-slide proof-slide--image" role="group" aria-roledescription="slide" aria-label="Carousel item 5 of 10" data-proof-slide="">
-          <img class="proof-image" src="/img/outdoor-inlets-current.png" alt="Two BPP-installed metal outdoor generator connection boxes with weather-rated covers" />
-          <p class="proof-copy">A permanent outdoor connection.</p>
-        </article>
-        <article class="proof-slide proof-slide--review" role="group" aria-roledescription="slide" aria-label="Carousel item 6 of 10" data-proof-slide="">
+        <article class="proof-card" data-proof-card="">
           <blockquote class="proof-review">
-            <div class="review-stars" role="img" aria-label="5 star Google review"><img src="/img/google-g-logo.webp" alt="" width="13" height="13" />★★★★★</div>
+            <div class="review-stars" role="img" aria-label="5 star Google review">★★★★★</div>
             <p>punctual, professional, and truly set the bar high. Throughout permitting and scheduling, he kept me fully informed, and his performance and timing exceeded my expectations.</p>
             <cite>Dino S. · Google review</cite>
           </blockquote>
         </article>
-        <article class="proof-slide proof-slide--image" role="group" aria-roledescription="slide" aria-label="Carousel item 7 of 10" data-proof-slide="">
-          <img class="proof-image" src="/img/transfer-systems-current.jpg" alt="Two installed breaker-panel interlock systems that prevent utility and generator power from being on at the same time" />
-          <p class="proof-copy">Safely switch to generator power.</p>
-        </article>
-        <article class="proof-slide proof-slide--review" role="group" aria-roledescription="slide" aria-label="Carousel item 8 of 10" data-proof-slide="">
+        <article class="proof-card" data-proof-card="">
           <blockquote class="proof-review">
-            <div class="review-stars" role="img" aria-label="5 star Google review"><img src="/img/google-g-logo.webp" alt="" width="13" height="13" />★★★★★</div>
+            <div class="review-stars" role="img" aria-label="5 star Google review">★★★★★</div>
             <p>Outstanding service, competent, on time, quick response, professional installation, clean, organized, safety a priority. Highly recommend! Will use again.</p>
             <cite>Mark M. · Google review</cite>
           </blockquote>
         </article>
-        <article class="proof-slide proof-slide--image" role="group" aria-roledescription="slide" aria-label="Carousel item 9 of 10" data-proof-slide="">
-          <img class="proof-image" src="/img/cord-permit-current.jpg" alt="A compatible yellow generator cord and electrical permit paperwork posted for inspection" />
-          <p class="proof-copy">Cord included. Permit handled.</p>
-        </article>
-        <article class="proof-slide proof-slide--review" role="group" aria-roledescription="slide" aria-label="Carousel item 10 of 10" data-proof-slide="">
+        <article class="proof-card" data-proof-card="">
           <blockquote class="proof-review">
-            <div class="review-stars" role="img" aria-label="5 star Google review"><img src="/img/google-g-logo.webp" alt="" width="13" height="13" />★★★★★</div>
+            <div class="review-stars" role="img" aria-label="5 star Google review">★★★★★</div>
             <p>Best customer service ever, he went above and beyond to help us. Very knowledgeable and honest man!! Definitely I'll recommend Key to all my friends.</p>
             <cite>Bogdi · Google review</cite>
           </blockquote>
@@ -1085,188 +1047,41 @@
       } else if (mode === 'paid') {
         setHeroHeading('Portable generator hookup.', 'Priced without a home visit.');
         var fcTitle = document.querySelector('.form-card .fc-title');
-        if (fcTitle) fcTitle.textContent = "First, a few quick details.";
+        if (fcTitle) fcTitle.textContent = "Let's start with a few details.";
       }
       // cold/direct keeps the default HTML above
 
       // Keep the hero variant explicit so entry-mode funnels remain comparable.
       try { if (window.posthog) { posthog.register({ hero_variant: 'integrated-a', walk_entry: mode }); posthog.capture('walk_v2_hero_shown', { variant: 'integrated-a', walk_entry: mode, walk_src: src || 'none' }); } } catch(e){}
-      var proofTrack = document.querySelector('[data-proof-track]');
-      if (proofTrack) {
-        var originals = Array.prototype.slice.call(proofTrack.querySelectorAll('[data-proof-slide]'));
+      var proofReviews = document.querySelector('[data-proof-reviews]');
+      if (proofReviews) {
+        var cards = Array.prototype.slice.call(proofReviews.querySelectorAll('[data-proof-card]'));
         var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        var autoplayMs = 8000;
-        var textIdleMs = 2400;
-        var timer = 0;
-        var textEntryPaused = false;
-        var textIdleTimer = 0;
-        var settleTimer = 0;
-        var dragPointer = null;
-        var dragStartX = 0;
-        var dragStartScroll = 0;
-
-        function slides() {
-          return Array.prototype.slice.call(proofTrack.querySelectorAll('.proof-slide'));
-        }
-        function slideOffset(index) {
-          var slide = slides()[index];
-          if (!slide) return proofTrack.scrollLeft;
-          return slide.offsetLeft - (proofTrack.clientWidth - slide.offsetWidth) / 2;
-        }
-        function jumpTo(index, smooth) {
-          proofTrack.scrollTo({
-            left: slideOffset(index),
-            behavior: smooth && !reduced ? 'smooth' : 'auto'
-          });
-        }
-        function teleportTo(index) {
-          var priorSnap = proofTrack.style.scrollSnapType;
-          proofTrack.style.scrollSnapType = 'none';
-          proofTrack.scrollLeft = slideOffset(index);
-          window.requestAnimationFrame(function () {
-            proofTrack.style.scrollSnapType = priorSnap;
-          });
-        }
-        function currentIndex() {
-          var center = proofTrack.scrollLeft + proofTrack.clientWidth / 2;
-          var nearest = 0;
-          var distance = Infinity;
-          slides().forEach(function (slide, index) {
-            var slideCenter = slide.offsetLeft + slide.offsetWidth / 2;
-            var nextDistance = Math.abs(slideCenter - center);
-            if (nextDistance < distance) {
-              nearest = index;
-              distance = nextDistance;
-            }
-          });
-          return nearest;
-        }
-        function clearAutoplay() {
-          if (timer) window.clearInterval(timer);
-          timer = 0;
-        }
-        function syncPauseState() {
-          proofTrack.setAttribute('data-autoplay-paused', textEntryPaused ? 'true' : 'false');
-        }
-        function startAutoplay() {
-          if (reduced || textEntryPaused || timer || document.visibilityState !== 'visible') return;
-          timer = window.setInterval(function () {
-            if (!textEntryPaused && document.visibilityState === 'visible') {
-              jumpTo(currentIndex() + 1, true);
-            }
-          }, autoplayMs);
-        }
-        function restartAutoplay() {
-          clearAutoplay();
-          startAutoplay();
-        }
-        function isTextEntry(target) {
-          if (!target || !target.matches) return false;
-          if (target.matches('textarea, [contenteditable="true"]')) return true;
-          if (!target.matches('input')) return false;
-          return !/^(button|checkbox|color|file|hidden|image|radio|range|reset|submit)$/i.test(target.type || 'text');
-        }
-        function releaseTextPause() {
-          textEntryPaused = false;
-          syncPauseState();
-          restartAutoplay();
-        }
-        function holdForTextActivity() {
-          textEntryPaused = true;
-          syncPauseState();
-          clearAutoplay();
-          if (textIdleTimer) window.clearTimeout(textIdleTimer);
-          textIdleTimer = window.setTimeout(releaseTextPause, textIdleMs);
-        }
-        function settle() {
-          if (settleTimer) window.clearTimeout(settleTimer);
-          settleTimer = window.setTimeout(function () {
-            var index = currentIndex();
-            if (index < originals.length) teleportTo(index + originals.length);
-            if (index >= originals.length * 2) teleportTo(index - originals.length);
-          }, reduced ? 0 : 260);
-        }
-        function beginDrag(event) {
-          if (event.button !== undefined && event.button !== 0) return;
-          if (event.cancelable) event.preventDefault();
-          dragPointer = event.pointerId;
-          dragStartX = event.clientX;
-          dragStartScroll = proofTrack.scrollLeft;
-          proofTrack.style.scrollSnapType = 'none';
-          proofTrack.classList.add('is-dragging');
-          if (proofTrack.setPointerCapture) proofTrack.setPointerCapture(event.pointerId);
-          restartAutoplay();
-        }
-        function moveDrag(event) {
-          if (dragPointer !== event.pointerId) return;
-          if (event.cancelable) event.preventDefault();
-          proofTrack.scrollLeft = dragStartScroll + dragStartX - event.clientX;
-        }
-        function endDrag(event) {
-          if (dragPointer !== event.pointerId) return;
-          var targetIndex = currentIndex();
-          dragPointer = null;
-          proofTrack.classList.remove('is-dragging');
-          if (proofTrack.hasPointerCapture && proofTrack.hasPointerCapture(event.pointerId)) {
-            proofTrack.releasePointerCapture(event.pointerId);
-          }
-          proofTrack.style.scrollSnapType = '';
-          jumpTo(targetIndex, true);
-          settle();
-          restartAutoplay();
-        }
-
-        if (originals.length > 1) {
-          function makeLoopClone(slide) {
-            var clone = slide.cloneNode(true);
-            clone.removeAttribute('data-proof-slide');
-            clone.setAttribute('aria-hidden', 'true');
-            return clone;
-          }
-          originals.forEach(function (slide) {
-            proofTrack.insertBefore(makeLoopClone(slide), originals[0]);
-          });
-          originals.forEach(function (slide) {
-            proofTrack.appendChild(makeLoopClone(slide));
-          });
-          function alignFirstSlide() {
-            window.requestAnimationFrame(function () {
-              window.requestAnimationFrame(function () { teleportTo(originals.length); });
+        if (reduced || cards.length < 2) {
+          proofReviews.classList.add('is-stack');
+          cards.forEach(function (card) { card.classList.add('is-on'); });
+        } else {
+          var shown = 0;
+          var timer = 0;
+          function show(index) {
+            shown = (index + cards.length) % cards.length;
+            cards.forEach(function (card, i) {
+              card.classList.toggle('is-on', i === shown);
             });
           }
-          alignFirstSlide();
-          if (document.readyState !== 'complete') window.addEventListener('load', alignFirstSlide, { once: true });
-
-          proofTrack.addEventListener('scroll', settle, { passive: true });
-          proofTrack.addEventListener('pointerdown', beginDrag);
-          proofTrack.addEventListener('pointermove', moveDrag);
-          proofTrack.addEventListener('pointerup', endDrag);
-          proofTrack.addEventListener('pointercancel', endDrag);
-          proofTrack.addEventListener('keydown', function (event) {
-            if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
-            event.preventDefault();
-            jumpTo(currentIndex() + (event.key === 'ArrowRight' ? 1 : -1), true);
-            restartAutoplay();
-          });
-          document.addEventListener('focusin', function (event) {
-            if (isTextEntry(event.target)) holdForTextActivity();
-          });
-          document.addEventListener('input', function (event) {
-            if (isTextEntry(event.target)) holdForTextActivity();
-          });
-          document.addEventListener('focusout', function (event) {
-            if (!isTextEntry(event.target)) return;
-            if (textIdleTimer) window.clearTimeout(textIdleTimer);
-            window.setTimeout(function () {
-              if (!isTextEntry(document.activeElement)) releaseTextPause();
-            }, 0);
-          });
+          function start() {
+            if (timer || document.visibilityState !== 'visible') return;
+            timer = window.setInterval(function () { show(shown + 1); }, 8000);
+          }
+          function stop() {
+            if (timer) window.clearInterval(timer);
+            timer = 0;
+          }
           document.addEventListener('visibilitychange', function () {
-            if (document.visibilityState === 'visible') startAutoplay();
-            else clearAutoplay();
+            if (document.visibilityState === 'visible') start();
+            else stop();
           });
-          syncPauseState();
-          startAutoplay();
+          start();
         }
       }
     })();
@@ -1277,7 +1092,12 @@
 
         <!-- 4. form card -->
         <section class="form-card" id="quote-form">
-          <h2 class="fc-title">First, a few quick details.</h2>
+          <h2 class="fc-title">Let's start with a few details.</h2>
+          <noscript>
+            <div style="background:#fff8e6;border:1px solid #ffba00;border-radius:12px;padding:16px;margin-bottom:18px;color:#1b2b4b;font-size:16px;line-height:1.55;text-align:center;">
+              Turn on JavaScript, then reload this page to start your quote.
+            </div>
+          </noscript>
           <form autocomplete="off">
             <div class="fields">
               <div class="field">
@@ -1285,7 +1105,7 @@
                 <input id="fName" name="name" type="text" inputmode="text" autocomplete="name" autocapitalize="words" placeholder="Sarah" data-f="name" />
               </div>
               <div class="field" data-phone-field="">
-                <label for="fPhone">Mobile number</label>
+                <label for="fPhone">Phone</label>
                 <input id="fPhone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(864) 000-0000" data-f="phone" />
                 <span class="field-error"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.5"></circle><path d="M8 5v3.5M8 11v.2"></path></svg><span>Enter a 10-digit phone number so I can text your quote</span></span>
               </div>
@@ -1302,18 +1122,14 @@
 
             <!-- 5. submit row: consent is the tap on the gold button, never required -->
             <div class="submit-row">
-              <div data-resume-recovery hidden aria-live="polite">
-                <p data-resume-message style="font-size:15px;line-height:1.5;color:var(--text2,#4d5a6e);text-align:center;margin:0 0 14px;font-weight:600;">Picking up where you left off...</p>
-                <button class="cta" type="button" data-resume-retry hidden><span>Try saved link again</span></button>
-                <button class="qw-secondary-action" type="button" data-resume-new hidden style="width:100%;margin-top:10px;">Start a new Quote Walk</button>
-              </div>
               <p data-unconfirmed-address="" aria-live="polite" style="display:none; font-size:14px; line-height:1.5; color:var(--gold-ink, #8a5a00); text-align:center; margin:0 0 12px; font-weight:600;">Your address is saved exactly as entered. Continue with the setup questions. Your service area still needs to be verified before your project range or proposal can be prepared.</p>
               <button class="cta" type="submit" data-cta="" disabled="">
-                <span data-cta-label="">Start my quote</span>
+                <svg viewBox="0 0 16 16"><path d="M2.5 3.5h11a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H6.5l-3 2.4V11.5h-1a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1z"></path></svg>
+                <span data-cta-label="">Continue</span>
               </button>
               <p class="cta-hint" data-cta-hint="" aria-live="polite" style="display:none; font-size:14px; line-height:1.5; color:var(--gold-ink, #8a5a00); text-align:center; margin:10px 0 0; font-weight:600;"></p>
               <p data-submit-error="" role="alert" style="display:none; font-size:15px; line-height:1.5; color:var(--red, #dc2626); text-align:center; margin:10px 0 0; font-weight:600;"></p>
-              <p class="consent-fine">By tapping Start my quote, you agree to texts from Backup Power Pro about your project. Msg and data rates may apply. Reply STOP anytime.</p>
+              <p class="consent-fine">By tapping the button you agree to get texts from Backup Power Pro about your quote and install. Msg and data rates may apply. Reply STOP anytime.</p>
             </div>
           </form>
         </section>
@@ -1322,9 +1138,9 @@
 
     <!-- 7. footer -->
     <footer class="foot">
-      <div class="foot-identity"><strong>Licensed and insured</strong><span>SC Lic #2942 by Key Electric</span></div>
-      <span class="foot-area">Currently serving Greenville, Spartanburg,<br>and Pickens counties</span>
-      <span class="foot-process">Every project is reviewed and permitted by Key, completed with trusted local installation partners, and coordinated through final inspection.</span>
+      <strong>Key Goodson, Licensed Electrician, SC Lic #2942</strong>
+      <span>Serving Greenville, Spartanburg, and Pickens counties</span>
+      <span>Every project is reviewed and permitted by Key, completed with trusted local installation partners, and coordinated through final inspection.</span>
     </footer>
   </main>
 
@@ -1345,42 +1161,29 @@
   var areaBoundary = !!resumeT && landingParams.get('area') === 'out';
   var editDetails = !!resumeT && landingParams.get('edit') === 'details';
   if (resumeT && !areaBoundary && !editDetails) {
-    var resumeForm = main.querySelector('form');
-    var resumeFields = resumeForm && resumeForm.querySelector('.fields');
-    var resumeRecovery = main.querySelector('[data-resume-recovery]');
-    var resumeMessage = main.querySelector('[data-resume-message]');
-    var resumeRetry = main.querySelector('[data-resume-retry]');
-    var resumeNew = main.querySelector('[data-resume-new]');
-    var resumeSubmit = main.querySelector('.submit-row > .cta');
-    if (resumeFields) resumeFields.hidden = true;
-    if (resumeSubmit) resumeSubmit.hidden = true;
-    if (resumeRecovery) resumeRecovery.hidden = false;
-    main.setAttribute('aria-busy', 'true');
+    main.style.visibility = 'hidden';
+    var resumingMsg = document.createElement('p');
+    resumingMsg.textContent = 'One sec, picking up where you left off...';
+    resumingMsg.setAttribute('style', 'position:fixed;left:0;right:0;top:42%;margin:0;text-align:center;color:var(--faint,#9aa);font-size:15px;padding:0 24px');
+    document.body.appendChild(resumingMsg);
     WALK.ph('walk_v2_screen_view', { screen: 'landing_resume' });
-    function loadSavedWalk() {
-      if (resumeRetry) resumeRetry.disabled = true;
-      if (resumeMessage) resumeMessage.textContent = 'Picking up where you left off...';
-      main.setAttribute('aria-busy', 'true');
-      return WALK.view(resumeT).then(function (v) { WALK.routeFromState(resumeT, v); })
-        .catch(function (cause) {
-          main.removeAttribute('aria-busy');
-          if (resumeMessage) resumeMessage.textContent = cause && (
-              cause.status === 410
-              || cause.body && cause.body.error === 'expired'
-            )
-            ? 'This saved link has expired. Start a new Quote Walk below.'
-            : 'Your saved walk could not be loaded. Try the saved link again, or start a new Quote Walk.';
-          if (resumeRetry) { resumeRetry.hidden = false; resumeRetry.disabled = false; }
-          if (resumeNew) resumeNew.hidden = false;
-          WALK.ph('walk_v2_screen_view', { screen: 'landing_return_recovery' });
-        });
-    }
-    if (resumeRetry) resumeRetry.addEventListener('click', loadSavedWalk);
-    if (resumeNew) resumeNew.addEventListener('click', function () {
-      WALK.setToken('');
-      window.location.replace('/walk-v2/');
-    });
-    loadSavedWalk();
+    WALK.view(resumeT).then(function (v) { WALK.routeFromState(resumeT, v); })
+      .catch(function (cause) {
+        resumingMsg.remove();
+        main.style.visibility = '';
+        var recovery = main.querySelector('[data-submit-error]');
+        if (recovery) {
+          recovery.setAttribute('data-return-recovery', '');
+          recovery.textContent = cause && (
+            cause.status === 410
+            || cause.body && cause.body.error === 'expired'
+          )
+            ? 'This saved link has expired. Start here to create a new Quote Walk.'
+            : 'This saved link has been replaced. Use your newest saved link, or start here again.';
+          recovery.style.display = '';
+        }
+        WALK.ph('walk_v2_screen_view', { screen: 'landing_return_recovery' });
+      });
   } else {
     WALK.ph('walk_v2_screen_view', { screen: editDetails ? 'landing_edit' : 'landing' });
   }
@@ -1467,7 +1270,7 @@
 
   /* Address auto-suggest via the server-side Places proxy. Debounced; a pick
      fills the field. The field still works as a plain input if Google is down. */
-  var addrTimer = null, addrPicked = false, addrSel = { city: '', county: '', state: '', zip: '' }, lastAddrPreds = [];
+  var addrTimer = null, addrPicked = false, addrSel = { city: '', state: '', zip: '' }, lastAddrPreds = [];
   /* Soft-block (Key 2026-07-21): the Next gate requires a VALIDATED address, a real
      picked suggestion OR the explicit "not listed" escape, not just >=6 chars, so a
      lazy fake free-text address can no longer pass. addrValidatedValue pins the exact
@@ -1507,7 +1310,7 @@
   }
   function suggest() {
     if (addrPicked) { addrPicked = false; return; }
-    addrSel = { city: '', county: '', state: '', zip: '' }; // editing after a pick invalidates the structured parts
+    addrSel = { city: '', state: '', zip: '' }; // editing after a pick invalidates the structured parts
     addrValidated = false; addrUnverified = false; // and re-locks Next until a fresh pick
     var q = addrIn.value.trim();
     if (addrTimer) clearTimeout(addrTimer);
@@ -1522,6 +1325,7 @@
     if (esc) {
       addrPicked = true; addrValidated = true; addrUnverified = true;
       addrValidatedValue = addrIn.value.trim();
+      addrSel = { city: '', state: '', zip: '' };
       closeDrop(); refresh();
       return;
     }
@@ -1534,7 +1338,7 @@
     for (var mi = 0; mi < lastAddrPreds.length; mi++) {
       if (String(lastAddrPreds[mi].description) === picked) { match = lastAddrPreds[mi]; break; }
     }
-    if (match) addrSel = { city: match.city || '', county: match.county || '', state: match.state || '', zip: match.zip || '' };
+    if (match) addrSel = { city: match.city || '', state: match.state || '', zip: match.zip || '' };
     addrValidated = true; addrUnverified = false; addrValidatedValue = picked;
     closeDrop(); refresh();
   });
@@ -1601,7 +1405,7 @@
       ) _se.style.display = 'none';
     }
     paintFieldOk();
-    ctaLabelEl.textContent = 'Start my quote';
+    ctaLabelEl.textContent = 'Continue';
     var ready = part1Done();
     cta.disabled = submitting || !ready;
     if (unconfirmedAddressNote) {
@@ -1721,24 +1525,52 @@
     var attr = attribution();
     var eventId = 'wv2-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
 
-    /* address backfill: if they typed an address but never tapped a suggestion,
-       addrSel is empty and we would ship a hardcoded SC with no city/zip. Run one
-       last geocode on the typed text so the real city/state/zip ride along (the
-       free-text address is still the source of truth Key reads). Best-effort: on
-       any failure we fall back to the existing addrSel/'SC' default below. */
-    if (!addrSel.state && addrIn.value.trim().length >= 6) {
+    /* Structured city/state/zip come only from a picked Mapbox feature.
+       An unselected type-in or the explicit escape stores the typed string
+       and leaves state/ZIP empty. Never take the bbox-biased first hit. */
+    function normAddr(value) {
+      return String(value || '').replace(/\s+/g, ' ').trim().toLowerCase();
+    }
+    function featureMatchesTyped(feature, typed) {
+      var q = normAddr(typed);
+      var place = normAddr(feature && feature.description);
+      if (!q || !place) return false;
+      if (place === q) return true;
+      var qStreet = q.split(',')[0].trim();
+      var pStreet = place.split(',')[0].trim();
+      if (!qStreet || qStreet !== pStreet) return false;
+      var extra = q.indexOf(',') > -1 ? q.slice(q.indexOf(',') + 1).trim() : '';
+      if (!extra) return false;
+      return extra.split(',').every(function (part) {
+        part = part.trim();
+        return !part || place.indexOf(part) !== -1;
+      });
+    }
+    if (addrUnverified || !addrValidated) {
+      addrSel = { city: '', state: '', zip: '' };
+    } else if (!addrSel.state) {
       try {
         var bf = await WALK.addrSuggest(addrIn.value.trim());
-        if (bf && bf.length && bf[0].state) {
-          addrSel = { city: bf[0].city || '', county: bf[0].county || '', state: bf[0].state || '', zip: bf[0].zip || '' };
+        var hit = null;
+        for (var bi = 0; bf && bi < bf.length; bi++) {
+          if (featureMatchesTyped(bf[bi], addrIn.value)) { hit = bf[bi]; break; }
         }
-      } catch (_) { /* keep the SC fallback */ }
+        if (hit) {
+          addrSel = {
+            city: hit.city || '',
+            state: hit.state || '',
+            zip: hit.zip || ''
+          };
+        } else {
+          addrSel = { city: '', state: '', zip: '' };
+        }
+      } catch (_) { /* leave state empty */ }
     }
 
     var payload = {
       firstName: name, lastName: '', phone: natDigits(phoneIn.value), email: '',
       existingToken: editDetails ? resumeT : '',
-      address: addrIn.value.trim(), addressStreet: '', addressCity: addrSel.city, addressCounty: addrSel.county, addressState: addrSel.state || 'SC', addressZip: addrSel.zip, addressCountry: 'US', addressUnverified: addrUnverified ? 'true' : '',
+      address: addrIn.value.trim(), addressStreet: '', addressCity: addrSel.city || '', addressCounty: '', addressState: addrSel.state || '', addressZip: addrSel.zip || '', addressCountry: 'US', addressUnverified: addrUnverified ? 'true' : '',
       leadChannel: attr.channel, utmSource: attr.source, utmMedium: attr.medium, utmCampaign: attr.campaign,
       hasCompatibleGenerator: 'Unanswered - connection check pending',
       outletAmps: [],
@@ -1756,39 +1588,51 @@
       pageUrl: window.location.href, referrer: document.referrer || ''
     };
 
-    /* One bounded keepalive request owns lead creation. The server serializes
-       retries by event identity. A timeout returns control to the visible retry
-       state instead of entering an unbounded synchronous fallback. */
-    var delivered = false, tokenOut = null, serviceAreaStatus = '', savedAddressRefresh = false, failureMessage = '';
+    /* resilient delivery: the keepalive fetch below already survives page unload
+       (the beacon's only job) AND returns the pre_read token + delivered status,
+       so a parallel sendBeacon was pure redundancy that double-POSTed the lead
+       (a second contact in the rare concurrent-lookup race). keepalive covers
+       unload; the sync-XHR fallback covers a fetch throw. */
+    var body = JSON.stringify(payload);
+    var url = 'https://reowtzedjflwmlptupbk.supabase.co/functions/v1/quo-ai-new-lead';
+    var delivered = false, tokenOut = null, serviceAreaStatus = '';
     try {
-      var result = await WALK.submitLead(payload);
-      var j = result.body || {};
-      delivered = result.ok;
-      if (result.ok) {
-        if (j.skipped) {
-          delivered = false;
-          if (j.reason === 'do_not_contact') {
-            failureMessage = 'This mobile number is marked as opted out of texts. Use a different mobile number, or contact Backup Power Pro to update your text preference.';
-          }
-        }
-        tokenOut = j.preReadToken || null;
-        serviceAreaStatus = j.service_area_status || '';
-        savedAddressRefresh = j.saved_address_refresh === true;
-      } else if (result.status === 429) {
-        failureMessage = 'Too many tries too quickly. Wait one minute, then tap the button again.';
+      var resp = await fetch(url, { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: body });
+      delivered = resp.ok;
+      if (resp.ok) {
+        try {
+          var j = await resp.json();
+          tokenOut = j && j.preReadToken || null;
+          serviceAreaStatus = j && j.service_area_status || '';
+        } catch (_) {}
       }
-      if (!delivered || !tokenOut) WALK.ph('lead_submit_failed', { status: result.status, method: 'bounded-fetch', form: 'walkv2-landing' });
+      if (!delivered) WALK.ph('lead_submit_failed', { status: resp.status, method: 'fetch', form: 'walkv2-landing' });
     } catch (err) {
-      WALK.ph('lead_submit_failed', { err: String(err).slice(0, 200), method: 'bounded-fetch', form: 'walkv2-landing' });
+      try {
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', url, false);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.send(body);
+        delivered = xhr.status >= 200 && xhr.status < 300;
+        /* parse the pre_read token from the fallback response too. Without this a
+           lead that delivered via XHR (after the keepalive fetch threw) would
+           dead-end at the "did not go through" alert below, because advancing into
+           the walk needs tokenOut and only the fetch path was reading it. */
+        if (delivered) {
+          try {
+            var fallbackBody = JSON.parse(xhr.responseText) || {};
+            tokenOut = fallbackBody.preReadToken || null;
+            serviceAreaStatus = fallbackBody.service_area_status || '';
+          } catch (_) {}
+        }
+      } catch (e2) {
+        WALK.ph('lead_submit_failed', { err: String(err).slice(0, 200), method: 'xhr-threw', form: 'walkv2-landing' });
+      }
     }
-    if (delivered && tokenOut && !savedAddressRefresh && typeof fbq === 'function') { try { fbq('track', 'Lead', { content_name: 'walkv2-landing', content_category: 'generator-installation', value: 1200, currency: 'USD' }, { eventID: eventId }); } catch (_) {} }
+    if (typeof fbq === 'function') { try { fbq('track', 'Lead', { content_name: 'walkv2-landing', content_category: 'generator-installation', value: 1200, currency: 'USD' }, { eventID: eventId }); } catch (_) {} }
     WALK.ph('walk_v2_submitted', { connection_status: 'unanswered', delivered: delivered });
     if (delivered && tokenOut && serviceAreaStatus === 'verified_out_of_area') {
-      WALK.go('index.html', tokenOut, { area: 'out' });
-      return;
-    }
-    if (delivered && tokenOut && savedAddressRefresh) {
-      WALK.go('incomplete.html', tokenOut, { resume: '1' });
+      window.location.replace('/walk-v2/index.html?area=out&t=' + encodeURIComponent(tokenOut));
       return;
     }
     if (delivered && tokenOut) { WALK.go('connection.html', tokenOut); return; }
@@ -1799,9 +1643,7 @@
     refresh();
     var se = main.querySelector('[data-submit-error]');
     if (se) {
-      se.textContent = failureMessage || (delivered
-        ? 'Your details saved, but the quote did not start. Tap the button to try again.'
-        : 'That did not go through. Tap the button to try again.');
+      se.textContent = 'That did not go through. Tap the button to try again.';
       se.style.display = '';
       try { se.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (_) {}
     } else {

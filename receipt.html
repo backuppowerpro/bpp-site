@@ -9,7 +9,7 @@
 <meta name="color-scheme" content="light only">
 <meta name="supported-color-schemes" content="light only">
 <!-- View-only receipt. Every display, font, image, and PDF dependency is local; only its customer DTO crosses the network. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https://*.supabase.co; connect-src 'self' https://*.supabase.co;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://*.supabase.co;">
 <title>Your receipt | Backup Power Pro</title>
 <link rel="stylesheet" href="assets/css/bpp-money-fonts.css?v=20260808a">
 <!-- SRI-pinned jsPDF 2.5.1 is stored locally so a CDN failure cannot remove the customer's printable receipt. -->
@@ -84,20 +84,9 @@
   .state-card h2{margin:0 0 8px;font-family:'Outfit',Arial,sans-serif;font-size:21px;font-weight:800;color:#0b1f3b}
   .state-card p{margin:0 auto;font-family:'Inter',Arial,sans-serif;font-size:14px;line-height:1.6;color:#6b7280;max-width:34em}
   .state-card a{color:#0b1f3b;font-weight:600}
-  .preview-bar{position:fixed;top:0;left:0;right:0;z-index:99999;background:#f59e0b;color:#1c1003;font-family:'Outfit',Arial,sans-serif;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;text-align:center;padding:8px 16px;box-shadow:0 2px 12px rgba(0,0,0,.18)}
-  .preview-bar[hidden],.preview-watermark[hidden]{display:none}
-  .preview-watermark{position:fixed;inset:0;pointer-events:none;z-index:99998;display:flex;align-items:center;justify-content:center;overflow:hidden}
-  .preview-watermark span{font-family:'Outfit',Arial,sans-serif;font-size:clamp(60px,14vw,120px);font-weight:900;color:rgba(11,31,59,.06);letter-spacing:.1em;text-transform:uppercase;transform:rotate(-35deg);white-space:nowrap;user-select:none}
-  body.preview-mode{padding-top:34px!important}
-  #receipt-home-row{display:none}
-  .document-home{width:100%;aspect-ratio:16/7;border-radius:10px;overflow:hidden;background:#0b1f3b}
-  .document-home img{display:block;width:100%;height:100%;object-fit:cover}
 </style>
 </head>
 <body class="dm-page" style="margin:0;padding:0;background:#eef1f7;">
-<div class="preview-bar" id="preview-bar" data-preview-banner="true" hidden>Preview mode, not sent to client, read only</div>
-<div class="preview-watermark" id="preview-watermark" data-preview-watermark="true" aria-hidden="true" hidden><span>Preview</span></div>
-<noscript><div class="preview-bar" data-preview-banner="true">Preview unavailable, JavaScript is off, no customer action can occur</div><div class="preview-watermark" data-preview-watermark="true" aria-hidden="true"><span>Preview unavailable</span></div><div style="max-width:600px;margin:70px auto 24px;padding:18px;border:1px solid #ffba00;border-radius:14px;background:#fff8e6;color:#0b1f3b;text-align:center;font:600 16px/1.55 Arial,sans-serif;">This receipt did not load. Turn on JavaScript and reload, or call (864) 863-7800.</div></noscript>
 
 <!-- PREHEADER (kept for parity; bound to real values on load) -->
 <div id="preheader" style="display:none;max-height:0;overflow:hidden;opacity:0;font-size:1px;line-height:1px;color:#eef1f7;"></div>
@@ -139,18 +128,12 @@
           </td>
         </tr>
 
-        <tr id="receipt-home-row" style="display:none;">
-          <td bgcolor="#ffffff" class="dm-card px" style="background:#ffffff;padding:18px 28px 0;">
-            <div class="document-home"><img id="receipt-home-img" alt="Home at the service address"></div>
-          </td>
-        </tr>
-
         <!-- PAID SEAL + HERO -->
         <tr>
           <td bgcolor="#ffffff" class="dm-card px" align="center" style="background:#ffffff;padding:36px 36px 6px;">
             <!-- seal: fixed 64x64 cell, raw hex, no box-shadow (Gmail/Outlook drop it) -->
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 16px;">
-              <tr><td width="64" height="64" align="center" valign="middle" bgcolor="#f0fdf6" class="dm-okbg" style="width:64px;height:64px;border-radius:50%;color:#067a52;font-family:Arial,sans-serif;font-size:30px;font-weight:bold;line-height:64px;text-align:center;">&#10003;</td></tr>
+            <table role="presentation" id="paid-seal-wrap" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 16px;">
+              <tr><td id="paid-seal" width="64" height="64" align="center" valign="middle" bgcolor="#f0fdf6" class="dm-okbg" style="width:64px;height:64px;border-radius:50%;color:#067a52;font-family:Arial,sans-serif;font-size:30px;font-weight:bold;line-height:64px;text-align:center;">&#10003;</td></tr>
             </table>
             <h1 class="display h1 dm-ink" id="hero-title" style="margin:0 0 8px;font-family:'Outfit',Arial,sans-serif;font-size:28px;line-height:1.16;font-weight:800;color:#0b1f3b;letter-spacing:-.01em;">You're all set. Paid in full.</h1>
             <p id="hero-sub" class="body-font dm-ink2" style="margin:0 0 4px;font-family:'Inter',Arial,sans-serif;font-size:15px;line-height:1.55;color:#4a5568;max-width:32em;">
@@ -296,7 +279,6 @@ var INV = null; // invoice record
 var PROP = null; // linked proposal (for deposit remaining-balance honesty)
 var PAYMENTS = []; // payment rows from invoice-view (amount, refunded_amount) for refund honesty
 var RECEIPT_PAYMENT = null; // immutable proof for exactly one completed payment
-var IS_PREVIEW = new URLSearchParams(window.location.search).get('preview')==='1';
 
 // Refund math (S6, Key 2026-07-17: a refunded payment must never render the
 // celebratory paid receipt). Stripe's charge.refunded webhook records
@@ -329,6 +311,22 @@ function firstNameOf(name){
   return n.split(/\s+/)[0];
 }
 
+// Calmer chrome for refund / adjusted. Paid-in-full green stays only when
+// no money was returned. Hide the success seal rather than leave a blank
+// navy circle. The muted pill names the state.
+function applyAdjustedChrome(){
+  var wrap=document.getElementById('paid-seal-wrap');
+  var seal=document.getElementById('paid-seal');
+  if(wrap) wrap.style.display='none';
+  else if(seal) seal.style.display='none';
+  if(seal) seal.classList.remove('dm-okbg');
+  var pill=document.getElementById('paid-pill');
+  if(pill){
+    pill.style.color='#e8edf5';
+    pill.style.background='rgba(255,255,255,.12)';
+  }
+}
+
 // Show a state card (loading / error / not-yet-paid) and hide the receipt.
 function showState(title,msg,spin){
   var sr=document.getElementById('state-root');
@@ -351,11 +349,6 @@ function showReceipt(){
 
 // ── INIT ────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', function(){
-  if(IS_PREVIEW){
-    document.body.classList.add('preview-mode');
-    document.getElementById('preview-bar').hidden=false;
-    document.getElementById('preview-watermark').hidden=false;
-  }
   showState('Loading your receipt...','One moment while we pull up your receipt.', true);
   var params = new URLSearchParams(window.location.search);
   var receiptToken = params.get('receipt');
@@ -376,8 +369,7 @@ async function loadReceipt(token,isPaymentReceipt){
     var ctrl=new AbortController();
     var timer=setTimeout(function(){ ctrl.abort(); }, 10000);
     var query=isPaymentReceipt?'receipt_token=':'token=';
-    var preview=IS_PREVIEW?'&preview=1':'';
-    var res=await fetch(SUPABASE_URL+'/functions/v1/invoice-view?'+query+encodeURIComponent(token)+preview,{
+    var res=await fetch(SUPABASE_URL+'/functions/v1/invoice-view?'+query+encodeURIComponent(token),{
       headers:{ 'Authorization':'Bearer '+SUPABASE_KEY },
       signal:ctrl.signal,
     });
@@ -689,6 +681,7 @@ function renderReceipt(){
     if(gridRow) gridRow.style.display='none';
     if(keepNote) keepNote.textContent = 'Save this. It is your record that your payment of '+fmt(rf.refunded)+' was refunded in full.';
     if(signoff) signoff.textContent = firstName ? ('Take care, '+firstName+'. If plans change down the road, you know where to find me.') : 'Take care. If plans change down the road, you know where to find me.';
+    applyAdjustedChrome();
   } else if((rf.partial||rf.full) && isPaymentReceipt){
     var currentRemaining=currentRemainingBalance();
     if(pill) pill.innerHTML = 'Payment adjusted';
@@ -698,6 +691,16 @@ function renderReceipt(){
     if(balanceLabel) balanceLabel.textContent='Current balance remaining';
     if(balanceAmt) balanceAmt.textContent=fmt(currentRemaining);
     if(keepNote) keepNote.textContent='Save this. It shows the original payment and the current adjustment.';
+    applyAdjustedChrome();
+  } else if(rf.partial && !isPaymentReceipt){
+    document.title='Payment adjusted, your receipt | Backup Power Pro';
+    if(hero) hero.textContent = firstName ? (firstName+', this payment was adjusted.') : 'This payment was adjusted.';
+    if(pill) pill.innerHTML = 'Payment adjusted';
+    if(heroSub) heroSub.textContent = fmt(rf.refunded)+' of your '+fmt(rf.paidSum)+' payment was refunded. Depending on your bank, it can take 5 to 10 business days to appear back on your statement.';
+    if(ownRow) ownRow.style.display='none';
+    if(gridRow) gridRow.style.display='none';
+    if(keepNote) keepNote.textContent='Save this. It is your record of this payment and the refund that followed.';
+    applyAdjustedChrome();
   }
 
   // Billed-to block (name / address / phone / email)
@@ -768,21 +771,6 @@ function renderReceipt(){
   }
 
   showReceipt();
-  loadHomeImage();
-}
-
-function loadHomeImage(){
-  var params=new URLSearchParams(window.location.search);
-  var receiptToken=params.get('receipt');
-  var invoiceToken=params.get('token');
-  var row=document.getElementById('receipt-home-row');
-  var img=document.getElementById('receipt-home-img');
-  if(!row||!img||(!receiptToken&&!invoiceToken)) return;
-  img.onload=function(){row.style.display='table-row';};
-  img.onerror=function(){row.remove();};
-  var mode=receiptToken?'r':'i';
-  var token=receiptToken||invoiceToken;
-  img.src=SUPABASE_URL+'/functions/v1/streetview-hero?'+mode+'='+encodeURIComponent(token);
 }
 </script>
 </body>
