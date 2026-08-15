@@ -2,7 +2,7 @@
 <html lang="en" class="no-js qw-template-document-root">
 <head>
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-4JOu4dmjzTECJoiA5V2EHS9vVEbt1n9bRK9dIf5SlCc='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-oy8BBmKR81N7mZJF/Mlkt18/mt1YBTZQMPYdlXc+IIY='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://reowtzedjflwmlptupbk.supabase.co; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-6mwsRyANfr8IftJzvi0gP+lKuUDOsVssfUNkn7goJSU='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-oy8BBmKR81N7mZJF/Mlkt18/mt1YBTZQMPYdlXc+IIY='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://reowtzedjflwmlptupbk.supabase.co; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script src="/walk-v2/token-bootstrap.js?v=20260815-bearer"></script>
 <script src="/walk-v2/no-js-bootstrap.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
@@ -474,15 +474,21 @@
     var observed = Array.isArray(v2().observed_connections) ? v2().observed_connections : [];
     if (!renderScope(snapshot)) return;
     var distanceCopy = (DISTANCE_LABELS[v2().distance_band] || 'the confirmed path').toLowerCase();
-    var basisCopy = observed.length === 2 && v2().pricing_basis === '50'
+    var pricingBasis = snapshot.pricing_basis || v2().pricing_basis || '';
+    if (pricingBasis === '50A') pricingBasis = '50';
+    if (pricingBasis === '30A') pricingBasis = '30';
+    if (pricingBasis !== '30' && pricingBasis !== '50') pricingBasis = '';
+    var basisCopy = observed.length === 2 && pricingBasis === '50'
       ? 'the higher 50 Amp connection'
-      : observed.length === 2 && v2().pricing_basis === '30'
+      : observed.length === 2 && pricingBasis === '30'
         ? 'the 30 Amp setup you selected'
-        : 'a ' + String(v2().pricing_basis) + ' Amp connection';
+        : pricingBasis
+          ? 'a ' + pricingBasis + ' Amp connection'
+          : 'the confirmed generator connection';
     var isRevisedRange = Boolean(snapshot.revision_reason && snapshot.revision_reason !== 'initial');
     var qualifier = 'Based on ' + basisCopy + ' and a connection path of ' + distanceCopy + ', this is the ' + (isRevisedRange ? 'revised ' : '') + 'range I expect for your permanent, permitted backup power connection.';
     if (observed.length === 2) {
-      qualifier += v2().pricing_basis === '30'
+      qualifier += pricingBasis === '30'
         ? ' Both connections remain saved.'
         : ' Your 30 Amp connection remains saved.';
     }
@@ -515,8 +521,8 @@
     }
     show(options, editingOptions);
     show(main.querySelector('[data-not-fit-terminal]'), notFitClosed);
-    show(main.querySelector('[data-alt-30]'), observed.indexOf('30') !== -1 && observed.indexOf('50') !== -1 && v2().pricing_basis === '50');
-    show(main.querySelector('[data-alt-50]'), observed.indexOf('30') !== -1 && observed.indexOf('50') !== -1 && v2().pricing_basis === '30');
+    show(main.querySelector('[data-alt-30]'), observed.indexOf('30') !== -1 && observed.indexOf('50') !== -1 && pricingBasis === '50');
+    show(main.querySelector('[data-alt-50]'), observed.indexOf('30') !== -1 && observed.indexOf('50') !== -1 && pricingBasis === '30');
     show(main.querySelector('[data-alt-distance]'), DISTANCE_ORDER[v2().distance_band] > 1);
     if (v2().accepted_range_snapshot_id) {
       finalizeHandoff(false);
