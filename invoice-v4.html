@@ -120,6 +120,88 @@ function fmtDate(v){
   catch(e){ return ''; }
 }
 
+
+// ADDRESS DISPLAY TIDY (proposal miss path, no geocode)
+function isStateAbbr(word){
+  return /^(?:A[LKZR]|C[AOT]|D[CE]|FL|GA|HI|I[DLNA]|K[SY]|LA|M[EDAINSOT]|N[EVHJMYCD]|O[HKR]|PA|RI|S[CD]|T[NX]|UT|V[TA]|W[AIVY])$/i.test(word);
+}
+function titleAddressWord(word){
+  if(isStateAbbr(word)&&word.length===2&&word===word.toUpperCase()) return word;
+  return word.replace(/[A-Za-z]+/g,function(letters){
+    return letters.charAt(0).toUpperCase()+letters.slice(1).toLowerCase();
+  });
+}
+function titleAddressPhrase(text){
+  return String(text||'').split(/(\s+)/).map(function(token){
+    return /^\s+$/.test(token)?token:titleAddressWord(token);
+  }).join('');
+}
+function isStreetType(word){
+  return /^(?:st|street|rd|road|ave|avenue|blvd|boulevard|ln|lane|dr|drive|ct|court|cir|circle|pl|place|ter|terrace|hwy|highway|pkwy|parkway|way|trl|trail|loop|pass|pike|row|sq|square|aly|alley|ext|extension|walk|path)$/i.test(String(word||'').replace(/\./g,''));
+}
+function isUnitType(word){
+  return /^(?:apt|apartment|unit|ste|suite|fl|floor|rm|room|bldg|building|lot|#)/i.test(String(word||'').replace(/\./g,''));
+}
+function knownState(value){
+  var text=String(value||'').replace(/\s+/g,' ').trim();
+  if(!text) return '';
+  if(/^south carolina$/i.test(text)) return 'SC';
+  if(isStateAbbr(text)) return text.toUpperCase();
+  return '';
+}
+function knownZip(value){
+  var text=String(value||'').trim();
+  return /^\d{5}(?:-\d{4})?$/.test(text)?text:'';
+}
+function formatLocality(text){
+  var tokens=String(text||'').replace(/\s+/g,' ').trim().split(' ').filter(Boolean);
+  if(!tokens.length) return '';
+  var zip='';
+  if(knownZip(tokens[tokens.length-1])) zip=tokens.pop();
+  var state='';
+  if(tokens.length>=2&&knownState(tokens.slice(-2).join(' '))){
+    state=knownState(tokens.slice(-2).join(' '));
+    tokens=tokens.slice(0,-2);
+  } else if(tokens.length&&knownState(tokens[tokens.length-1])){
+    state=knownState(tokens.pop());
+  }
+  var city=titleAddressPhrase(tokens.join(' '));
+  var out=city||'';
+  if(state) out=out?out+', '+state:state;
+  if(zip) out=out?out+' '+zip:zip;
+  return out;
+}
+function splitUndelimitedAddress(text){
+  var tokens=String(text||'').replace(/\s+/g,' ').trim().split(' ').filter(Boolean);
+  var suffixAt=-1;
+  for(var i=0;i<tokens.length;i++) if(isStreetType(tokens[i])) suffixAt=i;
+  if(suffixAt<0||suffixAt>=tokens.length-1) return {street:tokens.join(' '),locality:''};
+  var cut=suffixAt+1;
+  if(cut<tokens.length&&isUnitType(tokens[cut])){
+    cut+=1;
+    if(cut<tokens.length&&/^(?:#)?\d+[A-Za-z]?$/.test(tokens[cut])) cut+=1;
+  }
+  if(cut>=tokens.length) return {street:tokens.join(' '),locality:''};
+  return {street:tokens.slice(0,cut).join(' '),locality:tokens.slice(cut).join(' ')};
+}
+function compactAddress(value){
+  var parts=String(value||'').replace(/\s+/g,' ').trim().split(',').map(function(part){return part.trim();}).filter(Boolean);
+  if(!parts.length) return '';
+  if(/^(united states(?: of america)?|usa|us)$/i.test(parts[parts.length-1])) parts.pop();
+  if(!parts.length) return '';
+  if(parts.length<2){
+    var split=splitUndelimitedAddress(parts[0]);
+    var street=titleAddressPhrase(split.street);
+    var locality=formatLocality(split.locality);
+    return locality?street+', '+locality:street;
+  }
+  return parts.map(function(part, i){
+    if(i===parts.length-1) return formatLocality(part)||titleAddressPhrase(part);
+    return titleAddressPhrase(part);
+  }).filter(Boolean).join(', ');
+}
+// END ADDRESS DISPLAY TIDY
+
 var _toast=null,_toastTimer=null;
 function showToast(msg){
   if(!_toast){ _toast=document.createElement('div'); _toast.className='toast'; document.body.appendChild(_toast); }
@@ -308,7 +390,7 @@ function renderVoided(){
   var total=invoiceTotal();
   var page=document.getElementById('page');
   var name=INV.contact_name||'';
-  var addr=INV.contact_address||'';
+  var addr=compactAddress(INV.contact_address||'');
   var issued=fmtDate(INV.created_at);
   var voided=voidedDate();
   var num=INV.document_number||'';
@@ -356,7 +438,7 @@ function renderPayable(){
   var page=document.getElementById('page');
   var name=INV.contact_name||'';
   var firstName=(name.trim().split(/\s+/)[0])||'';
-  var addr=INV.contact_address||'';
+  var addr=compactAddress(INV.contact_address||'');
   var issued=fmtDate(INV.created_at);
   var isDeposit=INV.notes==='deposit'||(INV.line_items||[]).some(function(item){return /deposit/i.test(String(item&&item.name||''));});
   var isStandalone=!INV.proposal_id;
@@ -438,7 +520,7 @@ function renderPaid(){
   var total=invoiceTotal();
   var page=document.getElementById('page');
   var name=INV.contact_name||'';
-  var addr=INV.contact_address||'';
+  var addr=compactAddress(INV.contact_address||'');
   var issued=fmtDate(INV.created_at);
   var paid=INV.paid_at?fmtDate(INV.paid_at):'';
   var isDeposit = INV.notes==='deposit';
