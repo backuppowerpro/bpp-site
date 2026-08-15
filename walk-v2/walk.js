@@ -430,6 +430,8 @@
           .then(mapFeatures)
           .catch(function () { return []; });
       }
+      /* Local bbox ranks first. Unconstrained results still fill remaining
+         slots so an out-of-area house is listed, never rewritten. */
       return Promise.all([fetchMapped(localUrl), fetchMapped(base)]).then(function (sets) {
         var seen = {};
         var out = [];

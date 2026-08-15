@@ -667,7 +667,12 @@
     overflow: hidden;
     padding: 4px;
   }
-  .addr-drop.open { display: block; }
+  .addr-drop.open {
+    display: block;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
   .addr-opt {
     display: flex;
     align-items: center;
@@ -681,8 +686,16 @@
     color: var(--text);
     transition: background var(--dur) var(--ease);
   }
-  .addr-opt:hover, .addr-opt:active { background: var(--sunken); }
+  .addr-opt:focus, .addr-opt:focus-visible { outline: none; }
+  @media (hover: hover) and (pointer: fine) {
+    .addr-opt:hover { background: var(--sunken); }
+  }
   .addr-opt svg { width: 16px; height: 16px; stroke-width: 1.8; color: var(--faint); flex: 0 0 auto; }
+  .addr-opt .a1, .addr-opt .a2 {
+    overflow: visible;
+    text-overflow: unset;
+    white-space: normal;
+  }
   .addr-opt .a1 { font-weight: 600; }
   .addr-opt .a2 { color: var(--muted); font-size: 14px; }
   .addr-opt .lines { display: flex; flex-direction: column; gap: 1px; }
@@ -1478,7 +1491,8 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
 
   /* Address auto-suggest via the server-side Places proxy. Debounced; a pick
      fills the field. The field still works as a plain input if Google is down. */
-  var addrTimer = null, addrPicked = false, addrSel = { city: '', state: '', zip: '' }, lastAddrPreds = [];
+  var addrTimer = null, addrCloseTimer = null, addrPicked = false, addrSel = { city: '', state: '', zip: '' }, lastAddrPreds = [];
+  var addrSuggestGen = 0;
   /* Soft-block (Key 2026-07-21): the Next gate requires a VALIDATED address, a real
      picked suggestion OR the explicit "not listed" escape, not just >=6 chars, so a
      lazy fake free-text address can no longer pass. addrValidatedValue pins the exact
@@ -1487,20 +1501,81 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
   var addrValidated = false, addrValidatedValue = '', addrUnverified = false;
   var addrSvg = '<svg viewBox="0 0 16 16"><path d="M8 14s4.5-4 4.5-7.5a4.5 4.5 0 0 0-9 0C3.5 10 8 14 8 14z"></path><circle cx="8" cy="6.5" r="1.6"></circle></svg>';
   var addrEditSvg = '<svg viewBox="0 0 16 16"><path d="M11 2.5l2.5 2.5L6 12.5 3 13l.5-3z"></path></svg>';
-  function closeDrop() { drop.classList.remove('open'); drop.innerHTML = ''; }
-  function renderDrop(preds) {
+  function cancelAddrClose() {
+    if (addrCloseTimer) { clearTimeout(addrCloseTimer); addrCloseTimer = null; }
+  }
+  function closeDrop() {
+    cancelAddrClose();
+    drop.classList.remove('open');
+    drop.innerHTML = '';
+    drop.style.maxHeight = '';
+    drop.style.overflowY = '';
+  }
+  function addrCityState(p) {
+    var city = String((p && p.city) || '').trim();
+    var state = String((p && p.state) || '').trim();
+    var st = /^[A-Za-z]{2}$/.test(state) ? state.toUpperCase() : '';
+    if (city && st) return city + ', ' + st;
+    if (city) return city;
+    return '';
+  }
+  function visBox() {
+    var vv = window.visualViewport;
+    if (vv) return { top: vv.offsetTop, bottom: vv.offsetTop + vv.height };
+    return { top: 0, bottom: window.innerHeight };
+  }
+  /* Keep the field and the list in the visible gap above the keyboard.
+     Cap the list to that gap (about 3-4 rows). Same list, no new picker. */
+  function fitAddrDrop() {
+    if (!drop.classList.contains('open') || !addrIn) return;
+    var pad = 8;
+    var row = 48;
+    var maxList = 4 * row + 8;
+    var minList = 3 * row + 8;
+    var vis = visBox();
+    var label = addrField ? (addrField.querySelector('label') || addrIn) : addrIn;
+    var chromeTop = label.getBoundingClientRect().top;
+    var chromeBottom = addrIn.getBoundingClientRect().bottom;
+    var desiredTop = vis.top + pad;
+    var roomBelow = vis.bottom - chromeBottom - 6 - pad;
+    if (chromeTop < desiredTop || roomBelow < minList) {
+      var y = (window.scrollY || document.documentElement.scrollTop || 0) + (chromeTop - desiredTop);
+      window.scrollTo(0, Math.max(0, y));
+    }
+    vis = visBox();
+    var dropTop = drop.getBoundingClientRect().top;
+    var avail = vis.bottom - dropTop - pad;
+    drop.style.maxHeight = Math.floor(Math.max(row, Math.min(maxList, avail))) + 'px';
+    drop.style.overflowY = 'auto';
+    drop.scrollTop = 0;
+  }
+  function onAddrVisChange() { if (drop.classList.contains('open')) fitAddrDrop(); }
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', onAddrVisChange);
+    window.visualViewport.addEventListener('scroll', onAddrVisChange);
+  }
+  window.addEventListener('resize', onAddrVisChange);
+  /* UX 2026-08-15: the page list has no selected row. Key's Inman highlight
+     sat next to iOS AutoFill of the Greenville house. Do not invent a picker
+     or move activedescendant. Keep focus on the input so a suggestion button
+     cannot take :focus and look chosen. */
+  function keepAddrFocus() {
+    if (drop.contains(document.activeElement)) addrIn.focus();
+  }
+  function renderDrop(preds, gen) {
+    if (gen != null && gen !== addrSuggestGen) return;
+    cancelAddrClose();
     lastAddrPreds = preds || [];
     var q = addrIn.value.trim();
-    var html = (preds || []).map(function (p) {
-      var d = String(p.description || '');
-      return '<button type="button" class="addr-opt" data-addr-pick="' + encodeURIComponent(d) + '">' +
+    var html = (preds || []).map(function (p, k) {
+      return '<button type="button" tabindex="-1" class="addr-opt" data-addr-pick="' + k + '" data-addr-idx="' + k + '">' +
         addrSvg + '<span class="lines"><span class="a1"></span><span class="a2"></span></span></button>';
     }).join('');
     /* Deliberate escape (soft-block): a real address Mapbox does not know still gets
        through, but only by an explicit tap, and it rides as flagged. Shown once the
        typed address looks complete, and it is the ONLY row when Mapbox returns nothing. */
     if (q.length >= 6) {
-      html += '<button type="button" class="addr-opt addr-escape" data-addr-escape="1">' +
+      html += '<button type="button" tabindex="-1" class="addr-opt addr-escape" data-addr-escape="1">' +
         addrEditSvg + '<span class="lines"><span class="a1">My address isn\'t listed</span>' +
         '<span class="a2">Use what I typed</span></span></button>';
     }
@@ -1512,48 +1587,73 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
       if (!opts[k]) return;
       var d = String(p.description || ''); var i = d.indexOf(',');
       opts[k].querySelector('.a1').textContent = i > -1 ? d.slice(0, i) : d;
-      opts[k].querySelector('.a2').textContent = i > -1 ? d.slice(i + 1).trim() : '';
+      opts[k].querySelector('.a2').textContent = addrCityState(p);
     });
     drop.classList.add('open');
+    keepAddrFocus();
+    fitAddrDrop();
   }
-  function suggest() {
+  function suggest(immediate) {
     if (addrPicked) { addrPicked = false; return; }
     addrSel = { city: '', state: '', zip: '' }; // editing after a pick invalidates the structured parts
     addrValidated = false; addrUnverified = false; // and re-locks Next until a fresh pick
     var q = addrIn.value.trim();
     if (addrTimer) clearTimeout(addrTimer);
     if (q.length < 3) { closeDrop(); return; }
-    addrTimer = setTimeout(function () {
-      WALK.addrSuggest(q).then(renderDrop);
-    }, 220);
+    function run() {
+      var typed = addrIn.value.trim();
+      if (typed.length < 3) { closeDrop(); return; }
+      var gen = ++addrSuggestGen;
+      WALK.addrSuggest(typed).then(function (preds) { renderDrop(preds, gen); });
+    }
+    if (immediate) run();
+    else addrTimer = setTimeout(run, 220);
   }
+  function pickEscape() {
+    addrPicked = true; addrValidated = true; addrUnverified = true;
+    addrValidatedValue = addrIn.value.trim();
+    addrSel = { city: '', state: '', zip: '' };
+    closeDrop(); refresh();
+  }
+  function pickSuggestion(idx) {
+    var match = lastAddrPreds[idx];
+    if (!match) return;
+    var picked = String(match.description || '');
+    if (!picked) return;
+    addrPicked = true;
+    addrIn.value = picked;
+    addrIn.title = picked;
+    addrSel = { city: match.city || '', state: match.state || '', zip: match.zip || '' };
+    addrValidated = true; addrUnverified = false; addrValidatedValue = picked;
+    closeDrop(); refresh();
+  }
+  drop.addEventListener('pointerdown', function (e) {
+    if (e.target.closest('.addr-opt')) e.preventDefault();
+  });
+  drop.addEventListener('focusin', function () { keepAddrFocus(); });
   drop.addEventListener('click', function (e) {
     /* explicit "my address isn't listed" escape: validate the typed text, but flag it */
     var esc = e.target.closest('[data-addr-escape]');
-    if (esc) {
-      addrPicked = true; addrValidated = true; addrUnverified = true;
-      addrValidatedValue = addrIn.value.trim();
-      addrSel = { city: '', state: '', zip: '' };
-      closeDrop(); refresh();
-      return;
-    }
+    if (esc) { pickEscape(); return; }
     var b = e.target.closest('[data-addr-pick]'); if (!b) return;
-    addrPicked = true;
-    var picked = decodeURIComponent(b.getAttribute('data-addr-pick'));
-    addrIn.value = picked;
-    /* copy the picked prediction's structured parts so the lead carries city/state/zip */
-    var match = null;
-    for (var mi = 0; mi < lastAddrPreds.length; mi++) {
-      if (String(lastAddrPreds[mi].description) === picked) { match = lastAddrPreds[mi]; break; }
-    }
-    if (match) addrSel = { city: match.city || '', state: match.state || '', zip: match.zip || '' };
-    addrValidated = true; addrUnverified = false; addrValidatedValue = picked;
-    closeDrop(); refresh();
+    pickSuggestion(Number(b.getAttribute('data-addr-idx')));
   });
-  addrIn.addEventListener('blur', function () { setTimeout(closeDrop, 150); });
+  addrIn.addEventListener('blur', function () {
+    cancelAddrClose();
+    addrCloseTimer = setTimeout(function () {
+      addrCloseTimer = null;
+      if (document.activeElement === addrIn || drop.contains(document.activeElement)) return;
+      closeDrop();
+    }, 150);
+  });
   /* Re-open the list on focus when the address is typed but not yet validated, so
      "Pick your address from the list" is never a dead end with no visible list. */
-  addrIn.addEventListener('focus', function () { if (!addrOk() && addrIn.value.trim().length >= 3) suggest(); });
+  addrIn.addEventListener('focus', function () {
+    cancelAddrClose();
+    if (addrOk() || addrIn.value.trim().length < 3) return;
+    if (lastAddrPreds.length) renderDrop(lastAddrPreds);
+    suggest(true);
+  });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDrop(); });
 
   function digits(v) { return (v || '').replace(/\D/g, ''); }
