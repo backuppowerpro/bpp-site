@@ -246,7 +246,10 @@ function invoiceTotal(){
 }
 function voidedDate(){
   // Only a date the payload already carries. Do not invent one from created_at.
-  return fmtDate(INV.voided_at || INV.voided_on || INV.cancelled_at || '');
+  var v=INV.voided_at || INV.voided_on || INV.cancelled_at || '';
+  if(!v) return '';
+  try{ return new Date(v).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric',timeZone:'America/New_York'}); }
+  catch(e){ return ''; }
 }
 function invoiceRemaining(){
   var remaining=Number(INV.amount_remaining);
