@@ -6,7 +6,7 @@
 
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://us.i.posthog.com https://us-assets.i.posthog.com https://connect.facebook.net 'sha256-SILzPhfLYZcCd4Tf0iA88+GJxTW0Ww/xsABc9z+kB/M=' 'sha256-G+RGGG/nS7Jz0Zp8ZGoJDT28GiNgr71xVKUjVbBKqLc=' 'sha256-wygnGpICbMppymZ/+XZT8Vgnv0wtsjTA4zJ1JolzPtc=' 'sha256-8D3LGBD86E4uSFC42nggO2UYeAOHJnZE1qO2PPhWGcM=' 'sha256-83cnzl8V2LDrqY08oQrKy9GF4ekGdl5OIAaFIHRBoKo=' 'sha256-hz4qGbeNFCvHsIMpdSIAtf2uPW5FLW626ZOdPQxGyR4='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-WrAreQj/0yCq+M7usW/J8Xm4XoJ2M6bde/luad6SyBc=' 'sha256-0Iyyv4VKPnVS157Xktla6XdEbzCmufeHLHEeNrA4/ks=' 'sha256-M8iRdWV7mgh/H8ZrJIYj7+JApx46IWfGlaIDVtJ6UBk='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://www.facebook.com; connect-src 'self' https://api.mapbox.com https://reowtzedjflwmlptupbk.supabase.co https://us.i.posthog.com https://us-assets.i.posthog.com https://*.posthog.com https://www.facebook.com; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://us.i.posthog.com https://us-assets.i.posthog.com https://connect.facebook.net 'sha256-SILzPhfLYZcCd4Tf0iA88+GJxTW0Ww/xsABc9z+kB/M=' 'sha256-G+RGGG/nS7Jz0Zp8ZGoJDT28GiNgr71xVKUjVbBKqLc=' 'sha256-wygnGpICbMppymZ/+XZT8Vgnv0wtsjTA4zJ1JolzPtc=' 'sha256-8D3LGBD86E4uSFC42nggO2UYeAOHJnZE1qO2PPhWGcM=' 'sha256-C6KL4dSidAIfZ88IF8QeDABri3YwVT+gwqSqUoxZEOU=' 'sha256-hz4qGbeNFCvHsIMpdSIAtf2uPW5FLW626ZOdPQxGyR4='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-KsnKCsHbsnK9PU8OK0Oo9U0PAjUXKo/Dxx4RfSK54z8=' 'sha256-0Iyyv4VKPnVS157Xktla6XdEbzCmufeHLHEeNrA4/ks=' 'sha256-M8iRdWV7mgh/H8ZrJIYj7+JApx46IWfGlaIDVtJ6UBk='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://www.facebook.com; connect-src 'self' https://api.mapbox.com https://reowtzedjflwmlptupbk.supabase.co https://us.i.posthog.com https://us-assets.i.posthog.com https://*.posthog.com https://www.facebook.com; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script>/* flip no-js->js before paint so scroll-reveal hides content only when JS can reveal it; 5s failsafe reveals everything if the reveal script ever fails, so the form is never stuck invisible */(function(){var e=document.documentElement;e.classList.remove('no-js');e.classList.add('js');setTimeout(function(){try{var l=document.querySelectorAll('.rv:not(.in)');for(var i=0;i<l.length;i++)l[i].classList.add('in');}catch(x){}},5000);})();</script>
 <script>/* Entry mode + dynamic hero (Key 2026-07-01 / 2026-07-13 / paid fast lane 2026-07-13):
    src=home -> home hero
@@ -356,54 +356,95 @@
     line-height: 1.6;
   }
   .hero .process strong { color: #fff; }
-  .proof-band {
-    padding: 14px 18px 0;
+  .proof-carousel {
+    position: relative;
+    padding: 14px 0 0;
     background: var(--page);
   }
-  .proof-photos {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
+  .proof-track {
+    display: flex;
+    gap: 10px;
+    padding: 0 18px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 18px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    touch-action: pan-y;
+    cursor: grab;
   }
-  .proof-photo {
-    margin: 0;
-    min-width: 0;
-    overflow: hidden;
-    border-radius: 14px;
-    background: #07172d;
-    box-shadow: var(--shadow-sm);
-  }
-  .proof-photo img {
-    display: block;
-    width: 100%;
-    height: 104px;
-    object-fit: cover;
-  }
-  .proof-reviews {
-    margin-top: 10px;
-  }
-  .proof-card {
-    display: none;
-    margin: 0;
+  .proof-track.is-dragging { cursor: grabbing; }
+  .proof-track:focus-visible {
+    outline: 3px solid var(--gold);
+    outline-offset: -3px;
     border-radius: 16px;
-    background: linear-gradient(160deg, #fff, #f5f7fb);
+  }
+  .proof-track::-webkit-scrollbar { display: none; }
+  .proof-slide {
+    flex: 0 0 calc(100% - 48px);
+    height: 184px;
+    display: flex;
+    position: relative;
+    overflow: hidden;
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+    border-radius: 16px;
+    background: #fff;
     box-shadow: var(--shadow-sm), inset 0 0 0 1px rgba(11,31,59,.06);
   }
-  .proof-card.is-on { display: block; }
-  .proof-reviews.is-stack .proof-card {
-    display: block;
+  .proof-slide .proof-image {
+    width: 61%;
+    height: 100%;
+    object-fit: cover;
   }
-  .proof-reviews.is-stack .proof-card + .proof-card { margin-top: 10px; }
+  .proof-slide .proof-copy {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    padding: 13px 12px;
+    color: var(--navy);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.42;
+  }
+  .proof-slide--image .proof-image {
+    width: 100%;
+  }
+  .proof-slide--image {
+    background: transparent;
+    box-shadow: none;
+  }
+  .proof-slide--image .proof-copy {
+    position: absolute;
+    inset: auto 0 0;
+    margin: 0;
+    min-height: 52px;
+    padding: 17px 16px 13px;
+    align-items: flex-end;
+    background: linear-gradient(180deg, transparent, rgba(7,23,45,.9));
+    color: #fff;
+    font-family: var(--head);
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  .proof-slide--review {
+    align-items: stretch;
+    background: linear-gradient(160deg, #fff, #f5f7fb);
+  }
   .proof-review {
     display: flex;
     min-width: 0;
+    flex: 1;
     flex-direction: column;
+    justify-content: center;
     margin: 0;
-    padding: 16px 18px 14px;
+    padding: 14px 18px 10px;
     color: var(--navy);
   }
   .proof-review::before {
-    content: "\201C";
+    content: "“";
     height: 20px;
     color: var(--gold);
     font-family: Georgia, serif;
@@ -412,25 +453,36 @@
     line-height: 1;
   }
   .proof-review p {
-    margin: 6px 0 0;
-    font-size: 16px;
+    margin: 3px 0 0;
+    font-size: 12.5px;
     font-weight: 600;
-    line-height: 1.45;
+    line-height: 1.4;
   }
   .proof-review .review-stars {
-    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 2px;
     color: var(--gold);
-    font-size: 12px;
+    font-size: 11px;
     line-height: 1;
     letter-spacing: .08em;
   }
   .proof-review cite {
-    margin-top: 10px;
+    margin-top: 5px;
     color: var(--muted);
-    font-size: 13px;
+    font-size: 11.5px;
     font-style: normal;
     font-weight: 750;
     line-height: 1.3;
+  }
+  @media (max-width: 340px) {
+    .proof-slide--image .proof-copy {
+      padding-right: 4px;
+      padding-left: 4px;
+      font-size: 14px;
+      letter-spacing: -0.01em;
+    }
   }
   .hero .photozone {
     position: relative;
@@ -504,9 +556,8 @@
     .hero .process { max-width: 48ch; }
     .hero .review { left: 22px; right: 22px; bottom: 20px; padding: 11px 13px; font-size: 13.5px; }
     .hero .cta { align-self: flex-start; width: auto; min-width: 300px; }
-    .proof-band { padding-right: 42px; padding-left: 42px; }
-    .proof-photo img { height: 128px; }
-    .proof-review p { font-size: 16px; }
+    .proof-carousel { padding-right: 0; padding-left: 0; }
+    .proof-slide { flex-basis: calc(100% - 48px); }
   }
 
   /* ================= body grid ================= */
@@ -953,53 +1004,59 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
       </div>
     </section>
     </div>
-    <section class="proof-band" aria-label="Installed work and customer reviews">
-      <div class="proof-photos">
-        <figure class="proof-photo">
-          <img src="/img/install-inlet-brick-hd.jpg" alt="Real BPP-installed metal outdoor connection box with a weather-rated cover on a brick wall" />
-        </figure>
-        <figure class="proof-photo">
-          <img src="/img/install-inlet-interlock.jpg" alt="Interlock kit installed inside the breaker panel" />
-        </figure>
-        <figure class="proof-photo">
-          <img src="/img/install-full-setup.jpg" alt="Portable generator hooked up to a home inlet" />
-        </figure>
-        <figure class="proof-photo">
-          <img src="/img/install-inlet-siding.jpg" alt="Outdoor generator inlet installed on house siding" />
-        </figure>
-      </div>
-      <div class="proof-reviews" data-proof-reviews="" aria-live="polite">
-        <article class="proof-card is-on" data-proof-card="">
+    <section class="proof-carousel" aria-label="Installed work and customer reviews">
+      <div class="proof-track" role="group" aria-roledescription="carousel" tabindex="0" data-proof-track="" data-autoplay-ms="8000" data-autoplay-paused="false">
+        <article class="proof-slide proof-slide--image" role="group" aria-roledescription="slide" aria-label="Carousel item 1 of 10" data-proof-slide="">
+          <img class="proof-image" src="/img/connected-generator-current.jpg" alt="Portable generator connected by a yellow cord to an outdoor home inlet" />
+          <p class="proof-copy">One hookup. Power what matters.</p>
+        </article>
+        <article class="proof-slide proof-slide--review" role="group" aria-roledescription="slide" aria-label="Carousel item 2 of 10" data-proof-slide="">
           <blockquote class="proof-review">
-            <div class="review-stars" role="img" aria-label="5 star Google review">★★★★★</div>
-            <p>Installed a 50-amp Generator inlet box along with a panel interlock system in our home. I was impressed by Key's attention to detail, professionalism, and organization.</p>
+            <div class="review-stars" role="img" aria-label="5 star Google review"><img src="/img/google-g-logo.webp" alt="" width="13" height="13" />★★★★★</div>
+            <p>Installed a 50-amp Generator inlet box along with a panel interlock system in our home. I was impressed by Key’s attention to detail, professionalism, and organization.</p>
             <cite>Jim J. · Google review</cite>
           </blockquote>
         </article>
-        <article class="proof-card" data-proof-card="">
+        <article class="proof-slide proof-slide--image" role="group" aria-roledescription="slide" aria-label="Carousel item 3 of 10" data-proof-slide="">
+          <img class="proof-image" src="/img/essentials-powered-current.png" alt="A lit home, a cold refrigerator, and a phone charging at night" />
+          <p class="proof-copy">Keep your essentials on.</p>
+        </article>
+        <article class="proof-slide proof-slide--review" role="group" aria-roledescription="slide" aria-label="Carousel item 4 of 10" data-proof-slide="">
           <blockquote class="proof-review">
-            <div class="review-stars" role="img" aria-label="5 star Google review">★★★★★</div>
+            <div class="review-stars" role="img" aria-label="5 star Google review"><img src="/img/google-g-logo.webp" alt="" width="13" height="13" />★★★★★</div>
             <p>Oh my gosh these guys were absolutely fantastic. Everything went so smoothly and the finished work looks super professional.</p>
             <cite>Hallie L. · Google review</cite>
           </blockquote>
         </article>
-        <article class="proof-card" data-proof-card="">
+        <article class="proof-slide proof-slide--image" role="group" aria-roledescription="slide" aria-label="Carousel item 5 of 10" data-proof-slide="">
+          <img class="proof-image" src="/img/outdoor-inlets-current.png" alt="Two BPP-installed metal outdoor generator connection boxes with weather-rated covers" />
+          <p class="proof-copy">A permanent outdoor connection.</p>
+        </article>
+        <article class="proof-slide proof-slide--review" role="group" aria-roledescription="slide" aria-label="Carousel item 6 of 10" data-proof-slide="">
           <blockquote class="proof-review">
-            <div class="review-stars" role="img" aria-label="5 star Google review">★★★★★</div>
+            <div class="review-stars" role="img" aria-label="5 star Google review"><img src="/img/google-g-logo.webp" alt="" width="13" height="13" />★★★★★</div>
             <p>punctual, professional, and truly set the bar high. Throughout permitting and scheduling, he kept me fully informed, and his performance and timing exceeded my expectations.</p>
             <cite>Dino S. · Google review</cite>
           </blockquote>
         </article>
-        <article class="proof-card" data-proof-card="">
+        <article class="proof-slide proof-slide--image" role="group" aria-roledescription="slide" aria-label="Carousel item 7 of 10" data-proof-slide="">
+          <img class="proof-image" src="/img/transfer-systems-current.jpg" alt="Two installed breaker-panel interlock systems that prevent utility and generator power from being on at the same time" />
+          <p class="proof-copy">Safely switch to generator power.</p>
+        </article>
+        <article class="proof-slide proof-slide--review" role="group" aria-roledescription="slide" aria-label="Carousel item 8 of 10" data-proof-slide="">
           <blockquote class="proof-review">
-            <div class="review-stars" role="img" aria-label="5 star Google review">★★★★★</div>
+            <div class="review-stars" role="img" aria-label="5 star Google review"><img src="/img/google-g-logo.webp" alt="" width="13" height="13" />★★★★★</div>
             <p>Outstanding service, competent, on time, quick response, professional installation, clean, organized, safety a priority. Highly recommend! Will use again.</p>
             <cite>Mark M. · Google review</cite>
           </blockquote>
         </article>
-        <article class="proof-card" data-proof-card="">
+        <article class="proof-slide proof-slide--image" role="group" aria-roledescription="slide" aria-label="Carousel item 9 of 10" data-proof-slide="">
+          <img class="proof-image" src="/img/cord-permit-current.jpg" alt="A compatible yellow generator cord and electrical permit paperwork posted for inspection" />
+          <p class="proof-copy">Cord included. Permit handled.</p>
+        </article>
+        <article class="proof-slide proof-slide--review" role="group" aria-roledescription="slide" aria-label="Carousel item 10 of 10" data-proof-slide="">
           <blockquote class="proof-review">
-            <div class="review-stars" role="img" aria-label="5 star Google review">★★★★★</div>
+            <div class="review-stars" role="img" aria-label="5 star Google review"><img src="/img/google-g-logo.webp" alt="" width="13" height="13" />★★★★★</div>
             <p>Best customer service ever, he went above and beyond to help us. Very knowledgeable and honest man!! Definitely I'll recommend Key to all my friends.</p>
             <cite>Bogdi · Google review</cite>
           </blockquote>
@@ -1055,35 +1112,182 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
 
       // Keep the hero variant explicit so entry-mode funnels remain comparable.
       try { if (window.posthog) { posthog.register({ hero_variant: 'integrated-a', walk_entry: mode }); posthog.capture('walk_v2_hero_shown', { variant: 'integrated-a', walk_entry: mode, walk_src: src || 'none' }); } } catch(e){}
-      var proofReviews = document.querySelector('[data-proof-reviews]');
-      if (proofReviews) {
-        var cards = Array.prototype.slice.call(proofReviews.querySelectorAll('[data-proof-card]'));
+      var proofTrack = document.querySelector('[data-proof-track]');
+      if (proofTrack) {
+        var originals = Array.prototype.slice.call(proofTrack.querySelectorAll('[data-proof-slide]'));
         var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (reduced || cards.length < 2) {
-          proofReviews.classList.add('is-stack');
-          cards.forEach(function (card) { card.classList.add('is-on'); });
-        } else {
-          var shown = 0;
-          var timer = 0;
-          function show(index) {
-            shown = (index + cards.length) % cards.length;
-            cards.forEach(function (card, i) {
-              card.classList.toggle('is-on', i === shown);
+        var autoplayMs = 8000;
+        var textIdleMs = 2400;
+        var timer = 0;
+        var textEntryPaused = false;
+        var textIdleTimer = 0;
+        var settleTimer = 0;
+        var dragPointer = null;
+        var dragStartX = 0;
+        var dragStartScroll = 0;
+
+        function slides() {
+          return Array.prototype.slice.call(proofTrack.querySelectorAll('.proof-slide'));
+        }
+        function slideOffset(index) {
+          var slide = slides()[index];
+          if (!slide) return proofTrack.scrollLeft;
+          return slide.offsetLeft - (proofTrack.clientWidth - slide.offsetWidth) / 2;
+        }
+        function jumpTo(index, smooth) {
+          proofTrack.scrollTo({
+            left: slideOffset(index),
+            behavior: smooth && !reduced ? 'smooth' : 'auto'
+          });
+        }
+        function teleportTo(index) {
+          var priorSnap = proofTrack.style.scrollSnapType;
+          proofTrack.style.scrollSnapType = 'none';
+          proofTrack.scrollLeft = slideOffset(index);
+          window.requestAnimationFrame(function () {
+            proofTrack.style.scrollSnapType = priorSnap;
+          });
+        }
+        function currentIndex() {
+          var center = proofTrack.scrollLeft + proofTrack.clientWidth / 2;
+          var nearest = 0;
+          var distance = Infinity;
+          slides().forEach(function (slide, index) {
+            var slideCenter = slide.offsetLeft + slide.offsetWidth / 2;
+            var nextDistance = Math.abs(slideCenter - center);
+            if (nextDistance < distance) {
+              nearest = index;
+              distance = nextDistance;
+            }
+          });
+          return nearest;
+        }
+        function clearAutoplay() {
+          if (timer) window.clearInterval(timer);
+          timer = 0;
+        }
+        function syncPauseState() {
+          proofTrack.setAttribute('data-autoplay-paused', textEntryPaused ? 'true' : 'false');
+        }
+        function startAutoplay() {
+          if (reduced || textEntryPaused || timer || document.visibilityState !== 'visible') return;
+          timer = window.setInterval(function () {
+            if (!textEntryPaused && document.visibilityState === 'visible') {
+              jumpTo(currentIndex() + 1, true);
+            }
+          }, autoplayMs);
+        }
+        function restartAutoplay() {
+          clearAutoplay();
+          startAutoplay();
+        }
+        function isTextEntry(target) {
+          if (!target || !target.matches) return false;
+          if (target.matches('textarea, [contenteditable="true"]')) return true;
+          if (!target.matches('input')) return false;
+          return !/^(button|checkbox|color|file|hidden|image|radio|range|reset|submit)$/i.test(target.type || 'text');
+        }
+        function releaseTextPause() {
+          textEntryPaused = false;
+          syncPauseState();
+          restartAutoplay();
+        }
+        function holdForTextActivity() {
+          textEntryPaused = true;
+          syncPauseState();
+          clearAutoplay();
+          if (textIdleTimer) window.clearTimeout(textIdleTimer);
+          textIdleTimer = window.setTimeout(releaseTextPause, textIdleMs);
+        }
+        function settle() {
+          if (settleTimer) window.clearTimeout(settleTimer);
+          settleTimer = window.setTimeout(function () {
+            var index = currentIndex();
+            if (index < originals.length) teleportTo(index + originals.length);
+            if (index >= originals.length * 2) teleportTo(index - originals.length);
+          }, reduced ? 0 : 260);
+        }
+        function beginDrag(event) {
+          if (event.button !== undefined && event.button !== 0) return;
+          if (event.cancelable) event.preventDefault();
+          dragPointer = event.pointerId;
+          dragStartX = event.clientX;
+          dragStartScroll = proofTrack.scrollLeft;
+          proofTrack.style.scrollSnapType = 'none';
+          proofTrack.classList.add('is-dragging');
+          if (proofTrack.setPointerCapture) proofTrack.setPointerCapture(event.pointerId);
+          restartAutoplay();
+        }
+        function moveDrag(event) {
+          if (dragPointer !== event.pointerId) return;
+          if (event.cancelable) event.preventDefault();
+          proofTrack.scrollLeft = dragStartScroll + dragStartX - event.clientX;
+        }
+        function endDrag(event) {
+          if (dragPointer !== event.pointerId) return;
+          var targetIndex = currentIndex();
+          dragPointer = null;
+          proofTrack.classList.remove('is-dragging');
+          if (proofTrack.hasPointerCapture && proofTrack.hasPointerCapture(event.pointerId)) {
+            proofTrack.releasePointerCapture(event.pointerId);
+          }
+          proofTrack.style.scrollSnapType = '';
+          jumpTo(targetIndex, true);
+          settle();
+          restartAutoplay();
+        }
+
+        if (originals.length > 1) {
+          function makeLoopClone(slide) {
+            var clone = slide.cloneNode(true);
+            clone.removeAttribute('data-proof-slide');
+            clone.setAttribute('aria-hidden', 'true');
+            return clone;
+          }
+          originals.forEach(function (slide) {
+            proofTrack.insertBefore(makeLoopClone(slide), originals[0]);
+          });
+          originals.forEach(function (slide) {
+            proofTrack.appendChild(makeLoopClone(slide));
+          });
+          function alignFirstSlide() {
+            window.requestAnimationFrame(function () {
+              window.requestAnimationFrame(function () { teleportTo(originals.length); });
             });
           }
-          function start() {
-            if (timer || document.visibilityState !== 'visible') return;
-            timer = window.setInterval(function () { show(shown + 1); }, 8000);
-          }
-          function stop() {
-            if (timer) window.clearInterval(timer);
-            timer = 0;
-          }
-          document.addEventListener('visibilitychange', function () {
-            if (document.visibilityState === 'visible') start();
-            else stop();
+          alignFirstSlide();
+          if (document.readyState !== 'complete') window.addEventListener('load', alignFirstSlide, { once: true });
+
+          proofTrack.addEventListener('scroll', settle, { passive: true });
+          proofTrack.addEventListener('pointerdown', beginDrag);
+          proofTrack.addEventListener('pointermove', moveDrag);
+          proofTrack.addEventListener('pointerup', endDrag);
+          proofTrack.addEventListener('pointercancel', endDrag);
+          proofTrack.addEventListener('keydown', function (event) {
+            if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+            event.preventDefault();
+            jumpTo(currentIndex() + (event.key === 'ArrowRight' ? 1 : -1), true);
+            restartAutoplay();
           });
-          start();
+          document.addEventListener('focusin', function (event) {
+            if (isTextEntry(event.target)) holdForTextActivity();
+          });
+          document.addEventListener('input', function (event) {
+            if (isTextEntry(event.target)) holdForTextActivity();
+          });
+          document.addEventListener('focusout', function (event) {
+            if (!isTextEntry(event.target)) return;
+            if (textIdleTimer) window.clearTimeout(textIdleTimer);
+            window.setTimeout(function () {
+              if (!isTextEntry(document.activeElement)) releaseTextPause();
+            }, 0);
+          });
+          document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'visible') startAutoplay();
+            else clearAutoplay();
+          });
+          syncPauseState();
+          startAutoplay();
         }
       }
     })();
