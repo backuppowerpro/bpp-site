@@ -7,6 +7,7 @@
 
 <meta charset="utf-8" />
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://us.i.posthog.com https://us-assets.i.posthog.com https://connect.facebook.net 'sha256-SILzPhfLYZcCd4Tf0iA88+GJxTW0Ww/xsABc9z+kB/M=' 'sha256-G+RGGG/nS7Jz0Zp8ZGoJDT28GiNgr71xVKUjVbBKqLc=' 'sha256-wygnGpICbMppymZ/+XZT8Vgnv0wtsjTA4zJ1JolzPtc=' 'sha256-8D3LGBD86E4uSFC42nggO2UYeAOHJnZE1qO2PPhWGcM=' 'sha256-C6KL4dSidAIfZ88IF8QeDABri3YwVT+gwqSqUoxZEOU=' 'sha256-hz4qGbeNFCvHsIMpdSIAtf2uPW5FLW626ZOdPQxGyR4='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-KsnKCsHbsnK9PU8OK0Oo9U0PAjUXKo/Dxx4RfSK54z8=' 'sha256-0Iyyv4VKPnVS157Xktla6XdEbzCmufeHLHEeNrA4/ks=' 'sha256-M8iRdWV7mgh/H8ZrJIYj7+JApx46IWfGlaIDVtJ6UBk='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://www.facebook.com; connect-src 'self' https://api.mapbox.com https://reowtzedjflwmlptupbk.supabase.co https://us.i.posthog.com https://us-assets.i.posthog.com https://*.posthog.com https://www.facebook.com; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<script src="/walk-v2/token-bootstrap.js?v=20260815-bearer"></script>
 <script>/* flip no-js->js before paint so scroll-reveal hides content only when JS can reveal it; 5s failsafe reveals everything if the reveal script ever fails, so the form is never stuck invisible */(function(){var e=document.documentElement;e.classList.remove('no-js');e.classList.add('js');setTimeout(function(){try{var l=document.querySelectorAll('.rv:not(.in)');for(var i=0;i<l.length;i++)l[i].classList.add('in');}catch(x){}},5000);})();</script>
 <script>/* Entry mode + dynamic hero (Key 2026-07-01 / 2026-07-13 / paid fast lane 2026-07-13):
    src=home -> home hero
@@ -1354,7 +1355,7 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
 
 </div>
 
-<script src="/walk-v2/walk.js"></script>
+<script src="/walk-v2/walk.js?v=20260815-bearer"></script>
 <script>
 
 (function () {
@@ -1364,6 +1365,31 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
      see and submit a SECOND lead during the redirect window. On success
      routeFromState redirects away (the form is never shown); on a bad token we
      reveal the already-wired form below (the wiring still runs synchronously). */
+  var nameIn = main.querySelector('[data-f="name"]');
+  var phoneIn = main.querySelector('[data-f="phone"]');
+  var addrIn = main.querySelector('[data-f="addr"]');
+  function restoreDraft() {
+    try {
+      var draft = JSON.parse(sessionStorage.getItem('bpp:qwv2:draft') || 'null');
+      if (!draft || typeof draft !== 'object') return;
+      if (draft.name && nameIn && !nameIn.value) nameIn.value = draft.name;
+      if (draft.phone && phoneIn && !phoneIn.value) phoneIn.value = draft.phone;
+      if (draft.address && addrIn && !addrIn.value) addrIn.value = draft.address;
+    } catch (_) {}
+  }
+  function persistDraft() {
+    try {
+      sessionStorage.setItem('bpp:qwv2:draft', JSON.stringify({
+        name: nameIn && nameIn.value || '',
+        phone: phoneIn && phoneIn.value || '',
+        address: addrIn && addrIn.value || '',
+      }));
+    } catch (_) {}
+  }
+  [nameIn, phoneIn, addrIn].forEach(function (field) {
+    if (field) field.addEventListener('input', persistDraft);
+  });
+
   var resumeT = WALK.token();
   var landingParams = new URLSearchParams(window.location.search);
   var areaBoundary = !!resumeT && landingParams.get('area') === 'out';
@@ -1379,26 +1405,47 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
       .catch(function (cause) {
         resumingMsg.remove();
         main.style.visibility = '';
+        WALK.setToken('');
+        restoreDraft();
         var recovery = main.querySelector('[data-submit-error]');
         if (recovery) {
           recovery.setAttribute('data-return-recovery', '');
-          recovery.textContent = cause && (
+          var expired = cause && (
             cause.status === 410
             || cause.body && cause.body.error === 'expired'
-          )
+          );
+          recovery.textContent = expired
             ? 'This saved link has expired. Start here to create a new Quote Walk.'
-            : 'This saved link has been replaced. Use your newest saved link, or start here again.';
+            : 'Your saved walk could not be loaded.';
           recovery.style.display = '';
+          if (!recovery.querySelector('[data-retry-saved-link]')) {
+            var actions = document.createElement('span');
+            actions.style.display = 'block';
+            actions.style.marginTop = '10px';
+            var retry = document.createElement('button');
+            retry.type = 'button';
+            retry.setAttribute('data-retry-saved-link', '');
+            retry.textContent = 'Try saved link again';
+            retry.addEventListener('click', function () { window.location.reload(); });
+            var startOver = document.createElement('button');
+            startOver.type = 'button';
+            startOver.textContent = 'Start a new Quote Walk';
+            startOver.addEventListener('click', function () {
+              WALK.setToken('');
+              window.location.replace('/walk-v2/');
+            });
+            actions.appendChild(retry);
+            actions.appendChild(document.createTextNode(' '));
+            actions.appendChild(startOver);
+            recovery.appendChild(actions);
+          }
         }
         WALK.ph('walk_v2_screen_view', { screen: 'landing_return_recovery' });
       });
   } else {
+    restoreDraft();
     WALK.ph('walk_v2_screen_view', { screen: editDetails ? 'landing_edit' : 'landing' });
   }
-
-  var nameIn = main.querySelector('[data-f="name"]');
-  var phoneIn = main.querySelector('[data-f="phone"]');
-  var addrIn = main.querySelector('[data-f="addr"]');
   var emailIn = main.querySelector('[data-f="email"]');
   var phoneField = main.querySelector('[data-phone-field]');
   var nameField = nameIn ? nameIn.closest('.field') : null;
@@ -1803,7 +1850,7 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
        unload; the sync-XHR fallback covers a fetch throw. */
     var body = JSON.stringify(payload);
     var url = 'https://reowtzedjflwmlptupbk.supabase.co/functions/v1/quo-ai-new-lead';
-    var delivered = false, tokenOut = null, serviceAreaStatus = '';
+    var delivered = false, tokenOut = null, serviceAreaStatus = '', savedAddressRefresh = false;
     try {
       var resp = await fetch(url, { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: body });
       delivered = resp.ok;
@@ -1812,6 +1859,8 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
           var j = await resp.json();
           tokenOut = j && j.preReadToken || null;
           serviceAreaStatus = j && j.service_area_status || '';
+          savedAddressRefresh = j && j.saved_address_refresh === true;
+          if (j && j.skipped && !tokenOut) delivered = false;
         } catch (_) {}
       }
       if (!delivered) WALK.ph('lead_submit_failed', { status: resp.status, method: 'fetch', form: 'walkv2-landing' });
@@ -1831,6 +1880,7 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
             var fallbackBody = JSON.parse(xhr.responseText) || {};
             tokenOut = fallbackBody.preReadToken || null;
             serviceAreaStatus = fallbackBody.service_area_status || '';
+            savedAddressRefresh = fallbackBody.saved_address_refresh === true;
           } catch (_) {}
         }
       } catch (e2) {
@@ -1840,10 +1890,20 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
     if (typeof fbq === 'function') { try { fbq('track', 'Lead', { content_name: 'walkv2-landing', content_category: 'generator-installation', value: 1200, currency: 'USD' }, { eventID: eventId }); } catch (_) {} }
     WALK.ph('walk_v2_submitted', { connection_status: 'unanswered', delivered: delivered });
     if (delivered && tokenOut && serviceAreaStatus === 'verified_out_of_area') {
-      window.location.replace('/walk-v2/index.html?area=out&t=' + encodeURIComponent(tokenOut));
+      persistDraft();
+      WALK.go('index.html', tokenOut, { area: 'out' });
       return;
     }
-    if (delivered && tokenOut) { WALK.go('connection.html', tokenOut); return; }
+    if (delivered && tokenOut && savedAddressRefresh) {
+      persistDraft();
+      WALK.go('incomplete.html', tokenOut, { resume: '1' });
+      return;
+    }
+    if (delivered && tokenOut) {
+      persistDraft();
+      WALK.go('connection.html', tokenOut);
+      return;
+    }
 
     /* Delivery failed: keep recovery inside the guided flow. The CTA is
        re-enabled by refresh() so the customer can try again. */
