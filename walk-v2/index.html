@@ -926,7 +926,8 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
   <!-- ============ MAIN PAGE (mobile, interactive) ============ -->
   <main class="page" id="mainPage" data-screen-label="Landing page (interactive, mobile)">
 
-    <!-- 1. site header -->
+    <!-- 1. site header + hero sit in intro-card so desktop navy paints. Mobile: display:contents. -->
+    <div class="intro-card">
     <header class="site-head">
       <a class="lockup" href="https://backuppowerpro.com" aria-label="Backup Power Pro" style="text-decoration:none;">
         <img src="/assets/images/logo-white-v2.png" alt="Backup Power Pro" style="height:28px;display:block;width:auto;" />
@@ -951,6 +952,7 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
         <p class="process">I’ll guide you through a few quick questions and ask for photos of your panel. Then I’ll review your setup myself and text you a complete proposal, so you know exactly what’s included before any work begins.</p>
       </div>
     </section>
+    </div>
     <section class="proof-band" aria-label="Installed work and customer reviews">
       <div class="proof-photos">
         <figure class="proof-photo">
