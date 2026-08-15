@@ -133,7 +133,7 @@
     .price-card .section-label{color:#ffd15a}
     .price-card .section-title{color:#fff}
     .price-total{
-      display:grid;grid-template-columns:1.2fr 1.05fr .9fr;align-items:end;gap:0;margin-top:18px;
+      display:grid;grid-template-columns:1.15fr .9fr 1.1fr;align-items:end;gap:0;margin-top:18px;
     }
     .total-part{min-width:0;padding-right:10px}
     .total-part span{
@@ -145,11 +145,7 @@
       min-width:0;padding:1px 0 2px 12px;border-left:1px solid rgba(255,255,255,.14);
     }
     .pay-part span{display:block;color:rgba(255,255,255,.58);font-size:9.5px;line-height:1.25}
-    .pay-part strong{display:block;margin-top:4px;color:#fff;font:800 17px/1.1 Outfit,sans-serif;white-space:nowrap}
-    .pay-deposit span{color:rgba(255,255,255,.86)}
-    .pay-deposit strong{font-size:24px;letter-spacing:-.03em;line-height:1}
-    .pay-remainder span{color:rgba(255,255,255,.46)}
-    .pay-remainder strong{color:rgba(255,255,255,.68);font-size:15px;font-weight:700}
+    .pay-part strong{display:block;margin-top:4px;color:#fff;font:800 17px/1.1 Outfit,sans-serif}
     .next-panel{border-top:1px solid var(--plan-line);background:#fff}
     .journey{margin-top:18px;border-top:1px solid var(--plan-line)}
     .journey-phase{
@@ -347,10 +343,10 @@
       margin:0 auto;padding:8px 8px 8px 14px;border:1px solid rgba(11,31,59,.07);border-radius:18px;
       background:rgba(255,255,255,.94);box-shadow:0 11px 30px rgba(11,31,59,.18);
       backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
-      opacity:0;transform:translateY(calc(100% + 30px));pointer-events:none;
-      transition:opacity 180ms cubic-bezier(.16,1,.3,1),transform 240ms cubic-bezier(.16,1,.3,1);
+      opacity:0;pointer-events:none;
+      transition:opacity 180ms cubic-bezier(.16,1,.3,1);
     }
-    .sticky.shown{opacity:1;transform:none;pointer-events:auto}
+    .sticky.shown{opacity:1;pointer-events:auto}
     .sticky span{display:block;color:var(--plan-muted);font-size:9px;line-height:1.2}
     .sticky strong{display:block;margin-top:2px;color:var(--plan-navy);font:800 18px/1.1 Outfit,sans-serif}
     .sticky button{
@@ -391,19 +387,15 @@
       .project-item .ds{font-size:11px;line-height:1.42}
       .project-item .pr{font-size:12.5px}
       .project-item .pr.included{padding:5px 7px;font-size:9px}
-      .price-total{grid-template-columns:1.18fr 1.08fr .86fr}
-      .pay-deposit strong{font-size:22px}
-      .pay-remainder strong{font-size:14px}
     }
     @media (max-width:370px){
       .hero h1{font-size:27px}
-      .price-total{grid-template-columns:1.12fr 1.08fr .82fr}
+      .price-total{grid-template-columns:1.08fr .86fr 1.06fr}
       .total-part{padding-right:6px}
       .total-part strong{font-size:31px}
       .pay-part{padding-left:7px}
       .pay-part span{font-size:8.5px}
-      .pay-deposit strong{font-size:19px;letter-spacing:-.03em}
-      .pay-remainder strong{font-size:13px;letter-spacing:-.02em}
+      .pay-part strong{font-size:14px;letter-spacing:-.025em}
       .sticky{grid-template-columns:1fr 1.25fr}
     }
     @media (prefers-reduced-motion:reduce){
@@ -480,11 +472,11 @@
             <span>Your total</span>
             <strong id="allInTotal">$1,497</strong>
           </div>
-          <div class="pay-part pay-deposit">
+          <div class="pay-part">
             <span>Deposit to begin</span>
             <strong id="sTotal">$374</strong>
           </div>
-          <div class="pay-part pay-remainder">
+          <div class="pay-part">
             <span>Remainder after install</span>
             <strong id="balanceTotal">$1,123</strong>
           </div>
@@ -593,7 +585,7 @@
   <script>
     (function(){
       var POM_PRICE=447;
-      var SYSTEM_ORDER=['installation','transfer','inlet','cord','wire','walkthrough','panelGuide','permit','workmanship'];
+      var SYSTEM_ORDER=['installation','permit','transfer','inlet','cord','wire','walkthrough','panelGuide','workmanship'];
       var fixture={
         customerName:'Sample Homeowner',
         customerAddress:'123 Example Lane, Greenville, South Carolina 29601, United States',
@@ -603,7 +595,7 @@
         depositRate:.20,
         pomOffered:false,
         aiSummary:'Customer owns a 50A-capable portable generator and shared the panel and planned outdoor connection location.',
-        notes:'based on your portable generator and the panel location you shared, I recommend the plan below. It gives you a permanent outdoor connection point and lets you choose any breaker in your panel within the generator\'s capacity. The complete price includes installation, permit, and inspection.',
+        notes:'here is everything we talked through for your install, priced and ready. Approve it right from your phone and I will take it from there.',
         systemItems:{
           installation:{id:'installation',included:true,title:'50A generator connection installation',description:'Panel-matched installation, breaker wiring, testing, and cleanup.',amount:919,image:'assets/images/work-full-install.jpg',showItem:true,showPrice:true},
           transfer:{id:'transfer',included:true,title:'Panel-matched power transfer system',description:'A panel-matched safety interlock prevents utility and generator power from feeding the panel at the same time.',amount:0,image:'assets/images/work-panel-interlock.jpg',showItem:true,showPrice:false},
@@ -611,7 +603,7 @@
           cord:{id:'cord',included:true,title:'Heavy-duty compatible cord',description:'A complete factory-manufactured cord assembly, matched to your portable generator and connection box.',amount:249,image:'assets/product-images/cord-50amp.jpg',showItem:true,showPrice:false},
           walkthrough:{id:'walkthrough',included:true,title:'System walkthrough',description:'You see the finished system work and learn how to connect your portable generator and select circuits safely.',amount:0,image:'assets/product-images/system-walkthrough.jpg',showItem:true,showPrice:false},
           panelGuide:{id:'panelGuide',included:true,title:'Step-by-step panel guide',description:'A durable instruction label stays inside your panel for quick reference during an outage.',amount:0,image:'assets/product-images/panel-operating-guide.jpg',showItem:true,showPrice:false},
-          permit:{id:'permit',included:true,title:'Permit and required inspection',description:'Required for local code compliance. We handle the application, permit fee, inspection scheduling, and follow-through.',amount:150,image:'assets/product-images/permit-inspection-photo.jpg',showItem:true,showPrice:false},
+          permit:{id:'permit',included:true,title:'Permit and required inspection',description:'Required for local code compliance. We handle the application, permit fee, inspection scheduling, and follow-through.',amount:150,image:'assets/product-images/permit-inspection-photo.jpg',showItem:true,showPrice:true},
           workmanship:{id:'workmanship',included:true,title:'One-year workmanship support',description:'If an issue comes from our installation work during the first year, we return and correct it at no charge.',amount:0,image:'assets/product-images/workmanship-support.jpg',showItem:true,showPrice:false},
           wire:{id:'wire',included:false,title:'Extended wire run',description:'Additional wiring required for your installation.',amount:0,image:'assets/product-images/wire-run.jpg',showItem:true,showPrice:false}
         },
@@ -625,7 +617,6 @@
       var approvalCueTimer=null;
       var proposal=null;
       var submitting=false;
-      var addressLookup={gen:0,controller:null};
       var params=new URLSearchParams(window.location.search);
       var isPreview=params.get('preview')==='1';
       var isLocalFixture=(location.hostname==='127.0.0.1'||location.hostname==='localhost')&&!params.get('token');
@@ -684,183 +675,14 @@
           .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
           .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
       }
-      function isStateAbbr(word){
-        return /^(?:A[LKZR]|C[AOT]|D[CE]|FL|GA|HI|I[DLNA]|K[SY]|LA|M[EDAINSOT]|N[EVHJMYCD]|O[HKR]|PA|RI|S[CD]|T[NX]|UT|V[TA]|W[AIVY])$/i.test(word);
-      }
-      function titleAddressWord(word){
-        if(isStateAbbr(word)&&word.length===2&&word===word.toUpperCase()) return word;
-        return word.replace(/[A-Za-z]+/g,function(letters){
-          return letters.charAt(0).toUpperCase()+letters.slice(1).toLowerCase();
-        });
-      }
-      function titleAddressPhrase(text){
-        return String(text||'').split(/(\s+)/).map(function(token){
-          return /^\s+$/.test(token)?token:titleAddressWord(token);
-        }).join('');
-      }
-      function isStreetType(word){
-        return /^(?:st|street|rd|road|ave|avenue|blvd|boulevard|ln|lane|dr|drive|ct|court|cir|circle|pl|place|ter|terrace|hwy|highway|pkwy|parkway|way|trl|trail|loop|pass|pike|row|sq|square|aly|alley|ext|extension|walk|path)$/i.test(String(word||'').replace(/\./g,''));
-      }
-      function isUnitType(word){
-        return /^(?:apt|apartment|unit|ste|suite|fl|floor|rm|room|bldg|building|lot|#)/i.test(String(word||'').replace(/\./g,''));
-      }
-      function knownState(value){
-        var text=String(value||'').replace(/\s+/g,' ').trim();
-        if(!text) return '';
-        if(/^south carolina$/i.test(text)) return 'SC';
-        if(isStateAbbr(text)) return text.toUpperCase();
-        return '';
-      }
-      function knownZip(value){
-        var text=String(value||'').trim();
-        return /^\d{5}(?:-\d{4})?$/.test(text)?text:'';
-      }
-      function addressHasPiece(text, piece){
-        if(!piece) return true;
-        return new RegExp('(?:^|[,\\s])'+String(piece).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?:$|[,\\s])','i').test(text);
-      }
-      function formatLocality(text){
-        var tokens=String(text||'').replace(/\s+/g,' ').trim().split(' ').filter(Boolean);
-        if(!tokens.length) return '';
-        var zip='';
-        if(knownZip(tokens[tokens.length-1])) zip=tokens.pop();
-        var state='';
-        if(tokens.length>=2&&knownState(tokens.slice(-2).join(' '))){
-          state=knownState(tokens.slice(-2).join(' '));
-          tokens=tokens.slice(0,-2);
-        } else if(tokens.length&&knownState(tokens[tokens.length-1])){
-          state=knownState(tokens.pop());
-        }
-        var city=titleAddressPhrase(tokens.join(' '));
-        var out=city||'';
-        if(state) out=out?out+', '+state:state;
-        if(zip) out=out?out+' '+zip:zip;
-        return out;
-      }
-      function splitUndelimitedAddress(text){
-        var tokens=String(text||'').replace(/\s+/g,' ').trim().split(' ').filter(Boolean);
-        var suffixAt=-1;
-        for(var i=0;i<tokens.length;i++) if(isStreetType(tokens[i])) suffixAt=i;
-        if(suffixAt<0||suffixAt>=tokens.length-1) return {street:tokens.join(' '),locality:''};
-        var cut=suffixAt+1;
-        if(cut<tokens.length&&isUnitType(tokens[cut])){
-          cut+=1;
-          if(cut<tokens.length&&/^(?:#)?\d+[A-Za-z]?$/.test(tokens[cut])) cut+=1;
-        }
-        if(cut>=tokens.length) return {street:tokens.join(' '),locality:''};
-        return {street:tokens.slice(0,cut).join(' '),locality:tokens.slice(cut).join(' ')};
-      }
-      function samePayloadParts(source){
-        source=source||{};
-        return {
-          city:String(source.contact_city||source.customerCity||source.city||'').trim(),
-          state:knownState(source.contact_state||source.customerState||source.state),
-          zip:knownZip(source.contact_zip||source.customerZip||source.zip||source.postal_code)
-        };
-      }
-      function appendKnownParts(formatted, extras){
-        extras=extras||{};
-        var city=titleAddressPhrase(String(extras.city||'').trim());
-        var state=knownState(extras.state);
-        var zip=knownZip(extras.zip);
-        var out=String(formatted||'').trim();
-        if(city&&!addressHasPiece(out,city)) out=out?out+', '+city:city;
-        if(state&&!addressHasPiece(out,state)) out=out?out+', '+state:state;
-        if(zip&&!addressHasPiece(out,zip)) out=out?out+' '+zip:zip;
-        return out.replace(/\s+,/g,',').replace(/\s+/g,' ').trim();
-      }
-      function compactAddress(value, extras){
-        var parts=String(value||'').replace(/\s+/g,' ').trim().split(',').map(function(part){return part.trim();}).filter(Boolean);
-        if(!parts.length) return appendKnownParts('', extras);
-        if(/^(united states(?: of america)?|usa|us)$/i.test(parts[parts.length-1])) parts.pop();
-        if(!parts.length) return appendKnownParts('', extras);
-        var formatted;
-        if(parts.length<2){
-          var split=splitUndelimitedAddress(parts[0]);
-          var street=titleAddressPhrase(split.street);
-          var locality=formatLocality(split.locality);
-          formatted=locality?street+', '+locality:street;
-        } else {
-          var region=parts.pop().replace(/\b\d{5}(?:-\d{4})?\b/g,'').trim();
-          if(/^south carolina$/i.test(region)) region='SC';
-          else if(isStateAbbr(region)) region=region.toUpperCase();
-          formatted=titleAddressPhrase(parts.concat(region||[]).join(', '));
-        }
-        return appendKnownParts(formatted, extras);
-      }
-      function canonStreetWord(word){
-        var key=String(word||'').toLowerCase().replace(/\./g,'');
-        var map={st:'street',street:'street',rd:'road',road:'road',ave:'avenue',avenue:'avenue',blvd:'boulevard',boulevard:'boulevard',ln:'lane',lane:'lane',dr:'drive',drive:'drive',ct:'court',court:'court',cir:'circle',circle:'circle',pl:'place',place:'place',ter:'terrace',terrace:'terrace',hwy:'highway',highway:'highway',pkwy:'parkway',parkway:'parkway',trl:'trail',trail:'trail',way:'way'};
-        return map[key]||key;
-      }
-      function storedStreetParts(value){
-        var tokens=String(value||'').toLowerCase().replace(/[.,#]/g,' ').replace(/\s+/g,' ').trim().split(' ').filter(Boolean);
-        var number=tokens[0]&&/^\d+[a-z]?$/.test(tokens[0])?tokens[0]:'';
-        var start=number?1:0;
-        var suffixAt=-1;
-        for(var i=start;i<tokens.length;i++) if(isStreetType(tokens[i])) suffixAt=i;
-        var nameTokens=suffixAt>=0?tokens.slice(start,suffixAt+1):tokens.slice(start);
-        if(suffixAt<0&&nameTokens.length>1) nameTokens=nameTokens.slice(0,-1);
-        return {number:number,name:nameTokens.map(canonStreetWord).join(' ')};
-      }
-      function featureStreetParts(feature){
-        var number=String(feature&&feature.address||'').toLowerCase().trim();
-        var name=String(feature&&feature.text||'').toLowerCase().replace(/\./g,'').replace(/\s+/g,' ').trim().split(' ').filter(Boolean).map(canonStreetWord).join(' ');
-        if(!number){
-          var lead=String(feature&&feature.place_name||'').match(/^(\d+[a-z]?)\b/i);
-          if(lead) number=lead[1].toLowerCase();
-        }
-        return {number:number,name:name};
-      }
-      function streetCore(name){
-        return String(name||'').replace(/\b(?:street|road|avenue|boulevard|lane|drive|court|circle|place|terrace|highway|parkway|trail|way)\b/g,'').replace(/\s+/g,' ').trim();
-      }
-      function sameStreet(stored, feature){
-        var have=storedStreetParts(stored);
-        var hit=featureStreetParts(feature);
-        if(have.number&&hit.number&&have.number!==hit.number) return false;
-        var haveCore=streetCore(have.name);
-        var hitCore=streetCore(hit.name);
-        if(!haveCore||!hitCore) return false;
-        return haveCore===hitCore||hitCore.indexOf(haveCore)!==-1||haveCore.indexOf(hitCore)!==-1;
-      }
-      function mapsStreetFeature(formatted){
-        var street=String(formatted||'').split(',')[0]||'';
-        var lead=street.match(/^(\d+[a-z]?)\s+(.+)$/i);
-        return {address:lead?lead[1]:'',text:lead?lead[2]:street,place_name:formatted};
-      }
-      function displayMapsAddress(formatted){
-        var parts=String(formatted||'').split(',').map(function(part){return part.trim();}).filter(Boolean);
+      function compactAddress(value){
+        var parts=String(value||'').split(',').map(function(part){return part.trim();}).filter(Boolean);
         if(!parts.length) return '';
         if(/^(united states(?: of america)?|usa|us)$/i.test(parts[parts.length-1])) parts.pop();
-        return parts.join(', ');
-      }
-      function lookupFormattedAddress(stored, node, token){
-        var query=String(stored||'').replace(/\s+/g,' ').trim();
-        if(!query||!node||!/^[0-9a-f-]{36}$/i.test(String(token||''))) return;
-        var gen=++addressLookup.gen;
-        if(addressLookup.controller) addressLookup.controller.abort();
-        var controller=new AbortController();
-        addressLookup.controller=controller;
-        var timer=setTimeout(function(){controller.abort();},2800);
-        fetch(SUPABASE_URL+'/functions/v1/streetview-hero?t='+encodeURIComponent(token)+'&format=1',{
-          headers:{'Authorization':'Bearer '+SUPABASE_KEY},
-          cache:'no-store',
-          signal:controller.signal
-        })
-          .then(function(response){
-            var type=response.headers.get('content-type')||'';
-            if(!response.ok||type.indexOf('application/json')===-1) return {};
-            return response.json();
-          })
-          .then(function(data){
-            if(gen!==addressLookup.gen) return;
-            var formatted=displayMapsAddress(data&&data.formatted_address);
-            if(!formatted||!sameStreet(query,mapsStreetFeature(formatted))) return;
-            node.textContent=formatted;
-          })
-          .catch(function(){})
-          .then(function(){clearTimeout(timer);});
+        if(parts.length<2) return parts.join(', ').replace(/\b\d{5}(?:-\d{4})?\b/g,'').trim();
+        var region=parts.pop().replace(/\b\d{5}(?:-\d{4})?\b/g,'').trim();
+        if(/^south carolina$/i.test(region)) region='SC';
+        return parts.concat(region||[]).join(', ');
       }
       function localAmpTitle(value){
         return String(value||'').replace(/^(30|50)A\b/,fixture.amp+'A');
@@ -951,20 +773,17 @@
         document.getElementById('projectScope').innerHTML=items.map(projectItemHtml).join('');
       }
       function renderNote(){
-        var note=String(fixture.notes||'').trim();
+        var stored=String(fixture.notes||'').trim();
+        var fallback='here is everything we talked through for your install, priced and ready. Approve it right from your phone and I will take it from there.';
+        var note=stored||fallback;
         var prefix=String(fixture.customerName||'Sample Homeowner').trim().split(/\s+/)[0]||'Sample';
-        if(!note) note='I reviewed your information and prepared the installation plan below.';
         note=note.charAt(0).toLowerCase()+note.slice(1);
         document.getElementById('personalNoteText').textContent=prefix+', '+note;
       }
       function renderIdentity(){
         var name=String(fixture.customerName||'Sample Homeowner').trim()||'Sample Homeowner';
         document.getElementById('customerName').textContent=name;
-        var addressNode=document.getElementById('customerAddress');
-        addressNode.textContent=compactAddress(fixture.customerAddress,{
-          city:fixture.customerCity,state:fixture.customerState,zip:fixture.customerZip
-        });
-        lookupFormattedAddress(fixture.customerAddress,addressNode,proposal&&proposal.token);
+        document.getElementById('customerAddress').textContent=compactAddress(fixture.customerAddress);
         document.getElementById('compactProposalTitle').textContent=(name.split(/\s+/)[0]||'Your')+"'s proposal";
         var signature=document.getElementById('signature');
         if(signature.dataset.edited!=='true') signature.value=name;
@@ -974,7 +793,6 @@
           var valid=document.querySelector('.good-through');
           if(valid){
             var validParts=[];
-            if(fixture.document_number) validParts.push(String(fixture.document_number));
             if(expires&&!isNaN(expires.getTime())) validParts.push('Valid through '+expires.toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'America/New_York'}));
             if(validParts.length) valid.textContent=validParts.join(' · ');
           }
@@ -1055,8 +873,11 @@
         var priceCard=document.getElementById('pricePanel');
         var approvalCard=document.getElementById('approve');
         var sticky=document.querySelector('.sticky');
-        var customerHasReadPrice=priceCard.getBoundingClientRect().bottom<120;
-        var approvalIsHere=approvalCard.getBoundingClientRect().top<window.innerHeight-120;
+        var shown=sticky.classList.contains('shown');
+        var priceBottom=priceCard.getBoundingClientRect().bottom;
+        var approvalTop=approvalCard.getBoundingClientRect().top;
+        var customerHasReadPrice=shown?priceBottom<160:priceBottom<120;
+        var approvalIsHere=shown?approvalTop<window.innerHeight-80:approvalTop<window.innerHeight-120;
         sticky.classList.toggle('shown',customerHasReadPrice&&!approvalIsHere);
       }
       function syncPersonalHeader(){
@@ -1107,13 +928,12 @@
         return base+Math.max(0,length-5)*perFt
           -(row.include_cord===false?cordOff:0)
           -(row.include_inlet===false?inletOff:0)
-          -(row.include_permit===false?150:0);
+          -(row.include_permit===false?125:0);
       }
       function proposalFixture(row){
         var amp=String(row.selected_amp||row.amp_type)==='30'?'30':'50';
         var standard=structuredBase(row);
         var permitAllocation=row.include_permit===false?0:Math.min(150,standard);
-        var payloadParts=samePayloadParts(row);
         var extras=Array.isArray(row.extra_line_items)?row.extra_line_items.filter(function(item){return item&&item.checked!==false;}):[];
         var lines=extras.map(function(item){
           return {
@@ -1131,8 +951,7 @@
             amount:Number(row.discount_amount),discountType:'dollar',showItem:true,showPrice:true});
         }
         return {
-          customerName:String(row.contact_name||'Homeowner'),customerAddress:String(row.contact_address||''),
-          customerCity:payloadParts.city,customerState:payloadParts.state,customerZip:payloadParts.zip,amp:amp,
+          customerName:String(row.contact_name||'Homeowner'),customerAddress:String(row.contact_address||''),amp:amp,
           document_number:row.document_number||null,
           total:Number(row.signed_total!=null?row.signed_total:row.total)||0,requireDeposit:row.require_deposit!==false,
           depositRate:Number(row.deposit_rate!=null?row.deposit_rate:.20),pomOffered:row.pom_offered!==false,
@@ -1145,7 +964,7 @@
             cord:{id:'cord',included:row.include_cord!==false,title:'Heavy-duty compatible cord',description:'A complete factory-manufactured cord assembly, matched to your portable generator and connection box.',amount:amp==='30'?129:249,image:'assets/product-images/cord-'+amp+'amp.jpg',showItem:true,showPrice:false},
             walkthrough:{id:'walkthrough',included:true,title:'System walkthrough',description:'You see the finished system work and learn how to connect your portable generator and select circuits safely.',amount:0,image:'assets/product-images/system-walkthrough.jpg',showItem:true,showPrice:false},
             panelGuide:{id:'panelGuide',included:true,title:'Step-by-step panel guide',description:'A durable instruction label stays inside your panel for quick reference during an outage.',amount:0,image:'assets/product-images/panel-operating-guide.jpg',showItem:true,showPrice:false},
-            permit:{id:'permit',included:row.include_permit!==false,title:'Permit and required inspection',description:'Required for local code compliance. We handle the application, permit fee, inspection scheduling, and follow-through.',amount:permitAllocation,image:'assets/product-images/permit-inspection-photo.jpg',showItem:true,showPrice:false},
+            permit:{id:'permit',included:row.include_permit!==false,title:'Permit and required inspection',description:'Required for local code compliance. We handle the application, permit fee, inspection scheduling, and follow-through.',amount:permitAllocation,image:'assets/product-images/permit-inspection-photo.jpg',showItem:true,showPrice:permitAllocation>0},
             workmanship:{id:'workmanship',included:true,title:'One-year workmanship support',description:'If an issue comes from our installation work during the first year, we return and correct it at no charge.',amount:0,image:'assets/product-images/workmanship-support.jpg',showItem:true,showPrice:false},
             wire:{id:'wire',included:Number(row.length_ft||row.run_ft||5)>5,title:'Extended wire run',description:'Additional wiring required for your installation.',amount:Math.max(0,Number(row.length_ft||row.run_ft||5)-5)*(amp==='30'?12:14),image:'assets/product-images/wire-run.jpg',showItem:true,showPrice:false}
           }
@@ -1320,9 +1139,6 @@
         fixture={
           customerName:String(payload.customerName||'Sample Homeowner'),
           customerAddress:String(payload.customerAddress||''),
-          customerCity:samePayloadParts(payload).city,
-          customerState:samePayloadParts(payload).state,
-          customerZip:samePayloadParts(payload).zip,
           amp:String(payload.amp)==='30'?'30':'50',
           total:Math.max(0,Number(payload.total)||0),
           requireDeposit:payload.requireDeposit!==false,
