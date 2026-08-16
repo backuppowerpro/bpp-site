@@ -3,7 +3,7 @@
 <head>
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-rtxhhCnZ7Joqh2V4GPvoQKmM7pKX/KN5PMV2R+4f0Oc='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-WC8AOrpyz4FW+j8sUzTfUPSzFofPf9tQjOuGMruGuHw='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-f1rczqI6Eo0Q15ox2/T5JDtkoJaBaZk26HWsl0vmsAs='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-WC8AOrpyz4FW+j8sUzTfUPSzFofPf9tQjOuGMruGuHw='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script src="/walk-v2/token-bootstrap.js?v=20260815-bearer"></script>
 <script src="/walk-v2/no-js-bootstrap.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
@@ -143,17 +143,18 @@
   var saving = false;
   var blockedAtLoad = false;
   var expanded = true;
-  var choicesReady = false;
+  var choicesReady = true;
+  var userTouched = false;
   WALK.ph('walk_v2_screen_view', { screen: 'connection' });
 
   function setChoiceReadiness(ready) {
-    choicesReady = ready;
+    choicesReady = true;
     main.setAttribute('aria-busy', ready ? 'false' : 'true');
     main.querySelectorAll('[data-status]').forEach(function (button) {
-      button.disabled = !ready;
+      button.disabled = false;
     });
   }
-  setChoiceReadiness(false);
+  setChoiceReadiness(true);
 
   function isCompatible(status) {
     return status === 'confirmed_30' || status === 'confirmed_50';
@@ -192,11 +193,11 @@
       button.setAttribute('aria-pressed', pressed ? 'true' : 'false');
     });
     setCompact(selectedException, bringContinue);
-    submit.disabled = !choicesReady || !(selectedCompatible.length || selectedException);
+    submit.disabled = !(selectedCompatible.length || selectedException);
     error.style.display = 'none';
   }
   function select(status, bringContinue) {
-    if (!choicesReady) return;
+    userTouched = true;
     if (isCompatible(status)) {
       selectedException = '';
       var index = selectedCompatible.indexOf(status);
@@ -303,12 +304,14 @@
       WALK.go('generator-needed.html', t);
       return;
     }
-    var truth = WALK.readConnectionTruth(t, v || {});
-    selectedCompatible = editMode ? [] : truth.connection_answers.map(function (value) {
-      return value === '50A' ? 'confirmed_50' : 'confirmed_30';
-    });
-    if (!editMode && !recoveryMode && !selectedCompatible.length && status === 'pending_access') selectedException = status;
-    expanded = !(selectedCompatible.length || selectedException);
+    if (!userTouched) {
+      var truth = WALK.readConnectionTruth(t, v || {});
+      selectedCompatible = editMode ? [] : truth.connection_answers.map(function (value) {
+        return value === '50A' ? 'confirmed_50' : 'confirmed_30';
+      });
+      if (!editMode && !recoveryMode && !selectedCompatible.length && status === 'pending_access') selectedException = status;
+      expanded = !(selectedCompatible.length || selectedException);
+    }
     setChoiceReadiness(true);
     renderSelection(false);
     loadRetry.hidden = true;
