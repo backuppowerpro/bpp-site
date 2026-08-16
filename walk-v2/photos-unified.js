@@ -66,7 +66,7 @@
 
   function guidanceHint() {
     if (!photos.length) {
-      return "Up to 10 photos or short videos. Take new ones or choose from your library.";
+      return "Add at least one photo or short video to continue. You can add up to 10.";
     }
     if (photos.length >= MAX_ITEMS) {
       return "That's 10. Remove one to add another, or continue.";
@@ -74,7 +74,7 @@
     if (hasSavedMedia()) {
       return "Saved. Add more if they help, or continue.";
     }
-    return "Up to 10 photos or short videos. Take new ones or choose from your library.";
+    return "Finish saving at least one photo or short video to continue.";
   }
 
   function render() {
@@ -102,9 +102,9 @@
     }
     slots.className = "slots unified-photo-list";
     slots.innerHTML = html;
-    cta.disabled = hasBusyUpload();
+    cta.disabled = hasBusyUpload() || !hasSavedMedia();
     later.hidden = hasSavedMedia();
-    ctaInner.textContent = "Continue";
+    ctaInner.textContent = hasSavedMedia() ? "Continue" : "Add a photo or video to continue";
     hint.textContent = guidanceHint();
   }
 
@@ -331,6 +331,11 @@
 
   cta.addEventListener("click", function () {
     if (cta.disabled || sending) return;
+    if (!hasSavedMedia()) {
+      hint.textContent = "Add at least one photo or short video before continuing.";
+      render();
+      return;
+    }
     sending = true;
     WALK.view(t).then(function (latest) {
       var state = latest.quote_walk_v2 || {};

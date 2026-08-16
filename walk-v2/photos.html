@@ -819,7 +819,7 @@
         <!-- 3. ask -->
         <section class="ask rv" style="--rvd: 0ms;">
           <h2 data-photo-heading="">Add photos or a short video.</h2>
-          <p class="helper" data-photo-helper="">The most useful ones are every panel with the outer door open, the outdoor connection area, and the path back to the panel. Add them in any order, or continue without any if you are not at the house.</p>
+          <p class="helper" data-photo-helper="">Add at least one photo or short video before we prepare your range. The most useful views show every panel with the outer door open, the outdoor connection area, and the path back to the panel.</p>
         </section>
 
         <!-- One unlabeled multi-photo area. Customers can add photos in any order. -->
@@ -841,15 +841,15 @@
             <video data-preview-video="" controls playsinline hidden></video>
             <button class="qw-secondary-action" type="button" data-preview-replace="">Replace</button>
           </dialog>
-          <p class="slots-hint" data-hint="" aria-live="polite">Up to 10 photos or short videos. Take new ones or choose from your library.</p>
+          <p class="slots-hint" data-hint="" aria-live="polite">Add at least one photo or short video to continue. You can add up to 10.</p>
         </section>
 
         <!-- Fresh Air (2026-07-13): gift lives on thank-you. No unlock-pressure banner here. -->
 
-        <!-- 6. primary actions: photo optional-feeling for shaky-hand / not-home path -->
+        <!-- 6. primary actions: one saved item is required, away from home saves progress -->
         <div class="photo-actions" style="display:flex; flex-direction:column; gap:10px; margin-top:4px;">
-          <button class="cta" type="button" data-cta="" style="margin:0;">
-            <span data-cta-inner="">Continue</span>
+          <button class="cta" type="button" data-cta="" style="margin:0;" disabled>
+            <span data-cta-inner="">Add a photo or video to continue</span>
             <svg data-cta-arrow="" viewBox="0 0 18 18"><path d="M3 9h11M10 4.5L14.5 9 10 13.5"></path></svg>
           </button>
           <button class="qw-secondary-action photo-later" type="button" data-photo-later="">I'm away from home</button>
@@ -869,7 +869,7 @@
 </div>
 
 <script src="/walk-v2/walk.js?v=20260816-save"></script>
-<script src="/walk-v2/photos-unified.js"></script>
+<script src="/walk-v2/photos-unified.js?v=20260816-required-media"></script>
 <script>
 
 (function () {
