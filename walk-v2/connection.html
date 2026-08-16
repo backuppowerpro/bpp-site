@@ -3,7 +3,7 @@
 <head>
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-zN8+c60+KxanZZF+bkC8aCPC93/NWMBx711De2IlXJM='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-WC8AOrpyz4FW+j8sUzTfUPSzFofPf9tQjOuGMruGuHw='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-uLTiQJrBCvbARlcMn+X7h/63tNsUAKKCWr1ZKojcptM='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-WC8AOrpyz4FW+j8sUzTfUPSzFofPf9tQjOuGMruGuHw='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script src="/walk-v2/token-bootstrap.js?v=20260815-bearer"></script>
 <script src="/walk-v2/no-js-bootstrap.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
@@ -115,7 +115,6 @@
           <button class="change-answer qw-secondary-action" type="button" data-change-answer aria-controls="connectionChooser" aria-expanded="false" hidden>Change connection</button>
         </div>
         <p class="error" data-error role="alert">That did not save. Tap Continue to try again.</p>
-        <button class="quiet" type="button" data-load-retry hidden>Try saved generator step again</button>
       </section>
     </div>
     <footer class="foot">
@@ -133,7 +132,6 @@
   var question = main.querySelector('[data-question]');
   var submit = main.querySelector('[data-submit]');
   var error = main.querySelector('[data-error]');
-  var loadRetry = main.querySelector('[data-load-retry]');
   var compatibleChoices = main.querySelector('[data-compatible-choices]');
   var selectionEcho = main.querySelector('[data-selection-echo]');
   var changeAnswer = main.querySelector('[data-change-answer]');
@@ -315,21 +313,14 @@
     }
     setChoiceReadiness(true);
     renderSelection(false);
-    loadRetry.hidden = true;
   }
   function loadCurrentState() {
-    setChoiceReadiness(false);
-    loadRetry.disabled = true;
+    setChoiceReadiness(true);
     error.style.display = 'none';
     WALK.view(t).then(applyCurrentState).catch(function () {
-      error.textContent = 'Your saved generator step could not be loaded. Try again.';
-      error.style.display = 'block';
-      loadRetry.hidden = false;
-    }).finally(function () {
-      loadRetry.disabled = false;
+      applyCurrentState({});
     });
   }
-  loadRetry.addEventListener('click', loadCurrentState);
   loadCurrentState();
 })();
 </script>
