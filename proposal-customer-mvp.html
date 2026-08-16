@@ -676,13 +676,20 @@
           .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
       }
       function compactAddress(value){
-        var parts=String(value||'').split(',').map(function(part){return part.trim();}).filter(Boolean);
-        if(!parts.length) return '';
-        if(/^(united states(?: of america)?|usa|us)$/i.test(parts[parts.length-1])) parts.pop();
-        if(parts.length<2) return parts.join(', ').replace(/\b\d{5}(?:-\d{4})?\b/g,'').trim();
-        var region=parts.pop().replace(/\b\d{5}(?:-\d{4})?\b/g,'').trim();
-        if(/^south carolina$/i.test(region)) region='SC';
-        return parts.concat(region||[]).join(', ');
+        var street=String(value||'').split(',')[0].trim();
+        return street
+          .replace(/\bStreet\b/gi,'St')
+          .replace(/\bRoad\b/gi,'Rd')
+          .replace(/\bAvenue\b/gi,'Ave')
+          .replace(/\bBoulevard\b/gi,'Blvd')
+          .replace(/\bDrive\b/gi,'Dr')
+          .replace(/\bLane\b/gi,'Ln')
+          .replace(/\bCourt\b/gi,'Ct')
+          .replace(/\bCircle\b/gi,'Cir')
+          .replace(/\bParkway\b/gi,'Pkwy')
+          .replace(/\bHighway\b/gi,'Hwy')
+          .replace(/\s+/g,' ')
+          .trim();
       }
       function localAmpTitle(value){
         return String(value||'').replace(/^(30|50)A\b/,fixture.amp+'A');
@@ -1032,7 +1039,6 @@
         if(!photo) return;
         if(isLocalFixture){photo.classList.remove('no-photo');photo.style.setProperty('--hero-image','url("assets/images/sample-home.jpg")');return;}
         photo.classList.add('no-photo');
-        if(!String(row.contact_address||'').trim()) return;
         fetch(SUPABASE_URL+'/functions/v1/streetview-hero?t='+encodeURIComponent(row.token),{headers:{'Authorization':'Bearer '+SUPABASE_KEY}})
           .then(function(response){
             var contentType=response.headers.get('content-type')||'';
