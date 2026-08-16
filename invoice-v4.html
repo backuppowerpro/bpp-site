@@ -73,16 +73,22 @@
 .paid-banner .paid-check{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
 .paid-banner h2{font-family:var(--font-display);font-size:22px;font-weight:800;margin-bottom:6px}
 .paid-banner p{font-size:13.5px;opacity:.9;line-height:1.5}
-/* Navy notice: voided / refund / adjusted. Same banner bones as .paid-banner,
-   not the paid-in-full green. Reuse, no new visual language. */
 .notice-banner{background:var(--navy);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:30px 24px;text-align:center;color:#fff;margin-bottom:var(--card-gap)}
 .notice-banner h2{font-family:var(--font-display);font-size:22px;font-weight:800;margin-bottom:6px}
 .notice-banner p{font-size:13.5px;opacity:.9;line-height:1.5}
+.preview-bar{position:fixed;top:0;left:0;right:0;z-index:99999;background:#f59e0b;color:#1c1003;font-family:var(--font-display);font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;text-align:center;padding:8px 16px;box-shadow:0 2px 12px rgba(0,0,0,.18)}
+.preview-bar[hidden],.preview-watermark[hidden]{display:none}
+.preview-watermark{position:fixed;inset:0;pointer-events:none;z-index:99998;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.preview-watermark span{font-family:var(--font-display);font-size:clamp(60px,14vw,120px);font-weight:900;color:rgba(11,31,59,.06);letter-spacing:.1em;text-transform:uppercase;transform:rotate(-35deg);white-space:nowrap;user-select:none}
+body.preview-mode{padding-top:34px}
+body.preview-mode #pay-btn{display:none!important}
 </style>
 </head>
 <body>
+<noscript><div class="preview-bar" data-preview-banner="true">Preview unavailable, JavaScript is off, no customer action can occur</div><div class="preview-watermark" data-preview-watermark="true" aria-hidden="true"><span>Preview unavailable</span></div><div style="max-width:620px;margin:70px auto 24px;padding:18px;border:1px solid #ffba00;border-radius:14px;background:#fff8e6;color:#0b1f3b;text-align:center;font:600 16px/1.55 system-ui,sans-serif;">This invoice did not load. Turn on JavaScript and reload, or call (864) 863-7800.</div></noscript>
 
-<div class="comp-flag" id="preview-flag" hidden>Preview mode, payment is disabled</div>
+<div class="preview-bar" id="preview-flag" data-preview-banner="true" hidden>Preview mode, not sent to client, read only</div>
+<div class="preview-watermark" id="preview-watermark" data-preview-watermark="true" aria-hidden="true" hidden><span>Preview</span></div>
 
 <div class="brand-bar">
   <img src="assets/images/logo-white-v2.png" alt="Backup Power Pro">
@@ -120,8 +126,6 @@ function fmtDate(v){
   catch(e){ return ''; }
 }
 
-
-// ADDRESS DISPLAY TIDY (proposal miss path, no geocode)
 function isStateAbbr(word){
   return /^(?:A[LKZR]|C[AOT]|D[CE]|FL|GA|HI|I[DLNA]|K[SY]|LA|M[EDAINSOT]|N[EVHJMYCD]|O[HKR]|PA|RI|S[CD]|T[NX]|UT|V[TA]|W[AIVY])$/i.test(word);
 }
@@ -200,7 +204,6 @@ function compactAddress(value){
     return titleAddressPhrase(part);
   }).filter(Boolean).join(', ');
 }
-// END ADDRESS DISPLAY TIDY
 
 var _toast=null,_toastTimer=null;
 function showToast(msg){
@@ -212,6 +215,10 @@ function showToast(msg){
 
 function isClosedInvoice(inv){
   return ['cancelled','voided','refunded','declined','void'].indexOf(String((inv&&inv.status)||'').toLowerCase())>-1;
+}
+function isPayableInvoice(inv){
+  var status=String((inv&&inv.status)||'').toLowerCase();
+  return ['sent','unpaid','viewed','overdue','partial'].indexOf(status)>-1 && invoiceRemaining()>0;
 }
 
 function showState(title,msg){
@@ -232,7 +239,11 @@ function showState(title,msg){
 window.addEventListener('DOMContentLoaded', function(){
   var params = new URLSearchParams(window.location.search);
   var token = params.get('token');
-  if(IS_PREVIEW) document.getElementById('preview-flag').hidden=false;
+  if(IS_PREVIEW){
+    document.body.classList.add('preview-mode');
+    document.getElementById('preview-flag').hidden=false;
+    document.getElementById('preview-watermark').hidden=false;
+  }
   if(!token){ showState('Invoice not found.','This link is missing an invoice token. Please use the link we texted you, or contact (864) 863-7800.'); return; }
   loadInvoice(token);
 });
@@ -245,7 +256,8 @@ async function loadInvoice(token){
   try{
     var ctrl=new AbortController();
     var timer=setTimeout(function(){ ctrl.abort(); }, 10000);
-    var res=await fetch(SUPABASE_URL+'/functions/v1/invoice-view?token='+encodeURIComponent(token),{
+    var preview=IS_PREVIEW?'&preview=1':'';
+    var res=await fetch(SUPABASE_URL+'/functions/v1/invoice-view?token='+encodeURIComponent(token)+preview,{
       headers:{ 'Authorization':'Bearer '+SUPABASE_KEY },
       signal:ctrl.signal,
       cache:'no-store',
@@ -327,10 +339,9 @@ function invoiceTotal(){
   return Number(INV.total);
 }
 function voidedDate(){
-  // Only a date the payload already carries. Do not invent one from created_at.
-  var v=INV.voided_at || INV.voided_on || INV.cancelled_at || '';
-  if(!v) return '';
-  try{ return new Date(v).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric',timeZone:'America/New_York'}); }
+  var value=INV.voided_at || INV.voided_on || INV.cancelled_at || '';
+  if(!value) return '';
+  try{ return new Date(value).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric',timeZone:'America/New_York'}); }
   catch(e){ return ''; }
 }
 function invoiceRemaining(){
@@ -385,7 +396,6 @@ function agreementHtml(){
   '</div>';
 }
 
-// ── RENDER VOIDED (recognizable document, no pay path) ──────────────
 function renderVoided(){
   var total=invoiceTotal();
   var page=document.getElementById('page');
@@ -393,21 +403,20 @@ function renderVoided(){
   var addr=compactAddress(INV.contact_address||'');
   var issued=fmtDate(INV.created_at);
   var voided=voidedDate();
-  var num=INV.document_number||'';
+  var number=INV.document_number||'';
 
   page.innerHTML =
     '<div class="notice-banner">'+
       '<h2>Invoice voided.</h2>'+
       '<p>This invoice was voided. No payment is due on it. Please contact (864) 863-7800 if you have questions.</p>'+
     '</div>'+
-
     '<div class="card pad">'+
       '<div class="inv-top">'+
         '<div class="eyebrow" style="margin-bottom:0">Invoice</div>'+
         '<span class="status warn">Voided</span>'+
       '</div>'+
       '<div class="inv-meta">'+
-        (num?'<span>Invoice <b>#'+esc(num)+'</b></span>':'')+
+        (number?'<span>Invoice <b>#'+esc(number)+'</b></span>':'')+
         (issued?'<span>Issued <b>'+esc(issued)+'</b></span>':'')+
         (voided?'<span>Voided <b>'+esc(voided)+'</b></span>':'')+
       '</div>'+
@@ -418,13 +427,11 @@ function renderVoided(){
         (INV.contact_email?'<br>'+esc(INV.contact_email):'')+
       '</div>'+
     '</div>'+
-
     '<div class="card pad">'+
       '<div class="due-lbl">Original total</div>'+
       '<div class="due-amt">'+fmt(total)+'</div>'+
       '<div class="due-when">No payment is due on this invoice.</div>'+
     '</div>'+
-
     '<div class="inv-foot">Backup Power Pro by Key Electric &middot; Greenville, Spartanburg &amp; Pickens counties<br>Questions on this invoice? Text Key at <b>(864) 863-7800</b></div>';
 
   revealCards();
@@ -610,8 +617,8 @@ function renderPaid(){
 var STRIPE_CHECKOUT_HOSTS = ['checkout.stripe.com'];
 
 async function payOnline(){
-  if(IS_PREVIEW){ showToast('Preview mode, payment is disabled.'); return; }
-  if(isClosedInvoice(INV)){
+  if(IS_PREVIEW||new URLSearchParams(window.location.search).get('preview')==='1'){ showToast('Preview mode, payment is disabled.'); return; }
+  if(!isPayableInvoice(INV)){
     showToast('This invoice is not available for payment. Call or text (864) 863-7800.');
     return;
   }

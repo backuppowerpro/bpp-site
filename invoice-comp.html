@@ -248,8 +248,12 @@ function invoiceRemaining(){
   var remaining=Number(INV.amount_remaining);
   return Number.isFinite(remaining) ? Math.max(0,remaining) : NaN;
 }
+function isPayableInvoice(inv){
+  var status=String((inv&&inv.status)||'').toLowerCase();
+  return ['sent','unpaid','viewed','overdue','open','partial'].indexOf(status)>-1 && invoiceRemaining()>0;
+}
 function homeImageHtml(){
-  return '<div class="invoice-home" id="invoice-home"><img id="invoice-home-img" alt="Home at the service address"></div>';
+  return INV.contact_address?'<div class="invoice-home" id="invoice-home"><img id="invoice-home-img" alt="Home at the service address"></div>':'';
 }
 function loadHomeImage(){
   var wrap=document.getElementById('invoice-home');
@@ -447,6 +451,10 @@ var STRIPE_CHECKOUT_HOSTS = ['checkout.stripe.com'];
 
 async function payOnline(){
   if(IS_PREVIEW||new URLSearchParams(window.location.search).get('preview')==='1'){ showToast('Preview mode, payment is disabled.'); return; }
+  if(!isPayableInvoice(INV)){
+    showToast('This invoice is not available for payment. Call or text (864) 863-7800.');
+    return;
+  }
   var btn=document.getElementById('pay-btn');
   var token=new URLSearchParams(window.location.search).get('token');
   if(!token){ showToast('Payment unavailable right now, call or text (864) 863-7800.'); return; }
