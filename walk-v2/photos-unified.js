@@ -5,6 +5,8 @@
   var t = WALK.requireToken();
   if (!t) return;
 
+  var MAX_ITEMS = 10;
+  var MAX_BYTES = 15 * 1024 * 1024;
   var main = document.getElementById("mainPage");
   main.querySelectorAll(".rv").forEach(function (element) {
     element.classList.add("in");
@@ -16,10 +18,10 @@
   var later = main.querySelector("[data-photo-later]");
   var preview = main.querySelector("[data-photo-preview]");
   var previewImage = main.querySelector("[data-preview-image]");
+  var previewVideo = main.querySelector("[data-preview-video]");
   var previewClose = main.querySelector("[data-preview-close]");
   var previewReplace = main.querySelector("[data-preview-replace]");
   var photos = [];
-  var panelConfirmed = false;
   var nextIndex = 1;
   var sending = false;
   var previewPhoto = null;
@@ -27,14 +29,14 @@
 
   var file = document.createElement("input");
   file.type = "file";
-  file.accept = "image/*";
+  file.accept = "image/*,video/*";
   file.multiple = true;
   file.hidden = true;
   document.body.appendChild(file);
 
   var replacementFile = document.createElement("input");
   replacementFile.type = "file";
-  replacementFile.accept = "image/*";
+  replacementFile.accept = "image/*,video/*";
   replacementFile.hidden = true;
   document.body.appendChild(replacementFile);
 
@@ -50,51 +52,67 @@
     });
   }
 
-  function hasUsefulPanelSet() {
-    return panelConfirmed && photos.some(function (photo) { return photo.status === "done"; });
+  function isVideoItem(item) {
+    return Boolean(item && (item.kind === "video" || (item.mimeType || "").indexOf("video/") === 0));
   }
 
-  function hasAuthoritativePanelPhoto(value, hasSavedPhoto) {
-    var state = value && value.quote_walk_v2 || value || {};
-    var blockers = Array.isArray(state.blockers)
-      ? state.blockers
-      : state.readiness && Array.isArray(state.readiness.input_blockers)
-        ? state.readiness.input_blockers
-        : null;
-    return Boolean(
-      hasSavedPhoto
-      && blockers
-      && blockers.indexOf("panel_photo") === -1
-    );
+  function hasBusyUpload() {
+    return photos.some(function (photo) { return photo.status === "uploading"; });
+  }
+
+  function hasSavedMedia() {
+    return photos.some(function (photo) { return photo.status === "done"; });
+  }
+
+  function guidanceHint() {
+    if (!photos.length) {
+      return "Up to 10 photos or short videos. Take new ones or choose from your library.";
+    }
+    if (photos.length >= MAX_ITEMS) {
+      return "That's 10. Remove one to add another, or continue.";
+    }
+    if (hasSavedMedia()) {
+      return "Saved. Add more if they help, or continue.";
+    }
+    return "Up to 10 photos or short videos. Take new ones or choose from your library.";
   }
 
   function render() {
     var html = "";
     photos.forEach(function (photo) {
-      html += '<article class="slot unified-photo ' + escapeHtml(photo.status) + '" data-local-id="' + escapeHtml(photo.localId) + '">' +
-        '<button class="thumb" type="button" data-preview="' + escapeHtml(photo.localId) + '" aria-label="Preview uploaded photo">' +
-          (photo.dataUrl ? '<img src="' + escapeHtml(photo.dataUrl) + '" alt="" />' : "") +
-          (photo.status === "uploading" ? '<span class="tag">Saving photo</span>' : "") +
+      var video = isVideoItem(photo);
+      html += '<article class="slot unified-photo ' + escapeHtml(photo.status) + (video ? " is-video" : "") + '" data-local-id="' + escapeHtml(photo.localId) + '">' +
+        '<button class="thumb" type="button" data-preview="' + escapeHtml(photo.localId) + '" aria-label="' + (video ? "Preview uploaded video" : "Preview uploaded photo") + '">' +
+          (photo.dataUrl
+            ? (video
+              ? '<video src="' + escapeHtml(photo.dataUrl) + '" muted playsinline preload="metadata"></video>'
+              : '<img src="' + escapeHtml(photo.dataUrl) + '" alt="" />')
+            : (video ? '<span class="video-mark" aria-hidden="true"></span>' : "")) +
+          (video ? '<span class="video-badge">Video</span>' : "") +
+          (photo.status === "uploading" ? '<span class="tag">Saving</span>' : "") +
           (photo.status === "failed" ? '<span class="tag">Upload failed</span>' : "") +
         '</button>' +
-        '<button class="remove" type="button" data-remove="' + escapeHtml(photo.localId) + '" aria-label="Remove uploaded photo"></button>' +
+        '<button class="remove" type="button" data-remove="' + escapeHtml(photo.localId) + '" aria-label="Remove uploaded item"></button>' +
         (photo.status === "failed" ? '<button class="retry" type="button" data-retry="' + escapeHtml(photo.localId) + '">Retry upload</button>' : '') +
       '</article>';
     });
-    html += '<button class="add-photo-tile" type="button" data-add-more aria-label="Add photo">' +
-      '<span aria-hidden="true">+</span><span>Add photo</span></button>';
+    if (photos.length < MAX_ITEMS) {
+      html += '<button class="add-photo-tile" type="button" data-add-more aria-label="Add photo or video">' +
+        '<span aria-hidden="true">+</span><span>Add</span></button>';
+    }
     slots.className = "slots unified-photo-list";
     slots.innerHTML = html;
-    cta.disabled = !hasUsefulPanelSet() || photos.some(function (photo) {
-      return photo.status === "uploading";
-    });
-    later.hidden = hasUsefulPanelSet();
-    ctaInner.textContent = hasUsefulPanelSet() ? "Continue" : "Add a photo to continue";
-    hint.textContent = photos.length
-      ? hasUsefulPanelSet()
-        ? "Photos saved. Add more helpful views, or continue."
-        : "Add at least one clear photo of a panel to continue."
-      : "Choose several at once. At least one clear panel photo is needed before your project range.";
+    cta.disabled = hasBusyUpload();
+    later.hidden = hasSavedMedia();
+    ctaInner.textContent = "Continue";
+    hint.textContent = guidanceHint();
+  }
+
+  function revokePreview(photo) {
+    if (photo && photo.objectUrl) {
+      URL.revokeObjectURL(photo.objectUrl);
+      photo.objectUrl = "";
+    }
   }
 
   function removeServerPhoto(photo) {
@@ -105,19 +123,19 @@
   function send(photo) {
     photo.status = "uploading";
     render();
-    return WALK.photo(t, photo.dataUrl, photo.idx, {
+    var source = photo.file || photo.dataUrl;
+    return WALK.photo(t, source, photo.idx, {
       role: "setup_photo",
       panel_id: null,
       synthetic_name: photo.name
     }).then(function (value) {
       photo.mediaId = value && value.media_receipt_id || null;
       photo.status = "done";
-      panelConfirmed = hasAuthoritativePanelPhoto(value, true);
-      WALK.ph("walk_v2_photo_uploaded", { role: photo.role });
+      WALK.ph("walk_v2_photo_uploaded", { kind: photo.kind });
       render();
     }).catch(function () {
       photo.status = "failed";
-      WALK.ph("walk_v2_photo_upload_failed", { role: photo.role });
+      WALK.ph("walk_v2_photo_upload_failed", { kind: photo.kind });
       render();
     });
   }
@@ -133,23 +151,59 @@
     return uploadQueue;
   }
 
+  function kindForFile(selected) {
+    var type = String(selected && selected.type || "");
+    if (type.indexOf("video/") === 0) return "video";
+    if (type.indexOf("image/") === 0) return "image";
+    return "";
+  }
+
   function addFile(selected) {
     if (!selected) return;
-    if (selected.type && selected.type.indexOf("image/") !== 0) {
-      hint.textContent = "That file is not a photo. Choose an image.";
+    if (photos.length >= MAX_ITEMS) {
+      hint.textContent = "That's 10. Remove one to add another, or continue.";
       return;
     }
-    if (selected.size > 40 * 1024 * 1024) {
-      hint.textContent = "That photo is too large. Choose a smaller image.";
+    var kind = kindForFile(selected);
+    if (!kind) {
+      hint.textContent = "Choose a photo or a short video.";
+      return;
+    }
+    if (selected.size > MAX_BYTES) {
+      hint.textContent = kind === "video"
+        ? "That video is too large. Choose a shorter clip."
+        : "That photo is too large. Choose a smaller image.";
+      return;
+    }
+    if (kind === "video") {
+      var objectUrl = URL.createObjectURL(selected);
+      var video = {
+        localId: "media-" + Date.now() + "-" + nextIndex,
+        idx: nextIndex++,
+        name: selected.name || "video",
+        kind: "video",
+        mimeType: selected.type || "video/mp4",
+        dataUrl: objectUrl,
+        objectUrl: objectUrl,
+        file: selected,
+        mediaId: null,
+        cancelled: false,
+        status: "uploading"
+      };
+      photos.push(video);
+      enqueue(video);
       return;
     }
     WALK.resizeImage(selected, 1600).then(function (dataUrl) {
+      if (photos.length >= MAX_ITEMS) return;
       var photo = {
-        localId: "photo-" + Date.now() + "-" + nextIndex,
+        localId: "media-" + Date.now() + "-" + nextIndex,
         idx: nextIndex++,
         name: selected.name || "photo",
-        role: "setup_photo",
+        kind: "image",
+        mimeType: "image/jpeg",
         dataUrl: dataUrl,
+        file: null,
         mediaId: null,
         cancelled: false,
         status: "uploading"
@@ -189,19 +243,28 @@
     }
     if (previewButton) {
       previewPhoto = photo;
-      previewImage.src = photo.dataUrl;
+      if (isVideoItem(photo) && previewVideo) {
+        previewImage.hidden = true;
+        previewVideo.hidden = false;
+        previewVideo.src = photo.dataUrl || "";
+      } else {
+        if (previewVideo) {
+          previewVideo.removeAttribute("src");
+          previewVideo.hidden = true;
+        }
+        previewImage.hidden = false;
+        previewImage.src = photo.dataUrl;
+      }
       preview.showModal();
       return;
     }
     photo.cancelled = true;
-    removeServerPhoto(photo).then(function (value) {
+    removeServerPhoto(photo).then(function () {
+      revokePreview(photo);
       photos = photos.filter(function (item) { return item !== photo; });
-      panelConfirmed = hasAuthoritativePanelPhoto(value, photos.some(function (item) {
-        return item.status === "done";
-      }));
       render();
     }).catch(function () {
-      hint.textContent = "That photo could not be removed. Try again.";
+      hint.textContent = "That item could not be removed. Try again.";
     });
   });
 
@@ -219,31 +282,50 @@
     replacementFile.value = "";
     var photo = previewPhoto;
     if (!selected || !photo) return;
-    if (selected.type && selected.type.indexOf("image/") !== 0) {
-      hint.textContent = "That file is not a photo. Choose an image.";
+    var kind = kindForFile(selected);
+    if (!kind) {
+      hint.textContent = "Choose a photo or a short video.";
       return;
     }
-    if (selected.size > 40 * 1024 * 1024) {
-      hint.textContent = "That photo is too large. Choose a smaller image.";
+    if (selected.size > MAX_BYTES) {
+      hint.textContent = kind === "video"
+        ? "That video is too large. Choose a shorter clip."
+        : "That photo is too large. Choose a smaller image.";
       return;
     }
-    WALK.resizeImage(selected, 1600).then(function (dataUrl) {
+    var prepare = kind === "video"
+      ? Promise.resolve({ dataUrl: URL.createObjectURL(selected), file: selected, mimeType: selected.type || "video/mp4" })
+      : WALK.resizeImage(selected, 1600).then(function (dataUrl) {
+        return { dataUrl: dataUrl, file: null, mimeType: "image/jpeg" };
+      });
+    prepare.then(function (next) {
       return removeServerPhoto(photo).then(function () {
+        revokePreview(photo);
         photo.idx = nextIndex++;
-        photo.name = selected.name || "photo";
-        photo.dataUrl = dataUrl;
+        photo.name = selected.name || (kind === "video" ? "video" : "photo");
+        photo.kind = kind;
+        photo.mimeType = next.mimeType;
+        photo.dataUrl = next.dataUrl;
+        photo.objectUrl = kind === "video" ? next.dataUrl : "";
+        photo.file = next.file;
         photo.mediaId = null;
         photo.cancelled = false;
         preview.close();
         enqueue(photo);
       });
     }).catch(function () {
-      hint.textContent = "That photo could not be replaced. Try again.";
+      hint.textContent = "That item could not be replaced. Try again.";
     });
   });
 
   preview.addEventListener("close", function () {
     previewImage.removeAttribute("src");
+    if (previewVideo) {
+      previewVideo.pause();
+      previewVideo.removeAttribute("src");
+      previewVideo.hidden = true;
+    }
+    previewImage.hidden = false;
     previewPhoto = null;
   });
 
@@ -256,12 +338,12 @@
       else WALK.go("range.html", t);
     }).catch(function () {
       sending = false;
-      hint.textContent = "Your saved photos could not be checked. Try again.";
+      hint.textContent = "Your saved items could not be checked. Try again.";
     });
   });
 
   later.addEventListener("click", function () {
-    if (sending || hasUsefulPanelSet()) return;
+    if (sending || hasSavedMedia()) return;
     sending = true;
     WALK.confirm(t, { photos_pending: true }).then(function () {
       WALK.go("incomplete.html", t);
@@ -285,23 +367,25 @@
       WALK.routeFromState(t, value);
       return;
     }
-    photos = (Array.isArray(state.media) ? state.media : []).map(function (media, index) {
+    photos = (Array.isArray(state.media) ? state.media : []).slice(0, MAX_ITEMS).map(function (media, index) {
+      var mimeType = String(media.mime_type || media.mimeType || "");
+      var kind = mimeType.indexOf("video/") === 0 ? "video" : "image";
       return {
         localId: "saved-" + media.id,
         idx: index + 1,
-        name: "Saved photo",
-        role: media.role,
+        name: kind === "video" ? "Saved video" : "Saved photo",
+        kind: kind,
+        mimeType: mimeType,
         dataUrl: media.preview_href || "",
+        file: null,
         mediaId: media.id,
         cancelled: false,
         status: "done"
       };
     });
-    panelConfirmed = hasAuthoritativePanelPhoto(value, photos.length > 0);
     nextIndex = photos.length + 1;
     render();
   }).catch(function () {
-    hint.textContent = "Your saved photos could not be loaded. Try again.";
-    cta.disabled = true;
+    hint.textContent = "Your saved items could not be loaded. Try again.";
   });
 })();

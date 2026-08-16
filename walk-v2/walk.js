@@ -309,6 +309,7 @@
       });
     },
     confirm: function (t, fields) {
+      var stableRequestKey = null;
       function send(retried) {
         var state = readJourneyState(t);
         if (!state.version) {
@@ -320,10 +321,8 @@
         }
         var payload = Object.assign({ token: t }, fields);
         payload.expected_version = state.version;
-        payload.request_key = requestKey(t, 'save_answers', fields, state.version);
-        if (retried) {
-          payload.request_key = payload.request_key + ':r' + Date.now().toString(36);
-        }
+        stableRequestKey = stableRequestKey || requestKey(t, 'save_answers', fields, state.version);
+        payload.request_key = stableRequestKey;
         return postJson(BASE + '/pre-read-confirm', payload).then(function (value) {
           rememberJourneyState(t, value);
           try {
@@ -331,8 +330,7 @@
           } catch (_) {}
           return value;
         }).catch(function (error) {
-          var code = error && error.body && error.body.error;
-          if (!retried && (code === 'stale_journey_version' || code === 'v2_transition_failed')) {
+          if (!retried && error && error.body && error.body.error === 'stale_journey_version') {
             return getJson(BASE + '/pre-read-view?token=' + encodeURIComponent(t))
               .then(function (value) { rememberJourneyState(t, value); return send(true); });
           }

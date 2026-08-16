@@ -6,7 +6,7 @@
 
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://us.i.posthog.com https://us-assets.i.posthog.com https://connect.facebook.net 'sha256-SILzPhfLYZcCd4Tf0iA88+GJxTW0Ww/xsABc9z+kB/M=' 'sha256-G+RGGG/nS7Jz0Zp8ZGoJDT28GiNgr71xVKUjVbBKqLc=' 'sha256-wygnGpICbMppymZ/+XZT8Vgnv0wtsjTA4zJ1JolzPtc=' 'sha256-8D3LGBD86E4uSFC42nggO2UYeAOHJnZE1qO2PPhWGcM=' 'sha256-C6KL4dSidAIfZ88IF8QeDABri3YwVT+gwqSqUoxZEOU=' 'sha256-GER8Ewwuga0Yuh3f0ZsgJcl2UEAF0ghHvpkZTWuzk/8='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-KsnKCsHbsnK9PU8OK0Oo9U0PAjUXKo/Dxx4RfSK54z8=' 'sha256-0Iyyv4VKPnVS157Xktla6XdEbzCmufeHLHEeNrA4/ks=' 'sha256-M8iRdWV7mgh/H8ZrJIYj7+JApx46IWfGlaIDVtJ6UBk='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://www.facebook.com; connect-src 'self' https://api.mapbox.com https://reowtzedjflwmlptupbk.supabase.co https://us.i.posthog.com https://us-assets.i.posthog.com https://*.posthog.com https://www.facebook.com; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://us.i.posthog.com https://us-assets.i.posthog.com https://connect.facebook.net 'sha256-SILzPhfLYZcCd4Tf0iA88+GJxTW0Ww/xsABc9z+kB/M=' 'sha256-G+RGGG/nS7Jz0Zp8ZGoJDT28GiNgr71xVKUjVbBKqLc=' 'sha256-wygnGpICbMppymZ/+XZT8Vgnv0wtsjTA4zJ1JolzPtc=' 'sha256-8D3LGBD86E4uSFC42nggO2UYeAOHJnZE1qO2PPhWGcM=' 'sha256-C6KL4dSidAIfZ88IF8QeDABri3YwVT+gwqSqUoxZEOU=' 'sha256-TWfhzPLg5htJ60fv5SVP021wgYVr7zcGGBY9wEv96FA='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-KsnKCsHbsnK9PU8OK0Oo9U0PAjUXKo/Dxx4RfSK54z8=' 'sha256-0Iyyv4VKPnVS157Xktla6XdEbzCmufeHLHEeNrA4/ks=' 'sha256-BuvqUh7iB0AoDfKg/8gV96gGldTNPPeIA/fLsxb6ADs='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://www.facebook.com; connect-src 'self' https://api.mapbox.com https://reowtzedjflwmlptupbk.supabase.co https://us.i.posthog.com https://us-assets.i.posthog.com https://*.posthog.com https://www.facebook.com; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script src="/walk-v2/token-bootstrap.js?v=20260815-bearer"></script>
 <script>/* flip no-js->js before paint so scroll-reveal hides content only when JS can reveal it; 5s failsafe reveals everything if the reveal script ever fails, so the form is never stuck invisible */(function(){var e=document.documentElement;e.classList.remove('no-js');e.classList.add('js');setTimeout(function(){try{var l=document.querySelectorAll('.rv:not(.in)');for(var i=0;i<l.length;i++)l[i].classList.add('in');}catch(x){}},5000);})();</script>
 <script>/* Entry mode + dynamic hero (Key 2026-07-01 / 2026-07-13 / paid fast lane 2026-07-13):
@@ -665,7 +665,9 @@
     background: var(--card);
     border-radius: var(--r-md);
     box-shadow: var(--shadow-lift), inset 0 0 0 1px var(--edge-soft);
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 4px;
   }
   .addr-drop.open { display: block; }
@@ -1534,7 +1536,13 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
   var addrValidated = false, addrValidatedValue = '', addrUnverified = false;
   var addrSvg = '<svg viewBox="0 0 16 16"><path d="M8 14s4.5-4 4.5-7.5a4.5 4.5 0 0 0-9 0C3.5 10 8 14 8 14z"></path><circle cx="8" cy="6.5" r="1.6"></circle></svg>';
   var addrEditSvg = '<svg viewBox="0 0 16 16"><path d="M11 2.5l2.5 2.5L6 12.5 3 13l.5-3z"></path></svg>';
-  function closeDrop() { drop.classList.remove('open'); drop.innerHTML = ''; }
+  function fitDropToViewport() {
+    if (!drop.classList.contains('open')) return;
+    var viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    var top = drop.getBoundingClientRect().top;
+    drop.style.maxHeight = Math.max(96, Math.floor(viewportHeight - top - 10)) + 'px';
+  }
+  function closeDrop() { drop.classList.remove('open'); drop.innerHTML = ''; drop.style.maxHeight = ''; }
   function renderDrop(preds) {
     lastAddrPreds = preds || [];
     var q = addrIn.value.trim();
@@ -1562,6 +1570,7 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
       opts[k].querySelector('.a2').textContent = i > -1 ? d.slice(i + 1).trim() : '';
     });
     drop.classList.add('open');
+    requestAnimationFrame(fitDropToViewport);
   }
   function suggest() {
     if (addrPicked) { addrPicked = false; return; }
@@ -1601,6 +1610,8 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
   /* Re-open the list on focus when the address is typed but not yet validated, so
      "Pick your address from the list" is never a dead end with no visible list. */
   addrIn.addEventListener('focus', function () { if (!addrOk() && addrIn.value.trim().length >= 3) suggest(); });
+  window.addEventListener('resize', fitDropToViewport);
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', fitDropToViewport);
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDrop(); });
 
   function digits(v) { return (v || '').replace(/\D/g, ''); }
@@ -1860,7 +1871,7 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
        unload; the sync-XHR fallback covers a fetch throw. */
     var body = JSON.stringify(payload);
     var url = 'https://reowtzedjflwmlptupbk.supabase.co/functions/v1/quo-ai-new-lead';
-    var delivered = false, tokenOut = null, serviceAreaStatus = '', savedAddressRefresh = false;
+    var delivered = false, tokenOut = null, serviceAreaStatus = '', savedAddressRefresh = false, failureMessage = '';
     try {
       var resp = await fetch(url, { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: body });
       delivered = resp.ok;
@@ -1870,8 +1881,15 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
           tokenOut = j && j.preReadToken || null;
           serviceAreaStatus = j && j.service_area_status || '';
           savedAddressRefresh = j && j.saved_address_refresh === true;
-          if (j && j.skipped && !tokenOut) delivered = false;
+          if (j && j.skipped && !tokenOut) {
+            delivered = false;
+            if (j.reason === 'do_not_contact') {
+              failureMessage = 'This mobile number is marked as opted out of texts. Use a different mobile number, or contact Backup Power Pro to update your text preference.';
+            }
+          }
         } catch (_) {}
+      } else if (resp.status === 429) {
+        failureMessage = 'Too many tries too quickly. Wait one minute, then tap the button again.';
       }
       if (!delivered) WALK.ph('lead_submit_failed', { status: resp.status, method: 'fetch', form: 'walkv2-landing' });
     } catch (err) {
@@ -1891,13 +1909,21 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
             tokenOut = fallbackBody.preReadToken || null;
             serviceAreaStatus = fallbackBody.service_area_status || '';
             savedAddressRefresh = fallbackBody.saved_address_refresh === true;
+            if (fallbackBody.skipped && !tokenOut) {
+              delivered = false;
+              if (fallbackBody.reason === 'do_not_contact') {
+                failureMessage = 'This mobile number is marked as opted out of texts. Use a different mobile number, or contact Backup Power Pro to update your text preference.';
+              }
+            }
           } catch (_) {}
+        } else if (xhr.status === 429) {
+          failureMessage = 'Too many tries too quickly. Wait one minute, then tap the button again.';
         }
       } catch (e2) {
         WALK.ph('lead_submit_failed', { err: String(err).slice(0, 200), method: 'xhr-threw', form: 'walkv2-landing' });
       }
     }
-    if (typeof fbq === 'function') { try { fbq('track', 'Lead', { content_name: 'walkv2-landing', content_category: 'generator-installation', value: 1200, currency: 'USD' }, { eventID: eventId }); } catch (_) {} }
+    if (delivered && tokenOut && !savedAddressRefresh && typeof fbq === 'function') { try { fbq('track', 'Lead', { content_name: 'walkv2-landing', content_category: 'generator-installation', value: 1200, currency: 'USD' }, { eventID: eventId }); } catch (_) {} }
     WALK.ph('walk_v2_submitted', { connection_status: 'unanswered', delivered: delivered });
     if (delivered && tokenOut && serviceAreaStatus === 'verified_out_of_area') {
       persistDraft();
@@ -1921,7 +1947,9 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
     refresh();
     var se = main.querySelector('[data-submit-error]');
     if (se) {
-      se.textContent = 'That did not go through. Tap the button to try again.';
+      se.textContent = failureMessage || (delivered
+        ? 'Your details saved, but the quote did not start. Tap the button to try again.'
+        : 'That did not go through. Tap the button to try again.');
       se.style.display = '';
       try { se.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (_) {}
     } else {
