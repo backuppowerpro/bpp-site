@@ -213,7 +213,7 @@
     steps.forEach(function (step, index) {
       var labelNode = step.querySelector('.pl');
       var key = String(labelNode && labelNode.textContent || '').trim().toLowerCase();
-      var complete = truth[key] === true;
+      var complete = truth[key] === true && currentIndex >= 0 && index < currentIndex;
       step.classList.toggle('done', complete);
       step.classList.toggle('on', key === current);
       step.classList.toggle('reached', currentIndex >= 0 && index < currentIndex);
