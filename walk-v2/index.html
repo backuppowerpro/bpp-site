@@ -6,9 +6,9 @@
 
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://us.i.posthog.com https://us-assets.i.posthog.com https://connect.facebook.net 'sha256-SILzPhfLYZcCd4Tf0iA88+GJxTW0Ww/xsABc9z+kB/M=' 'sha256-G+RGGG/nS7Jz0Zp8ZGoJDT28GiNgr71xVKUjVbBKqLc=' 'sha256-wygnGpICbMppymZ/+XZT8Vgnv0wtsjTA4zJ1JolzPtc=' 'sha256-8D3LGBD86E4uSFC42nggO2UYeAOHJnZE1qO2PPhWGcM=' 'sha256-C6KL4dSidAIfZ88IF8QeDABri3YwVT+gwqSqUoxZEOU=' 'sha256-6HcVctadHYjkn4IAalE33dwiLKhgK2ovLYtBfRnRO4c='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-KsnKCsHbsnK9PU8OK0Oo9U0PAjUXKo/Dxx4RfSK54z8=' 'sha256-0Iyyv4VKPnVS157Xktla6XdEbzCmufeHLHEeNrA4/ks=' 'sha256-BuvqUh7iB0AoDfKg/8gV96gGldTNPPeIA/fLsxb6ADs='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://www.facebook.com; connect-src 'self' https://api.mapbox.com https://reowtzedjflwmlptupbk.supabase.co https://us.i.posthog.com https://us-assets.i.posthog.com https://*.posthog.com https://www.facebook.com; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://us.i.posthog.com https://us-assets.i.posthog.com https://connect.facebook.net 'sha256-SILzPhfLYZcCd4Tf0iA88+GJxTW0Ww/xsABc9z+kB/M=' 'sha256-G+RGGG/nS7Jz0Zp8ZGoJDT28GiNgr71xVKUjVbBKqLc=' 'sha256-wygnGpICbMppymZ/+XZT8Vgnv0wtsjTA4zJ1JolzPtc=' 'sha256-8D3LGBD86E4uSFC42nggO2UYeAOHJnZE1qO2PPhWGcM=' 'sha256-C6KL4dSidAIfZ88IF8QeDABri3YwVT+gwqSqUoxZEOU=' 'sha256-YfuANaWbTUPEzg51WvON89PNKstzj8CEJXM5uqvbi5o='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-KsnKCsHbsnK9PU8OK0Oo9U0PAjUXKo/Dxx4RfSK54z8=' 'sha256-0Iyyv4VKPnVS157Xktla6XdEbzCmufeHLHEeNrA4/ks=' 'sha256-BuvqUh7iB0AoDfKg/8gV96gGldTNPPeIA/fLsxb6ADs='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://www.facebook.com; connect-src 'self' https://api.mapbox.com https://reowtzedjflwmlptupbk.supabase.co https://us.i.posthog.com https://us-assets.i.posthog.com https://*.posthog.com https://www.facebook.com; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script src="/walk-v2/token-bootstrap.js?v=20260815-bearer"></script>
-<script>/* flip no-js->js before paint so scroll-reveal hides content only when JS can reveal it; 5s failsafe reveals everything if the reveal script ever fails, so the form is never stuck invisible */(function(){var e=document.documentElement;e.classList.remove('no-js');e.classList.add('js');setTimeout(function(){try{var l=document.querySelectorAll('.rv:not(.in)');for(var i=0;i<l.length;i++)l[i].classList.add('in');}catch(x){}},5000);})();</script>
+<script src="/walk-v2/no-js-bootstrap.js"></script>
 <script>/* Entry mode + dynamic hero (Key 2026-07-01 / 2026-07-13 / paid fast lane 2026-07-13):
    src=home -> home hero
    src=city_<slug> -> city hero
@@ -973,8 +973,10 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
 </script>
 <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1389648775800936&ev=PageView&noscript=1" alt=""/></noscript>
 <link rel="stylesheet" href="/walk-v2/mobile-canvas.css?v=20260815navy" />
+<link rel="stylesheet" href="/walk-v2/no-js-recovery.css" />
 </head>
 <body>
+<div class="qw-no-js-note qw-script-recovery" role="alert">JavaScript is required to continue this Quote Walk. Your saved answers remain on file. Turn it on and reload, or call <a href="tel:+18648637800">(864) 863-7800</a>.</div>
 <div class="stack" id="stack">
 
   <!-- ============ MAIN PAGE (mobile, interactive) ============ -->
@@ -1363,10 +1365,9 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
 (function () {
   var main = document.getElementById('mainPage');
   /* resume routing: a saved-walk link lands here with ?t= and skips the form.
-     Hide the fresh form while view() is in flight so a resuming visitor can never
-     see and submit a SECOND lead during the redirect window. On success
-     routeFromState redirects away (the form is never shown); on a bad token we
-     reveal the already-wired form below (the wiring still runs synchronously). */
+     Keep the page visible while view() is in flight so a slow or failed request
+     never produces a blank screen. The form is temporarily inert, which prevents
+     a second lead submission during the redirect window. */
   var nameIn = main.querySelector('[data-f="name"]');
   var phoneIn = main.querySelector('[data-f="phone"]');
   var addrIn = main.querySelector('[data-f="addr"]');
@@ -1397,7 +1398,8 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
   var areaBoundary = !!resumeT && landingParams.get('area') === 'out';
   var editDetails = !!resumeT && landingParams.get('edit') === 'details';
   if (resumeT && !areaBoundary && !editDetails) {
-    main.style.visibility = 'hidden';
+    main.setAttribute('inert', '');
+    main.setAttribute('aria-busy', 'true');
     var resumingMsg = document.createElement('p');
     resumingMsg.textContent = 'One sec, picking up where you left off...';
     resumingMsg.setAttribute('style', 'position:fixed;left:0;right:0;top:42%;margin:0;text-align:center;color:var(--faint,#9aa);font-size:15px;padding:0 24px');
@@ -1406,7 +1408,8 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
     WALK.view(resumeT).then(function (v) { WALK.routeFromState(resumeT, v); })
       .catch(function (cause) {
         resumingMsg.remove();
-        main.style.visibility = '';
+        main.removeAttribute('inert');
+        main.removeAttribute('aria-busy');
         WALK.setToken('');
         restoreDraft();
         var recovery = main.querySelector('[data-submit-error]');
