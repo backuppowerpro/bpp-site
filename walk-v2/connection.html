@@ -3,7 +3,7 @@
 <head>
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-uLTiQJrBCvbARlcMn+X7h/63tNsUAKKCWr1ZKojcptM='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-WC8AOrpyz4FW+j8sUzTfUPSzFofPf9tQjOuGMruGuHw='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-YHh6ZZfpuVyEZTsPT1Bpk9y+W/JSK+wDVU/I4xpg4og='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-WC8AOrpyz4FW+j8sUzTfUPSzFofPf9tQjOuGMruGuHw='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script src="/walk-v2/token-bootstrap.js?v=20260815-bearer"></script>
 <script src="/walk-v2/no-js-bootstrap.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
@@ -112,7 +112,7 @@
         <p class="selection-echo" data-selection-echo hidden></p>
         <div class="confirm-actions qw-action-stack">
           <button class="submit qw-primary-action" type="button" data-submit disabled>Continue</button>
-          <button class="change-answer qw-secondary-action" type="button" data-change-answer aria-controls="connectionChooser" aria-expanded="false" hidden>Change connection</button>
+          <button class="change-answer qw-secondary-action" type="button" data-change-answer aria-controls="connectionChooser" aria-expanded="false" hidden>Change answer</button>
         </div>
         <p class="error" data-error role="alert">That did not save. Tap Continue to try again.</p>
       </section>
@@ -218,18 +218,13 @@
     WALK.go('index.html', t, { edit: 'details' });
   });
   changeAnswer.addEventListener('click', function () {
+    userTouched = true;
+    selectedCompatible = [];
+    selectedException = '';
     expanded = true;
-    main.querySelectorAll('.choice[data-status]').forEach(function (button) {
-      button.hidden = false;
-    });
-    main.querySelectorAll('.other [data-status]').forEach(function (button) {
-      button.hidden = false;
-    });
-    changeAnswer.setAttribute('aria-expanded', 'true');
-    changeAnswer.hidden = true;
-    if (selectionEcho) selectionEcho.hidden = true;
-    var selectedCard = main.querySelector('.choice[data-status][aria-pressed="true"]');
-    if (selectedCard) selectedCard.focus({ preventScroll: true });
+    renderSelection(false);
+    var firstChoice = main.querySelector('.choice[data-status]');
+    if (firstChoice) firstChoice.focus({ preventScroll: true });
   });
 
   submit.addEventListener('click', function () {
