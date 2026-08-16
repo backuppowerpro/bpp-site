@@ -6,7 +6,7 @@
 
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://us.i.posthog.com https://us-assets.i.posthog.com https://connect.facebook.net 'sha256-SILzPhfLYZcCd4Tf0iA88+GJxTW0Ww/xsABc9z+kB/M=' 'sha256-G+RGGG/nS7Jz0Zp8ZGoJDT28GiNgr71xVKUjVbBKqLc=' 'sha256-wygnGpICbMppymZ/+XZT8Vgnv0wtsjTA4zJ1JolzPtc=' 'sha256-8D3LGBD86E4uSFC42nggO2UYeAOHJnZE1qO2PPhWGcM=' 'sha256-C6KL4dSidAIfZ88IF8QeDABri3YwVT+gwqSqUoxZEOU=' 'sha256-4gaAf49jHRks4wjFm/x6bj/dK1lY8+wv0Hfg3rfmcdw='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-pRz+VUsU2ZSqzYq18pPIfk6XAFVUh6hEF3awY7Fgcgo=' 'sha256-0Iyyv4VKPnVS157Xktla6XdEbzCmufeHLHEeNrA4/ks=' 'sha256-M8iRdWV7mgh/H8ZrJIYj7+JApx46IWfGlaIDVtJ6UBk='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://www.facebook.com; connect-src 'self' https://api.mapbox.com https://reowtzedjflwmlptupbk.supabase.co https://us.i.posthog.com https://us-assets.i.posthog.com https://*.posthog.com https://www.facebook.com; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://us.i.posthog.com https://us-assets.i.posthog.com https://connect.facebook.net 'sha256-SILzPhfLYZcCd4Tf0iA88+GJxTW0Ww/xsABc9z+kB/M=' 'sha256-G+RGGG/nS7Jz0Zp8ZGoJDT28GiNgr71xVKUjVbBKqLc=' 'sha256-wygnGpICbMppymZ/+XZT8Vgnv0wtsjTA4zJ1JolzPtc=' 'sha256-8D3LGBD86E4uSFC42nggO2UYeAOHJnZE1qO2PPhWGcM=' 'sha256-C6KL4dSidAIfZ88IF8QeDABri3YwVT+gwqSqUoxZEOU=' 'sha256-QM3SZqHqa0IjSw/ttstKydqsCKryqBkw9Da5DKmJ0pk='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-KsnKCsHbsnK9PU8OK0Oo9U0PAjUXKo/Dxx4RfSK54z8=' 'sha256-0Iyyv4VKPnVS157Xktla6XdEbzCmufeHLHEeNrA4/ks=' 'sha256-M8iRdWV7mgh/H8ZrJIYj7+JApx46IWfGlaIDVtJ6UBk='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://www.facebook.com; connect-src 'self' https://api.mapbox.com https://reowtzedjflwmlptupbk.supabase.co https://us.i.posthog.com https://us-assets.i.posthog.com https://*.posthog.com https://www.facebook.com; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script src="/walk-v2/token-bootstrap.js?v=20260815-bearer"></script>
 <script>/* flip no-js->js before paint so scroll-reveal hides content only when JS can reveal it; 5s failsafe reveals everything if the reveal script ever fails, so the form is never stuck invisible */(function(){var e=document.documentElement;e.classList.remove('no-js');e.classList.add('js');setTimeout(function(){try{var l=document.querySelectorAll('.rv:not(.in)');for(var i=0;i<l.length;i++)l[i].classList.add('in');}catch(x){}},5000);})();</script>
 <script>/* Entry mode + dynamic hero (Key 2026-07-01 / 2026-07-13 / paid fast lane 2026-07-13):
@@ -661,13 +661,11 @@
     top: calc(100% + 6px);
     left: 0;
     right: 0;
-    z-index: 2;
-    max-height: 168px;
-    overflow-x: hidden;
-    overflow-y: auto;
+    z-index: 20;
     background: var(--card);
     border-radius: var(--r-md);
     box-shadow: var(--shadow-lift), inset 0 0 0 1px var(--edge-soft);
+    overflow: hidden;
     padding: 4px;
   }
   .addr-drop.open { display: block; }
@@ -801,7 +799,7 @@
   }
 
   /* ================= 6. submit row ================= */
-  .submit-row { display: flex; flex-direction: column; gap: 16px; margin-top: 26px; position: relative; z-index: 5; }
+  .submit-row { display: flex; flex-direction: column; gap: 16px; margin-top: 26px; }
   .consent {
     display: flex;
     align-items: flex-start;
@@ -1811,22 +1809,6 @@ fbq('track','ViewContent',{content_name:'walk-v2-landing',content_category:'gene
       addrValidated = true;
       addrUnverified = true;
       addrValidatedValue = addrIn.value.trim();
-      try {
-        var autoPreds = await WALK.addrSuggest(addrIn.value.trim());
-        var autoHit = null;
-        for (var ai = 0; autoPreds && ai < autoPreds.length; ai++) {
-          if (featureMatchesTyped(autoPreds[ai], addrIn.value)) { autoHit = autoPreds[ai]; break; }
-        }
-        if (!autoHit && autoPreds && autoPreds[0] && featureMatchesTyped(autoPreds[0], addrIn.value.split(',')[0])) {
-          autoHit = autoPreds[0];
-        }
-        if (autoHit) {
-          addrUnverified = false;
-          addrIn.value = autoHit.description || addrIn.value;
-          addrValidatedValue = addrIn.value.trim();
-          addrSel = { city: autoHit.city || '', state: autoHit.state || '', zip: autoHit.zip || '' };
-        }
-      } catch (_) {}
     }
     if (addrUnverified || !addrValidated) {
       addrSel = { city: '', state: '', zip: '' };
