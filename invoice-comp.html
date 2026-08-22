@@ -165,7 +165,8 @@ async function loadInvoice(token){
     var ctrl=new AbortController();
     var timer=setTimeout(function(){ ctrl.abort(); }, 10000);
     var preview=IS_PREVIEW?'&preview=1':'';
-    var res=await fetch(SUPABASE_URL+'/functions/v1/invoice-view?token='+encodeURIComponent(token)+preview,{
+    var reconcile=!IS_PREVIEW&&new URLSearchParams(window.location.search).get('paid')==='1'?'&reconcile=1':'';
+    var res=await fetch(SUPABASE_URL+'/functions/v1/invoice-view?token='+encodeURIComponent(token)+preview+reconcile,{
       headers:{ 'Authorization':'Bearer '+SUPABASE_KEY },
       signal:ctrl.signal,
       cache:'no-store',

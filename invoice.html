@@ -350,7 +350,8 @@ window.addEventListener('DOMContentLoaded', async () => {
     // preview=1 passthrough: invoice-view skips the viewed_at/view_count bump
     // for Key's own CRM preview, so "Viewed" always means the customer.
     const previewParam = new URLSearchParams(window.location.search).get('preview') === '1' ? '&preview=1' : '';
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/invoice-view?token=${encodeURIComponent(token)}${previewParam}`, {
+    const reconcileParam = !previewParam && new URLSearchParams(window.location.search).get('paid') === '1' ? '&reconcile=1' : '';
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/invoice-view?token=${encodeURIComponent(token)}${previewParam}${reconcileParam}`, {
       headers: { 'Authorization': `Bearer ${SUPABASE_KEY}` },
       signal: ctrl.signal,
     });

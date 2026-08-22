@@ -221,6 +221,15 @@ function isPayableInvoice(inv){
   return ['sent','unpaid','viewed','overdue','partial'].indexOf(status)>-1 && invoiceRemaining()>0;
 }
 
+function trustedCompletionReceiptURL(value){
+  try{
+    var target=new URL(String(value||''),window.location.origin);
+    if(target.origin!==window.location.origin||target.pathname!=='/receipt.html'||target.hash) return null;
+    if(target.searchParams.getAll('receipt').length!==1||target.searchParams.size!==1) return null;
+    return target.toString();
+  }catch(e){ return null; }
+}
+
 function showState(title,msg){
   var page=document.getElementById('page');
   page.innerHTML='';
@@ -233,6 +242,18 @@ function showState(title,msg){
   wrap.appendChild(h2); wrap.appendChild(p);
   card.appendChild(wrap); page.appendChild(card);
   requestAnimationFrame(function(){ card.classList.add('in'); });
+}
+
+function appendStateReceiptLink(receiptURL){
+  var wrap=document.querySelector('#page .state-wrap');
+  if(!wrap||!receiptURL) return;
+  var link=document.createElement('a');
+  link.className='btn-gold';
+  link.href=receiptURL;
+  link.textContent='View payment receipt';
+  link.style.marginTop='20px';
+  link.style.display='inline-flex';
+  wrap.appendChild(link);
 }
 
 // ── INIT ────────────────────────────────────────────────────────────
@@ -257,7 +278,8 @@ async function loadInvoice(token){
     var ctrl=new AbortController();
     var timer=setTimeout(function(){ ctrl.abort(); }, 10000);
     var preview=IS_PREVIEW?'&preview=1':'';
-    var res=await fetch(SUPABASE_URL+'/functions/v1/invoice-view?token='+encodeURIComponent(token)+preview,{
+    var reconcile=!IS_PREVIEW&&new URLSearchParams(window.location.search).get('paid')==='1'?'&reconcile=1':'';
+    var res=await fetch(SUPABASE_URL+'/functions/v1/invoice-view?token='+encodeURIComponent(token)+preview+reconcile,{
       headers:{ 'Authorization':'Bearer '+SUPABASE_KEY },
       signal:ctrl.signal,
       cache:'no-store',
@@ -307,11 +329,19 @@ async function loadInvoice(token){
   // fully payable (2026-06-09 walkthrough finding, double-charge path; the
   // checkout fn now also refuses these server-side).
   var invoiceStatus=String(INV.status||'').toLowerCase();
+  var completionReceiptURL=trustedCompletionReceiptURL(INV.completion_receipt_url);
+  if(!IS_PREVIEW&&completionReceiptURL&&invoiceStatus==='paid'){
+    window.location.replace(completionReceiptURL);
+    return;
+  }
   var _payable=['sent','unpaid','viewed','overdue','partial'];
   if(isClosedInvoice(INV)){
     if(invoiceStatus==='refunded') showState('Invoice refunded.','Payments on this invoice were refunded. No payment is due. Please contact (864) 863-7800 if you have questions.');
     else if(invoiceStatus==='voided'||invoiceStatus==='void') renderVoided();
     else showState('Invoice cancelled.','This invoice has been cancelled and is no longer available for payment. Please contact (864) 863-7800 if you have questions.');
+  } else if(INV.payment_state==='received_under_review'){
+    showState('Payment received.','Your payment was received and this invoice cannot be paid again. Key is reviewing the payment record. Please refresh later or contact (864) 863-7800 if you need help.');
+    appendStateReceiptLink(completionReceiptURL);
   } else if(invoiceStatus==='paid'){
     renderPaid();
   } else if(_payable.indexOf(invoiceStatus)>-1 || IS_PREVIEW){
