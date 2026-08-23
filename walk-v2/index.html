@@ -1836,7 +1836,7 @@
     var body = JSON.stringify(payload);
     var url = 'https://reowtzedjflwmlptupbk.supabase.co/functions/v1/quo-ai-new-lead';
     var delivered = false, tokenOut = null, serviceAreaStatus = '', savedAddressRefresh = false, failureMessage = '';
-    var savedWalkRecoveryMessage = 'This form cannot open an existing saved Quote Walk. Use your saved Quote Walk link, or call Backup Power Pro for help.';
+    var savedWalkRecoveryMessage = 'This form cannot open an existing saved Quote Walk. Use your saved Quote Walk link, or text Backup Power Pro at (864) 863-7800 for help.';
     try {
       var resp = await fetch(url, { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: body });
       delivered = resp.ok;
