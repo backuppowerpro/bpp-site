@@ -1,11 +1,12 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="no-js">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="robots" content="noindex,nofollow,noarchive" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-85BhBFkdhUeJW2EYdCR44ap30MVHvy2ywDH26B5cK4s='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-+6Ffm1vrZYa4Vi2tMkHenmNSEHhXCrI5AmZspoSkIew='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; form-action 'self'; frame-src 'none'" />
-<script src="/walk-v2/token-bootstrap.js"></script>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-aWwxE1+iJDZRYCws+8aXoxt6ZqgccGamq/x7qCBo3BY='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-+6Ffm1vrZYa4Vi2tMkHenmNSEHhXCrI5AmZspoSkIew='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; form-action 'self'; frame-src 'none'" />
+<script src="/walk-v2/token-bootstrap.js?v=20260815-bearer"></script>
+<script src="/walk-v2/no-js-bootstrap.js"></script>
 <title>Saved Quote Walk | Backup Power Pro</title>
 <style>
 :root {
@@ -75,31 +76,35 @@ h1 { margin:0 0 8px; color:var(--navy); font-family:var(--head); font-size:22px;
 }
 @media (min-width:760px) { .page { min-height:calc(100vh - 48px); margin:24px auto; overflow:hidden; border-radius:20px; box-shadow:0 18px 44px rgba(11,31,59,.14); } }
 </style>
-<link rel="stylesheet" href="/walk-v2/mobile-canvas.css" />
+<link rel="stylesheet" href="/walk-v2/mobile-canvas.css?v=b2000f10529a" />
+<link rel="stylesheet" href="/walk-v2/no-js-recovery.css" />
 </head>
 <body>
-<div class="page">
+<div class="qw-no-js-note qw-script-recovery" role="alert">JavaScript is required to load your saved Quote Walk. Your saved answers remain on file. Turn it on and reload, or call <a href="tel:+18648637800">(864) 863-7800</a>.</div>
+<div class="page" data-screen-label="Quote walk incomplete">
   <header class="head"><img src="/assets/images/logo-white-v2.png" alt="Backup Power Pro" /></header>
   <main>
     <p class="kicker">Saved for later</p>
     <h1 data-title="">Checking your saved Quote Walk.</h1>
     <p class="helper">Finish these details so I can prepare your project range and review your setup.</p>
     <p class="error hidden" data-error="" role="alert"></p>
+    <button class="resume-action hidden" type="button" data-load-retry="">Try loading saved progress again</button>
     <div class="tasks hidden" data-actions=""></div>
   </main>
   <footer class="foot">
-    <strong>Key Goodson, Licensed Electrician, SC Lic #2942</strong>
-    <span>Serving Greenville, Spartanburg, and Pickens counties</span>
-    <span>Every project is reviewed and permitted by Key, completed with trusted local installation partners, and coordinated through final inspection.</span>
+    <div class="foot-identity"><strong>Licensed and insured</strong><span>SC Lic #2942 by Key Electric</span></div>
+    <span class="foot-area">Currently serving Greenville, Spartanburg,<br>and Pickens counties</span>
+    <span class="foot-process">Every project is reviewed and permitted by Key, completed with trusted local installation partners, and coordinated through final inspection.</span>
   </footer>
 </div>
-<script src="/walk-v2/walk.js"></script>
+<script src="/walk-v2/walk.js?v=acd71b9339d0"></script>
 <script>
 (function () {
   var t = WALK.requireToken(); if (!t) return;
   var title = document.querySelector('[data-title]');
   var actions = document.querySelector('[data-actions]');
   var error = document.querySelector('[data-error]');
+  var loadRetry = document.querySelector('[data-load-retry]');
 
   var TASKS = {
     service: { label: 'Verify your service area', action: 'Check address', image: '/assets/images/work-full-install.jpg' },
@@ -125,7 +130,11 @@ h1 { margin:0 0 8px; color:var(--navy); font-family:var(--head); font-size:22px;
     button.className = 'action';
     button.type = 'button';
     button.textContent = actionLabel || 'Open';
-    if (refresh) {
+    if (group === 'service') {
+      button.addEventListener('click', function () {
+        navigateTask('service', {}, []);
+      });
+    } else if (refresh) {
       button.addEventListener('click', load);
     } else {
       button.addEventListener('click', function () {
@@ -152,7 +161,7 @@ h1 { margin:0 0 8px; color:var(--navy); font-family:var(--head); font-size:22px;
       target = 'photos.html';
     }
     if (group === 'service') {
-      load(false);
+      WALK.go('index.html', t, { edit: 'details' });
       return;
     }
     WALK.go(target, t, { recovery: '1' });
@@ -237,11 +246,17 @@ h1 { margin:0 0 8px; color:var(--navy); font-family:var(--head); font-size:22px;
   }
   function load(resumeNow) {
     error.classList.add('hidden');
+    loadRetry.disabled = true;
+    loadRetry.classList.add('hidden');
     WALK.view(t).then(function (value) { render(value, resumeNow === true); }).catch(function () {
       error.textContent = 'Your saved progress could not be loaded. Try again.';
       error.classList.remove('hidden');
+      loadRetry.classList.remove('hidden');
+    }).finally(function () {
+      loadRetry.disabled = false;
     });
   }
+  loadRetry.addEventListener('click', function () { load(false); });
   load();
 })();
 </script>
