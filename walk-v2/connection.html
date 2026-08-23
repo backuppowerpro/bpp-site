@@ -3,7 +3,7 @@
 <head>
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-OiucwkqfxCMLQpXP0/FWhCY+i8qqim4e/7I2ScbT9Os='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-TUTB2AggojqMyVT24DU0+xLaXzVS6RASeySUDerf6fw='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-1Hy/x+VGwu+iHzvTncvF4ZLz80x0K9aphtPhqRZQ0qI='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-TUTB2AggojqMyVT24DU0+xLaXzVS6RASeySUDerf6fw='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script src="/walk-v2/token-bootstrap.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
 <title>Backup Power Pro · Quote Walk · Generator Connection</title>
@@ -249,13 +249,13 @@
     var legacyStatus = observedSet.indexOf('50A') !== -1
       ? 'confirmed_50'
       : observedSet.indexOf('30A') !== -1 ? 'confirmed_30' : selectedException;
-    var fields = {
-      connection_status: legacyStatus,
-      connection_answers: observedSet,
-      pricing_basis: WALK.pricingBasis(observedSet),
-      pricing_basis_rule_version: 'connection-set-v1',
-      pricing_basis_authority: 'key_explicit_2026_07_28'
-    };
+    var fields = { connection_status: legacyStatus };
+    if (observedSet.length) {
+      fields.connection_answers = observedSet;
+      fields.pricing_basis = WALK.pricingBasis(observedSet);
+      fields.pricing_basis_rule_version = 'connection-set-v1';
+      fields.pricing_basis_authority = 'key_explicit_2026_07_28';
+    }
     if (legacyStatus === 'confirmed_30') {
       fields.outlet_amp = '30';
       fields.generator_ownership_status = 'owned';
@@ -265,7 +265,7 @@
       fields.generator_ownership_status = 'owned';
     }
     if (selectedException === 'no_generator') {
-      fields.connection_status = 'no_generator';
+      fields.connection_status = 'unanswered';
       fields.generator_ownership_status = 'not_owned';
     }
     WALK.ph('walk_v2_confirm_tap', {
