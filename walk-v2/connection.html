@@ -3,7 +3,7 @@
 <head>
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-bE1MT6uMXn0HUf6v965B+KSJ3E2sNYtBs9AgpPVptCs='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-GpMzzuUIqq4mzpbYS+Aq+F67vQmjr9YXOohNvVwg/yM='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-aHCrs69PdHRIDVEDYmjVCDAfB3Zu6fdyouZQ8WZcT1o='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-0btNvzM0b4aM9IPwoBql3rMdVBoRMABj+jXht7JDZRA='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script src="/walk-v2/token-bootstrap.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
 <title>Backup Power Pro · Quote Walk · Generator Connection</title>
@@ -56,8 +56,11 @@
   .other{display:grid;gap:10px;margin-top:14px}
   .quiet{width:100%;min-height:50px;padding:13px 15px;text-align:left;border-radius:12px;background:var(--card);box-shadow:inset 0 0 0 1.5px var(--edge);font-size:15px;font-weight:600;color:var(--navy)}
   .quiet[aria-pressed=true]{background:#fff8ec;box-shadow:inset 0 0 0 2px var(--gold)}
+  .compatibility-check{margin-top:16px;padding:18px 14px 16px;background:var(--card);border-radius:var(--r-md);box-shadow:var(--shadow-md),inset 0 0 0 1.5px var(--edge)}
+  .compatibility-check img{display:block;width:100%;height:auto}
+  .compatibility-check p{margin:12px 8px 0;text-align:center;color:#9f261d;font-size:14px;font-weight:700;line-height:1.45}
   .confirm-actions{display:grid;gap:2px;margin-top:12px}
-  .selection-echo{margin:12px 0 0;color:var(--navy);font-size:14px;font-weight:700;text-align:center}
+  .selection-echo{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
   .submit{width:100%;min-height:54px;margin-top:18px;border-radius:100px;background:var(--gold);color:var(--navy);font-family:var(--head);font-size:17px;font-weight:800;box-shadow:0 6px 24px rgba(255,186,0,.3)}
   .submit:disabled{opacity:.42;cursor:not-allowed;box-shadow:none}
   .error{display:none;margin:12px 0 0;text-align:center;color:#b42318;font-weight:600;font-size:14px;line-height:1.5}
@@ -106,12 +109,16 @@
           <button class="quiet" type="button" data-status="no_compatible_generator_connection" data-compatible-exception aria-pressed="false">I don't see either connection</button>
           <button class="quiet" type="button" data-status="no_generator" aria-pressed="false">I don't have a generator yet.</button>
         </div>
+        <aside class="compatibility-check" data-compatibility-check aria-label="Outlet confirmation guide" hidden>
+          <img src="/walk-v2/connection-mistaken-outlets.png" alt="Three similar-looking outlet shapes commonly mistaken for the compatible generator connections" width="2868" height="1320" />
+          <p>These similar-looking outlets, including 120V 30 Amp outlets, are not a match.</p>
+        </aside>
         <p class="selection-echo" data-selection-echo hidden></p>
         <div class="confirm-actions qw-action-stack">
           <button class="submit qw-primary-action" type="button" data-submit disabled>Continue</button>
           <button class="change-answer qw-secondary-action" type="button" data-change-answer aria-controls="connectionChooser" aria-expanded="false" hidden>Change connection</button>
         </div>
-        <p class="error" data-error role="alert">That did not save. Tap Continue to try again.</p>
+        <p class="error" data-error role="alert">That did not save. Tap the button to try again.</p>
       </section>
     </div>
     <footer class="foot">
@@ -130,6 +137,7 @@
   var submit = main.querySelector('[data-submit]');
   var error = main.querySelector('[data-error]');
   var compatibleChoices = main.querySelector('[data-compatible-choices]');
+  var compatibilityCheck = main.querySelector('[data-compatibility-check]');
   var selectionEcho = main.querySelector('[data-selection-echo]');
   var changeAnswer = main.querySelector('[data-change-answer]');
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -161,6 +169,8 @@
     main.querySelectorAll('.other [data-status]').forEach(function (button) {
       button.hidden = compact;
     });
+    compatibilityCheck.hidden = !compact;
+    submit.textContent = compact ? 'Confirm and continue' : 'Continue';
     changeAnswer.hidden = !compact;
     changeAnswer.setAttribute('aria-expanded', compact ? 'false' : 'true');
     if (selectionEcho) {
@@ -223,6 +233,8 @@
     });
     changeAnswer.setAttribute('aria-expanded', 'true');
     changeAnswer.hidden = true;
+    compatibilityCheck.hidden = true;
+    submit.textContent = 'Continue';
     if (selectionEcho) selectionEcho.hidden = true;
     var selectedCard = main.querySelector('.choice[data-status][aria-pressed="true"]');
     if (selectedCard) selectedCard.focus({ preventScroll: true });
@@ -285,7 +297,9 @@
         });
       }
     }).catch(function () {
-      saving = false; submit.disabled = false; submit.textContent = 'Continue'; error.style.display = 'block';
+      saving = false; submit.disabled = false;
+      submit.textContent = selectedCompatible.length ? 'Confirm and continue' : 'Continue';
+      error.style.display = 'block';
     });
   });
 
