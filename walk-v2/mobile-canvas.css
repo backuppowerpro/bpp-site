@@ -1279,8 +1279,9 @@ body.qw-template-document .page > .foot {
   display: contents;
 }
 
-/* Desktop Quote Walk shell. The wide layout activates only when the approved
-   nested composition has enough room to read as two intentional columns. */
+/* Desktop Quote Walk shell. The opening and final payoff pages use their
+   approved wide compositions. The four guided question pages preserve the
+   same single-column reading order as mobile inside a wider centered canvas. */
 @media (min-width: 1024px) {
   .stack {
     padding: 32px 24px 72px !important;
@@ -1563,6 +1564,39 @@ body.qw-template-document .page > .foot {
   .page[data-screen-label="Quote walk: generator needed"] [data-education] > .not-compatible,
   .page[data-screen-label="Quote walk: generator needed"] [data-education] > .submit {
     grid-column: 2;
+  }
+
+  .page[data-screen-label="Quote walk: generator connection"],
+  .page[data-screen-label="Quote walk step 1 (interactive, mobile)"],
+  .page[data-screen-label="Quote walk step 2 (interactive, mobile)"],
+  .page[data-screen-label="Quote walk step 3 (interactive, mobile)"] {
+    width: min(760px, calc(100vw - 64px)) !important;
+    max-width: 760px !important;
+  }
+
+  .page[data-screen-label="Quote walk: generator connection"] [data-question] {
+    display: block;
+  }
+
+  .page[data-screen-label="Quote walk step 1 (interactive, mobile)"] .col-main,
+  .page[data-screen-label="Quote walk step 3 (interactive, mobile)"] .col-main {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 22px;
+  }
+
+  .page[data-screen-label="Quote walk step 1 (interactive, mobile)"] .rooms {
+    grid-column: auto;
+    grid-row: auto;
+    align-self: stretch;
+  }
+
+  .page[data-screen-label="Quote walk step 2 (interactive, mobile)"] > .body {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 24px;
   }
 
   .page[data-screen-label="Quote walk thank you (interactive, mobile)"] .col-main {
