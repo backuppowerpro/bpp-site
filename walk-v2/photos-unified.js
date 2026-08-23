@@ -23,6 +23,7 @@
   var nextIndex = 1;
   var sending = false;
   var previewPhoto = null;
+  var uploadQueue = Promise.resolve();
 
   var file = document.createElement("input");
   file.type = "file";
@@ -104,21 +105,25 @@
   function send(photo) {
     photo.status = "uploading";
     render();
-    WALK.photo(t, photo.dataUrl, photo.idx, {
-      role: "setup_photo",
-      panel_id: null,
-      synthetic_name: photo.name
-    }).then(function (value) {
-      photo.mediaId = value && value.media_receipt_id || null;
-      photo.status = "done";
-      panelConfirmed = hasAuthoritativePanelPhoto(value, true);
-      WALK.ph("walk_v2_photo_uploaded", { role: photo.role });
-      render();
-    }).catch(function () {
-      photo.status = "failed";
-      WALK.ph("walk_v2_photo_upload_failed", { role: photo.role });
-      render();
+    uploadQueue = uploadQueue.catch(function () {}).then(function () {
+      if (photo.status !== "uploading" || photos.indexOf(photo) === -1) return;
+      return WALK.photo(t, photo.dataUrl, photo.idx, {
+        role: "setup_photo",
+        panel_id: null,
+        synthetic_name: photo.name
+      }).then(function (value) {
+        photo.mediaId = value && value.media_receipt_id || null;
+        photo.status = "done";
+        panelConfirmed = hasAuthoritativePanelPhoto(value, true);
+        WALK.ph("walk_v2_photo_uploaded", { role: photo.role });
+        render();
+      }).catch(function () {
+        photo.status = "failed";
+        WALK.ph("walk_v2_photo_upload_failed", { role: photo.role });
+        render();
+      });
     });
+    return uploadQueue;
   }
 
   function addFile(selected) {
