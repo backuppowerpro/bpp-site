@@ -9,6 +9,97 @@
     || 'https://reowtzedjflwmlptupbk.supabase.co/functions/v1';
   var TOKEN_STORAGE_KEY = 'bpp:qwv2:bearer';
   var pressTimers = typeof WeakMap !== 'undefined' ? new WeakMap() : null;
+  var initialViewStarted = false;
+  var pageReady = false;
+
+  var NEXT_RESOURCES = {
+    '/walk-v2/': [
+      ['/walk-v2/connection.html', 'document'],
+      ['/walk-v2/connection-mistaken-outlets.png', 'image']
+    ],
+    '/walk-v2/index.html': [
+      ['/walk-v2/connection.html', 'document'],
+      ['/walk-v2/connection-mistaken-outlets.png', 'image']
+    ],
+    '/walk-v2/connection.html': [
+      ['/walk-v2/location.html', 'document'],
+      ['/walk-v2/generator-needed.html', 'document'],
+      ['/walk-v2/main-panel-example-breaker.jpg', 'image'],
+      ['/walk-v2/main-panel-example-meter-combo.jpg', 'image']
+    ],
+    '/walk-v2/generator-needed.html': [['/walk-v2/connection.html', 'document']],
+    '/walk-v2/location.html': [
+      ['/walk-v2/distance.html', 'document'],
+      ['/walk-v2/cord-square-yellow.jpg', 'image'],
+      ['/walk-v2/outdoor-connection-brick.jpg', 'image']
+    ],
+    '/walk-v2/distance.html': [
+      ['/walk-v2/photos.html', 'document'],
+      ['/walk-v2/outdoor-area-path-to-panel.jpg', 'image'],
+      ['/img/panel-example.jpg', 'image']
+    ],
+    '/walk-v2/photos.html': [
+      ['/walk-v2/range.html', 'document'],
+      ['/walk-v2/incomplete.html', 'document']
+    ],
+    '/walk-v2/incomplete.html': [
+      ['/walk-v2/connection.html', 'document'],
+      ['/walk-v2/location.html', 'document'],
+      ['/walk-v2/distance.html', 'document'],
+      ['/walk-v2/photos.html', 'document']
+    ]
+  };
+
+  function warmNextResources() {
+    if (typeof document === 'undefined') return;
+    var path = String(window.location && window.location.pathname || '/walk-v2/');
+    (NEXT_RESOURCES[path] || []).forEach(function (entry) {
+      if (document.querySelector('link[data-qw-prefetch="' + entry[0] + '"]')) return;
+      var link = document.createElement('link');
+      link.rel = 'prefetch';
+      link.href = entry[0];
+      link.as = entry[1];
+      link.setAttribute('data-qw-prefetch', entry[0]);
+      document.head.appendChild(link);
+    });
+  }
+  function waitForCriticalVisuals() {
+    if (typeof document === 'undefined') return Promise.resolve();
+    var waits = [];
+    if (document.fonts && document.fonts.ready) waits.push(document.fonts.ready.catch(function () {}));
+    Array.from(document.images || []).forEach(function (image) {
+      var box = image.getBoundingClientRect();
+      if (box.top > window.innerHeight * 1.15 || image.complete) return;
+      waits.push(new Promise(function (resolve) {
+        var finish = function () { resolve(); };
+        image.addEventListener('load', finish, { once: true });
+        image.addEventListener('error', finish, { once: true });
+      }));
+    });
+    return Promise.race([
+      Promise.all(waits),
+      new Promise(function (resolve) { setTimeout(resolve, 420); })
+    ]);
+  }
+  function revealSettledPage() {
+    if (pageReady || typeof document === 'undefined') return;
+    pageReady = true;
+    waitForCriticalVisuals().then(function () {
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          document.documentElement.classList.add('qw-ready');
+          warmNextResources();
+        });
+      });
+    });
+  }
+  function beginInitialView() {
+    if (!pageReady) initialViewStarted = true;
+  }
+  if (typeof document !== 'undefined') {
+    setTimeout(function () { if (!initialViewStarted) revealSettledPage(); }, 180);
+    setTimeout(revealSettledPage, 3000);
+  }
 
   function buttonFromEvent(event) {
     var target = event && event.target;
@@ -59,8 +150,9 @@
     });
     var query = params.toString();
     var target = '/walk-v2/' + page + (query ? '?' + query : '');
+    if (typeof document !== 'undefined') document.documentElement.classList.add('qw-leaving');
     if (window.__QW_NAVIGATE__) window.__QW_NAVIGATE__(target);
-    else window.location.href = target;
+    else setTimeout(function () { window.location.href = target; }, 110);
   }
   /* explicit back-a-step, token preserved everywhere. With no prevPage we send
    * them to the landing WITH the token so the landing's resume guard routes them
@@ -289,6 +381,7 @@
     progressTruth: progressTruth,
     paintProgress: paintProgress,
     view: function (t) {
+      beginInitialView();
       return getJson(BASE + '/pre-read-view?token=' + encodeURIComponent(t)).then(function (value) {
         rememberJourneyState(t, value);
         if (typeof document !== 'undefined') paintProgress(document, value);
@@ -298,7 +391,7 @@
           go('index.html', t, { area: 'out' });
         }
         return value;
-      });
+      }).finally(revealSettledPage);
     },
     confirm: function (t, fields) {
       var stableRequestKey = null;

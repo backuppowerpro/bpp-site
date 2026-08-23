@@ -3,6 +3,99 @@
   Keep every Quote Walk page at the same compact mobile-first width on desktop.
   Real phone viewports continue to fill the available screen.
 */
+
+/* Shared page loading and navigation transition. This reuses the established
+   BPP spinner and calm reveal so saved state and first-view images settle behind
+   one short loading layer instead of assembling in front of the customer. */
+body::before,
+body::after {
+  position: fixed;
+  z-index: 2147483000;
+  pointer-events: none;
+  content: "";
+}
+
+body::before {
+  inset: 0;
+  background: #fafbfc;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 140ms ease, visibility 140ms ease;
+  animation: qw-loader-failsafe 0s linear 4s forwards;
+}
+
+body::after {
+  top: 50%;
+  left: 50%;
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  border: 4px solid rgba(11,31,59,.13);
+  border-top-color: #ffba00;
+  border-radius: 50%;
+  opacity: 1;
+  visibility: visible;
+  animation: qw-page-spinner 520ms linear infinite, qw-loader-failsafe 0s linear 4s forwards;
+}
+
+html.qw-ready body::before,
+html.qw-ready body::after {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  animation: none;
+}
+
+html.qw-ready .page .rv {
+  opacity: 1 !important;
+  transform: none !important;
+  transition: none !important;
+}
+
+html.qw-ready .page {
+  animation: qw-page-arrive 180ms ease-out both;
+}
+
+html.qw-leaving body::before,
+html.qw-leaving body::after {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  animation: none;
+}
+
+html.qw-leaving body::after {
+  animation: qw-page-spinner 520ms linear infinite;
+}
+
+html.qw-leaving .page {
+  opacity: .86;
+  transition: opacity 110ms ease;
+}
+
+@keyframes qw-page-spinner { to { transform: rotate(360deg); } }
+@keyframes qw-page-arrive {
+  from { opacity: .72; }
+  to { opacity: 1; }
+}
+@keyframes qw-loader-failsafe {
+  to { opacity: 0; visibility: hidden; pointer-events: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before,
+  html.qw-ready .page,
+  html.qw-leaving .page {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  body::after,
+  html.qw-leaving body::after {
+    animation: qw-loader-failsafe 0s linear 4s forwards;
+  }
+}
+
 @media (min-width: 480px) {
   .stack {
     width: 100% !important;
