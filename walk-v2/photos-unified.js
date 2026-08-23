@@ -94,7 +94,7 @@
       ? hasUsefulPanelSet()
         ? "Photos saved. Add more helpful views, or continue."
         : "Add at least one clear photo of a panel to continue."
-      : "Choose several at once. At least one clear panel photo is needed before your project range.";
+      : "At least one clear panel photo is needed before your project range.";
   }
 
   function removeServerPhoto(photo) {
