@@ -6,7 +6,7 @@
 
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-DSo87JjXEXCAnK2KGrxs24flTeQvQA3bK9BlSj4EC5U='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-p5uw+OGmJSm6bYHpGRIkFVr7rUWh7SPGyXgJ/8Cemzg='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-+bCFB+DVCvVVVsTPY/gOURNOKfFZUIoyiOLVILPIe7o='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-p5uw+OGmJSm6bYHpGRIkFVr7rUWh7SPGyXgJ/8Cemzg='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script src="/walk-v2/token-bootstrap.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
 <title>Backup Power Pro · Quote Walk · Step 1</title>
@@ -704,31 +704,31 @@
         <section class="rooms" data-rooms="">
           <button class="room" type="button" data-room="Garage" aria-pressed="false">
             <span class="ric"><svg viewBox="0 0 16 16"><path d="M2 13V6.5L8 2.5l6 4V13"></path><path d="M4.5 13V8h7v5M4.5 10h7"></path></svg></span>
-            Garage
+            <span class="room-copy"><strong>Garage</strong></span>
           </button>
           <button class="room" type="button" data-room="Basement" aria-pressed="false">
             <span class="ric"><svg viewBox="0 0 16 16"><path d="M2 7L8 2.5 14 7"></path><path d="M3.5 8.5V13h9V8.5M6 13v-3h4v3"></path></svg></span>
-            Basement
+            <span class="room-copy"><strong>Basement</strong></span>
           </button>
           <button class="room" type="button" data-room="Outside" aria-pressed="false">
             <span class="ric"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="3"></circle><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M12.6 3.4l-1.4 1.4M4.8 11.2l-1.4 1.4"></path></svg></span>
-            Outside
+            <span class="room-copy"><strong>Outside</strong></span>
           </button>
           <button class="room" type="button" data-room="Closet" aria-pressed="false">
             <span class="ric"><svg viewBox="0 0 16 16"><rect x="3.5" y="2.5" width="9" height="11" rx="1"></rect><path d="M8 2.5v11M6.3 8h.2M9.5 8h.2"></path></svg></span>
-            Closet
+            <span class="room-copy"><strong>Closet</strong></span>
           </button>
           <button class="room" type="button" data-room="Utility area" aria-pressed="false">
             <span class="ric"><svg viewBox="0 0 16 16"><rect x="3" y="2.5" width="10" height="11" rx="1.5"></rect><circle cx="8" cy="9" r="2.8"></circle><path d="M5 4.5h.2M7 4.5h.2"></path></svg></span>
-            Utility area
+            <span class="room-copy"><strong>Utility area</strong></span>
           </button>
           <button class="room" type="button" data-room="Not sure" aria-pressed="false">
             <span class="ric"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.5"></circle><path d="M6.5 6.3a1.6 1.6 0 0 1 3.1.5c0 1.2-1.6 1.5-1.6 2.6M8 11.8h.01"></path></svg></span>
-            Not sure
+            <span class="room-copy"><strong>Not sure</strong></span>
           </button>
           <button class="room room--wide" type="button" data-room="Somewhere else" aria-pressed="false">
             <span class="ric"><svg viewBox="0 0 16 16"><path d="M8 14s4.5-4 4.5-7.5a4.5 4.5 0 0 0-9 0C3.5 10 8 14 8 14z"></path><circle cx="8" cy="6.5" r="1.6"></circle></svg></span>
-            Somewhere else
+            <span class="room-copy"><strong>Somewhere else</strong></span>
           </button>
           <button class="room room--wide" type="button" data-room="More than one panel" aria-pressed="false">
             <span class="ric"><svg viewBox="0 0 16 16"><rect x="2.5" y="3" width="5" height="10" rx="1"></rect><rect x="8.5" y="3" width="5" height="10" rx="1"></rect><path d="M4.2 6h1.6M10.2 6h1.6"></path></svg></span>
@@ -798,11 +798,28 @@
   var API_ROOM = {}; Object.keys(ROOM_API).forEach(function (k) { API_ROOM[ROOM_API[k]] = k; });
   var selectedRoom = null, saving = false;
 
+  function confirmationFor(room) {
+    var copy = {
+      'Garage': 'Got it, your main panel is located in the garage.',
+      'Basement': 'Got it, your main panel is located in the basement.',
+      'Outside': 'Got it, your main panel is located outside.',
+      'Closet': 'Got it, your main panel is located in a closet.',
+      'Utility area': 'Got it, your main panel is located in a utility area.',
+      'Somewhere else': 'Got it, your main panel is located somewhere else.',
+      'More than one panel': 'Got it, you have more than one electrical panel.'
+    };
+    return copy[room] || room;
+  }
+
   function paint(room, echoLine) {
     selectedRoom = room || null;
     var help = room === 'Not sure';
     main.querySelectorAll('[data-room]').forEach(function (c) {
-      c.setAttribute('aria-pressed', c.getAttribute('data-room') === room ? 'true' : 'false');
+      var active = c.getAttribute('data-room') === room;
+      var label = c.querySelector('.room-copy strong');
+      if (!label.getAttribute('data-original-label')) label.setAttribute('data-original-label', label.textContent);
+      label.textContent = active && !help ? confirmationFor(room) : label.getAttribute('data-original-label');
+      c.setAttribute('aria-pressed', active ? 'true' : 'false');
     });
     ask.hidden = help;
     rooms.hidden = help;
@@ -810,15 +827,8 @@
     var hasSelection = !!room && !help;
     rooms.classList.toggle('is-collapsed', hasSelection);
     selectionActions.classList.toggle('show', hasSelection);
-    panelExamples.hidden = room !== 'Outside';
-    if (echoLine && !help && room !== 'Outside') {
-      echoText.textContent = room === 'More than one panel'
-        ? 'Got it, more than one panel.'
-        : 'Got it, ' + room.toLowerCase() + '.';
-      echo.classList.remove('show'); void echo.offsetWidth; echo.classList.add('show');
-    } else {
-      echo.classList.remove('show');
-    }
+    panelExamples.hidden = !room;
+    echo.classList.remove('show');
   }
 
   /* welcome back: preselect their earlier answer (never re-ask) */
