@@ -1683,3 +1683,17 @@ body.qw-template-document .page > .foot {
     box-shadow: none !important;
   }
 }
+
+/* Pages without the outer .stack wrapper use the same desktop top breathing
+   room as the wrapped Quote Walk pages. Phones remain edge-to-edge. */
+@media (min-width: 480px) {
+  body > .page[data-screen-label] {
+    margin-top: 28px !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  body > .page[data-screen-label] {
+    margin-top: 32px !important;
+  }
+}
