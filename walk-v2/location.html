@@ -6,7 +6,7 @@
 
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-+bCFB+DVCvVVVsTPY/gOURNOKfFZUIoyiOLVILPIe7o='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-p5uw+OGmJSm6bYHpGRIkFVr7rUWh7SPGyXgJ/8Cemzg='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-feKLz6UCCHP2hKLUmaNgbY7xcRaihnIZnmmlpmm1SiM='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-EavXYlp3Q1yjh0fbur6hWLvozzph3LJlJ2SUgIlfBwA='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script src="/walk-v2/token-bootstrap.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
 <title>Backup Power Pro · Quote Walk · Step 1</title>
@@ -441,6 +441,10 @@
     object-fit: cover;
     border-radius: 10px;
   }
+  .panel-guide .panel-example-images img {
+    height: auto;
+    aspect-ratio: 1;
+  }
   .panel-guide h3 {
     margin: 0;
     color: var(--navy);
@@ -756,7 +760,10 @@
         </div>
 
         <section class="panel-guide" data-panel-guide="" aria-live="polite">
-          <img src="/img/panel-example.jpg" alt="Electrical panel with its hinged outer door open" />
+          <div class="panel-example-images" data-panel-guide-examples="">
+            <img src="/walk-v2/main-panel-example-breaker.jpg" alt="Main electrical breaker panel with its outer door open" width="900" height="900" />
+            <img src="/walk-v2/main-panel-example-meter-combo.jpg" alt="Outdoor main electrical panel combined with an electric meter" width="900" height="900" />
+          </div>
           <h3>Common places to look</h3>
           <p>Check the garage, basement, outside wall, closet, or utility area.</p>
           <p>You may open the hinged outer door, but never remove screws or the inner cover.</p>
@@ -827,7 +834,7 @@
     var hasSelection = !!room && !help;
     rooms.classList.toggle('is-collapsed', hasSelection);
     selectionActions.classList.toggle('show', hasSelection);
-    panelExamples.hidden = !room;
+    panelExamples.hidden = !room || help;
     echo.classList.remove('show');
   }
 
