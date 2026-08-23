@@ -270,7 +270,8 @@
     var sequentialEntry = new URLSearchParams(window.location.search).get("sequence") === "1";
     var connectionAnswered = (Array.isArray(state.observed_connections) && state.observed_connections.length)
       || value.connection_status === "pending_access";
-    if (!sequentialEntry && (!connectionAnswered || !value.confirmed_panel_room || !state.distance_band)) {
+    var distanceAnswered = Boolean(value.distance_band || state.distance_band);
+    if (!sequentialEntry && (!connectionAnswered || !value.confirmed_panel_room || !distanceAnswered)) {
       WALK.routeFromState(t, value);
       return;
     }
