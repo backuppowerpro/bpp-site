@@ -6,7 +6,7 @@
 
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-SILzPhfLYZcCd4Tf0iA88+GJxTW0Ww/xsABc9z+kB/M=' 'sha256-G+RGGG/nS7Jz0Zp8ZGoJDT28GiNgr71xVKUjVbBKqLc=' 'sha256-wygnGpICbMppymZ/+XZT8Vgnv0wtsjTA4zJ1JolzPtc=' 'sha256-8D3LGBD86E4uSFC42nggO2UYeAOHJnZE1qO2PPhWGcM=' 'sha256-CyZokA2CtmiDNgPMBMgwDybGngi/oE7042XVPWEk2Wk=' 'sha256-9Rx37WhDgGz/OAIuM+qq+kybsH2xDr3pNDGnSbZg67A='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-K2S09QqOYxExW92fGzlWi7bH8KOggn4Z0kGyDeRSRZ4=' 'sha256-0Iyyv4VKPnVS157Xktla6XdEbzCmufeHLHEeNrA4/ks=' 'sha256-M8iRdWV7mgh/H8ZrJIYj7+JApx46IWfGlaIDVtJ6UBk='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://api.mapbox.com https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-SILzPhfLYZcCd4Tf0iA88+GJxTW0Ww/xsABc9z+kB/M=' 'sha256-G+RGGG/nS7Jz0Zp8ZGoJDT28GiNgr71xVKUjVbBKqLc=' 'sha256-wygnGpICbMppymZ/+XZT8Vgnv0wtsjTA4zJ1JolzPtc=' 'sha256-8D3LGBD86E4uSFC42nggO2UYeAOHJnZE1qO2PPhWGcM=' 'sha256-CyZokA2CtmiDNgPMBMgwDybGngi/oE7042XVPWEk2Wk=' 'sha256-0CJiV1QGCDXBnu8/D1w7vK+Szcn/OdjGAwv0erjoeWQ='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-K2S09QqOYxExW92fGzlWi7bH8KOggn4Z0kGyDeRSRZ4=' 'sha256-0Iyyv4VKPnVS157Xktla6XdEbzCmufeHLHEeNrA4/ks=' 'sha256-M8iRdWV7mgh/H8ZrJIYj7+JApx46IWfGlaIDVtJ6UBk='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://api.mapbox.com https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script src="/walk-v2/token-bootstrap.js"></script>
 <script>/* flip no-js->js before paint so scroll-reveal hides content only when JS can reveal it; 5s failsafe reveals everything if the reveal script ever fails, so the form is never stuck invisible */(function(){var e=document.documentElement;e.classList.remove('no-js');e.classList.add('js');setTimeout(function(){try{var l=document.querySelectorAll('.rv:not(.in)');for(var i=0;i<l.length;i++)l[i].classList.add('in');}catch(x){}},5000);})();</script>
 <script>/* Entry mode + dynamic hero (Key 2026-07-01 / 2026-07-13 / paid fast lane 2026-07-13):
@@ -1586,7 +1586,7 @@
       ) _se.style.display = 'none';
     }
     paintFieldOk();
-    ctaLabelEl.textContent = 'Start my quote';
+    ctaLabelEl.textContent = submitting ? 'Sending' : 'Start my quote';
     var ready = part1Done();
     cta.disabled = submitting || !ready;
     if (unconfirmedAddressNote) {
@@ -1750,7 +1750,7 @@
     var functionsBase = window.BPP_QUOTE_WALK_FUNCTIONS_BASE
       || 'https://reowtzedjflwmlptupbk.supabase.co/functions/v1';
     var url = functionsBase + '/quo-ai-new-lead';
-    var delivered = false, tokenOut = null, serviceAreaStatus = '';
+    var delivered = false, tokenOut = null, serviceAreaStatus = '', existingWalkAccepted = false;
     try {
       var resp = await fetch(url, { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: body });
       delivered = resp.ok;
@@ -1759,6 +1759,7 @@
           var j = await resp.json();
           tokenOut = j && j.preReadToken || null;
           serviceAreaStatus = j && j.service_area_status || '';
+          existingWalkAccepted = Boolean(j && j.accepted && !tokenOut);
         } catch (_) {}
       }
       if (!delivered) WALK.ph('lead_submit_failed', { status: resp.status, method: 'fetch', form: 'walkv2-landing' });
@@ -1778,6 +1779,7 @@
             var fallbackBody = JSON.parse(xhr.responseText) || {};
             tokenOut = fallbackBody.preReadToken || null;
             serviceAreaStatus = fallbackBody.service_area_status || '';
+            existingWalkAccepted = Boolean(fallbackBody.accepted && !tokenOut);
           } catch (_) {}
         }
       } catch (e2) {
@@ -1791,6 +1793,18 @@
       return;
     }
     if (delivered && tokenOut) { WALK.go('connection.html', tokenOut); return; }
+
+    if (delivered && existingWalkAccepted) {
+      submitting = false;
+      refresh();
+      var savedWalkMessage = main.querySelector('[data-submit-error]');
+      if (savedWalkMessage) {
+        savedWalkMessage.textContent = 'This phone number already has a saved Quote Walk. Use your saved link, or text Backup Power Pro at (864) 863-7800 for help.';
+        savedWalkMessage.style.display = '';
+        try { savedWalkMessage.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (_) {}
+      }
+      return;
+    }
 
     /* Delivery failed: keep recovery inside the guided flow. The CTA is
        re-enabled by refresh() so the customer can try again. */
