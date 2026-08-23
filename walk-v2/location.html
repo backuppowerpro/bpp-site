@@ -6,7 +6,7 @@
 
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-wygnGpICbMppymZ/+XZT8Vgnv0wtsjTA4zJ1JolzPtc=' 'sha256-6XvcOHHmwbhL3EUuHcd+TZH3ZwXHQm/RBbOsrtS1zZc='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-MrmhzpkHukIm0k9SqZ9up/8dFOQd/BtFVpwQCG7swsw='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-DSo87JjXEXCAnK2KGrxs24flTeQvQA3bK9BlSj4EC5U='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-fph7F8ZCovQjVR6ywdJB9jin0owtUbiis5ohR7b41Zg='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script src="/walk-v2/token-bootstrap.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
 <title>Backup Power Pro · Quote Walk · Step 1</title>
@@ -372,6 +372,31 @@
   .room[aria-pressed="true"] .room-sub { color: rgba(255,255,255,.76); }
   .rooms.is-collapsed { grid-template-columns: 1fr; }
   .rooms.is-collapsed .room:not([aria-pressed="true"]) { display: none; }
+  .panel-examples {
+    width: 100%;
+    max-width: 440px;
+    margin: 0 auto;
+  }
+  .panel-example-images {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .panel-example-images img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm), inset 0 0 0 1px var(--edge);
+  }
+  .panel-examples figcaption {
+    margin-top: 9px;
+    color: var(--muted);
+    font-size: 13.5px;
+    line-height: 1.4;
+    text-align: center;
+  }
   .selection-actions {
     display: none;
     gap: 10px;
@@ -710,6 +735,14 @@
           </button>
         </section>
 
+        <figure class="panel-examples" data-panel-examples="" hidden>
+          <div class="panel-example-images">
+            <img src="/walk-v2/main-panel-example-breaker.jpg" alt="Main electrical breaker panel with its outer door open" width="900" height="900" />
+            <img src="/walk-v2/main-panel-example-meter-combo.jpg" alt="Outdoor main electrical panel combined with an electric meter" width="900" height="900" />
+          </div>
+          <figcaption>Your main electrical panel may look something like this.</figcaption>
+        </figure>
+
         <!-- echo line -->
         <div class="echo" data-echo="" aria-live="polite">
           <span class="ring"><svg viewBox="0 0 14 14"><path d="M2.5 7.5l3 3 6-7"></path></svg></span>
@@ -759,6 +792,7 @@
   var rooms = main.querySelector('[data-rooms]');
   var selectionActions = main.querySelector('[data-selection-actions]');
   var panelGuide = main.querySelector('[data-panel-guide]');
+  var panelExamples = main.querySelector('[data-panel-examples]');
   var ROOM_API = { 'Garage': 'garage', 'Basement': 'basement', 'Outside': 'outside', 'Closet': 'closet', 'Utility area': 'laundry', 'Somewhere else': 'other', 'More than one panel': 'more_than_one_panel', 'Not sure': 'not_sure' };
   var API_ROOM = {}; Object.keys(ROOM_API).forEach(function (k) { API_ROOM[ROOM_API[k]] = k; });
   var selectedRoom = null, saving = false;
@@ -775,7 +809,8 @@
     var hasSelection = !!room && !help;
     rooms.classList.toggle('is-collapsed', hasSelection);
     selectionActions.classList.toggle('show', hasSelection);
-    if (echoLine && !help) {
+    panelExamples.hidden = room !== 'Outside';
+    if (echoLine && !help && room !== 'Outside') {
       echoText.textContent = room === 'More than one panel'
         ? 'Got it, more than one panel.'
         : 'Got it, ' + room.toLowerCase() + '.';
