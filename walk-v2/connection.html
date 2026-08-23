@@ -3,7 +3,7 @@
 <head>
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-aHCrs69PdHRIDVEDYmjVCDAfB3Zu6fdyouZQ8WZcT1o='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-TUTB2AggojqMyVT24DU0+xLaXzVS6RASeySUDerf6fw='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-CWgPxIzM93sX8FxYd6oFNg35tLLkFhE/YowSObTncdY='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-TUTB2AggojqMyVT24DU0+xLaXzVS6RASeySUDerf6fw='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script src="/walk-v2/token-bootstrap.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
 <title>Backup Power Pro · Quote Walk · Generator Connection</title>
@@ -224,20 +224,12 @@
     WALK.go('index.html', t, { edit: 'details' });
   });
   changeAnswer.addEventListener('click', function () {
+    selectedCompatible = [];
+    selectedException = '';
     expanded = true;
-    main.querySelectorAll('.choice[data-status]').forEach(function (button) {
-      button.hidden = false;
-    });
-    main.querySelectorAll('.other [data-status]').forEach(function (button) {
-      button.hidden = false;
-    });
-    changeAnswer.setAttribute('aria-expanded', 'true');
-    changeAnswer.hidden = true;
-    compatibilityCheck.hidden = true;
-    submit.textContent = 'Continue';
-    if (selectionEcho) selectionEcho.hidden = true;
-    var selectedCard = main.querySelector('.choice[data-status][aria-pressed="true"]');
-    if (selectedCard) selectedCard.focus({ preventScroll: true });
+    renderSelection(false);
+    var firstChoice = main.querySelector('.choice[data-status]');
+    if (firstChoice) firstChoice.focus({ preventScroll: true });
   });
 
   submit.addEventListener('click', function () {
