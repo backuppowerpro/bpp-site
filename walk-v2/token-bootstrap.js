@@ -21,23 +21,18 @@
   function store(value) {
     var next = valid(value) ? String(value) : '';
     try {
-      if (next) {
-        sessionStorage.setItem(STORAGE_KEY, next);
-        return sessionStorage.getItem(STORAGE_KEY) === next ? next : '';
-      }
-      sessionStorage.removeItem(STORAGE_KEY);
-      return '';
-    } catch (_) {
-      return '';
-    }
+      if (next) sessionStorage.setItem(STORAGE_KEY, next);
+      else sessionStorage.removeItem(STORAGE_KEY);
+    } catch (_) {}
+    return next;
   }
 
   var current = new URL(window.location.href);
   var supplied = current.searchParams.get('t') || '';
-  var stored = valid(supplied) ? store(supplied) : readStored();
-  var canRemoveSupplied = !valid(supplied) || stored === supplied;
+  if (valid(supplied)) store(supplied);
+  else readStored();
 
-  if (current.searchParams.has('t') && canRemoveSupplied) {
+  if (current.searchParams.has('t')) {
     current.searchParams.delete('t');
     try {
       history.replaceState(history.state, document.title, current.pathname + current.search + current.hash);

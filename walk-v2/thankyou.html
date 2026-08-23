@@ -1,18 +1,16 @@
 <!doctype html>
-<html lang="en" class="no-js">
+<html lang="en">
 <head>
 <meta name="referrer" content="strict-origin-when-cross-origin">
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-ZXU70hPTo8KpJ4rlHHrurC/zWIwLOiNjIRM9BSa6NiU='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-vJTGL1d96TSIuABuUIQ8TUdUz5v/h9tVLGK35mlVJQ0='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
-<script src="/walk-v2/token-bootstrap.js?v=20260815-bearer"></script>
-<script src="/walk-v2/no-js-bootstrap.js"></script>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-wygnGpICbMppymZ/+XZT8Vgnv0wtsjTA4zJ1JolzPtc=' 'sha256-5V0i3duCeK56PWKnEGRixbV+nARhJewv2lZ3TGm4piw='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-vJTGL1d96TSIuABuUIQ8TUdUz5v/h9tVLGK35mlVJQ0='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<script src="/walk-v2/token-bootstrap.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
 <title>Backup Power Pro · Thank You</title>
 <link rel="icon" href="/favicon.png" type="image/png" />
 <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.jpg" />
 <meta name="theme-color" content="#0b1f3b" />
-<link rel="stylesheet" href="/walk-v2/no-js-recovery.css" />
 <style>
   :root {
     --navy: #0b1f3b;
@@ -589,14 +587,13 @@
     .state-label { display: none; }
   }
 </style>
-<link rel="stylesheet" href="/walk-v2/mobile-canvas.css?v=b2000f10529a" />
+<link rel="stylesheet" href="/walk-v2/mobile-canvas.css" />
 </head>
 <body>
-<div class="qw-no-js-note qw-script-recovery" role="alert">JavaScript is required to load the current Quote Walk result. Your saved answers remain on file. Turn it on and reload, or call <a href="tel:+18648637800">(864) 863-7800</a>.</div>
 <div class="stack" id="stack">
 
   <!-- ============ MAIN PAGE (mobile, interactive) ============ -->
-  <main class="page qw-template-page qw-final-page" id="mainPage" data-screen-label="Quote walk thank you (interactive, mobile)">
+  <main class="page" id="mainPage" data-screen-label="Quote walk thank you (interactive, mobile)">
 
     <!-- 1. site header -->
     <header class="site-head">
@@ -605,7 +602,8 @@
       </a>
     </header>
 
-    <section class="qw-template-hero qw-final-hero">
+    <div class="body-grid">
+      <div class="col-main">
         <section class="celebrate rv" style="--rvd: 0ms;">
           <div class="big-check"><svg viewBox="0 0 30 30"><path d="M7 16l5.5 5.5L23 9.5"></path></svg></div>
           <h1 data-thanks-head="">I've got your setup.</h1>
@@ -628,11 +626,6 @@
           <p>I'll review your setup and text your proposal link to the mobile number you provided. No payment is due now.</p>
         </section>
 
-    </section>
-
-    <div class="body-grid">
-      <div class="col-main">
-
         <section class="price rv" style="--rvd: 90ms;">
           <p class="pk">Accepted project range</p>
           <p class="pl" data-price-line="">Your accepted current range</p>
@@ -654,15 +647,15 @@
     </div>
 
     <footer class="foot">
-      <div class="foot-identity"><strong>Licensed and insured</strong><span>SC Lic #2942 by Key Electric</span></div>
-      <span class="foot-area">Currently serving Greenville, Spartanburg,<br>and Pickens counties</span>
-      <span class="foot-process">Every project is reviewed and permitted by Key, completed with trusted local installation partners, and coordinated through final inspection.</span>
+      <strong>Key Goodson, Licensed Electrician, SC Lic #2942</strong>
+      <span>Serving Greenville, Spartanburg, and Pickens counties</span>
+      <span>Every project is reviewed and permitted by Key, completed with trusted local installation partners, and coordinated through final inspection.</span>
     </footer>
   </main>
 
 </div>
 
-<script src="/walk-v2/walk.js?v=acd71b9339d0"></script>
+<script src="/walk-v2/walk.js"></script>
 <script>
 
 (function () {
@@ -804,12 +797,7 @@
       WALK.ph('walk_v2_price_shown', { state: 'working', has_range: false });
     }
 
-  }).catch(function (cause) {
-    if (kick) kick.textContent = 'Quote Walk not confirmed';
-    num.style.display = 'none';
-    hideFollow();
-    WALK.renderRecovery(line, cause);
-  });
+  }).catch(function () { /* a read failure must NOT bounce them off the thank-you page; keep the honest no-number state */ if (kick) kick.textContent = 'Your quote'; num.style.display = 'none'; hideFollow(); line.textContent = 'Your setup is saved. The current range could not be loaded.'; });
 
   /* scroll reveal (comp behavior, unchanged) */
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;

@@ -1,11 +1,10 @@
 <!doctype html>
-<html lang="en" class="no-js">
+<html lang="en">
 <head>
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-exSKjBQ5xEXpGpu+EpxaMADRb0gkUmntnJ99Y0PnwnE='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-WC8AOrpyz4FW+j8sUzTfUPSzFofPf9tQjOuGMruGuHw='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
-<script src="/walk-v2/token-bootstrap.js?v=20260815-bearer"></script>
-<script src="/walk-v2/no-js-bootstrap.js"></script>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-bE1MT6uMXn0HUf6v965B+KSJ3E2sNYtBs9AgpPVptCs='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-GpMzzuUIqq4mzpbYS+Aq+F67vQmjr9YXOohNvVwg/yM='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<script src="/walk-v2/token-bootstrap.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
 <title>Backup Power Pro · Quote Walk · Generator Connection</title>
 <link rel="icon" href="/favicon.png" type="image/png" />
@@ -41,7 +40,7 @@
   .choice:active{transform:scale(.98)}
   .choice img,.choice .connection-icon{width:96px;height:96px;object-fit:contain;display:block}
   .connection-icon-30{position:relative;overflow:hidden;border-radius:50%;background:#fff}
-  .connection-icon-30::before{content:"";position:absolute;inset:0;background:var(--navy);-webkit-mask:url("/img/30amp-outlet-navy.png") center/contain no-repeat;mask:url("/img/30amp-outlet-navy.png") center/contain no-repeat}
+  .connection-icon-30::before{content:"";position:absolute;inset:0;background:var(--navy);-webkit-mask:url("/media/product-photos/30amp%20outlet.PNG") center/contain no-repeat;mask:url("/media/product-photos/30amp%20outlet.PNG") center/contain no-repeat}
   .choice strong{font-family:var(--head);font-size:18px;color:var(--navy)}
   .choice .shape{font-size:13px;font-weight:600;color:var(--navy-mid)}
   .choice .truth{font-size:13px;line-height:1.4;color:var(--muted)}
@@ -67,11 +66,9 @@
   @media(min-width:760px){.page{width:1080px}.site-head{padding:0 48px}.body{padding:42px 24px 14px}h1{font-size:36px}}
   @media(max-width:759px){html,body{background:var(--page)}.stack{padding:0 0 calc(28px + env(safe-area-inset-bottom,0px))}.page{width:100%;border-radius:0;box-shadow:none}}
 </style>
-<link rel="stylesheet" href="/walk-v2/mobile-canvas.css?v=b2000f10529a" />
-<link rel="stylesheet" href="/walk-v2/no-js-recovery.css" />
+<link rel="stylesheet" href="/walk-v2/mobile-canvas.css" />
 </head>
 <body>
-<div class="qw-no-js-note qw-script-recovery" role="alert">JavaScript is required to continue this Quote Walk. Your saved answers remain on file. Turn it on and reload, or call <a href="tel:+18648637800">(864) 863-7800</a>.</div>
 <div class="stack">
   <main class="page" id="mainPage" data-screen-label="Quote walk: generator connection">
     <header class="site-head">
@@ -112,19 +109,19 @@
         <p class="selection-echo" data-selection-echo hidden></p>
         <div class="confirm-actions qw-action-stack">
           <button class="submit qw-primary-action" type="button" data-submit disabled>Continue</button>
-          <button class="change-answer qw-secondary-action" type="button" data-change-answer aria-controls="connectionChooser" aria-expanded="false" hidden>Change answer</button>
+          <button class="change-answer qw-secondary-action" type="button" data-change-answer aria-controls="connectionChooser" aria-expanded="false" hidden>Change connection</button>
         </div>
         <p class="error" data-error role="alert">That did not save. Tap Continue to try again.</p>
       </section>
     </div>
     <footer class="foot">
-      <div class="foot-identity"><strong>Licensed and insured</strong><span>SC Lic #2942 by Key Electric</span></div>
-      <span class="foot-area">Currently serving Greenville, Spartanburg,<br>and Pickens counties</span>
-      <span class="foot-process">Every project is reviewed and permitted by Key, completed with trusted local installation partners, and coordinated through final inspection.</span>
+      <strong>Key Goodson, Licensed Electrician, SC Lic #2942</strong>
+      <span>Serving Greenville, Spartanburg, and Pickens counties</span>
+      <span>Every project is reviewed and permitted by Key, completed with trusted local installation partners, and coordinated through final inspection.</span>
     </footer>
   </main>
 </div>
-<script src="/walk-v2/walk.js?v=acd71b9339d0"></script>
+<script src="/walk-v2/walk.js"></script>
 <script>
 (function () {
   var t = WALK.requireToken(); if (!t) return;
@@ -141,19 +138,17 @@
   var saving = false;
   var blockedAtLoad = false;
   var expanded = true;
-  var choicesReady = true;
-  var userTouched = false;
-  var answerHydration = WALK.hydrationGuard();
+  var choicesReady = false;
   WALK.ph('walk_v2_screen_view', { screen: 'connection' });
 
   function setChoiceReadiness(ready) {
-    choicesReady = true;
+    choicesReady = ready;
     main.setAttribute('aria-busy', ready ? 'false' : 'true');
     main.querySelectorAll('[data-status]').forEach(function (button) {
-      button.disabled = false;
+      button.disabled = !ready;
     });
   }
-  setChoiceReadiness(true);
+  setChoiceReadiness(false);
 
   function isCompatible(status) {
     return status === 'confirmed_30' || status === 'confirmed_50';
@@ -192,12 +187,11 @@
       button.setAttribute('aria-pressed', pressed ? 'true' : 'false');
     });
     setCompact(selectedException, bringContinue);
-    submit.disabled = !(selectedCompatible.length || selectedException);
+    submit.disabled = !choicesReady || !(selectedCompatible.length || selectedException);
     error.style.display = 'none';
   }
   function select(status, bringContinue) {
-    userTouched = true;
-    answerHydration.touch();
+    if (!choicesReady) return;
     if (isCompatible(status)) {
       selectedException = '';
       var index = selectedCompatible.indexOf(status);
@@ -220,14 +214,18 @@
     WALK.go('index.html', t, { edit: 'details' });
   });
   changeAnswer.addEventListener('click', function () {
-    userTouched = true;
-    answerHydration.touch();
-    selectedCompatible = [];
-    selectedException = '';
     expanded = true;
-    renderSelection(false);
-    var firstChoice = main.querySelector('.choice[data-status]');
-    if (firstChoice) firstChoice.focus({ preventScroll: true });
+    main.querySelectorAll('.choice[data-status]').forEach(function (button) {
+      button.hidden = false;
+    });
+    main.querySelectorAll('.other [data-status]').forEach(function (button) {
+      button.hidden = false;
+    });
+    changeAnswer.setAttribute('aria-expanded', 'true');
+    changeAnswer.hidden = true;
+    if (selectionEcho) selectionEcho.hidden = true;
+    var selectedCard = main.querySelector('.choice[data-status][aria-pressed="true"]');
+    if (selectedCard) selectedCard.focus({ preventScroll: true });
   });
 
   submit.addEventListener('click', function () {
@@ -245,18 +243,25 @@
     var legacyStatus = observedSet.indexOf('50A') !== -1
       ? 'confirmed_50'
       : observedSet.indexOf('30A') !== -1 ? 'confirmed_30' : selectedException;
-    var fields = observedSet.length ? {
+    var fields = {
       connection_status: legacyStatus,
       connection_answers: observedSet,
-      pricing_basis: WALK.pricingBasis(observedSet) === '50A' ? '50' : WALK.pricingBasis(observedSet) === '30A' ? '30' : undefined,
+      pricing_basis: WALK.pricingBasis(observedSet),
       pricing_basis_rule_version: 'connection-set-v1',
-      pricing_basis_authority: 'key_explicit_2026_07_28',
-      outlet_amp: legacyStatus === 'confirmed_50' ? '50' : '30',
-      generator_ownership_status: 'owned'
-    } : {
-      connection_status: selectedException === 'no_generator' ? 'unanswered' : selectedException,
-      generator_ownership_status: selectedException === 'no_generator' ? 'not_owned' : 'owned'
+      pricing_basis_authority: 'key_explicit_2026_07_28'
     };
+    if (legacyStatus === 'confirmed_30') {
+      fields.outlet_amp = '30';
+      fields.generator_ownership_status = 'owned';
+    }
+    if (legacyStatus === 'confirmed_50') {
+      fields.outlet_amp = '50';
+      fields.generator_ownership_status = 'owned';
+    }
+    if (selectedException === 'no_generator') {
+      fields.connection_status = 'no_generator';
+      fields.generator_ownership_status = 'not_owned';
+    }
     WALK.ph('walk_v2_confirm_tap', {
       field: 'connection_status',
       value: legacyStatus,
@@ -272,9 +277,9 @@
           var params = new URLSearchParams(window.location.search);
           var recovery = params.get('recovery') === '1';
           var editing = params.get('edit') === '1';
-          if (selectedException === 'pending_access' && !recovery) WALK.go('location.html', t, { sequence: '1' });
+          if (selectedException === 'pending_access' && !recovery) WALK.go('location.html', t);
           else if (recovery || editing) WALK.routeRecoveryFromState(t, latest);
-          else WALK.go('location.html', t, { sequence: '1' });
+          else WALK.routeFromState(t, latest);
         }).catch(function () {
           WALK.go('location.html', t);
         });
@@ -284,45 +289,34 @@
     });
   });
 
-  function applyCurrentState(v) {
+  WALK.view(t).then(function (v) {
     var status = v && v.connection_status || '';
     var params = new URLSearchParams(window.location.search);
     var editMode = params.get('edit') === '1';
     var recoveryMode = params.get('recovery') === '1';
-    var sequentialEntry = params.get('sequence') === '1';
     var returningFromEducation = params.get('from') === 'generator-needed';
     blockedAtLoad = Boolean(v && (v.generator_ownership_status === 'not_owned' ||
       status === 'no_compatible_generator_connection'));
-    if (!sequentialEntry && !returningFromEducation && v && v.generator_ownership_status === 'not_owned') {
+    if (!returningFromEducation && v && v.generator_ownership_status === 'not_owned') {
       WALK.go('generator-needed.html', t);
       return;
     }
-    if (!sequentialEntry && !returningFromEducation && status === 'no_compatible_generator_connection') {
+    if (!returningFromEducation && status === 'no_compatible_generator_connection') {
       WALK.go('generator-needed.html', t);
       return;
     }
-    if (!userTouched && !sequentialEntry) {
-      var truth = WALK.readConnectionTruth(t, v || {});
-      selectedCompatible = editMode ? [] : truth.connection_answers.map(function (value) {
-        return value === '50A' ? 'confirmed_50' : 'confirmed_30';
-      });
-      if (!editMode && !recoveryMode && !selectedCompatible.length && status === 'pending_access') selectedException = status;
-      expanded = !(selectedCompatible.length || selectedException);
-    }
+    var truth = WALK.readConnectionTruth(t, v || {});
+    selectedCompatible = editMode ? [] : truth.connection_answers.map(function (value) {
+      return value === '50A' ? 'confirmed_50' : 'confirmed_30';
+    });
+    if (!editMode && !recoveryMode && !selectedCompatible.length && status === 'pending_access') selectedException = status;
+    expanded = !(selectedCompatible.length || selectedException);
     setChoiceReadiness(true);
     renderSelection(false);
-  }
-  function loadCurrentState() {
-    var hydrationVersion = answerHydration.begin();
+  }).catch(function () {
     setChoiceReadiness(true);
-    error.style.display = 'none';
-    WALK.view(t).then(function (value) {
-      if (answerHydration.accepts(hydrationVersion)) applyCurrentState(value);
-    }).catch(function () {
-      if (answerHydration.accepts(hydrationVersion)) applyCurrentState({});
-    });
-  }
-  loadCurrentState();
+    renderSelection(false);
+  });
 })();
 </script>
 </body>
