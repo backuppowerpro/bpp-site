@@ -426,7 +426,7 @@ html.qw-template-document-root {
 
 .accepted-phone-error {
   margin: 0 !important;
-  color: #fecaca !important;
+  color: var(--red, #b42318) !important;
   font-size: 12px !important;
   line-height: 1.4 !important;
 }
@@ -1310,30 +1310,25 @@ body.qw-template-document .page > .foot {
 
   .page[data-screen-label="Landing page (interactive, mobile)"] .intro-card {
     grid-area: intro;
-    display: flex !important;
+    display: flex;
     min-width: 0;
     height: 100%;
     flex-direction: column;
     border-radius: 22px;
-    background: linear-gradient(135deg, #17385f 0%, #0b1f3b 42%, #081a33 100%) !important;
+    background: linear-gradient(135deg, #17385f 0%, #0b1f3b 42%, #081a33 100%);
     overflow: hidden;
   }
 
   .page[data-screen-label="Landing page (interactive, mobile)"] .site-head {
     flex: 0 0 auto;
     padding: 0 42px !important;
-    background: #0b1f3b !important;
+    background: transparent !important;
   }
 
   .page[data-screen-label="Landing page (interactive, mobile)"] .hero {
     display: flex;
     min-width: 0;
     flex: 1 1 auto;
-    background: linear-gradient(135deg, #17385f 0%, #0b1f3b 42%, #081a33 100%) !important;
-  }
-
-  .page[data-screen-label="Landing page (interactive, mobile)"] .intro-card .site-head,
-  .page[data-screen-label="Landing page (interactive, mobile)"] .intro-card .hero {
     background: transparent !important;
   }
 
@@ -1407,7 +1402,7 @@ body.qw-template-document .page > .foot {
 
   .page[data-screen-label="Landing page (interactive, mobile)"] .proof-slide {
     flex-basis: calc((100% - 36px) / 3.18);
-    height: 242px;
+    height: 230px;
   }
 
   .page[data-screen-label="Landing page (interactive, mobile)"] .proof-review {

@@ -8,20 +8,14 @@
   var BASE = window.BPP_QUOTE_WALK_FUNCTIONS_BASE
     || 'https://reowtzedjflwmlptupbk.supabase.co/functions/v1';
   var TOKEN_STORAGE_KEY = 'bpp:qwv2:bearer';
-  var AUTHORIZED_SERVICE_COUNTIES = ['Greenville', 'Spartanburg', 'Pickens'];
 
   function setToken(value) {
     var next = /^[a-zA-Z0-9_-]{32,160}$/.test(String(value || '')) ? String(value) : '';
     try {
-      if (next) {
-        sessionStorage.setItem(TOKEN_STORAGE_KEY, next);
-        return sessionStorage.getItem(TOKEN_STORAGE_KEY) === next ? next : '';
-      }
-      sessionStorage.removeItem(TOKEN_STORAGE_KEY);
-      return '';
-    } catch (_) {
-      return '';
-    }
+      if (next) sessionStorage.setItem(TOKEN_STORAGE_KEY, next);
+      else sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+    } catch (_) {}
+    return next;
   }
   function token() {
     var t = '';
@@ -29,24 +23,12 @@
     if (!t) t = new URLSearchParams(window.location.search).get('t') || '';
     return /^[a-zA-Z0-9_-]{32,160}$/.test(t) ? t : '';
   }
-  var insideWalkNav = false;
-  var pendingUploadReconciliationCancels = [];
-  function cancelPendingUploadReconciliations() {
-    pendingUploadReconciliationCancels.slice().forEach(function (cancel) { cancel(); });
-  }
   function go(page, t, extra) {
-    cancelPendingUploadReconciliations();
-    insideWalkNav = true;
-    var retained = setToken(t);
+    setToken(t);
     var params = new URLSearchParams();
     Object.keys(extra || {}).forEach(function (key) {
       if (extra[key] != null) params.set(key, String(extra[key]));
     });
-    var carried = retained;
-    if (retained !== t) {
-      carried = /^[a-zA-Z0-9_-]{32,160}$/.test(String(t || '')) ? String(t) : retained;
-    }
-    if (carried) params.set('t', carried);
     var query = params.toString();
     var target = '/walk-v2/' + page + (query ? '?' + query : '');
     if (window.__QW_NAVIGATE__) window.__QW_NAVIGATE__(target);
@@ -62,75 +44,7 @@
     go('', t);
   }
   function ph(event, props) {
-    try {
-      window.dispatchEvent(new CustomEvent('bpp:walk-event', {
-        detail: Object.assign({ event: event, funnel: 'walkv2' }, props || {})
-      }));
-    } catch (_) {}
-  }
-  function hydrationGuard() {
-    var revision = 0;
-    return {
-      begin: function () { return revision; },
-      touch: function () { revision += 1; return revision; },
-      accepts: function (startedAt) { return startedAt === revision; }
-    };
-  }
-  function classifyRecoveryError(cause) {
-    var code = String(cause && (cause.code || cause.body && cause.body.error || cause.message) || '');
-    var status = Number(cause && cause.status || 0);
-    if (status === 410 || /expired|retired|invalid_or_expired_return/.test(code)) return 'expired';
-    if (status === 404 || /missing|not_found|not found|invalid token/.test(code)) return 'missing';
-    if (/already_complete|completed/.test(code)) return 'complete';
-    return 'temporary';
-  }
-  function renderRecovery(container, cause, options) {
-    if (!container) return null;
-    var config = options || {};
-    var state = classifyRecoveryError(cause);
-    var copy = {
-      expired: 'This saved link has expired. Your saved record is still protected.',
-      missing: 'This saved link is not available. No Quote Walk was marked complete.',
-      complete: 'This Quote Walk is already complete.',
-      temporary: 'Your saved Quote Walk could not be confirmed. Your answers and saved link are unchanged.'
-    };
-    container.replaceChildren();
-    container.setAttribute('data-return-recovery', state);
-    container.appendChild(document.createTextNode(config.message || copy[state]));
-    var actions = document.createElement('span');
-    actions.className = 'qw-recovery-actions';
-    if (state === 'temporary' || config.allowRetry === true) {
-      var retry = document.createElement('button');
-      retry.type = 'button';
-      retry.className = 'qw-secondary-action';
-      retry.setAttribute('data-retry-saved-link', '');
-      retry.textContent = 'Try again';
-      retry.addEventListener('click', function () {
-        if (typeof config.onRetry === 'function') config.onRetry();
-        else window.location.reload();
-      });
-      actions.appendChild(retry);
-    }
-    if (state !== 'complete') {
-      var startOver = document.createElement('button');
-      startOver.type = 'button';
-      startOver.className = 'qw-secondary-action';
-      startOver.setAttribute('data-start-over', '');
-      startOver.textContent = 'Start a new Quote Walk';
-      startOver.addEventListener('click', function () {
-        setToken('');
-        window.location.replace('/walk-v2/');
-      });
-      actions.appendChild(startOver);
-    }
-    var help = document.createElement('a');
-    help.className = 'qw-secondary-action';
-    help.href = 'tel:+18648637800';
-    help.textContent = 'Call or text Key';
-    actions.appendChild(help);
-    container.appendChild(actions);
-    container.style.display = '';
-    return state;
+    try { window.posthog && posthog.capture(event, Object.assign({ funnel: 'walkv2' }, props || {})); } catch (_) {}
   }
   function fingerprint(value) {
     var text = JSON.stringify(value || {});
@@ -269,7 +183,7 @@
       generator: observed.length > 0,
       panel: Boolean(panelLocation && panelLocation !== 'not_sure' && panelInventory !== 'incomplete'),
       distance: Boolean(distance && distance !== 'not_sure'),
-      photos: Boolean(hasSavedPhoto)
+      photos: Boolean(hasSavedPhoto && blockers && blockers.indexOf('panel_photo') === -1)
     };
   }
   function paintProgress(root, view) {
@@ -287,7 +201,7 @@
     steps.forEach(function (step, index) {
       var labelNode = step.querySelector('.pl');
       var key = String(labelNode && labelNode.textContent || '').trim().toLowerCase();
-      var complete = truth[key] === true && currentIndex >= 0 && index < currentIndex;
+      var complete = truth[key] === true;
       step.classList.toggle('done', complete);
       step.classList.toggle('on', key === current);
       step.classList.toggle('reached', currentIndex >= 0 && index < currentIndex);
@@ -300,35 +214,8 @@
     if (rail) rail.setAttribute('aria-label', labels.join('. ') + '.');
     return truth;
   }
-  function fetchWithTimeout(url, options, timeoutMs) {
-    var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
-    var requestOptions = Object.assign({}, options || {});
-    if (ctrl) requestOptions.signal = ctrl.signal;
-    return new Promise(function (resolve, reject) {
-      var settled = false;
-      var timer = setTimeout(function () {
-        if (settled) return;
-        settled = true;
-        if (ctrl) ctrl.abort();
-        var error = new Error('request_timeout');
-        error.name = 'TimeoutError';
-        reject(error);
-      }, timeoutMs);
-      fetch(url, requestOptions).then(function (value) {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timer);
-        resolve(value);
-      }, function (error) {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timer);
-        reject(error);
-      });
-    });
-  }
-  function getJson(url, timeoutMs) {
-    return fetchWithTimeout(url, {}, timeoutMs || 12000).then(function (r) {
+  function getJson(url) {
+    return fetch(url).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (body) {
         if (!r.ok) {
           var error = new Error(body && body.error || 'http_' + r.status);
@@ -346,189 +233,19 @@
        and no recovery. Abort after timeoutMs so the promise rejects and the
        caller's .catch (e.g. photos.html flips the entry to "failed" -> Retry)
        can recover instead of hanging. Default 30s. */
-    return fetchWithTimeout(url, {
+    var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, timeoutMs || 30000) : null;
+    return fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
-    }, timeoutMs || 30000).then(function (r) {
+      signal: ctrl ? ctrl.signal : undefined,
+    }).then(function (r) {
       return r.json().then(function (j) {
         if (!r.ok) { var e = new Error(j && j.error || 'http_' + r.status); e.body = j; throw e; }
         return j;
       });
-    });
-  }
-
-  function reconcilePendingUploads(t, value, options) {
-    var config = options || {};
-    var state = value && value.quote_walk_v2 || {};
-    var pending = Array.isArray(state.pending_media_uploads)
-      ? state.pending_media_uploads.slice(0, 10)
-      : [];
-    var valid = pending.filter(function (upload) {
-      return upload
-        && /^[a-f0-9-]{36}$/i.test(String(upload.reservation_id || ''))
-        && /^[a-f0-9-]{36}$/i.test(String(upload.lease_id || ''))
-        && upload.status === 'uploading';
-    });
-    if (!valid.length) return Promise.resolve({ state: value, results: [] });
-    var cancelled = false;
-    var retryTimer = null;
-    var retryWaitCancel = null;
-    var startedAt = Date.now();
-    var maxAttempts = 120;
-    var maxTransientFailures = 4;
-    var maxElapsedMs = 6 * 60 * 1000;
-    function emit(status) {
-      if (typeof config.onStatus === 'function') {
-        try { config.onStatus(status); } catch (_) {}
-      }
-    }
-    function cancel() {
-      cancelled = true;
-      if (retryTimer != null) {
-        clearTimeout(retryTimer);
-        retryTimer = null;
-      }
-      if (retryWaitCancel) retryWaitCancel();
-    }
-    function removeCancel() {
-      var index = pendingUploadReconciliationCancels.indexOf(cancel);
-      if (index !== -1) pendingUploadReconciliationCancels.splice(index, 1);
-      window.removeEventListener('pagehide', cancel);
-      window.removeEventListener('beforeunload', cancel);
-      if (config.signal && typeof config.signal.removeEventListener === 'function') {
-        config.signal.removeEventListener('abort', cancel);
-      }
-    }
-    pendingUploadReconciliationCancels.push(cancel);
-    window.addEventListener('pagehide', cancel, { once: true });
-    window.addEventListener('beforeunload', cancel, { once: true });
-    if (config.signal && typeof config.signal.addEventListener === 'function') {
-      if (config.signal.aborted) cancel();
-      else config.signal.addEventListener('abort', cancel, { once: true });
-    }
-    function retrySeconds(input) {
-      var numeric = Math.ceil(Number(input || 3));
-      return Math.max(1, Math.min(30, Number.isFinite(numeric) ? numeric : 3));
-    }
-    function waitToRetry(upload, seconds, attempt, reason) {
-      var remaining = retrySeconds(seconds);
-      return new Promise(function (resolve) {
-        function finish(value) {
-          if (retryTimer != null) clearTimeout(retryTimer);
-          retryTimer = null;
-          retryWaitCancel = null;
-          resolve(value);
-        }
-        retryWaitCancel = function () { finish(false); };
-        function tick() {
-          if (cancelled) { finish(false); return; }
-          emit({
-            type: 'waiting',
-            upload: upload,
-            attempt: attempt,
-            reason: reason,
-            retry_in_seconds: remaining
-          });
-          if (remaining === 0) { finish(true); return; }
-          retryTimer = setTimeout(function () {
-            remaining -= 1;
-            tick();
-          }, 1000);
-        }
-        tick();
-      });
-    }
-    function cancelledResult(upload, attempts) {
-      emit({ type: 'cancelled', upload: upload, attempt: attempts });
-      return { ok: false, cancelled: true, reservation_id: upload.reservation_id, attempts: attempts };
-    }
-    function actionableResult(upload, attempts, code) {
-      emit({ type: 'action_required', upload: upload, attempt: attempts, error: code });
-      return {
-        ok: false,
-        action_required: true,
-        reservation_id: upload.reservation_id,
-        attempts: attempts,
-        error: code
-      };
-    }
-    function recoverUpload(upload) {
-      var attempts = 0;
-      var transientFailures = 0;
-      function attempt() {
-        if (cancelled) return Promise.resolve(cancelledResult(upload, attempts));
-        if (attempts >= maxAttempts || Date.now() - startedAt >= maxElapsedMs) {
-          return Promise.resolve(actionableResult(upload, attempts, 'media_recovery_timeout'));
-        }
-        attempts += 1;
-        emit({ type: 'checking', upload: upload, attempt: attempts });
-        return postJson(BASE + '/pre-read-photo', {
-          token: t,
-          mode: 'recover',
-          reservation_id: upload.reservation_id,
-          lease_id: upload.lease_id
-        }, 30000).then(function (recovery) {
-          if (cancelled) return cancelledResult(upload, attempts);
-          if (recovery && recovery.receipt_settled === true) {
-            emit({ type: 'finalized', upload: upload, attempt: attempts });
-            return {
-              ok: true,
-              terminal: 'finalized',
-              reservation_id: upload.reservation_id,
-              attempts: attempts,
-              recovery: recovery
-            };
-          }
-          if (recovery && recovery.retry_ready === true) {
-            emit({ type: 'retry_ready', upload: upload, attempt: attempts });
-            return {
-              ok: true,
-              terminal: 'retry_ready',
-              retry_ready: true,
-              reservation_id: upload.reservation_id,
-              attempts: attempts,
-              recovery: recovery
-            };
-          }
-          if (recovery && recovery.status === 'uploading') {
-            transientFailures = 0;
-            return waitToRetry(upload, recovery.retry_after_seconds, attempts, 'uploading').then(function (continueRetry) {
-              return continueRetry ? attempt() : cancelledResult(upload, attempts);
-            });
-          }
-          return actionableResult(upload, attempts, 'media_recovery_unexpected');
-        }).catch(function (error) {
-          if (cancelled) return cancelledResult(upload, attempts);
-          var kind = classifyRecoveryError(error);
-          if (kind !== 'temporary') return actionableResult(upload, attempts, kind);
-          transientFailures += 1;
-          if (transientFailures >= maxTransientFailures) {
-            return actionableResult(upload, attempts, 'media_recovery_unavailable');
-          }
-          var seconds = error && error.body && error.body.retry_after_seconds;
-          return waitToRetry(upload, seconds, attempts, 'temporary').then(function (continueRetry) {
-            return continueRetry ? attempt() : cancelledResult(upload, attempts);
-          });
-        });
-      }
-      return attempt();
-    }
-    return valid.reduce(function (chain, upload) {
-      return chain.then(function (results) {
-        return recoverUpload(upload).then(function (result) {
-          results.push(result);
-          return results;
-        });
-      });
-    }, Promise.resolve([])).then(function (results) {
-      if (cancelled) return { state: value, results: results };
-      return window.WALK.view(t).then(function (refreshed) {
-        return { state: refreshed, results: results };
-      });
-    }).finally(function () {
-      removeCancel();
-    });
+    }).finally(function () { if (timer) clearTimeout(timer); });
   }
 
   window.WALK = {
@@ -537,16 +254,12 @@
     go: go,
     back: back,
     ph: ph,
-    hydrationGuard: hydrationGuard,
-    classifyRecoveryError: classifyRecoveryError,
-    renderRecovery: renderRecovery,
     normalizeConnectionSet: normalizeConnectionSet,
     pricingBasis: pricingBasis,
     saveConnectionTruth: saveConnectionTruth,
     readConnectionTruth: readConnectionTruth,
     progressTruth: progressTruth,
     paintProgress: paintProgress,
-    reconcilePendingUploads: reconcilePendingUploads,
     view: function (t) {
       return getJson(BASE + '/pre-read-view?token=' + encodeURIComponent(t)).then(function (value) {
         rememberJourneyState(t, value);
@@ -563,22 +276,15 @@
       var stableRequestKey = null;
       function send(retried) {
         var state = readJourneyState(t);
-        if (!state.version) {
-          return getJson(BASE + '/pre-read-view?token=' + encodeURIComponent(t))
-            .then(function (value) {
-              rememberJourneyState(t, value);
-              return send(retried);
-            });
-        }
         var payload = Object.assign({ token: t }, fields);
-        payload.expected_version = state.version;
-        stableRequestKey = stableRequestKey || requestKey(t, 'save_answers', fields, state.version);
-        payload.request_key = stableRequestKey;
+        if (state.version) {
+          payload.expected_version = state.version;
+          stableRequestKey = stableRequestKey || requestKey(t, 'save_answers', fields, state.version);
+          payload.request_key = stableRequestKey;
+        }
         return postJson(BASE + '/pre-read-confirm', payload).then(function (value) {
           rememberJourneyState(t, value);
-          try {
-            if (typeof document !== 'undefined') paintProgress(document, value);
-          } catch (_) {}
+          if (typeof document !== 'undefined') paintProgress(document, value);
           return value;
         }).catch(function (error) {
           if (!retried && error && error.body && error.body.error === 'stale_journey_version') {
@@ -649,13 +355,6 @@
             return getJson(BASE + '/pre-read-view?token=' + encodeURIComponent(t))
               .then(function (value) {
                 rememberJourneyState(t, value);
-                if (action === 'accept_range' || action === 'handoff') {
-                  var staleAuthorization = new Error('stale_customer_authorization');
-                  staleAuthorization.code = 'stale_customer_authorization';
-                  staleAuthorization.body = { error: 'stale_customer_authorization' };
-                  staleAuthorization.currentState = value;
-                  throw staleAuthorization;
-                }
                 return send(true);
               });
           }
@@ -666,130 +365,35 @@
     },
     photo: function (t, dataUrl, idx, suppliedIdentity) {
       idx = Number(idx);
-      if (!Number.isInteger(idx) || idx < 1 || idx > 10) {
+      if (
+        !Number.isInteger(idx)
+        || idx < 1
+        || (suppliedIdentity ? idx > 100 : idx > 3)
+      ) {
         return Promise.reject(new Error('invalid_media_index'));
       }
-      function identityFor(state, digest) {
+      function send(retried) {
+        var state = readJourneyState(t);
         var role = suppliedIdentity && suppliedIdentity.role != null
           ? String(suppliedIdentity.role)
           : 'setup_photo';
         if (role !== 'setup_photo') {
-          throw new Error('invalid_media_role');
+          return Promise.reject(new Error('invalid_media_role'));
         }
         if (suppliedIdentity && suppliedIdentity.panel_id != null) {
-          throw new Error('invalid_media_panel');
+          return Promise.reject(new Error('invalid_media_panel'));
         }
-        var replacementMediaId = suppliedIdentity && suppliedIdentity.replacement_media_id != null
-          ? String(suppliedIdentity.replacement_media_id)
-          : '';
-        var replacementAttemptId = suppliedIdentity && suppliedIdentity.replacement_attempt_id != null
-          ? String(suppliedIdentity.replacement_attempt_id)
-          : '';
-        if (replacementMediaId && !/^[a-f0-9-]{36}$/i.test(replacementMediaId)) {
-          throw new Error('invalid_replacement_media');
-        }
-        if ((replacementMediaId && !/^[a-zA-Z0-9:_-]{12,160}$/.test(replacementAttemptId))
-            || (!replacementMediaId && replacementAttemptId)) {
-          throw new Error('invalid_replacement_attempt');
-        }
-        return {
+        var panelId = null;
+        var identity = {
           journey_version: state.version || null,
           role: role,
-          panel_id: null,
-          image: digest,
-          replacement_media_id: replacementMediaId || null,
-          replacement_attempt_id: replacementAttemptId || null
+          panel_id: panelId,
+          image: fingerprint(dataUrl)
         };
-      }
-      function hexFromBuffer(buffer) {
-        return Array.from(new Uint8Array(buffer), function (byte) {
-          return byte.toString(16).padStart(2, '0');
-        }).join('');
-      }
-      function sendFile(file, retried) {
-        var state = readJourneyState(t);
-        var mimeType = String(file && file.type || '');
-        if (mimeType.indexOf('video/') !== 0) {
-          return Promise.reject(new Error('invalid_media_type'));
-        }
-        return file.arrayBuffer().then(function (bytes) {
-          return crypto.subtle.digest('SHA-256', bytes).then(function (digest) {
-            var identity = identityFor(state, hexFromBuffer(digest));
-            var payload = {
-              token: t,
-              idx: idx,
-              mode: 'sign',
-              content_type: mimeType,
-              byte_size: file.size,
-              sha256: hexFromBuffer(digest)
-            };
-            if (state.version) {
-              payload.role = identity.role;
-              payload.panel_id = identity.panel_id;
-              payload.replacement_media_id = identity.replacement_media_id;
-              payload.replacement_attempt_id = identity.replacement_attempt_id;
-              payload.expected_version = state.version;
-              payload.request_key = requestKey(t, 'register_media', identity, state.version);
-            }
-            return postJson(BASE + '/pre-read-photo', payload, 30000).then(function (signed) {
-              if (!signed || !signed.upload_url) throw new Error('media_sign_failed');
-              return fetchWithTimeout(signed.upload_url, {
-                method: 'PUT',
-                headers: { 'Content-Type': mimeType },
-                body: file
-              }, 45000).then(function (uploaded) {
-                if (!uploaded.ok) throw new Error('media_upload_failed');
-                return postJson(BASE + '/pre-read-photo', {
-                  token: t,
-                  mode: 'complete',
-                  reservation_id: signed.reservation_id,
-                  lease_id: signed.lease_id
-                }, 30000);
-              }).catch(function () {
-                return recoverReservedUpload(signed).then(function (recovery) {
-                  if (recovery && recovery.receipt_settled === true) return recovery;
-                  if (recovery && recovery.retry_ready === true && !retried) return sendFile(file, true);
-                  var waiting = new Error('media_upload_state_unavailable');
-                  waiting.body = recovery || {};
-                  throw waiting;
-                });
-              });
-            }).then(function (value) {
-              if (state.version && (!value || value.receipt_settled !== true)) {
-                throw new Error('media_receipt_unsettled');
-              }
-              rememberJourneyState(t, value);
-              return value;
-            });
-          });
-        }).catch(function (error) {
-          if (!retried && error && error.body && error.body.error === 'stale_journey_version') {
-            return getJson(BASE + '/pre-read-view?token=' + encodeURIComponent(t))
-              .then(function (value) { rememberJourneyState(t, value); return sendFile(file, true); });
-          }
-          throw error;
-        });
-      }
-      function recoverReservedUpload(signed) {
-        if (!signed || !signed.reservation_id || !signed.lease_id) {
-          return Promise.reject(new Error('media_reservation_missing'));
-        }
-        return postJson(BASE + '/pre-read-photo', {
-          token: t,
-          mode: 'recover',
-          reservation_id: signed.reservation_id,
-          lease_id: signed.lease_id
-        }, 30000);
-      }
-      function sendImage(retried) {
-        var state = readJourneyState(t);
-        var identity = identityFor(state, fingerprint(dataUrl));
         var payload = { token: t, image: dataUrl, idx: idx };
         if (state.version) {
-          payload.role = identity.role;
-          payload.panel_id = identity.panel_id;
-          payload.replacement_media_id = identity.replacement_media_id;
-          payload.replacement_attempt_id = identity.replacement_attempt_id;
+          payload.role = role;
+          payload.panel_id = panelId;
           payload.expected_version = state.version;
           payload.request_key = requestKey(t, 'register_media', identity, state.version);
         }
@@ -802,48 +406,27 @@
         }).catch(function (error) {
           if (!retried && error && error.body && error.body.error === 'stale_journey_version') {
             return getJson(BASE + '/pre-read-view?token=' + encodeURIComponent(t))
-              .then(function (value) { rememberJourneyState(t, value); return sendImage(true); });
+              .then(function (value) { rememberJourneyState(t, value); return send(true); });
           }
           throw error;
         });
       }
-      function start() {
-        try {
-          if (dataUrl && typeof dataUrl !== 'string') return sendFile(dataUrl, false);
-          return sendImage(false);
-        } catch (error) {
-          return Promise.reject(error);
-        }
-      }
-      if (readJourneyState(t).version) return start();
+      if (readJourneyState(t).version) return send(false);
       return getJson(BASE + '/pre-read-view?token=' + encodeURIComponent(t))
         .then(function (value) { rememberJourneyState(t, value); }, function () {})
-        .then(function () { return start(); });
+        .then(function () { return send(false); });
     },
     saveLater: function (t) { return postJson(BASE + '/pre-read-save-later', { token: t }); },
     emailCapture: function (t, email) { return postJson(BASE + '/walk-email-capture', { token: t, email: email }); },
     /* address auto-suggest via Mapbox Geocoding, the same provider the rest of
        BPP uses (quote.html, m/, pre-read). Publishable pk. token, US addresses,
        biased to Greenville. Returns {description} so the dropdown render is shared. */
-    rankAddressSuggestions: function (features) {
-      return (Array.isArray(features) ? features : []).map(function (feature, index) {
-        var county = String(feature && feature.county || '').replace(/\s+County$/i, '');
-        var state = String(feature && feature.state || '').toUpperCase();
-        var countyRank = AUTHORIZED_SERVICE_COUNTIES.indexOf(county);
-        return {
-          feature: feature,
-          index: index,
-          rank: countyRank >= 0 ? countyRank : state === 'SC' ? 10 : 20
-        };
-      }).sort(function (left, right) {
-        return left.rank - right.rank || left.index - right.index;
-      }).map(function (entry) { return entry.feature; });
-    },
-    addrSuggest: function (q, timeoutMs) {
+    addrSuggest: function (q) {
       var MB = 'pk.eyJ1Ijoia2V5ZWxlY3RyaWN1cHN0YXRlIiwiYSI6ImNtcm8zZ3NkeTFodmgyeG9hY284Z3F4YXcifQ.3mLKvFGpDEdkjEMQNVQhmg';
       var url = 'https://api.mapbox.com/geocoding/v5/mapbox.places/' + encodeURIComponent(q)
-        + '.json?access_token=' + MB + '&country=us&types=address&autocomplete=true&limit=10&proximity=-82.3940,34.8526';
-      return getJson(url, timeoutMs || 8000)
+        + '.json?access_token=' + MB + '&country=us&types=address&autocomplete=true&limit=5&proximity=-82.3940,34.8526';
+      return fetch(url)
+        .then(function (r) { return r.ok ? r.json() : { features: [] }; })
         .then(function (d) { return (d.features || []).map(function (f) {
           /* pull structured city/state/zip from the Mapbox feature context so the
              contact + pre_read carry them (the every-detail rule), not just the
@@ -863,37 +446,19 @@
             }
             return '';
           }
-          function ctxCounty() {
-            var county = ctxText('district');
-            return county.replace(/\s+County$/i, '');
-          }
           return {
             id: f.id || '',
             lng: (f.center && f.center[0]) || null,
             lat: (f.center && f.center[1]) || null,
             description: f.place_name || '',
             city: ctxText('place'),
-            county: ctxCounty(),
             state: ctxState(),
             zip: ctxText('postcode'),
           };
         }); })
-        .then(function (features) { return window.WALK.rankAddressSuggestions(features).slice(0, 5); })
         .catch(function () { return []; });
     },
     newLead: function (payload) { return postJson(BASE + '/quo-ai-new-lead', payload); },
-    submitLead: function (payload, timeoutMs) {
-      return fetchWithTimeout(BASE + '/quo-ai-new-lead', {
-        method: 'POST',
-        keepalive: true,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      }, timeoutMs || 20000).then(function (response) {
-        return response.json().catch(function () { return {}; }).then(function (body) {
-          return { ok: response.ok, status: response.status, body: body };
-        });
-      });
-    },
     /* Thank-you finalize: tells the backend the customer finished the walk UI
        (including photo-deferred). Fires the opener when SMS_AUTO_ENABLED. */
     markThankyou: function (t) {
@@ -903,23 +468,6 @@
     requireToken: function () {
       var t = token();
       if (!t) { window.location.replace('/walk-v2/'); return null; }
-      if (!window.__BPP_WALK_ABANDON_ARMED__) {
-        window.__BPP_WALK_ABANDON_ARMED__ = true;
-        window.addEventListener('pagehide', function () {
-          if (insideWalkNav) return;
-          var path = String(window.location && window.location.pathname || '');
-          if (/\/walk-v2\/thankyou\.html$/.test(path)) return;
-          if (/\/walk-v2\/?$/.test(path) || /\/walk-v2\/index\.html$/.test(path)) return;
-          try {
-            fetch(BASE + '/pre-read-save-later', {
-              method: 'POST',
-              keepalive: true,
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ token: t }),
-            });
-          } catch (_) {}
-        });
-      }
       return t;
     },
     /* Resume at the first unanswered step. New records always carry a
@@ -1044,8 +592,5 @@
       window.visualViewport.addEventListener('resize', syncAddressDropViewport, { passive: true });
       window.visualViewport.addEventListener('scroll', syncAddressDropViewport, { passive: true });
     }
-  }
-  if (typeof window.BPPQuoteWalkMarkReady === 'function') {
-    window.BPPQuoteWalkMarkReady();
   }
 })();

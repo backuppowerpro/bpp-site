@@ -1,18 +1,16 @@
 <!doctype html>
-<html lang="en" class="no-js">
+<html lang="en">
 <head>
 <meta name="referrer" content="strict-origin-when-cross-origin">
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-wygnGpICbMppymZ/+XZT8Vgnv0wtsjTA4zJ1JolzPtc=' 'sha256-jD7bXyAbGLRXUSgeb8YFgT7marimKY68axXzPzvpQGQ='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-TR5WsvRLJrBeuhBlf0r8jNpbnwt9KX6aRmecxwF1rHg='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://reowtzedjflwmlptupbk.supabase.co; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data: https://reowtzedjflwmlptupbk.supabase.co; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
-<script src="/walk-v2/token-bootstrap.js?v=20260815-bearer"></script>
-<script src="/walk-v2/no-js-bootstrap.js"></script>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-wygnGpICbMppymZ/+XZT8Vgnv0wtsjTA4zJ1JolzPtc=' 'sha256-jD7bXyAbGLRXUSgeb8YFgT7marimKY68axXzPzvpQGQ='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-TR5WsvRLJrBeuhBlf0r8jNpbnwt9KX6aRmecxwF1rHg='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://reowtzedjflwmlptupbk.supabase.co; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<script src="/walk-v2/token-bootstrap.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
 <title>Backup Power Pro · Quote Walk · Step 3</title>
 <link rel="icon" href="/favicon.png" type="image/png" />
 <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.jpg" />
 <meta name="theme-color" content="#0b1f3b" />
-<link rel="stylesheet" href="/walk-v2/no-js-recovery.css" />
 <style>
   :root {
     --navy: #0b1f3b;
@@ -782,11 +780,10 @@
     .state-label { display: none; }
   }
 </style>
-<link rel="stylesheet" href="/walk-v2/mobile-canvas.css?v=b2000f10529a" />
+<link rel="stylesheet" href="/walk-v2/mobile-canvas.css" />
 <link rel="stylesheet" href="/walk-v2/photos-unified.css" />
 </head>
 <body>
-<div class="qw-no-js-note qw-script-recovery" role="alert">JavaScript is required to upload photos. Photo upload is unavailable until it is turned on. Your saved answers remain on file. Turn it on and reload, or call <a href="tel:+18648637800">(864) 863-7800</a>.</div>
 <div class="stack" id="stack">
 
   <!-- ============ MAIN PAGE (mobile, interactive) ============ -->
@@ -818,8 +815,8 @@
 
         <!-- 3. ask -->
         <section class="ask rv" style="--rvd: 0ms;">
-          <h2 data-photo-heading="">Add photos or a short video.</h2>
-          <p class="helper" data-photo-helper="">Add at least one photo or short video before we prepare your range. The most useful views show every panel with the outer door open, the outdoor connection area, and the path back to the panel.</p>
+          <h2 data-photo-heading="">Show me the panels and the path.</h2>
+          <p class="helper" data-photo-helper="">Add clear photos of every panel that may matter. Wider photos showing the outdoor connection-box area and the path back to the panel help too. Honestly, the more images the better.</p>
         </section>
 
         <!-- One unlabeled multi-photo area. Customers can add photos in any order. -->
@@ -835,21 +832,20 @@
             </div>
           </div>
           <div class="slots" data-slots=""></div>
-          <dialog class="photo-preview" data-photo-preview="" aria-label="Photo or video preview">
-            <button class="preview-close" type="button" data-preview-close="" aria-label="Close preview">×</button>
-            <img data-preview-image="" alt="Selected photo preview" />
-            <video data-preview-video="" controls playsinline hidden></video>
-            <button class="qw-secondary-action" type="button" data-preview-replace="">Replace</button>
+          <dialog class="photo-preview" data-photo-preview="" aria-label="Photo preview">
+            <button class="preview-close" type="button" data-preview-close="" aria-label="Close photo preview">×</button>
+            <img data-preview-image="" alt="Selected setup photo preview" />
+            <button class="qw-secondary-action" type="button" data-preview-replace="">Replace photo</button>
           </dialog>
-          <p class="slots-hint" data-hint="" aria-live="polite">Add at least one photo or short video to continue. You can add up to 10.</p>
+          <p class="slots-hint" data-hint="" aria-live="polite">Choose several at once. At least one clear panel photo is needed before your project range.</p>
         </section>
 
         <!-- Fresh Air (2026-07-13): gift lives on thank-you. No unlock-pressure banner here. -->
 
-        <!-- 6. primary actions: one saved item is required, away from home saves progress -->
+        <!-- 6. primary actions: photo optional-feeling for shaky-hand / not-home path -->
         <div class="photo-actions" style="display:flex; flex-direction:column; gap:10px; margin-top:4px;">
-          <button class="cta" type="button" data-cta="" style="margin:0;" disabled>
-            <span data-cta-inner="">Add a photo or video to continue</span>
+          <button class="cta" type="button" data-cta="" disabled="" style="margin:0;">
+            <span data-cta-inner="">Add a photo to continue</span>
             <svg data-cta-arrow="" viewBox="0 0 18 18"><path d="M3 9h11M10 4.5L14.5 9 10 13.5"></path></svg>
           </button>
           <button class="qw-secondary-action photo-later" type="button" data-photo-later="">I'm away from home</button>
@@ -868,8 +864,8 @@
 
 </div>
 
-<script src="/walk-v2/walk.js?v=acd71b9339d0"></script>
-<script src="/walk-v2/photos-unified.js?v=8050d532ac79"></script>
+<script src="/walk-v2/walk.js"></script>
+<script src="/walk-v2/photos-unified.js"></script>
 <script>
 
 (function () {
