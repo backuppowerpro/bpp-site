@@ -3,7 +3,7 @@
 <head>
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-1Hy/x+VGwu+iHzvTncvF4ZLz80x0K9aphtPhqRZQ0qI='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-TUTB2AggojqMyVT24DU0+xLaXzVS6RASeySUDerf6fw='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-AT0KJZxxN5J+SpbFJPk9mcIqjLWa9bZf47l24ZnzCK4='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-TUTB2AggojqMyVT24DU0+xLaXzVS6RASeySUDerf6fw='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script src="/walk-v2/token-bootstrap.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
 <title>Backup Power Pro · Quote Walk · Generator Connection</title>
@@ -144,7 +144,6 @@
   var selectedCompatible = [];
   var selectedException = '';
   var saving = false;
-  var blockedAtLoad = false;
   var expanded = true;
   var choicesReady = false;
   var customerChangedSelection = false;
@@ -236,12 +235,6 @@
 
   submit.addEventListener('click', function () {
     if (!(selectedCompatible.length || selectedException) || saving) return;
-    if (blockedAtLoad && !selectedCompatible.length &&
-        selectedException !== 'no_compatible_generator_connection' &&
-        selectedException !== 'no_generator') {
-      WALK.go('generator-needed.html', t);
-      return;
-    }
     saving = true; submit.disabled = true; submit.textContent = 'Saving';
     var observedSet = selectedCompatible.map(function (status) {
       return status === 'confirmed_50' ? '50A' : '30A';
@@ -268,6 +261,9 @@
       fields.connection_status = 'unanswered';
       fields.generator_ownership_status = 'not_owned';
     }
+    if (selectedException === 'pending_access') {
+      fields.generator_ownership_status = 'owned';
+    }
     WALK.ph('walk_v2_confirm_tap', {
       field: 'connection_status',
       value: legacyStatus,
@@ -283,7 +279,7 @@
           var params = new URLSearchParams(window.location.search);
           var recovery = params.get('recovery') === '1';
           var editing = params.get('edit') === '1';
-          if (selectedException === 'pending_access' && !recovery) WALK.go('location.html', t);
+          if (selectedException === 'pending_access') WALK.go('location.html', t, { sequence: '1' });
           else if (recovery || editing) WALK.routeRecoveryFromState(t, latest);
           else WALK.routeFromState(t, latest);
         }).catch(function () {
@@ -303,8 +299,6 @@
     var editMode = params.get('edit') === '1';
     var recoveryMode = params.get('recovery') === '1';
     var returningFromEducation = params.get('from') === 'generator-needed';
-    blockedAtLoad = Boolean(v && (v.generator_ownership_status === 'not_owned' ||
-      status === 'no_compatible_generator_connection'));
     if (!returningFromEducation && v && v.generator_ownership_status === 'not_owned') {
       WALK.go('generator-needed.html', t);
       return;
