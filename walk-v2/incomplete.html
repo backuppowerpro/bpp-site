@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="robots" content="noindex,nofollow,noarchive" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-lOsix/W/FuPhdgO9cz0Gx04evCHrIoff6dN56/PwtN0='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-ggOETBpXuqn4PhdQocr8xg+Rwrj9k6s81lZsYHg0osY='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; form-action 'self'; frame-src 'none'" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-n7MRaoc4SIo89hm4+zuzTmiWKP2w/ArhUqDtj0FMYpc='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-nD1j5GOeJ/WmGUtcMWf54ik6Oylobh/EC+xc32nUBeA='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; form-action 'self'; frame-src 'none'" />
 <script src="/walk-v2/token-bootstrap.js"></script>
 <title>Saved Quote Walk | Backup Power Pro</title>
 <style>
@@ -31,7 +31,7 @@ h1 { margin:0 0 8px; color:var(--navy); font-family:var(--head); font-size:22px;
 .tasks { display:grid; gap:10px; }
 .task {
   display:grid;
-  grid-template-columns:64px minmax(0,1fr) auto;
+  grid-template-columns:64px minmax(0,1fr);
   gap:12px;
   align-items:center;
   min-height:76px;
@@ -49,7 +49,6 @@ h1 { margin:0 0 8px; color:var(--navy); font-family:var(--head); font-size:22px;
 .task.generator .connection-icon-30::before { content:""; position:absolute; inset:0; background:var(--navy); -webkit-mask:url("/media/product-photos/30amp%20outlet.PNG") center/contain no-repeat; mask:url("/media/product-photos/30amp%20outlet.PNG") center/contain no-repeat; }
 .task.distance .task-visual img { object-fit:contain; padding:5px; background:#fff; }
 .task-label { min-width:0; color:var(--navy); font-family:var(--head); font-size:14px; font-weight:700; line-height:1.25; }
-.action { min-height:44px; padding:8px 11px; border:0; border-radius:999px; background:transparent; color:var(--navy); font-family:var(--head); font-size:13px; font-weight:700; text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
 .resume-action {
   width:100%;
   min-height:50px;
@@ -64,16 +63,15 @@ h1 { margin:0 0 8px; color:var(--navy); font-family:var(--head); font-size:22px;
   font-size:15px;
   font-weight:700;
 }
-.action:focus-visible { outline:3px solid rgba(255,186,0,.48); outline-offset:2px; }
+.resume-action:focus-visible { outline:3px solid rgba(255,186,0,.48); outline-offset:2px; }
 .error { margin:0 0 12px; color:#b42318; font-size:13px; font-weight:600; }
 .hidden { display:none; }
 .foot { padding:20px; background:var(--navy); color:rgba(255,255,255,.72); font-size:12px; line-height:1.6; text-align:center; }
 @media (max-width:340px) {
   main { padding-right:16px; padding-left:16px; }
   h1 { font-size:20px; }
-  .task { grid-template-columns:54px minmax(0,1fr) auto; gap:9px; padding-right:9px; }
+  .task { grid-template-columns:54px minmax(0,1fr); gap:9px; padding-right:9px; }
   .task-visual { width:54px; height:48px; }
-  .action { padding-right:8px; padding-left:8px; font-size:12.5px; }
 }
 @media (min-width:760px) { .page { min-height:calc(100vh - 48px); margin:24px auto; overflow:hidden; border-radius:20px; box-shadow:0 18px 44px rgba(11,31,59,.14); } }
 </style>
@@ -104,13 +102,13 @@ h1 { margin:0 0 8px; color:var(--navy); font-family:var(--head); font-size:22px;
   var error = document.querySelector('[data-error]');
 
   var TASKS = {
-    service: { label: 'Verify your service area', action: 'Check address', image: '/assets/images/work-full-install.jpg' },
-    generator: { label: 'Confirm your generator connection', action: 'Check generator', icon: 'connection-icon-30' },
-    panel: { label: 'Confirm your main panel location', action: 'Check panels', image: '/img/panel-example.jpg' },
-    distance: { label: 'Confirm the connection distance', action: 'Check distance', image: '/walk-v2/connection-distance-icon.png' },
-    photos: { label: 'Add clear setup photos', action: 'Add photos', image: '/assets/images/work-full-install.jpg' }
+    service: { label: 'Verify your service area', image: '/assets/images/work-full-install.jpg' },
+    generator: { label: 'Confirm your generator connection', icon: 'connection-icon-30' },
+    panel: { label: 'Confirm your main panel location', image: '/img/panel-example.jpg' },
+    distance: { label: 'Confirm the connection distance', image: '/walk-v2/connection-distance-icon.png' },
+    photos: { label: 'Add clear setup photos', image: '/assets/images/work-full-install.jpg' }
   };
-  function addTask(group, target, refresh, label, actionLabel) {
+  function addTask(group, label) {
     var definition = TASKS[group];
     var card = document.createElement('article');
     card.className = 'task ' + group;
@@ -131,20 +129,8 @@ h1 { margin:0 0 8px; color:var(--navy); font-family:var(--head); font-size:22px;
     var text = document.createElement('span');
     text.className = 'task-label';
     text.textContent = label || definition.label;
-    var button = document.createElement('button');
-    button.className = 'action';
-    button.type = 'button';
-    button.textContent = actionLabel || 'Open';
-    if (refresh) {
-      button.addEventListener('click', load);
-    } else {
-      button.addEventListener('click', function () {
-        WALK.go(target, t, { recovery: '1' });
-      });
-    }
     card.appendChild(visual);
     card.appendChild(text);
-    card.appendChild(button);
     actions.appendChild(card);
   }
   function navigateTask(group, value, blockers) {
@@ -209,30 +195,20 @@ h1 { margin:0 0 8px; color:var(--navy); font-family:var(--head); font-size:22px;
 
     groups.forEach(function (group) {
       if (group === 'service') {
-        addTask('service', '', true, '', 'Open');
+        addTask('service');
       } else if (group === 'generator') {
         var needsEquipment = value.generator_ownership_status === 'not_owned'
           || value.connection_status === 'no_compatible_generator_connection';
-        var away = value.connection_status === 'pending_access';
         addTask(
           'generator',
-          needsEquipment ? 'generator-needed.html' : 'connection.html',
-          false,
-          needsEquipment ? 'Get a compatible generator connection' : TASKS.generator.label,
-          'Open'
+          needsEquipment ? 'Get a compatible generator connection' : TASKS.generator.label
         );
       } else if (group === 'panel') {
-        addTask(
-          'panel',
-          'location.html',
-          false,
-          TASKS.panel.label,
-          'Open'
-        );
+        addTask('panel', TASKS.panel.label);
       } else if (group === 'distance') {
-        addTask('distance', 'distance.html', false);
+        addTask('distance');
       } else if (group === 'photos') {
-        addTask('photos', 'photos.html', false);
+        addTask('photos');
       }
     });
     var resume = document.createElement('button');
