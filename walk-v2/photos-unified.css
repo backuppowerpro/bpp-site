@@ -138,11 +138,13 @@
 
 .add-photo-tile {
   display: flex;
+  flex-direction: column;
   height: auto;
   aspect-ratio: 1;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 7px;
+  text-align: center;
   color: var(--navy);
   background: #fff;
   border: 2px dashed rgba(11,31,59,.2);
@@ -152,8 +154,10 @@
 }
 
 .add-photo-tile span:first-child {
+  display: block;
   color: var(--gold-ink);
   font-size: 20px;
+  line-height: 1;
 }
 
 .photo-preview {
