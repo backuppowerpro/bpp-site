@@ -80,8 +80,8 @@
         (photo.status === "failed" ? '<button class="retry" type="button" data-retry="' + escapeHtml(photo.localId) + '">Retry upload</button>' : '') +
       '</article>';
     });
-    html += '<button class="add-photo-tile" type="button" data-add-more aria-label="Add photo">' +
-      '<span aria-hidden="true">+</span><span>Add photo</span></button>';
+    html += '<button class="add-photo-tile" type="button" data-add-more aria-label="Add photos and videos">' +
+      '<span aria-hidden="true">+</span><span>Add photos and videos</span></button>';
     slots.className = "slots unified-photo-list";
     slots.innerHTML = html;
     cta.disabled = !hasUsefulPanelSet() || photos.some(function (photo) {
