@@ -4,7 +4,7 @@
 <meta name="referrer" content="strict-origin-when-cross-origin">
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-IXdDo9hpg5gb38IQ47wwGTbPzM6n3Yehxc0osZljFoc='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-TRhi5LkSvf0t7Yhq09i8fgcIsvzycxuEM21o1TB34BE='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-fEPw2QFRksfMBrLJzu8wqxDXEPUHsCUEJqZxFagutsA='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-TRhi5LkSvf0t7Yhq09i8fgcIsvzycxuEM21o1TB34BE='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script src="/walk-v2/token-bootstrap.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
 <title>Backup Power Pro · Quote Walk · Step 2</title>
@@ -726,6 +726,10 @@
         navigated = true;
         var recovery = new URLSearchParams(window.location.search).get('recovery') === '1';
         if (recovery) {
+          if (answers.distance_band === 'not_sure') {
+            WALK.go('photos.html', t, { recovery: '1' });
+            return;
+          }
           WALK.view(t).then(function (latest) {
             WALK.routeRecoveryFromState(t, latest);
           }).catch(function () {
