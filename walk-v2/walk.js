@@ -8,6 +8,34 @@
   var BASE = window.BPP_QUOTE_WALK_FUNCTIONS_BASE
     || 'https://reowtzedjflwmlptupbk.supabase.co/functions/v1';
   var TOKEN_STORAGE_KEY = 'bpp:qwv2:bearer';
+  var pressTimers = typeof WeakMap !== 'undefined' ? new WeakMap() : null;
+
+  function buttonFromEvent(event) {
+    var target = event && event.target;
+    return target && target.closest ? target.closest('button, [role="button"]') : null;
+  }
+  function showButtonPress(button, duration) {
+    if (!button || button.disabled || button.hasAttribute('aria-pressed')
+        || button.getAttribute('aria-disabled') === 'true') return;
+    if (pressTimers) {
+      var prior = pressTimers.get(button);
+      if (prior) clearTimeout(prior);
+    }
+    button.classList.add('qw-tap-feedback');
+    var timer = setTimeout(function () {
+      button.classList.remove('qw-tap-feedback');
+      if (pressTimers) pressTimers.delete(button);
+    }, duration);
+    if (pressTimers) pressTimers.set(button, timer);
+  }
+  if (typeof document !== 'undefined') {
+    document.addEventListener('pointerdown', function (event) {
+      showButtonPress(buttonFromEvent(event), 220);
+    }, true);
+    document.addEventListener('click', function (event) {
+      showButtonPress(buttonFromEvent(event), 900);
+    }, true);
+  }
 
   function setToken(value) {
     var next = /^[a-zA-Z0-9_-]{32,160}$/.test(String(value || '')) ? String(value) : '';
