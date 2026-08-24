@@ -612,7 +612,7 @@ html.qw-template-document-root {
   padding: 17px 16px 13px !important;
   align-items: flex-end !important;
   color: #fff !important;
-  background: rgba(11,31,59,.94) !important;
+  background: linear-gradient(180deg, transparent, rgba(7,23,45,.9)) !important;
   font-family: var(--head) !important;
   font-size: 15px !important;
   font-weight: 700 !important;
