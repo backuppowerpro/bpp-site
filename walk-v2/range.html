@@ -513,7 +513,11 @@
   function stateAction(action, payload) {
     loading.textContent = 'Saving your current setup...';
     loading.classList.remove('hidden');
-    return WALK.stateAction(t, action, payload || {}).then(refresh).catch(function (cause) {
+    return WALK.stateAction(t, action, payload || {}).then(function (actionResult) {
+      return refresh().then(function () {
+        return { view: view, actionResult: actionResult };
+      });
+    }).catch(function (cause) {
       loading.classList.add('hidden');
       var code = cause && cause.body && cause.body.error;
       fail(code === 'readiness_incomplete'
@@ -596,15 +600,26 @@
     }
     var save = acceptedDelivery.querySelector('[data-save-phone]');
     save.disabled = true;
-    stateAction('update_phone', { phone: nextPhone }).then(function () {
+    stateAction('update_phone', { phone: nextPhone }).then(function (saved) {
       var confirmation = v2().confirmation_event || {};
-      phoneStatus.textContent = confirmation.manual_resend_required
-        ? 'Your number is updated. Key will use the new number when he resends the proposal link.'
-        : 'Got it. I’ll use the number ending in ' + nextPhone.slice(-4) + ' for your proposal.';
+      var result = saved && saved.actionResult || {};
+      var opener = result.opener_resend || {};
+      phoneStatus.textContent = ['sent', 'accepted_ambiguous'].indexOf(opener.action) !== -1
+        ? 'Your number is updated and a fresh confirmation was sent to the number ending in ' + nextPhone.slice(-4) + '.'
+        : result.opener_resend_requested
+          ? 'Your number is updated. A fresh confirmation is queued for the number ending in ' + nextPhone.slice(-4) + '.'
+          : confirmation.manual_resend_required
+            ? 'Your number is updated. Key will use the new number when he resends the proposal link.'
+            : 'Got it. I’ll use the number ending in ' + nextPhone.slice(-4) + ' for your proposal.';
       show(phoneStatus, true);
       show(phoneForm, false);
-    }).catch(function () {
-      phoneError.textContent = 'That number did not save. Your previous number is still on file. Try again.';
+    }).catch(function (cause) {
+      var code = cause && cause.body && cause.body.error;
+      phoneError.textContent = code === 'phone_already_in_use'
+        ? 'That mobile number already has a saved Quote Walk. Your previous number is still on this Quote Walk.'
+        : code === 'phone_suppressed'
+          ? 'That mobile number cannot receive texts from Backup Power Pro. Your previous number is still on file.'
+          : 'That number did not save. Your previous number is still on file. Try again.';
       show(phoneError, true);
     }).finally(function () { save.disabled = false; });
   });
