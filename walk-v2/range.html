@@ -2,7 +2,7 @@
 <html lang="en" class="qw-template-document-root">
 <head>
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-VKI2MWQeEY9LTrIkhfsLMRbF2fhbyQnAO254gPFy6FY='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-oy8BBmKR81N7mZJF/Mlkt18/mt1YBTZQMPYdlXc+IIY='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://reowtzedjflwmlptupbk.supabase.co; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-nui5uXAXNN6DmwUIdidTIzbXsRLi3kZUVZVYaiF+x2A='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-oy8BBmKR81N7mZJF/Mlkt18/mt1YBTZQMPYdlXc+IIY='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://reowtzedjflwmlptupbk.supabase.co; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script src="/walk-v2/token-bootstrap.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
 <meta name="robots" content="noindex, nofollow" />
@@ -362,13 +362,20 @@
   function renderScope(snapshot) {
     var rows = Array.isArray(snapshot.scope_rows) ? snapshot.scope_rows : [];
     var keys = rows.map(function (row) { return String(row && row.key || ''); });
-    var expectedCount = 7;
-    var valid = rows.length === expectedCount && new Set(keys).size === expectedCount && rows.every(function (row) {
-      if (!row || !SCOPE_CATALOG[row.key]) return false;
-      return row.key === 'heavy_duty_compatible_cord'
-        ? row.included === snapshot.cord_included
-        : row.included === true;
-    });
+    var requiredKeys = [
+      'installation',
+      'metal_outdoor_connection_box',
+      'system_walkthrough',
+      'panel_guide',
+      'permit_and_required_inspection',
+      'one_year_workmanship_support'
+    ];
+    if (snapshot.cord_included === true) requiredKeys.splice(2, 0, 'heavy_duty_compatible_cord');
+    var valid = typeof snapshot.cord_included === 'boolean'
+      && rows.length === requiredKeys.length
+      && new Set(keys).size === requiredKeys.length
+      && requiredKeys.every(function (key) { return keys.indexOf(key) !== -1; })
+      && rows.every(function (row) { return row && SCOPE_CATALOG[row.key] && row.included === true; });
     if (!valid) {
       fail('The included scope does not match the saved range. No scope details or proposal readiness have been assumed.');
       show(scope, false);
@@ -503,6 +510,7 @@
     show(main.querySelector('[data-alt-30]'), observed.indexOf('30') !== -1 && observed.indexOf('50') !== -1 && v2().pricing_basis === '50');
     show(main.querySelector('[data-alt-50]'), observed.indexOf('30') !== -1 && observed.indexOf('50') !== -1 && v2().pricing_basis === '30');
     show(main.querySelector('[data-alt-distance]'), DISTANCE_ORDER[v2().distance_band] > 1);
+    show(main.querySelector('[data-alt-cord]'), snapshot.cord_included === true);
     if (v2().accepted_range_snapshot_id) {
       finalizeHandoff();
     }
