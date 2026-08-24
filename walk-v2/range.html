@@ -2,7 +2,7 @@
 <html lang="en" class="qw-template-document-root">
 <head>
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-nui5uXAXNN6DmwUIdidTIzbXsRLi3kZUVZVYaiF+x2A='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-oy8BBmKR81N7mZJF/Mlkt18/mt1YBTZQMPYdlXc+IIY='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://reowtzedjflwmlptupbk.supabase.co; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-YiAMwnOBiDZVG+8DnjFIM44UXD+Os1UXM1qxWgwHDRg='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-nsJN+rYohRfvQKZrSnH/9ru/eYnYxfkNeGaH2tVU8O4='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://reowtzedjflwmlptupbk.supabase.co; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script src="/walk-v2/token-bootstrap.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
 <meta name="robots" content="noindex, nofollow" />
@@ -103,11 +103,6 @@
   .range .range-basis { margin-top: 12px; font-size: 13px; line-height: 1.45; }
   .range .range-basis:empty { display: none; }
   .scope-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-  .included {
-    flex: 0 0 auto; padding: 5px 9px; border-radius: 100px; color: #8a5a00;
-    background: var(--gold-tint); font-size: 10px; font-weight: 800; letter-spacing: .07em;
-    text-transform: uppercase; box-shadow: inset 0 0 0 1px rgba(255,186,0,.4);
-  }
   .scope-list { display: grid; margin-top: 10px; }
   .scope-row { display: grid; grid-template-columns: 64px 1fr; gap: 10px; align-items: center; padding: 10px 0; border-top: 1px solid rgba(11,31,59,.08); }
   button.scope-row { width: 100%; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
@@ -167,51 +162,38 @@
         </form>
         <p class="accepted-phone-status hidden" data-phone-status="" role="status"></p>
       </section>
-      <button class="btn range-primary-action" type="button" data-accept="">Yes, prepare my proposal</button>
     </div>
   </section>
-  <section class="proof-carousel qw-range-proof-carousel hidden" aria-label="What your project can include" data-range-proof-carousel="">
-    <div class="proof-track" role="group" aria-roledescription="carousel" aria-label="Installed work and customer reviews" tabindex="0" data-proof-track="" data-autoplay-ms="8000">
-      <article class="proof-slide proof-slide--image" role="group" aria-roledescription="slide" aria-label="Carousel item 1 of 10" data-proof-slide="">
+  <section class="proof-carousel qw-range-proof-carousel hidden" aria-label="Examples of completed work" data-range-proof-carousel="">
+    <div class="proof-track" role="group" aria-roledescription="carousel" aria-label="Completed Backup Power Pro work" tabindex="0" data-proof-track="" data-autoplay-ms="8000">
+      <article class="proof-slide proof-slide--image" role="group" aria-roledescription="slide" aria-label="Carousel item 1 of 5" data-proof-slide="">
         <img class="proof-image" src="/img/connected-generator-current.jpg" alt="Portable generator connected by a yellow cord to an outdoor home inlet" />
         <p class="proof-copy">One hookup. Power what matters.</p>
       </article>
-      <article class="proof-slide proof-slide--review" role="group" aria-roledescription="slide" aria-label="Carousel item 2 of 10" data-proof-slide="">
-        <blockquote class="proof-review"><div class="review-stars" role="img" aria-label="5 star Google review"><img src="/img/google-g-logo.webp" alt="" />★★★★★</div><p>Installed a 50-amp Generator inlet box along with a panel interlock system in our home. I was impressed by Key’s attention to detail, professionalism, and organization.</p><cite>Jim J. · Google review</cite></blockquote>
-      </article>
-      <article class="proof-slide proof-slide--image" role="group" aria-roledescription="slide" aria-label="Carousel item 3 of 10" data-proof-slide="">
+      <article class="proof-slide proof-slide--image" role="group" aria-roledescription="slide" aria-label="Carousel item 2 of 5" data-proof-slide="">
         <img class="proof-image" src="/img/essentials-powered-current.png" alt="A lit home, a cold refrigerator, and a phone charging at night" />
         <p class="proof-copy">Keep your essentials on.</p>
       </article>
-      <article class="proof-slide proof-slide--review" role="group" aria-roledescription="slide" aria-label="Carousel item 4 of 10" data-proof-slide="">
-        <blockquote class="proof-review"><div class="review-stars" role="img" aria-label="5 star Google review"><img src="/img/google-g-logo.webp" alt="" />★★★★★</div><p>Oh my gosh these guys were absolutely fantastic. Everything went so smoothly and the finished work looks super professional.</p><cite>Hallie L. · Google review</cite></blockquote>
-      </article>
-      <article class="proof-slide proof-slide--image" role="group" aria-roledescription="slide" aria-label="Carousel item 5 of 10" data-proof-slide="">
+      <article class="proof-slide proof-slide--image" role="group" aria-roledescription="slide" aria-label="Carousel item 3 of 5" data-proof-slide="">
         <img class="proof-image" src="/img/outdoor-inlets-current.png" alt="Two BPP-installed metal outdoor generator connections with weather-rated covers" />
         <p class="proof-copy">A permanent outdoor connection.</p>
       </article>
-      <article class="proof-slide proof-slide--review" role="group" aria-roledescription="slide" aria-label="Carousel item 6 of 10" data-proof-slide="">
-        <blockquote class="proof-review"><div class="review-stars" role="img" aria-label="5 star Google review"><img src="/img/google-g-logo.webp" alt="" />★★★★★</div><p>punctual, professional, and truly set the bar high. Throughout permitting and scheduling, he kept me fully informed, and his performance and timing exceeded my expectations.</p><cite>Dino S. · Google review</cite></blockquote>
-      </article>
-      <article class="proof-slide proof-slide--image" role="group" aria-roledescription="slide" aria-label="Carousel item 7 of 10" data-proof-slide="">
+      <article class="proof-slide proof-slide--image" role="group" aria-roledescription="slide" aria-label="Carousel item 4 of 5" data-proof-slide="">
         <img class="proof-image" src="/img/transfer-systems-current.jpg" alt="Two installed breaker-panel interlock systems that prevent utility and generator power from being on at the same time" />
         <p class="proof-copy">Safely switch to generator power.</p>
       </article>
-      <article class="proof-slide proof-slide--review" role="group" aria-roledescription="slide" aria-label="Carousel item 8 of 10" data-proof-slide="">
-        <blockquote class="proof-review"><div class="review-stars" role="img" aria-label="5 star Google review"><img src="/img/google-g-logo.webp" alt="" />★★★★★</div><p>Outstanding service, competent, on time, quick response, professional installation, clean, organized, safety a priority. Highly recommend! Will use again.</p><cite>Mark M. · Google review</cite></blockquote>
-      </article>
-      <article class="proof-slide proof-slide--image" role="group" aria-roledescription="slide" aria-label="Carousel item 9 of 10" data-proof-slide="">
+      <article class="proof-slide proof-slide--image" role="group" aria-roledescription="slide" aria-label="Carousel item 5 of 5" data-proof-slide="">
         <img class="proof-image" src="/img/cord-permit-current.jpg" alt="A compatible yellow generator cord and electrical permit paperwork posted for inspection" />
-        <p class="proof-copy">Cord included. Permit handled.</p>
-      </article>
-      <article class="proof-slide proof-slide--review" role="group" aria-roledescription="slide" aria-label="Carousel item 10 of 10" data-proof-slide="">
-        <blockquote class="proof-review"><div class="review-stars" role="img" aria-label="5 star Google review"><img src="/img/google-g-logo.webp" alt="" />★★★★★</div><p>Best customer service ever, he went above and beyond to help us. Very knowledgeable and honest man!! Definitely I'll recommend Key to all my friends.</p><cite>Bogdi · Google review</cite></blockquote>
+        <p class="proof-copy">Compatible cord and permit handled.</p>
       </article>
     </div>
   </section>
   <main id="rangePage">
     <div class="notice" data-loading="" role="status">Checking your saved setup...</div>
-    <div class="notice error hidden" data-error="" role="alert" tabindex="-1"></div>
+    <div class="notice error hidden" data-error="" role="alert" tabindex="-1">
+      <span data-error-copy=""></span>
+      <button class="btn secondary" type="button" data-retry-load="">Try loading again</button>
+    </div>
 
     <section class="notice hidden" data-revision-context="" role="status">
       <span data-revision-copy=""></span>
@@ -223,11 +205,11 @@
       <div class="actions">
         <div class="scope-expansion" id="includedScope" data-scope="">
           <div class="scope-head">
-            <h2 tabindex="-1">Included in your project range</h2>
+            <h2 tabindex="-1">Your project setup</h2>
           </div>
           <p class="scope-summary-copy" data-scope-summary-copy=""></p>
           <div class="scope-list" data-scope-list=""></div>
-          <button class="btn" type="button" data-accept-bottom="">Yes, prepare my proposal</button>
+          <button class="btn" type="button" data-accept="">Yes, prepare my proposal</button>
         </div>
         <button class="link-btn qw-secondary-action" type="button" data-no="">No, show me my options</button>
       </div>
@@ -235,7 +217,7 @@
 
     <section class="card hidden" data-options="">
       <h2>Would a different setup work better?</h2>
-      <p>These choices change the saved setup. Required installation work, permit, and required inspection stay included.</p>
+      <p>These choices change the saved setup. Required installation work, permit, and required inspection remain part of every option.</p>
       <button class="choice hidden" type="button" data-alt-30="">
         <strong>Choose a 30 Amp installation</strong>
         <small>Both observed connections stay saved. The revised range will use the selected 30 Amp installation.</small>
@@ -287,6 +269,8 @@
   var main = document.getElementById('rangePage');
   var loading = main.querySelector('[data-loading]');
   var error = main.querySelector('[data-error]');
+  var errorCopy = error.querySelector('[data-error-copy]');
+  var retryLoad = error.querySelector('[data-retry-load]');
   var rangeCard = document.querySelector('[data-range-card]');
   var acceptedDelivery = document.querySelector('[data-accepted-delivery]');
   var deliveryCopy = acceptedDelivery.querySelector('[data-delivery-copy]');
@@ -331,7 +315,7 @@
   function show(el, yes) { el.classList.toggle('hidden', !yes); }
   function fail(message) {
     loading.classList.add('hidden');
-    error.textContent = message;
+    errorCopy.textContent = message;
     error.classList.remove('hidden');
   }
   function money(cents) { return '$' + Math.round(Number(cents) / 100).toLocaleString('en-US'); }
@@ -438,7 +422,7 @@
       show(options, false);
       show(revision, false);
       show(main.querySelector('[data-not-fit-terminal]'), false);
-      document.querySelectorAll('[data-accept], [data-accept-bottom], [data-no]').forEach(function (button) {
+      document.querySelectorAll('[data-accept], [data-no]').forEach(function (button) {
         button.classList.add('hidden');
         button.hidden = true;
       });
@@ -451,7 +435,7 @@
       });
       return;
     }
-    document.querySelectorAll('[data-accept], [data-accept-bottom], [data-no]').forEach(function (button) {
+    document.querySelectorAll('[data-accept], [data-no]').forEach(function (button) {
       button.classList.remove('hidden');
       button.hidden = false;
     });
@@ -484,9 +468,13 @@
     } else if (snapshot.revision_reason === 'cord_removed') {
       revisionMessage = 'Revised setup: You will provide the approved compatible cord. This range is ' + money(cordCredit(snapshot)) + ' lower.';
     } else if (snapshot.revision_reason === 'cord_restored') {
-      revisionMessage = 'Revised setup: The approved compatible cord is included again, and the original range has been restored.';
+      revisionMessage = 'Revised setup: The approved compatible cord is included again. This range reflects your current saved setup.';
     } else if (snapshot.revision_reason === 'distance_restored') {
       revisionMessage = 'Revised setup: Your original connection path of ' + (DISTANCE_LABELS[snapshot.distance_band] || 'the saved distance') + ' is restored. A fresh range was created for that setup.';
+    } else if (snapshot.revision_reason === 'both_to_30') {
+      revisionMessage = 'Revised setup: Your range now uses the 30 Amp installation. Both observed connections remain saved.';
+    } else if (snapshot.revision_reason === 'return_to_50') {
+      revisionMessage = 'Revised setup: Your range now uses the 50 Amp installation. Both observed connections remain saved.';
     }
     revisionCopy.textContent = revisionMessage;
     restoreDistance.disabled = false;
@@ -517,6 +505,17 @@
   }
   function refresh() {
     return WALK.view(t).then(function (value) { view = value; render(); return value; });
+  }
+  function retryCurrentRange() {
+    retryLoad.disabled = true;
+    error.classList.add('hidden');
+    loading.textContent = 'Checking your saved setup...';
+    loading.classList.remove('hidden');
+    ensureRange().catch(function (cause) {
+      if (String(cause && cause.message) !== 'readiness_incomplete') {
+        fail('Your current range could not be loaded. Your saved answers are still available.');
+      }
+    }).finally(function () { retryLoad.disabled = false; });
   }
   function stateAction(action, payload) {
     loading.textContent = 'Saving your current setup...';
@@ -564,20 +563,21 @@
   function acceptCurrentRange() {
     if (finalizing) return;
     finalizing = true;
-    document.querySelectorAll('[data-accept], [data-accept-bottom]').forEach(function (button) { button.disabled = true; });
+    document.querySelectorAll('[data-accept]').forEach(function (button) { button.disabled = true; });
     stateAction('accept_range', {}).then(function () {
       finalizing = false;
       finalizeHandoff();
     }).catch(function () {
       finalizing = false;
-      document.querySelectorAll('[data-accept], [data-accept-bottom]').forEach(function (button) { button.disabled = false; });
+      document.querySelectorAll('[data-accept]').forEach(function (button) { button.disabled = false; });
       error.focus();
       error.scrollIntoView({ block: 'center' });
     });
   }
-  document.querySelectorAll('[data-accept], [data-accept-bottom]').forEach(function (button) {
+  document.querySelectorAll('[data-accept]').forEach(function (button) {
     button.addEventListener('click', acceptCurrentRange);
   });
+  retryLoad.addEventListener('click', retryCurrentRange);
   editPhone.addEventListener('click', function () {
     phoneStatus.textContent = '';
     show(phoneStatus, false);
@@ -674,7 +674,12 @@
   });
   restoreDistance.addEventListener('click', function () {
     restoreDistance.disabled = true;
-    stateAction('restore_distance', {})
+    WALK.confirm(t, {
+      distance_band: v2().original_distance_band,
+      revision_reason: 'distance_restored'
+    }).then(function () {
+      return stateAction('create_range', { revision_reason: 'distance_restored' });
+    })
       .catch(function () { restoreDistance.disabled = false; });
   });
   main.querySelector('[data-no-alternative]').addEventListener('click', function () {
@@ -705,7 +710,9 @@
   });
   WALK.ph('walk_v2_screen_view', { screen: 'range' });
   ensureRange().catch(function (cause) {
-    if (String(cause && cause.message) !== 'readiness_incomplete') fail('Your current range could not be loaded. Try again.');
+    if (String(cause && cause.message) !== 'readiness_incomplete') {
+      fail('Your current range could not be loaded. Your saved answers are still available.');
+    }
   });
 })();
 </script>

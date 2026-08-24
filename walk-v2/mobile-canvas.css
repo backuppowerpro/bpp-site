@@ -612,7 +612,7 @@ html.qw-template-document-root {
   padding: 17px 16px 13px !important;
   align-items: flex-end !important;
   color: #fff !important;
-  background: linear-gradient(180deg, transparent, rgba(7,23,45,.9)) !important;
+  background: rgba(11,31,59,.94) !important;
   font-family: var(--head) !important;
   font-size: 15px !important;
   font-weight: 700 !important;
@@ -1806,5 +1806,70 @@ body.qw-template-document .page > .foot {
 @media (min-width: 1024px) {
   body > .page[data-screen-label] {
     margin-top: 32px !important;
+  }
+}
+
+/* Key-selected closing-page pattern: the result, recovery, and confirmation
+   pages keep the same centered one-column reading order as the question pages. */
+@media (min-width: 1024px) {
+  .page[data-screen-label].qw-range-page,
+  .page[data-screen-label].qw-final-page,
+  .page[data-screen-label="Quote walk incomplete"] {
+    display: flex !important;
+    width: min(760px, calc(100vw - 64px)) !important;
+    max-width: 760px !important;
+  }
+
+  .page[data-screen-label].qw-range-page > .qw-range-hero,
+  .page[data-screen-label].qw-final-page > .qw-final-hero,
+  .page[data-screen-label].qw-range-page > #rangePage,
+  .page[data-screen-label].qw-final-page > .body-grid,
+  .page[data-screen-label].qw-range-page > .qw-range-proof-carousel {
+    width: 100% !important;
+    max-width: none !important;
+    height: auto !important;
+  }
+
+  .page[data-screen-label].qw-range-page > .qw-range-hero,
+  .page[data-screen-label].qw-final-page > .qw-final-hero {
+    min-height: 0 !important;
+    padding: 32px 34px !important;
+  }
+
+  .page[data-screen-label].qw-range-page > #rangePage,
+  .page[data-screen-label].qw-final-page > .body-grid {
+    display: block !important;
+    margin: 18px 0 0 !important;
+    padding: 30px !important;
+    border-radius: 20px;
+    background: #fff !important;
+    box-shadow: 0 8px 24px rgba(11,31,59,.07), inset 0 0 0 1px rgba(11,31,59,.07) !important;
+  }
+
+  .page[data-screen-label].qw-range-page > .qw-range-proof-carousel {
+    margin-top: 18px !important;
+  }
+
+  .page[data-screen-label].qw-range-page > .qw-range-proof-carousel .proof-track {
+    gap: 14px !important;
+    padding: 0 24px !important;
+    scroll-padding-inline: 24px !important;
+  }
+
+  .page[data-screen-label].qw-range-page > .qw-range-proof-carousel .proof-slide {
+    flex-basis: calc((100% - 28px) / 3) !important;
+    height: 210px !important;
+  }
+
+  .page[data-screen-label].qw-final-page > .body-grid .col-main,
+  .page[data-screen-label].qw-final-page > .body-grid .price {
+    height: auto !important;
+  }
+
+  .page[data-screen-label="Quote walk thank you (interactive, mobile)"] .col-main,
+  .page[data-screen-label="Quote walk incomplete"] .tasks {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: none !important;
   }
 }

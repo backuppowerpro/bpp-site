@@ -431,7 +431,7 @@
         && payloadKeys.every(function (key) { return key === 'revision_reason'; })
         && (
           !payloadKeys.length
-          || ['initial', 'both_to_30', 'shorter_distance', 'cord_removed', 'cord_restored', 'return_to_50']
+          || ['initial', 'both_to_30', 'shorter_distance', 'distance_restored', 'cord_removed', 'cord_restored', 'return_to_50']
             .indexOf(String(payloadFields.revision_reason || '')) !== -1
         );
       var validSupersedeMedia = action === 'supersede_media'
