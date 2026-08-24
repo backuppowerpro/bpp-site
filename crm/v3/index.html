@@ -204,6 +204,10 @@
     });
   })();
 </script>
+<!-- Twilio Voice SDK stays as a plain script tag: it ships a UMD that puts
+     `Twilio.Device` on window, which crm-phone.jsx picks up as a bare
+     identifier. Vendored locally so no third-party CDN on the hot path. -->
+<script src="/crm/v3/vendor/twilio-voice-sdk-2.18.3.min.js"></script>
 <!-- The single ES module entry. Vite:
        1. rewrites this to the content-hashed /crm/v3/assets/main-[hash].js at
           build time, so cache-busting is automatic (kills the manual ?v=NNN
@@ -822,19 +826,7 @@
     padding: 20px;
   }
 </style>
-  <script type="module" crossorigin src="/crm/v3/assets/index-DphPW1Th.js"></script>
-<script data-bpp-ionic-preload>
-(function(){try{
-  var params = new URLSearchParams(location.search);
-  var localShell = location.protocol === 'capacitor:' || document.documentElement.getAttribute('data-bpp-shell') === 'tauri' || !!(window.__TAURI_INTERNALS__ || window.__TAURI__ || window.__TAURI_METADATA__);
-  var wantsIonic = params.get('ionic') === '1' || localShell;
-  if (!wantsIonic) return;
-  var base = localShell ? './' : '/crm/v3/';
-  var preload = document.createElement('link');
-  preload.rel = 'modulepreload'; preload.crossOrigin = ''; preload.href = base + "assets/ionic-app-B36067HW.js";
-  document.head.appendChild(preload);
-}catch(_){}})();
-</script>
+  <script type="module" crossorigin src="/crm/v3/assets/index-BnKhUm-U.js"></script>
 </head>
 <body>
 <div id="root"></div>

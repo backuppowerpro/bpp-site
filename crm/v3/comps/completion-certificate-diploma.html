@@ -1,0 +1,481 @@
+<!doctype html>
+<!-- @dsCard group="Brand" name="Completion Certificate" subtitle="Customer-facing permanent record — 4 states" viewport="440x1200" -->
+<html lang="en">
+<head>
+<style data-omelette-injected>html,body{background:transparent}</style><script data-omelette-injected>(()=>{{const W=new URLSearchParams(location.search).get("theme");if(W==="light"||W==="dark"){document.documentElement.dataset.theme=W}}{const W=()=>{try{if(document.querySelector('meta[name="color-scheme"]'))return;const V=getComputedStyle(document.documentElement).getPropertyValue("color-scheme").trim();if(V&&V!=="normal")return;const z=(j)=>{if(!j)return null;const H=getComputedStyle(j).backgroundColor.match(/^rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)(?:[,\s/]+([\d.]+%?))?\s*\)$/);if(!H)return null;const F=H[4]==null?1:parseFloat(H[4])/(H[4].endsWith("%")?100:1);if(F<0.99)return null;return[+H[1],+H[2],+H[3]]};const G=z(document.body)||z(document.documentElement);if(!G)return;const K=(j)=>{const H=j/255;return H<=0.04045?H/12.92:((H+0.055)/1.055)**2.4};const D=0.2126*K(G[0])+0.7152*K(G[1])+0.0722*K(G[2]);document.documentElement.style.setProperty("color-scheme",D<0.4?"dark":"light")}catch{}};if(document.readyState==="complete")W();else window.addEventListener("load",W)}var b=[];var p=false;var O=30000;var n=3000;document.addEventListener("DOMContentLoaded",()=>{const W=window.Babel;const V="om-src-id";if(W&&W.registerPlugin&&!(W.availablePlugins&&W.availablePlugins[V])){W.registerPlugin(V,({types:D})=>({visitor:{JSXOpeningElement(j,H){const F=j.node;if(F.name&&F.name.type==="JSXMemberExpression")return;for(let Q=0;Q<F.attributes.length;Q++){const $=F.attributes[Q];if($.type==="JSXAttribute"&&$.name&&$.name.name==="data-om-id")return}const P=H.file&&H.file.opts&&H.file.opts.filename||"?";const R=F.loc&&F.loc.start;const J=`jsx:${P}:${F.start??0}:${R?R.line:0}:${R?R.column+1:0}`;F.attributes.push(D.jsxAttribute(D.jsxIdentifier("data-om-id"),D.stringLiteral(J)))}}}))}const z="om-text-extract";let G=false;if(p&&W&&W.registerPlugin&&!(W.availablePlugins&&W.availablePlugins[z])){const D=window.React;if(D&&D.useSyncExternalStore&&D.createElement){G=true;const j={};const H=new Set;let F=0;window.__omTextO=j;window.__omTextSet=(J)=>{for(const Q in J){const $=J[Q];if($==null)delete j[Q];else j[Q]=$}F++;H.forEach((Q)=>Q())};const P=(J)=>{H.add(J);return()=>H.delete(J)};const R=()=>F;window.__OmT=function J(Q){D.useSyncExternalStore(P,R,R);return D.createElement("span",{"data-om-text":Q.i,className:"__om-t"},Q.i in j?j[Q.i]:Q.children)};W.registerPlugin(z,({types:J})=>{const Q={style:1,script:1,noscript:1,textarea:1,title:1,option:1,text:1,tspan:1,textPath:1};const $={placeholder:1,alt:1,title:1,label:1,"aria-label":1,"aria-description":1,"aria-placeholder":1};const Y=(q,M)=>J.logicalExpression("??",J.memberExpression(J.logicalExpression("||",J.memberExpression(J.identifier("window"),J.identifier("__omTextO")),J.objectExpression([])),J.stringLiteral(q),true),M);const Z=(q)=>q.file&&q.file.opts&&q.file.opts.filename||"?";const B=(q)=>q.file&&q.file.code||"";const U=(q,M)=>{const L=(X)=>X&&X.start!=null&&X.end!=null&&(X.type==="StringLiteral"||X.type==="TemplateLiteral"&&X.expressions.length===0)?[X.start,X.end]:null;const N=L(M);if(N)return N;if(M&&M.type==="Identifier"){const X=q.scope.getBinding(M.name);if(X&&X.constant&&X.path.node.type==="VariableDeclarator"){return L(X.path.node.init)}}return null};const x=(q,M,L)=>{const N=q.node;let X=false;const f=(w,A)=>{X=true;return J.jsxElement(J.jsxOpeningElement(J.jsxIdentifier("__OmT"),[J.jsxAttribute(J.jsxIdentifier("i"),J.stringLiteral(w))],false),J.jsxClosingElement(J.jsxIdentifier("__OmT")),[A],false)};const C=N.children.map((w)=>{if(w.type==="JSXText"){if(w.start==null||w.end==null)return w;const A=L.slice(w.start,w.end);const k=A.length-A.trimStart().length;const u=A.length-A.trimEnd().length;if(k+u>=A.length)return w;return f(`txt:${M}:${w.start+k}:${w.end-u}`,w)}if(w.type==="JSXExpressionContainer"){const A=U(q,w.expression);if(A)return f(`str:${M}:${A[0]}:${A[1]}`,w)}return w});if(X)N.children=C};return{visitor:{JSXOpeningElement(q,M){const L=q.node;const N=Z(M);const X={};for(let f=0;f<L.attributes.length;f++){const C=L.attributes[f];if(C.type!=="JSXAttribute"||!C.name)continue;const w=C.name.name;if(!$[w])continue;if(!C.value||C.value.type!=="StringLiteral")continue;if(C.value.start==null||C.value.end==null)continue;const A=`txt:${N}:${C.value.start}:${C.value.end}`;X[w]=A;C.value=J.jsxExpressionContainer(Y(A,J.stringLiteral(C.value.value)))}if(Object.keys(X).length){L.attributes.push(J.jsxAttribute(J.jsxIdentifier("data-om-text-attrs"),J.stringLiteral(JSON.stringify(X))))}},JSXElement(q,M){const L=q.node.openingElement;const N=L&&L.name&&L.name.name;if(N==="__OmT")return;if(typeof N==="string"&&Q[N])return;x(q,Z(M),B(M))},JSXFragment(q,M){x(q,Z(M),B(M))}}}})}}const K=G?["transform-react-jsx-source",V,z]:["transform-react-jsx-source",V];document.querySelectorAll('script[type="text/babel"],script[type="text/jsx"]').forEach((D,j)=>{const H=D.getAttribute("data-plugins")||"";const F=K.filter((P)=>H.indexOf(P)<0);if(F.length){D.setAttribute("data-plugins",H?`${H},${F.join(",")}`:F.join(","))}if(!D.hasAttribute("data-filename")){D.setAttribute("data-filename",D.getAttribute("src")||`inline-${j}`)}})});var v=window.parent;var g="not editable here — open the project in the Claude Design editor to save";var d=()=>Promise.resolve({persisted:false,noHost:true,reason:g});var S=d;var h="data/storage.json";var i=()=>{try{const W=new URL(document.baseURI);const V=W.pathname.match(/\/projects\/([^/]+)\/serve\//);if(V)return V[1];return W.hostname.split(".")[0]||""}catch{return location.hostname.split(".")[0]||""}};var o=()=>{try{const W=new URL(document.baseURI);const V=W.pathname.indexOf("/serve/");if(V>=0)return W.origin+W.pathname.slice(0,V+"/serve/".length)+h}catch{}return"./"+h};var I=null;var _=()=>{if(!I){I=fetch(o(),{cache:"no-store"}).then((W)=>{if(W.ok)return W.text();return W.status===404?"":null}).catch(()=>null).then((W)=>{if(W===null){I=null;return null}const V=new Map;if(!W)return V;let z;try{z=JSON.parse(W)}catch{console.warn("[omelette.storage] "+h+" is not valid JSON; treating the store as unreadable so a save cannot overwrite the "+"hand-edited bytes. Fix the JSON (or delete the file) to re-enable persistence.");I=null;return null}if(z===null||typeof z!=="object"||Array.isArray(z)){console.warn("[omelette.storage] "+h+" doesn't hold a JSON object; treating the store as unreadable so a save cannot "+"overwrite the hand-edited bytes. Make the top level a JSON object to re-enable persistence.");I=null;return null}const G=z;if("data"in G){const K=G.data;if(K===null||typeof K!=="object"||Array.isArray(K)){console.warn("[omelette.storage] "+h+' has a "data" field that is not a JSON object; treating the store as unreadable so a '+'save cannot overwrite the hand-edited bytes. Make "data" a JSON object to re-enable persistence.');I=null;return null}const D=G._meta;const j=D!==null&&typeof D==="object"?D.project:undefined;if(typeof j==="string"&&j!==""&&j!==i())return V;for(const H of Object.keys(K))V.set(H,K[H]);return V}for(const K of Object.keys(G)){if(K!=="_meta")V.set(K,G[K])}return V})}return I};var y=(W)=>S(h,JSON.stringify({_meta:{project:i(),version:1},data:Object.fromEntries(W)},null,2));var m=Promise.resolve();var T=(W)=>{const V=m.then(W);m=V.then(()=>{return},()=>{return});return V};var s=/sk-(?:ant-)?[A-Za-z0-9_-]{16,}|AKIA[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{20,}|xox[a-z]-[A-Za-z0-9][A-Za-z0-9-]{9,}|AIza[0-9A-Za-z_-]{30,}|-----BEGIN [A-Z ]*PRIVATE KEY-----/;var a=/password|passwd|secret|api[_-]?key|access[_-]?token|auth[_-]?token|credential/i;var r=(W,V,z)=>{if(s.test(V)||a.test(W)&&typeof z==="string"&&z.length>=8){console.warn('[omelette.storage] the value for "'+W+'" looks like a credential. The storage file is a plaintext project file — visible to '+"everyone with project access and copied when the project is duplicated. Do not store secrets here.")}};var l={persisted:false,reason:"could not load the existing store — not overwriting it"};var c={persisted:false,reason:"stored value changed since a failed read — re-read this key before saving"};var E=new Set;var t={get:(W)=>{if(typeof W!=="string"){return Promise.reject(new TypeError("storage.get: key must be a string"))}return T(_).then((V)=>{if(V===null){E.add(W);return null}E.delete(W);if(!V.has(W))return null;const z=V.get(W);return z==null?null:JSON.parse(JSON.stringify(z))})},set:(W,V)=>{if(typeof W!=="string"){return Promise.reject(new TypeError("storage.set: key must be a string"))}let z;try{z=JSON.stringify(V)}catch(K){return Promise.reject(new TypeError("storage.set: value must be JSON-serializable ("+String(K)+")"))}if(z===undefined){return Promise.reject(new TypeError("storage.set: value must be JSON-serializable"))}r(W,z,V);const G=JSON.parse(z);return T(()=>_().then((K)=>{if(K===null)return l;if(E.has(W)){if(K.has(W))return c;E.delete(W)}K.set(W,G);return y(K)}))},delete:(W)=>{if(typeof W!=="string"){return Promise.reject(new TypeError("storage.delete: key must be a string"))}return T(()=>_().then((V)=>{if(V===null)return l;if(E.has(W)){if(V.has(W))return c;E.delete(W)}V.delete(W);return y(V)}))},keys:()=>T(_).then((W)=>W===null?[]:Array.from(W.keys()))};window.omelette={writeFile:(W,V)=>S(W,V).then((z)=>{if(!z.persisted&&!z.noHost){throw new Error(z.reason||"write failed")}}),storage:t};if(v&&v!==window){const W=(J,Q)=>{try{v.postMessage({__omelette_log:true,type:J,data:Q},"*")}catch{}};["log","warn","error"].forEach((J)=>{const Q=console[J];console[J]=(...$)=>{const Y=$.map((Z)=>{try{return typeof Z==="object"?JSON.stringify(Z):String(Z)}catch{try{return String(Z)}catch{return"[unstringifiable]"}}}).join(" ");W(J,Y);Q.apply(console,$)}});window.addEventListener("error",(J)=>{const Q=J.target;if(Q&&Q!==window&&Q.tagName){const $=Q.src||Q.href||"";W("resource_error",`${Q.tagName} failed to load: ${$}`)}else{W("error",`${J.message||"Unknown error"} at ${J.filename||"?"}:${J.lineno||0}:${J.colno||0}`)}},true);window.addEventListener("unhandledrejection",(J)=>{const Q=J.reason;const $=Q instanceof Error?`${Q.message} ${Q.stack}`:String(Q);W("error",`Unhandled rejection: ${$}`)});window.addEventListener("click",(J)=>{if(J.defaultPrevented||J.button!==0)return;if(J.metaKey||J.ctrlKey||J.shiftKey||J.altKey)return;const Q=J.composedPath?J.composedPath():[];const $=["button","input","select","textarea","summary","label"];let Y=null;for(const x of Q){if(!(x instanceof Element))continue;if(x.localName==="a"){if(!(x instanceof HTMLAnchorElement))return;Y=x;break}if($.indexOf(x.localName)!==-1)return}if(!Y)return;if(Y.isContentEditable)return;const Z=Y.closest("[contenteditable]");if(Z&&Z.getAttribute("contenteditable")!=="false")return;const B=(Y.getAttribute("target")||"_self").toLowerCase();if(B!=="_self"&&B!=="_top"&&B!=="_parent")return;let U;try{U=new URL(Y.href)}catch{return}if(U.protocol!=="http:"&&U.protocol!=="https:")return;if(location.origin==="null")return;if(U.origin===location.origin)return;J.preventDefault();window.open(U.href,"_blank","noopener,noreferrer")});const V=()=>{try{v.postMessage({type:"omelette:height",height:document.documentElement.scrollHeight},"*")}catch{}};if(window.ResizeObserver)new ResizeObserver(V).observe(document.documentElement);const z=()=>{V();if(!document.querySelector('script[type="text/babel"],script[type="text/jsx"]'))return;const J=()=>document.getElementById("root")||document.querySelector("body > div[id]");const Q=J()?.firstElementChild??null;let $=0;const Y=()=>{const Z=J();if(Z&&Z.firstElementChild!==Q||++$>30){V();return}setTimeout(Y,100)};setTimeout(Y,100)};if(document.readyState==="complete")z();else window.addEventListener("load",z);const G={};let K=0;const D=(J)=>new Promise((Q,$)=>{if(!b.length){$(new Error("claude.complete: no parent origin"));return}const Y=`c${++K}`;const Z=()=>setTimeout(()=>{delete G[Y];$(new Error(`claude.complete: no data for ${O/1000}s`))},O);const B=Z();G[Y]={resolve:Q,reject:$,text:"",t:B,arm:Z};try{for(const U of b){v.postMessage({__om_api:true,id:Y,body:J},U)}}catch(U){clearTimeout(B);delete G[Y];$(U)}});const j=8;const H=async(J,Q)=>{if(!Array.isArray(J.messages)){throw new Error("claude.complete: tools require a messages array")}const $=J.messages.slice();const Y={...J,tools:J.tools.map((U)=>{if(U===null||typeof U!=="object")return U;const x={};for(const q of Object.keys(U)){if(typeof U[q]!=="function")x[q]=U[q]}return x})};const Z=Y.tool_choice;const B=Z!=null&&(Z.type==="any"||Z.type==="tool")?{...Y,tool_choice:Z.disable_parallel_tool_use!==undefined?{type:"auto",disable_parallel_tool_use:Z.disable_parallel_tool_use}:{type:"auto"}}:Y;for(let U=0;U<j;U++){const x=await D({...U===0?Y:B,messages:$});const q=x.message;const M=q&&Array.isArray(q.content)?q.content:null;const L=M?M.filter((X)=>X?.type==="tool_use"):[];if(q?.stop_reason!=="tool_use"||L.length===0){return x.text}const N=[];for(const X of L){const f=Q.get(X.name);if(!f){N.push({type:"tool_result",tool_use_id:X.id,content:`no handler for tool "${X.name}"`,is_error:true});continue}try{const C=await f(X.input);const w=typeof C==="string"?C:R(C)??"";N.push({type:"tool_result",tool_use_id:X.id,content:w})}catch(C){N.push({type:"tool_result",tool_use_id:X.id,content:String(C?.message??C??"tool handler failed"),is_error:true})}}$.push({role:"assistant",content:M},{role:"user",content:N})}throw new Error(`claude.complete: exceeded ${j} tool turns`)};window.claude={complete(J){const Q=J;if(Q!==null&&typeof Q==="object"&&Array.isArray(Q.tools)&&Q.tools.some(($)=>$!==null&&typeof $==="object"&&typeof $.run==="function")){const $=new Map;for(const Y of Q.tools){if(Y!==null&&typeof Y==="object"&&typeof Y.run==="function"){$.set(String(Y.name),Y.run)}}return H(Q,$)}return D(J).then(($)=>$.text)}};const F={};let P=0;S=(J,Q)=>new Promise(($)=>{if(!b.length){$({persisted:false,noHost:true,reason:g});return}const Y=`f${++P}`;const Z=setTimeout(()=>{delete F[Y];$({persisted:false,noHost:true,reason:g})},n);F[Y]={settle:$,t:Z};try{for(const B of b){v.postMessage({__om_file:true,id:Y,op:"write",path:J,content:Q},B)}}catch{clearTimeout(Z);delete F[Y];$({persisted:false,noHost:true,reason:g})}});const R=(J)=>{try{return JSON.stringify(J)}catch{return JSON.stringify(String(J))}};window.addEventListener("message",(J)=>{if(b.indexOf(J.origin)<0)return;if(J.source!==v)return;const Q=J.data;if(!Q)return;if(Q.type==="omelette-preview-refresh"){if(typeof Q.token!=="string"||!/^[0-9a-f.-]+(\.(rc|pr-[0-9]+))?(\.[0-9]+\.[0-9a-f]{16})?$/.test(Q.token))return;const Z=Math.max(1,Math.floor((Q.expiresAt||0)-Date.now()/1000));document.cookie="__Host-omelette-preview="+Q.token+"; Path=/; Secure; SameSite=None; Partitioned; Max-Age="+Z;return}if(Q.__om_file_r){const Z=F[Q.id];if(!Z)return;clearTimeout(Z.t);delete F[Q.id];Z.settle(Q.ok?{persisted:true}:{persisted:false,reason:Q.error||"write failed"});return}if(Q.__om_api_r){const Z=G[Q.id];if(!Z)return;if(Q.error!=null){clearTimeout(Z.t);delete G[Q.id];Z.reject(new Error(Q.error));return}if(Q.chunk!=null){clearTimeout(Z.t);Z.t=Z.arm();Z.text+=Q.chunk;return}if(Q.done){clearTimeout(Z.t);delete G[Q.id];Z.resolve({text:Q.text!=null?Q.text:Z.text,message:Q.message});return}return}if(!Q.__om_eval)return;const $=Q;const Y=(Z)=>{J.source.postMessage({...Z,__om_eval_r:1,id:$.id},J.origin)};try{const Z=(0,eval)($.code);if(Z&&typeof Z.then==="function"){Z.then((B)=>Y({ok:1,v:R(B)}),(B)=>Y({ok:0,e:String(B)}))}else{Y({ok:1,v:R(Z)})}}catch(Z){Y({ok:0,e:String(Z)})}})}})();
+</script>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Certificate of Completed Installation — Backup Power Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_ds/backup-power-pro-design-system-019ddb93-c9e1-7b9a-9730-bbe409b713e9/tokens.css">
+<script src="image-slot.js"></script>
+<style>
+  :root{
+    /* Customer directive overrides on top of brand tokens */
+    --navy:#1B2B4B;
+    --gold:#ffba00;
+    --ink:#1B2B4B;
+    --muted:#51607e;      /* AA on white: ~5.0:1 */
+    --faint:#6b7794;      /* captions, ~4.5:1 */
+    --line:rgba(27,43,75,.14);
+    --line-soft:rgba(27,43,75,.08);
+    --paper:#f6f7f9;
+    --sheet:#ffffff;
+    --font:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+    --serif:'Cormorant Garamond',Georgia,'Times New Roman',serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--font);
+    font-size:17px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    font-feature-settings:"ss01";
+  }
+  a{color:var(--navy)}
+  a:hover{color:#33456b}
+
+  /* ---- Stage: mobile-first single column ---- */
+  .stage{min-height:100vh;display:flex;justify-content:center;padding:28px 18px 120px}
+  .sheet{
+    width:100%;max-width:440px;background:var(--sheet);
+    border-radius:18px;box-shadow:0 1px 2px rgba(27,43,75,.04),0 18px 50px rgba(27,43,75,.09);
+    padding:40px 32px 36px;position:relative;overflow:hidden;
+  }
+  /* ===== Issued state: diploma composition ===== */
+  .diploma{border:2px solid var(--navy);padding:36px 26px 30px;position:relative;text-align:center}
+  .diploma::before{content:"";position:absolute;inset:6px;border:1px solid var(--navy);pointer-events:none}
+  .dip-wordmark{font-size:13px;font-weight:600;letter-spacing:.34em;text-transform:uppercase;color:var(--navy);margin:0 0 5px}
+  .dip-sub{font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--faint);margin:0 0 22px}
+  h1.dip-title{font-family:var(--serif);font-weight:600;font-size:31px;line-height:1.1;letter-spacing:.005em;color:var(--navy);margin:0;text-wrap:balance}
+  .flourish{display:flex;align-items:center;justify-content:center;gap:12px;margin:16px 0 26px}
+  .flourish span{height:1px;width:44px;background:var(--navy);opacity:.5}
+  .flourish i{width:7px;height:7px;background:var(--navy);transform:rotate(45deg)}
+  .dip-confer{font-family:var(--serif);font-variant:all-small-caps;font-weight:600;font-size:20px;letter-spacing:.16em;color:var(--muted);margin:0 0 8px}
+  .dip-name{font-family:var(--serif);font-weight:700;font-size:40px;line-height:1.05;letter-spacing:.005em;color:var(--navy);margin:0 0 12px;text-wrap:balance}
+  .dip-addr{font-size:16px;color:var(--muted);margin:0 auto;max-width:300px}
+  .dip-decree{font-family:var(--serif);font-weight:500;font-size:20px;line-height:1.45;color:var(--navy);margin:22px auto 0;max-width:340px;text-wrap:pretty}
+  .dip-block{max-width:320px;margin:0 auto;text-align:left}
+  .diploma hr.rule{margin:28px 0}
+  .dip-privileges{font-family:var(--serif);font-style:italic;font-weight:500;font-size:18px;line-height:1.4;color:var(--muted);margin:0 auto 22px;max-width:320px;text-wrap:pretty}
+  .seal-wrap{display:flex;justify-content:center;margin:0 0 20px}
+  .seal{width:150px;height:150px}
+  .seal .ring{fill:none;stroke:var(--gold);stroke-width:1.75}
+  .seal .ring.thin{stroke-width:1}
+  .seal text{text-anchor:middle;stroke:none}
+  .seal .arc{font-family:var(--font);font-size:12.5px;font-weight:600;letter-spacing:.24em;fill:var(--navy)}
+  .seal .dot{fill:var(--navy);stroke:none}
+  .seal .seal-sub{font-family:var(--font);font-size:9px;font-weight:600;letter-spacing:.2em;fill:var(--faint)}
+  .seal .seal-no{font-family:var(--serif);font-weight:700;font-size:22px;letter-spacing:.1em;fill:var(--navy)}
+  .dip-installer{font-size:15px;font-weight:500;color:var(--navy);margin:0 auto 7px;max-width:320px;line-height:1.4}
+  .dip-issued{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin:0}
+  .diploma .actions{margin-top:30px}
+
+  /* ---- Masthead ---- */
+  .mast{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:34px}
+  .wordmark{font-weight:700;font-size:16px;letter-spacing:-0.01em;color:var(--navy)}
+  .wordmark span{color:var(--gold)}
+  .rec-tag{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+
+  /* ---- Header block ---- */
+  .eyebrow{font-size:12px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+  h1.headline{font-size:26px;font-weight:700;line-height:1.18;letter-spacing:-0.02em;color:var(--navy);margin:0 0 30px;text-wrap:balance}
+
+  /* ---- Subject ---- */
+  .subject{margin:0 0 30px}
+  .subject .name{font-size:33px;font-weight:600;line-height:1.1;letter-spacing:-0.025em;color:var(--navy);margin:0 0 8px;text-wrap:balance}
+  .subject .addr{font-size:17px;color:var(--muted);margin:0}
+
+  hr.rule{border:0;border-top:1px solid var(--line);margin:30px 0}
+
+  /* ---- Fact list ---- */
+  .facts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:16px}
+  .facts li{display:flex;gap:14px;align-items:baseline}
+  .facts .k{flex:0 0 92px;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);padding-top:2px}
+  .facts .v{flex:1;font-size:17px;font-weight:500;color:var(--navy)}
+
+  /* ---- Provenance timeline ---- */
+  .prov{margin:0}
+  .prov .cap{font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin:0 0 4px}
+  .prov .prov-head{font-size:16px;font-weight:600;color:var(--navy);margin:0 0 22px}
+  .timeline{list-style:none;margin:0;padding:0;position:relative}
+  .timeline li{position:relative;padding:0 0 22px 28px}
+  .timeline li:last-child{padding-bottom:0}
+  /* connecting line */
+  .timeline li::before{content:"";position:absolute;left:5px;top:14px;bottom:-4px;width:1.5px;background:var(--line)}
+  .timeline li:last-child::before{display:none}
+  /* node */
+  .timeline li::after{content:"";position:absolute;left:0;top:5px;width:12px;height:12px;border-radius:50%;background:var(--sheet);box-shadow:inset 0 0 0 2px var(--navy)}
+  .timeline li.pass::after{background:var(--gold);box-shadow:inset 0 0 0 2px var(--navy)}
+  .timeline .ev{font-size:16px;font-weight:600;color:var(--navy);line-height:1.3}
+  .timeline li.pass .ev{color:var(--navy)}
+  .timeline .dt{font-size:14px;color:var(--muted);margin-top:2px}
+  .no-permit{font-size:17px;color:var(--muted);margin:0;line-height:1.5}
+
+  /* ---- Photos ---- */
+  .photos{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0}
+  .photos .tile{position:relative;aspect-ratio:4/3;border-radius:12px;overflow:hidden}
+  .photos.count-1{grid-template-columns:1fr}
+  .photos.count-1 .tile,.photos.count-3 .tile:first-child{aspect-ratio:16/9}
+  .photos.count-3{grid-template-columns:1fr 1fr}
+  .photos.count-3 .tile:first-child{grid-column:1 / -1}
+
+  /* ---- Attribution / issue block ---- */
+  .attrib{margin:0}
+  .attrib .installer{font-size:16px;font-weight:500;color:var(--navy);margin:0 0 18px;line-height:1.4}
+  .attrib .meta{display:flex;justify-content:space-between;gap:16px;align-items:flex-end;flex-wrap:wrap}
+  .attrib .meta .lbl{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin:0 0 4px}
+  .attrib .meta .val{font-size:16px;font-weight:600;color:var(--navy);margin:0;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+  .attrib .meta .certno .val{letter-spacing:.12em}
+
+  /* ---- Actions ---- */
+  .actions{display:flex;flex-direction:column;gap:12px;margin-top:34px}
+  .btn{display:flex;align-items:center;justify-content:center;gap:9px;min-height:54px;padding:0 24px;
+    font-family:var(--font);font-size:17px;font-weight:600;border-radius:100px;cursor:pointer;
+    transition:background .18s ease,box-shadow .18s ease,transform .12s ease;text-decoration:none;width:100%}
+  .btn:active{transform:scale(.985)}
+  .btn-primary{background:var(--gold);color:var(--navy);box-shadow:0 4px 18px rgba(255,186,0,.28)}
+  .btn-primary:hover{background:var(--gold-hover,#ffc519);box-shadow:0 6px 22px rgba(255,186,0,.38)}
+  .btn-secondary{background:transparent;color:var(--navy);box-shadow:inset 0 0 0 1.5px rgba(27,43,75,.22)}
+  .btn-secondary:hover{box-shadow:inset 0 0 0 1.5px var(--navy)}
+
+  /* ---- VOID state ---- */
+  .void-wrap{text-align:left}
+  .void-badge{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);border:1.5px solid var(--line);border-radius:100px;padding:7px 16px;margin-bottom:24px}
+  .void-wrap h1{font-size:24px;font-weight:700;letter-spacing:-0.02em;color:var(--navy);margin:0 0 14px;line-height:1.2}
+  .void-wrap p{font-size:17px;color:var(--muted);margin:0 0 26px;line-height:1.55}
+  .void-wrap .voided-no{font-size:15px;color:var(--faint);margin:22px 0 0;font-variant-numeric:tabular-nums;letter-spacing:.04em}
+  .void-link{display:inline-flex;align-items:center;gap:8px;min-height:44px;font-size:17px;font-weight:600;color:var(--navy);text-decoration:none;border-bottom:2px solid var(--gold);padding-bottom:1px}
+  .void-link:hover{color:var(--navy);border-color:var(--navy)}
+
+  /* ---- Loading skeleton ---- */
+  .sk{background:linear-gradient(100deg,var(--line-soft) 30%,rgba(27,43,75,.03) 50%,var(--line-soft) 70%);background-size:400px 100%;border-radius:7px;animation:shimmer 1.4s infinite linear}
+  @keyframes shimmer{0%{background-position:-200px 0}100%{background-position:200px 0}}
+  .sk-line{height:16px;margin-bottom:14px}
+  .load-note{font-size:14px;color:var(--faint);text-align:center;margin:30px 0 0}
+
+  /* ---- Not found ---- */
+  .nf{text-align:left}
+  .nf h1{font-size:24px;font-weight:700;letter-spacing:-0.02em;color:var(--navy);margin:0 0 14px;line-height:1.2}
+  .nf p{font-size:17px;color:var(--muted);margin:0 0 12px;line-height:1.55}
+  .nf .contact{font-size:16px;color:var(--faint);margin-top:24px}
+  .nf .contact a{color:var(--navy);font-weight:600}
+
+  [hidden]{display:none !important}
+
+  /* ---- State switcher (screen-only dev control) ---- */
+  .switcher{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:100;
+    background:var(--navy);border-radius:100px;padding:5px;display:flex;gap:2px;align-items:center;
+    box-shadow:0 10px 30px rgba(27,43,75,.35);max-width:calc(100vw - 24px);flex-wrap:wrap;justify-content:center}
+  .switcher button{font-family:var(--font);font-size:12.5px;font-weight:600;color:rgba(255,255,255,.72);
+    padding:9px 15px;border-radius:100px;min-height:38px;letter-spacing:.01em}
+  .switcher button[aria-pressed="true"]{background:var(--gold);color:var(--navy)}
+  .switcher .sep{width:1px;height:20px;background:rgba(255,255,255,.18);margin:0 4px}
+  .switcher .toggle[aria-pressed="true"]{background:rgba(255,255,255,.14);color:#fff}
+
+  @media(max-width:420px){
+    .sheet{padding:20px}
+    .diploma{padding:30px 18px 26px}
+    .dip-title{font-size:26px}
+    .dip-name{font-size:34px}
+    .dip-decree{font-size:19px}
+  }
+
+  /* ============ PRINT — clean black & white ============ */
+  @media print{
+    @page{margin:0.7in}
+    body{background:#fff;font-size:12pt;color:#000}
+    .stage{display:block;padding:0;min-height:0}
+    .sheet{max-width:none;width:100%;box-shadow:none;border-radius:0;padding:0}
+    .sheet::before{background:#000;height:2px}
+    .switcher,.actions{display:none !important}
+    /* Force everything to legible black; gold prints pale, so convert accents */
+    .wordmark,.wordmark span,.headline,.subject .name,.facts .v,.prov .prov-head,
+    .timeline .ev,.attrib .installer,.attrib .meta .val,.void-wrap h1,.nf h1{color:#000 !important}
+    .eyebrow,.rec-tag,.facts .k,.prov .cap,.subject .addr,.timeline .dt,
+    .attrib .meta .lbl,.no-permit,.void-wrap p,.nf p{color:#333 !important}
+    .timeline li::after{background:#fff !important;box-shadow:inset 0 0 0 2px #000 !important}
+    .timeline li.pass::after{background:#000 !important;box-shadow:inset 0 0 0 2px #000 !important}
+    .timeline li::before{background:#999 !important}
+    hr.rule{border-color:#bbb !important}
+    .void-link{border-color:#000 !important;color:#000 !important}
+    /* diploma frame + seal → black */
+    .diploma{border-color:#000 !important}
+    .diploma::before{border-color:#000 !important}
+    .dip-title,.dip-name,.dip-decree,.dip-installer,.dip-wordmark{color:#000 !important}
+    .dip-confer,.dip-addr,.dip-privileges,.dip-sub,.dip-issued{color:#333 !important}
+    .flourish span,.flourish i{background:#000 !important;opacity:1 !important}
+    .seal .ring{stroke:#000 !important}
+    .seal .arc,.seal .seal-no{fill:#000 !important}
+    .seal .seal-sub,.seal .dot{fill:#333 !important}
+  }
+</style>
+</head>
+<body>
+
+<main class="stage">
+  <div class="sheet" id="sheet" role="document">
+
+    <!-- ============ ISSUED (diploma) ============ -->
+    <section class="state diploma" data-state="issued" data-screen-label="Issued">
+      <p class="dip-wordmark">Backup Power Pro</p>
+      <p class="dip-sub">Certificate of Completion</p>
+      <h1 class="dip-title">Certificate of Completed Installation</h1>
+      <div class="flourish"><span></span><i></i><span></span></div>
+
+      <p class="dip-confer">Be it known that</p>
+      <p class="dip-name" id="c-name"></p>
+      <p class="dip-addr" id="c-addr"></p>
+      <p class="dip-decree">having equipped their home with a code-compliant portable generator inlet, shall never again sit powerless in the dark.</p>
+
+      <hr class="rule">
+
+      <div class="dip-block">
+        <ul class="facts" id="c-facts"></ul>
+      </div>
+
+      <hr class="rule">
+
+      <div class="dip-block">
+        <div class="prov" id="c-prov"></div>
+      </div>
+
+      <div id="c-photos-wrap" hidden>
+        <hr class="rule">
+        <div class="photos" id="c-photos"></div>
+      </div>
+
+      <hr class="rule">
+
+      <p class="dip-privileges">Awarded with all the rights and privileges of the outage-ready.</p>
+
+      <div class="seal-wrap">
+        <svg class="seal" viewBox="0 0 200 200" role="img" aria-label="Backup Power Pro seal — SC LIC 2942">
+          <defs>
+            <path id="arcTop" d="M30,100 A70,70 0 0 1 170,100"></path>
+            <path id="arcBot" d="M38,103 A62,62 0 0 0 162,103"></path>
+          </defs>
+          <circle class="ring" cx="100" cy="100" r="90"></circle>
+          <circle class="ring" cx="100" cy="100" r="74"></circle>
+          <circle class="ring thin" cx="100" cy="100" r="57"></circle>
+          <text class="arc"><textPath href="#arcTop" startOffset="50%">BACKUP POWER PRO</textPath></text>
+          <text class="arc"><textPath href="#arcBot" startOffset="50%">SC LIC 2942</textPath></text>
+          <circle class="dot" cx="26" cy="100" r="2.6"></circle>
+          <circle class="dot" cx="174" cy="100" r="2.6"></circle>
+          <text class="seal-sub" x="100" y="90">No.</text>
+          <text class="seal-no" id="c-sealno" x="100" y="116"></text>
+        </svg>
+      </div>
+
+      <p class="dip-installer" id="c-installer"></p>
+      <p class="dip-issued" id="c-issued"></p>
+
+      <div class="actions">
+        <a class="btn btn-primary" href="#" id="save-pdf">Save as PDF</a>
+        <a class="btn btn-secondary" href="#" id="owner-guide">Open your owner's guide</a>
+      </div>
+    </section>
+
+    <!-- ============ VOID ============ -->
+    <section class="state void-wrap" data-state="void" data-screen-label="Void" hidden>
+      <header class="mast">
+        <div class="wordmark">Backup Power <span>Pro</span></div>
+        <div class="rec-tag">Completion record</div>
+      </header>
+      <span class="void-badge">Void</span>
+      <h1>This certificate was replaced</h1>
+      <p>A newer certificate was issued for this installation. The one you're looking at is no longer the current record.</p>
+      <a class="void-link" href="#" id="void-current">View the current certificate</a>
+      <p class="voided-no" id="void-no"></p>
+    </section>
+
+    <!-- ============ LOADING ============ -->
+    <section class="state" data-state="loading" data-screen-label="Loading" hidden aria-busy="true">
+      <header class="mast">
+        <div class="wordmark">Backup Power <span>Pro</span></div>
+        <div class="rec-tag">Completion record</div>
+      </header>
+      <div class="sk sk-line" style="width:52%;height:12px;margin-bottom:22px"></div>
+      <div class="sk sk-line" style="width:88%;height:22px"></div>
+      <div class="sk sk-line" style="width:70%;height:22px;margin-bottom:34px"></div>
+      <div class="sk sk-line" style="width:64%;height:26px"></div>
+      <div class="sk sk-line" style="width:80%;margin-bottom:34px"></div>
+      <div class="sk sk-line" style="width:100%"></div>
+      <div class="sk sk-line" style="width:100%"></div>
+      <div class="sk sk-line" style="width:46%;margin-bottom:34px"></div>
+      <div class="sk sk-line" style="width:100%;height:44px;border-radius:100px"></div>
+      <p class="load-note">Loading your certificate…</p>
+    </section>
+
+    <!-- ============ NOT FOUND ============ -->
+    <section class="state nf" data-state="notfound" data-screen-label="Not found" hidden>
+      <header class="mast">
+        <div class="wordmark">Backup Power <span>Pro</span></div>
+        <div class="rec-tag">Completion record</div>
+      </header>
+      <h1>We couldn't find that certificate</h1>
+      <p>The link may be mistyped or out of date. Check the link in your completion email and try again.</p>
+      <p class="contact">Still stuck? Reach Key Electric at <a href="tel:+18645550142">(864)&nbsp;555‑0142</a>.</p>
+    </section>
+
+  </div>
+</main>
+
+<!-- Screen-only: preview each state + the no-permit variant -->
+<nav class="switcher" aria-label="Preview certificate states">
+  <button data-go="issued" aria-pressed="true">Issued</button>
+  <button data-go="void" aria-pressed="false">Void</button>
+  <button data-go="loading" aria-pressed="false">Loading</button>
+  <button data-go="notfound" aria-pressed="false">Not found</button>
+  <span class="sep"></span>
+  <button class="toggle" id="permit-toggle" aria-pressed="true" title="Toggle whether a county permit was required">Permit</button>
+</nav>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---- Sample record. Any field except status, certNo, name, address,
+  // issued may be null; a null field is silently omitted (never a dash). ----
+  var RECORD = {
+    status: "issued",
+    certNo: "7GK2F9Q4",            // exactly 8 chars, never null
+    name: "Margaret & Tom Holloway",
+    address: "412 Pine Hollow Road, Greenville, SC 29607",
+    issued: "Apr 23, 2026",
+    installDate: "Apr 22, 2026",
+    equipment: "Portable generator inlet + interlock",
+    amperage: "30-amp inlet",
+    installer: "Installed under SC LIC #2942 · Key Goodson (Key Electric)",
+    permit: {                       // set to null → collapses to one line
+      jurisdiction: "Greenville County, SC",
+      number: "GVL-EL-26-1187",
+      submitted: "Apr 14, 2026",
+      approved:  "Apr 16, 2026",
+      passed:    "Apr 22, 2026"
+    },
+    photos: ["job-1","job-2","job-3","job-4"],  // 0–4; empty → section omitted
+    replacedBy: null
+  };
+
+  var el = function(id){ return document.getElementById(id); };
+  var esc = function(s){ return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); };
+
+  function row(label, value){
+    if(value == null || value === "") return "";   // graceful omission
+    return '<li><span class="k">'+esc(label)+'</span><span class="v">'+esc(value)+'</span></li>';
+  }
+
+  function renderFacts(r){
+    el("c-facts").innerHTML =
+      row("Installed", r.installDate) +
+      row("System", r.equipment) +
+      row("Inlet", r.amperage);
+  }
+
+  function tlNode(event, date, isPass){
+    if(!date && !event) return "";
+    return '<li'+(isPass?' class="pass"':'')+'><div class="ev">'+esc(event)+'</div>'+
+           (date? '<div class="dt">'+esc(date)+'</div>':'')+'</li>';
+  }
+
+  function renderProvenance(r){
+    var host = el("c-prov");
+    var p = r.permit;
+    if(!p){
+      host.innerHTML = '<p class="no-permit">No county permit was required for this installation.</p>';
+      return;
+    }
+    // Header: jurisdiction + permit number (each nullable)
+    var head = "";
+    if(p.jurisdiction) head += esc(p.jurisdiction);
+    if(p.number) head += (head? " · ":"") + "Permit " + esc(p.number);
+    var nodes =
+      tlNode("Submitted for review", p.submitted, false) +
+      tlNode("Permit approved", p.approved, false) +
+      tlNode("Passed county inspection", p.passed, true);
+    host.innerHTML =
+      '<p class="cap">County record</p>' +
+      (head? '<p class="prov-head">'+head+'</p>':'') +
+      (nodes? '<ul class="timeline">'+nodes+'</ul>':'');
+  }
+
+  function renderPhotos(r){
+    var wrap = el("c-photos-wrap");
+    var grid = el("c-photos");
+    var list = r.photos || [];
+    if(list.length === 0){ wrap.hidden = true; grid.innerHTML = ""; return; }  // no break at 0
+    wrap.hidden = false;
+    grid.className = "photos count-" + list.length;
+    grid.innerHTML = list.map(function(id){
+      return '<div class="tile"><image-slot id="cert-'+esc(id)+'" shape="rounded" radius="12" placeholder="Job photo"></image-slot></div>';
+    }).join("");
+  }
+
+  function renderAttrib(r){
+    el("c-sealno").textContent = r.certNo;
+    var inst = el("c-installer");
+    if(r.installer){ inst.textContent = r.installer; inst.hidden = false; } else { inst.hidden = true; }
+    var iss = el("c-issued");
+    if(r.issued){ iss.textContent = "Issued " + r.issued; iss.hidden = false; } else { iss.hidden = true; }
+  }
+
+  function renderIssued(r){
+    el("c-name").textContent = r.name;
+    el("c-addr").textContent = r.address;
+    renderFacts(r);
+    renderProvenance(r);
+    renderPhotos(r);
+    renderAttrib(r);
+  }
+
+  function renderVoid(r){
+    el("void-no").textContent = r.certNo ? "Certificate no. " + r.certNo : "";
+  }
+
+  // ---- State machine ----
+  function show(state){
+    document.querySelectorAll(".state").forEach(function(s){
+      s.hidden = (s.getAttribute("data-state") !== state);
+    });
+    document.querySelectorAll(".switcher button[data-go]").forEach(function(b){
+      b.setAttribute("aria-pressed", String(b.getAttribute("data-go") === state));
+    });
+  }
+
+  var permitRequired = true;
+  function build(){
+    var r = Object.assign({}, RECORD);
+    r.permit = permitRequired ? RECORD.permit : null;
+    renderIssued(r);
+    renderVoid(r);
+  }
+  build();
+  show("issued");
+
+  document.querySelectorAll(".switcher button[data-go]").forEach(function(b){
+    b.addEventListener("click", function(){ show(b.getAttribute("data-go")); });
+  });
+  var pt = el("permit-toggle");
+  pt.addEventListener("click", function(){
+    permitRequired = !permitRequired;
+    pt.setAttribute("aria-pressed", String(permitRequired));
+    build();
+  });
+
+  el("save-pdf").addEventListener("click", function(e){ e.preventDefault(); window.print(); });
+  el("owner-guide").addEventListener("click", function(e){ e.preventDefault(); });
+  el("void-current").addEventListener("click", function(e){ e.preventDefault(); });
+})();
+</script>
+
+</body>
+</html>

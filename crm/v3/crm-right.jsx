@@ -1,23 +1,9 @@
-import { deliverySyncMessage, operatorDocumentPreviewUrl, promoteDocumentAfterDelivery } from './money-link-delivery.js';
-import { applyProposalLifecycleReceipt, mutateProposalLifecycle } from './proposal-lifecycle.js';
-import { applyInvoiceLifecycleReceipt, mutateInvoiceLifecycle } from './invoice-lifecycle.js';
-import { deleteDraftMoneyDocument } from './money-document-operation.js';
-import { sendManualSmsWithReceipt } from './manual-sms-operation.js';
-
 // crm-right.jsx - Right panel: contact detail, 5 fully-featured tabs.
 // Consumes canonical DB-shape arrays directly. Each tab filters by contact_id inline.
 
 function RightPanel({ contactId, tab, dncSet = new Set(), toggleDnc = () => {}, highlightId, bumpData, onOpenTab, onBack }) {
   const { contacts, events, proposals, invoices, messages, calls, permits, materials } = CRM;
   const contact = contacts.find(c => c.id === contactId);
-  const workspaceStatus = CRM.domainStatus?.workspace || { state:'idle', error:null };
-  const proposalsStatus = CRM.domainStatus?.proposals || { state:'idle', error:null };
-  const moneyStatus = CRM.domainStatus?.money || { state:'idle', error:null };
-  const messagesStatus = CRM.domainStatus?.messages || { state:'idle', error:null };
-  const commercialReady = proposalsStatus.state === 'ready' && moneyStatus.state === 'ready';
-  const overviewReady = workspaceStatus.state === 'ready' && commercialReady && messagesStatus.state === 'ready';
-  const overviewError = workspaceStatus.state === 'error' || proposalsStatus.state === 'error'
-    || moneyStatus.state === 'error' || messagesStatus.state === 'error';
 
   if (!contact) return <EmptyHero />;
 
@@ -33,21 +19,10 @@ function RightPanel({ contactId, tab, dncSet = new Set(), toggleDnc = () => {}, 
   return (
     <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden', background:BG, minHeight:0 }}>
       <ContactStrip contact={contact} isDnc={dncSet.has(contactId)} toggleDnc={() => toggleDnc(contactId)} bumpData={bumpData} onOpenTab={onOpenTab} tab={tab} onBack={onBack} />
-      {tab==='contacts' && (overviewReady
-        ? <ContactOverview contact={contact} events={cEvents} permits={cPermits} proposals={cProposals} invoices={cInvoices} materials={cMaterials} messages={cMessages} calls={cCalls} bumpData={bumpData} onOpenTab={onOpenTab} />
-        : <div style={{ flex:1, overflowY:'auto', minHeight:0, padding:'0 16px var(--tabbar-clear, calc(env(safe-area-inset-bottom, 0px) + 92px))', display:'flex', flexDirection:'column' }}>
-            <ContactHero contact={contact} proposals={[]} nextItem={null} statusReady={false} />
-            <DomainTruthPane error={overviewError} loadingText="Loading current project details..." errorText="Project details could not fully load" helper="Quotes, balances, messages, permits, readiness, and photos stay hidden until their source reads settle." />
-          </div>)}
-      {tab==='calendar' && (workspaceStatus.state === 'ready'
-        ? <ContactCalendar contact={contact} events={cEvents} highlightId={highlightId} bumpData={bumpData} onOpenTab={onOpenTab} />
-        : <DomainTruthPane error={workspaceStatus.state === 'error'} loadingText="Loading current calendar..." errorText="Calendar could not load" helper="Appointments stay hidden until project data is current." />)}
-      {tab==='finance'  && (commercialReady
-        ? <ContactFinance contact={contact} proposals={cProposals} invoices={cInvoices} highlightId={highlightId} />
-        : <DomainTruthPane error={proposalsStatus.state === 'error' || moneyStatus.state === 'error'} loadingText="Checking quote and balance..." errorText="Money documents could not load" helper="Documents and balances stay hidden until proposals, invoices, and payments agree." />)}
-      {tab==='messages' && (messagesStatus.state === 'ready'
-        ? <ContactMessages contact={contact} thread={cMessages} isDnc={dncSet.has(contactId)} />
-        : <DomainTruthPane error={messagesStatus.state === 'error'} loadingText="Loading current conversation..." errorText="Messages could not load" helper="The conversation stays hidden so missing messages cannot look like an empty thread." />)}
+      {tab==='contacts' && <ContactOverview contact={contact} events={cEvents} permits={cPermits} proposals={cProposals} invoices={cInvoices} materials={cMaterials} messages={cMessages} calls={cCalls} bumpData={bumpData} onOpenTab={onOpenTab} />}
+      {tab==='calendar' && <ContactCalendar contact={contact} events={cEvents} highlightId={highlightId} bumpData={bumpData} onOpenTab={onOpenTab} />}
+      {tab==='finance'  && <ContactFinance  contact={contact} proposals={cProposals} invoices={cInvoices} highlightId={highlightId} />}
+      {tab==='messages' && <ContactMessages contact={contact} thread={cMessages} isDnc={dncSet.has(contactId)} />}
       {tab==='calls'    && <ContactCalls    contact={contact} calls={cCalls} isDnc={dncSet.has(contactId)} />}
       {/* Right-pane Subs tab = THIS contact's assigned sub + job (Key, 2026-07-04).
           The left Subs tab is the whole roster; this is the one job. Reuses the
@@ -58,44 +33,12 @@ function RightPanel({ contactId, tab, dncSet = new Set(), toggleDnc = () => {}, 
   );
 }
 
-function DomainTruthPane({ error, loadingText, errorText, helper }) {
-  return (
-    <div role={error ? 'alert' : 'status'} style={{ flex:1, padding:28, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', textAlign:'center', color:MUTED, lineHeight:1.45 }}>
-      <div style={{ fontSize:16, fontWeight:700, color:NAVY }}>{error ? errorText : loadingText}</div>
-      <div style={{ marginTop:7, maxWidth:420, fontSize:13 }}>{helper}</div>
-      {error && <button type="button" onClick={() => window.location.reload()} style={{ marginTop:16, minHeight:44, padding:'0 16px', borderRadius:8, border:'1px solid rgba(27,43,75,.2)', background:'white', color:NAVY, fontFamily:'inherit', fontWeight:700, cursor:'pointer' }}>Try again</button>}
-    </div>
-  );
-}
-
 // ── Contact Strip ─────────────────────────────────────────────────
 // Compact strip - keeps the navigation context (name + ••• menu) sticky at
 // the top of the right pane. The richer hero (with house image, big name
 // overlay, status pill) lives inside ContactInfoSection on the Contact tab.
 function ContactStrip({ contact, isDnc, toggleDnc, bumpData, onOpenTab, tab, onBack }) {
   const isPremium = contact.pricing_tier === 'premium' || contact.pricing_tier === 'premium_plus';
-  const [auditBusy, setAuditBusy] = React.useState(false);
-
-  const runMoneyAudit = async () => {
-    if (auditBusy || !CRM.__invokeFn) return;
-    setAuditBusy(true);
-    try {
-      const { data, error } = await CRM.__invokeFn('record-payment', { body: { action:'reconciliation_report' } });
-      if (error || !data?.ok) {
-        window.alert('Money audit failed. Try again.');
-        return;
-      }
-      const issues = Array.isArray(data.issues) ? data.issues.slice(0, 8) : [];
-      if (!issues.length) {
-        window.alert('Money audit complete. No reconciliation issues found.');
-        return;
-      }
-      const lines = issues.map(item => `${item.invoice_document_number || 'Invoice'}: ${String(item.reconciliation_state || 'review required').replaceAll('_', ' ')}`);
-      window.alert(`Money audit found ${data.issue_count || issues.length} issue${Number(data.issue_count || issues.length) === 1 ? '' : 's'}.\n\n${lines.join('\n')}`);
-    } finally {
-      setAuditBusy(false);
-    }
-  };
 
   // Pin state shares CRM.contacts as the source of truth (column added
   // 2026-05-09 via migration 20260509140000). Pins now sync between
@@ -150,7 +93,7 @@ function ContactStrip({ contact, isDnc, toggleDnc, bumpData, onOpenTab, tab, onB
           </svg>
         </button>
       )}
-      <ContactAvatar contact={contact} size={28} lazy={false} ringColor={(tab === 'messages' || tab === 'calls') && window.lineColorFor ? window.lineColorFor(contact.current_line) : null} />
+      <ContactAvatar contact={contact} size={28} ringColor={(tab === 'messages' || tab === 'calls') && window.lineColorFor ? window.lineColorFor(contact.current_line) : null} />
       <div style={{ flex:1, minWidth:0, display:'flex', alignItems:'center', gap:8 }}>
         {isPremium && window.tweaksGlobal?.premiumDots !== false && <GoldDot />}
         <span style={{ fontSize:17, fontWeight:700, letterSpacing:'-0.2px', color:NAVY, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', minWidth:0, flex:1 }}>{contactName(contact)}</span>
@@ -188,13 +131,6 @@ function ContactStrip({ contact, isDnc, toggleDnc, bumpData, onOpenTab, tab, onB
           aria-label="Quick replies" title="Quick replies (suggestions + templates)"
           style={{ background:'none', border:'none', cursor:'pointer', flexShrink:0, width:44, height:44, display:'flex', alignItems:'center', justifyContent:'center', color:'#5a6478', padding:0 }}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="19" height="19"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/><path d="M8 10h8M8 13.5h5"/></svg>
-        </button>
-      )}
-      {tab === 'finance' && (
-        <button onClick={runMoneyAudit} disabled={auditBusy} type="button"
-          className="bpp-ios-navbar-btn" aria-label="Audit money records" title="Audit money records"
-          style={{ width:'auto', minWidth:44, padding:'0 8px', fontSize:12, fontWeight:700 }}>
-          {auditBusy ? 'Auditing...' : 'Audit money'}
         </button>
       )}
       <ContactOverflowMenu contact={contact} isDnc={isDnc} toggleDnc={toggleDnc} bumpData={bumpData} onOpenTab={onOpenTab} />
@@ -857,7 +793,7 @@ function POMInspectionButton({ contact, proposals }) {
 // the existing components/logic unchanged.
 
 // Short, human status word derived from stage + latest proposal status. Drives
-// the small pill on the hero. Prefers an approved/booked/installed read over the
+// the small pill on the hero. Prefers a signed/booked/installed read over the
 // raw stage label so the word matches where the JOB actually is.
 function shortStatusLabel(contact, proposals = []) {
   const stage = contact.stage;
@@ -867,10 +803,9 @@ function shortStatusLabel(contact, proposals = []) {
   if (stage === 'permit_approved') return 'Permit OK';
   if (stage === 'permit_waiting' || stage === 'permit_submit') return 'Permitting';
   if (stage === 'booked') return 'Booked';
-  // Only authoritative Approved truth may report acceptance. Historical
-  // unpaid Signed rows remain visible in Documents as Not accepted.
-  const hasApproved = proposals.some(p => p.status === 'approved');
-  if (hasApproved) return 'Approved';
+  // Quoted vs Signed: if there is a signed/approved proposal, say so.
+  const hasSigned = proposals.some(p => p.status === 'signed' || p.status === 'approved');
+  if (hasSigned) return 'Signed';
   if (stage === 'quoted') return 'Quoted';
   if (stage === 'new') return 'New lead';
   // Fallback to the canonical stage label so the pill is never blank.
@@ -878,14 +813,46 @@ function shortStatusLabel(contact, proposals = []) {
 }
 
 // HERO , full-width property image with a name/city overlay + status pill.
-// Property bytes come only from the authenticated, address-bound gateway.
-// Missing or unverifiable imagery uses the neutral navy fallback. The hero used
-// to live INSIDE
+// Reuses the SAME Street-View-imagery resolution as the old ContactInfoSection
+// hero (checkSvImagery -> real Street View, else Mapbox satellite, else a soft
+// navy gradient block , never a broken img). The hero used to live INSIDE
 // ContactInfoSection; the overhaul promotes it to its own top block so the
 // demoted Contact section renders rows only (no duplicate hero).
-function ContactHero({ contact, proposals = [], nextItem = null, statusReady = true }) {
-  const propertyImage = useContactPropertyImage(contact);
-  const heroUrl = propertyImage.status === 'ready' ? propertyImage.url : null;
+function ContactHero({ contact, proposals = [], nextItem = null }) {
+  const [verified, setVerified] = React.useState(false);
+  const [hasImagery, setHasImagery] = React.useState(false);
+  const [satUrl, setSatUrl] = React.useState(null);
+  const [imgFailed, setImgFailed] = React.useState(false);
+  React.useEffect(() => {
+    setVerified(false);
+    setHasImagery(false);
+    setSatUrl(null);
+    setImgFailed(false);
+    if (!contact.address || !isAddressableStreet(contact.address)) {
+      setVerified(true);
+      return;
+    }
+    let cancelled = false;
+    window.checkSvImagery(contact.address).then(async result => {
+      if (cancelled) return;
+      setHasImagery(result === 'ok');
+      setVerified(true);
+      if (result === 'none') {
+        const url = await window.mapboxSatUrl?.(contact.address, 640, 320);
+        if (!cancelled) setSatUrl(url || null);
+      }
+    }).catch(() => {
+      // Any imagery-resolution failure (network throw, mapbox error) settles to the
+      // navy gradient fallback instead of an unhandled rejection or a stuck state.
+      if (!cancelled) { setVerified(true); setHasImagery(false); setSatUrl(null); }
+    });
+    return () => { cancelled = true; };
+  }, [contact.id, contact.address]);
+
+  const addressable = isAddressableStreet(contact.address);
+  const heroUrl = !imgFailed && addressable && hasImagery
+    ? `https://maps.googleapis.com/maps/api/streetview?size=640x320&scale=2&location=${encodeURIComponent((contact.address || '').trim())}&fov=90&pitch=2&source=outdoor&key=${SV_KEY}`
+    : (!imgFailed ? (satUrl || null) : null);
 
   // City = the segment after the street in the address ("123 Main St, Inman, SC"
   // -> "Inman"). Falls back to nothing rather than echoing the street.
@@ -910,10 +877,9 @@ function ContactHero({ contact, proposals = [], nextItem = null, statusReady = t
         <img
           src={heroUrl}
           alt=""
-          data-property-image-identity={propertyImage.propertyImageIdentity}
           loading="lazy"
           decoding="async"
-          onError={propertyImage.reportPropertyImageFailure}
+          onError={() => setImgFailed(true)}
           style={{
             position:'absolute', inset:0, width:'100%', height:'100%',
             objectFit:'cover', objectPosition:'50% 35%',
@@ -935,12 +901,12 @@ function ContactHero({ contact, proposals = [], nextItem = null, statusReady = t
             borderRadius:20, letterSpacing:'0.04em', whiteSpace:'nowrap',
           }}>{contact.pricing_tier === 'premium_plus' ? 'PREMIUM+' : 'PREMIUM'}</span>
         )}
-        {statusReady && <span style={{
+        <span style={{
           fontSize:12, fontWeight:700, color:'white', background:'rgba(0,0,0,0.45)',
           backdropFilter:'blur(4px)', WebkitBackdropFilter:'blur(4px)',
           border:'1px solid rgba(255,255,255,0.35)', padding:'4px 11px', borderRadius:20,
           letterSpacing:'0.02em', whiteSpace:'nowrap', textShadow:'0 1px 2px rgba(0,0,0,0.4)',
-        }}>{statusWord}</span>}
+        }}>{statusWord}</span>
       </div>
       {/* Name + city + amperage, bottom-left (right edge leaves room for the
           drive-time chip so a long name ellipsizes rather than colliding). */}
@@ -994,19 +960,6 @@ function ContactHero({ contact, proposals = [], nextItem = null, statusReady = t
           <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
           Open in Maps
         </button>
-      )}
-      {propertyImage.status === 'error' && (
-        <button
-          type="button"
-          aria-label="Retry property image"
-          onClick={propertyImage.retryPropertyImage}
-          style={{
-            position:'absolute', top:52, left:12, minHeight:44, padding:'8px 12px',
-            border:'1px solid rgba(255,255,255,0.35)', borderRadius:20,
-            color:'white', background:'rgba(0,0,0,0.55)', fontSize:12,
-            fontWeight:700, cursor:'pointer',
-          }}
-        >Retry image</button>
       )}
     </div>
   );
@@ -1313,11 +1266,16 @@ function ContactOverview({ contact, events, permits = [], proposals = [], materi
   // Compute unbilled = max(signed proposal total, 0) - total invoiced;
   // surface as the pill when there's no normal balance to chase but
   // money is still on the table.
-  // A legacy unpaid Signed proposal must not trigger booked revenue or payment
-  // actions. It remains preserved for an explicit audit/reset.
+  // status !== 'signed': a signed-awaiting-deposit proposal must not trigger
+  // the unbilled "Send invoice" nudge; its correct chase is the deposit link
+  // (its own moneyStatus branch below). signed rows DO have approved_at
+  // (mapProposal maps signed_at), so the timestamp filter alone won't skip them.
   const liveSignedProposals = proposals
     .filter(p => p.approved_at && !p.superseded_at && p.status !== 'cancelled' && p.status !== 'signed')
     .sort((a, b) => (b.approved_at || '').localeCompare(a.approved_at || ''));
+  const awaitingDepositProposal = proposals
+    .filter(p => p.status === 'signed' && !p.superseded_at)
+    .sort((a, b) => (b.approved_at || '').localeCompare(a.approved_at || ''))[0] || null;
   const latestSignedTotalCents = liveSignedProposals[0]?.amount_cents || 0;
   const totalInvoicedCents = invoices
     .filter(i => i.status !== 'cancelled' && i.status !== 'voided' && i.status !== 'refunded')
@@ -1343,7 +1301,16 @@ function ContactOverview({ contact, events, permits = [], proposals = [], materi
           bg: '#EFF6FF',
           border: '#BFDBFE',
         }
-  ) : hasUnbilled ? {
+  ) : awaitingDepositProposal ? {
+    // Signed, deposit not paid (#114). Cents = the full signed contract value
+    // at stake (no deposit means no job), NOT a computed deposit amount; the
+    // deposit rate lives server-side and a wrong dollar figure here would lie.
+    cents: awaitingDepositProposal.amount_cents || 0,
+    label: 'Awaiting deposit',
+    color: '#92400E',
+    bg: '#FFFBEB',
+    border: '#FDE68A',
+  } : hasUnbilled ? {
     cents: unbilledCents,
     label: unbilledDays >= 14 ? `Unbilled · ${unbilledDays}d` : 'Send invoice',
     color: '#7C2D12',
@@ -2322,6 +2289,95 @@ function DriveTimeBadge({ contact, dark }) {
   );
 }
 
+function HouseHero({ contact }) {
+  const [failed, setFailed] = React.useState(false);
+  // Pre-flight check via the free Places metadata API. Without this,
+  // Google returns a "Sorry, we have no imagery here" placeholder image
+  // (HTTP 200, so onError doesn't fire) and the hero displays a giant
+  // ugly gray rectangle on every contact whose address has no panorama.
+  // Same cache pattern as ContactAvatar.
+  const [hasImagery, setHasImagery] = React.useState(false);
+  const [verified, setVerified] = React.useState(false);
+  const [satUrl, setSatUrl] = React.useState(null);
+  const address = contact.address;
+  React.useEffect(() => {
+    setFailed(false);
+    setVerified(false);
+    setHasImagery(false);
+    setSatUrl(null);
+    if (!address || !isAddressableStreet(address) || typeof window.checkSvImagery !== 'function') {
+      setVerified(true);
+      return;
+    }
+    let cancelled = false;
+    window.checkSvImagery(address).then(async result => {
+      if (cancelled) return;
+      setHasImagery(result === 'ok');
+      setVerified(true);
+      if (result === 'none') {
+        const url = await window.mapboxSatUrl?.(address, 640, 240);
+        if (!cancelled) setSatUrl(url || null);
+      }
+    }).catch(() => {
+      // Imagery-resolution failure settles to no-imagery (verified) instead of an
+      // unhandled rejection that leaves this section stuck in the "verifying" state.
+      if (!cancelled) { setVerified(true); setHasImagery(false); setSatUrl(null); }
+    });
+    return () => { cancelled = true; };
+  }, [contact.id, address]);
+
+  if (!address || failed) return null;
+  if (!isAddressableStreet(address)) return null;
+  // While verifying, render nothing (avoid flicker). Once verified,
+  // show Street View if available, satellite overhead as fallback,
+  // or nothing if neither is available.
+  if (!verified || (!hasImagery && !satUrl)) return null;
+  const url = hasImagery
+    ? `https://maps.googleapis.com/maps/api/streetview?size=640x240&scale=2` +
+      `&location=${encodeURIComponent(address.trim())}` +
+      `&fov=90&pitch=2&source=outdoor&key=${SV_KEY}`
+    : satUrl;
+  const mapsLink = `https://maps.apple.com/?q=${encodeURIComponent(address.trim())}`;
+  return (
+    <a
+      href={mapsLink}
+      target="_blank"
+      rel="noopener noreferrer"
+      title="Open in Google Maps"
+      style={{
+        display:'block', marginTop:12, borderRadius:8, overflow:'hidden',
+        border:'1px solid rgba(11,31,59,0.08)', background:'#EBEBEA',
+        aspectRatio:'8 / 3', position:'relative',
+      }}
+    >
+      <img
+        src={url}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        onError={() => setFailed(true)}
+        style={{
+          width:'100%', height:'100%', objectFit:'cover',
+          objectPosition: hasImagery ? '50% 30%' : 'center center',
+          filter: 'saturate(1.2) contrast(1.05)',
+          display:'block',
+        }}
+      />
+      <div style={{
+        position:'absolute', inset:0,
+        background:'linear-gradient(180deg, rgba(0,0,0,0) 55%, rgba(0,0,0,0.35) 78%, rgba(0,0,0,0.78) 100%)',
+        pointerEvents:'none',
+      }} />
+      <div style={{
+        position:'absolute', left:12, right:12, bottom:10,
+        color:'white', fontSize:12, fontWeight:600, letterSpacing:'0.01em',
+        textShadow:'0 1px 2px rgba(0,0,0,0.6)',
+        whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis',
+      }}>{address}</div>
+    </a>
+  );
+}
+
 // Photos section - combined gallery of:
 //   1. Photos auto-extracted from this contact's SMS thread (Twilio MMS)
 //   2. Job photos Key uploads directly (stored in Supabase Storage,
@@ -2718,10 +2774,25 @@ function ContactInfoSection({ contact, bumpData, onOpenTab, hideStageCta }) {
     const { error } = await CRM.__db.from('contacts').update(corePatch).eq('id', contact.id);
     if (error) { setSaving(false); window.showToast?.(`Save failed: ${error.message}`); return; }
 
-    // Proposal, invoice, and receipt contact fields are immutable document
-    // evidence. Their home photo resolves the current contacts.address through
-    // the protected gateway, so this edit updates the visual without rewriting
-    // the customer's issued document.
+    // Propagate to denormalized contact_* fields on proposals + invoices.
+    // proposal.html and invoice.html render the customer-facing Street
+    // View image from contact_address - without this, an address edit
+    // never reaches the customer's open proposal link.
+    const denormPatch = {
+      contact_name: corePatch.name || '',
+      contact_phone: corePatch.phone || '',
+      contact_email: corePatch.email || '',
+      contact_address: corePatch.address || '',
+    };
+    const propagate = await Promise.allSettled([
+      CRM.__db.from('proposals').update(denormPatch).eq('contact_id', contact.id),
+      CRM.__db.from('invoices').update(denormPatch).eq('contact_id', contact.id),
+    ]);
+    const failed = propagate.filter(r => r.status === 'rejected' || r.value?.error);
+    if (failed.length) {
+      console.warn('[CRM] propagate to proposals/invoices partially failed:', failed);
+    }
+
     contact.name = corePatch.name;
     contact.phone = corePatch.phone;
     contact.email = corePatch.email;
@@ -3029,6 +3100,11 @@ function ContactInfoRows({ contact, bumpData, onOpenTab, hideStageCta }) {
         mono
         actions={<>
           <CopyBtn onClick={() => copy(contact.phone, 'Phone')} />
+          {/* DNC gate (TCPA): a do_not_contact contact must not be one tap from a
+              dialed call. When DNC, the icon blocks the dial and names why. */}
+          <CallIconBtn {...(contact.do_not_contact
+            ? { onClick: () => window.showToast?.('On do-not-contact, calls disabled') }
+            : { href: `tel:${contact.phone}` })} />
         </>}
       />
       {contact.email ? (
@@ -3957,7 +4033,7 @@ function __manualEmailIntentIdentity(payload) {
     contact_id: payload.contact_id,
     to_email: payload.to_email,
     subject: payload.subject,
-    resource_id: payload.document_id || vars.proposal_url || vars.invoice_url || vars.receipt_url
+    resource_id: vars.proposal_url || vars.invoice_url || vars.receipt_url
       || vars.certificate_url || vars.owner_guide_url || vars.retry_url
       || vars.quote_num || vars.invoice_num || vars.receipt_num || payload.subject,
   };
@@ -5582,13 +5658,12 @@ function AddEventInline({ contact, bumpData, hasUpcoming, quiet }) {
 // XSS target) and never sessionStorage; Key re-enters it after a reload.
 let __chargeOperatorSecret = '';
 
-function ChargeCardPanel({ contact, proposal, invoice, onClose }) {
+function ChargeCardPanel({ contact, proposal, onClose }) {
   const [amount, setAmount] = React.useState('');
   const [code, setCode]     = React.useState('');
   const [secret, setSecret] = React.useState(__chargeOperatorSecret);
   const [busy, setBusy]     = React.useState(false);
   const [codeSent, setCodeSent] = React.useState(false);
-  const [reviewedCents, setReviewedCents] = React.useState(null);
 
   // Estimate ONLY (shown as a hint). Paid invoices tied to this proposal net
   // against its total; the edge fn computes the authoritative balance from the
@@ -5631,30 +5706,8 @@ function ChargeCardPanel({ contact, proposal, invoice, onClose }) {
     if (!secret.trim()) { window.showToast?.('Enter the operator passphrase first'); return; }
     setBusy(true);
     try {
-      const preview = await CRM.__invokeFn('charge-saved-card', {
-        body: { action: 'preview', invoice_id: invoice.id },
-        headers: opHeaders(),
-      });
-      if (preview.error || !preview.data?.eligible) {
-        window.showToast?.(`Charge review failed: ${preview.data?.error || await describeError(preview.error)}`);
-        return;
-      }
-      const exactCents = Number(preview.data.amount_cents);
-      if (!Number.isSafeInteger(exactCents) || exactCents <= 0
-          || preview.data.invoice_id !== invoice.id
-          || preview.data.proposal_id !== proposal.id) {
-        window.showToast?.('Charge review changed. Refresh the invoice before continuing.');
-        return;
-      }
-      setReviewedCents(exactCents);
-      setAmount((exactCents / 100).toFixed(2));
       const { error } = await CRM.__invokeFn('request-charge-code', {
-        body: {
-          purpose: 'charge',
-          proposal_id: proposal.id,
-          invoice_id: invoice.id,
-          expected_amount_cents: exactCents,
-        },
+        body: { proposal_id: proposal.id },
         headers: opHeaders(),
       });
       if (error) { window.showToast?.(`Code request failed: ${await describeError(error)}`); return; }
@@ -5667,22 +5720,12 @@ function ChargeCardPanel({ contact, proposal, invoice, onClose }) {
     if (busy) return;
     const amt = Number(amount);
     if (!(amt > 0)) { window.showToast?.('Enter the exact dollar amount to charge'); return; }
-    const amountCents = Math.round(amt * 100);
-    if (!Number.isSafeInteger(reviewedCents) || amountCents !== reviewedCents) {
-      window.showToast?.('The amount no longer matches the reviewed invoice. Text a new code to review it again.');
-      return;
-    }
     if (!/^\d{6}$/.test(code.trim())) { window.showToast?.('Enter the 6-digit code from the text'); return; }
     if (!secret.trim()) { window.showToast?.('Enter the operator passphrase'); return; }
     setBusy(true);
     try {
       const { data, error } = await CRM.__invokeFn('charge-saved-card', {
-        body: {
-          invoice_id: invoice.id,
-          proposal_id: proposal.id,
-          expected_amount: amt,
-          expected_amount_cents: reviewedCents,
-        },
+        body: { proposal_id: proposal.id, expected_amount: amt },
         headers: { ...opHeaders(), 'x-charge-code': code.trim() },
       });
       if (error) { window.showToast?.(`Charge refused: ${await describeError(error)}`); return; }
@@ -5781,19 +5824,10 @@ function RefundPanel({ payment, onClose }) {
     if (busy) return;
     if (!secret.trim()) { window.showToast?.('Enter the operator passphrase first'); return; }
     if (!payment.proposal_id) { window.showToast?.('This payment has no proposal to authorize against'); return; }
-    const amountCents = Math.round(Number(amount) * 100);
-    if (!Number.isSafeInteger(amountCents) || amountCents <= 0 || amountCents > Math.round(remaining * 100)) {
-      window.showToast?.('Enter the exact refundable amount before requesting a code'); return;
-    }
     setBusy(true);
     try {
       const { error } = await CRM.__invokeFn('request-charge-code', {
-        body: {
-          purpose: 'refund',
-          proposal_id: payment.proposal_id,
-          payment_id: payment.id,
-          expected_amount_cents: amountCents,
-        },
+        body: { proposal_id: payment.proposal_id },
         headers: opHeaders(),
       });
       if (error) { window.showToast?.(`Code request failed: ${await describeError(error)}`); return; }
@@ -5967,8 +6001,8 @@ function MoneyCard({ firstName, tierText, dueAmount, totalAmount, paidAmount, pa
 
   // RECORD PAYMENT sheet
   if (sheet) {
-    const methods = ['Cash', 'External card payment', 'Check', 'Other external payment'];
-    const icons = { Cash: '💵', 'External card payment': '💳', Check: '🧾', 'Other external payment': '💸' };
+    const methods = ['Cash', 'Card (offline)', 'Check', 'Paid elsewhere'];
+    const icons = { Cash: '💵', 'Card (offline)': '💳', Check: '🧾', 'Paid elsewhere': '💸' };
     const chip = (m) => ({
       minHeight: 48, borderRadius: 10, cursor: 'pointer', fontFamily: 'inherit', fontSize: 14, fontWeight: 700,
       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
@@ -5995,7 +6029,7 @@ function MoneyCard({ firstName, tierText, dueAmount, totalAmount, paidAmount, pa
         <button style={{ ...navyBtn, opacity: busy || amtNum <= 0 ? 0.6 : 1 }} disabled={busy || amtNum <= 0}
           onClick={async () => { setBusy(true); const ok = await onRecord(amtNum, method); setBusy(false); if (ok) setSheet(false); }}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-          {busy ? 'Recording...' : 'Record ' + money(amtNum) + ' payment'}
+          {busy ? 'Recording...' : 'Mark ' + money(amtNum) + ' paid'}
         </button>
         <div style={{ textAlign: 'center', marginTop: 10 }}>
           <button onClick={() => setSheet(false)} style={{ background: 'none', border: 'none', color: MUT, fontSize: 13, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', minHeight: 44, padding: '0 16px' }}>Cancel</button>
@@ -6057,10 +6091,10 @@ function MoneyCard({ firstName, tierText, dueAmount, totalAmount, paidAmount, pa
       ) : (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '6px 0 2px' }}>
           <span style={{ ...moneyBig, fontSize: 40, lineHeight: 1.05 }}>{money(dueAmount)}</span>
-          {onEdit && <button onClick={() => { setEditVal(String(totalAmount ?? dueAmount ?? '')); setEditing(true); }} aria-label="Edit price" title="Edit price"
+          <button onClick={() => { setEditVal(String(totalAmount ?? dueAmount ?? '')); setEditing(true); }} aria-label="Edit price" title="Edit price"
             style={{ width: 44, height: 44, borderRadius: 8, background: 'transparent', border: 'none', cursor: 'pointer', color: MUT, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-          </button>}
+          </button>
         </div>
       )}
       <div style={{ fontSize: 13, color: MUT, marginBottom: 16 }}>{[partial ? (money(paidAmount) + ' of ' + money(totalAmount) + ' paid') : null, tierText, signedWhen].filter(Boolean).join('  ·  ')}</div>
@@ -6096,15 +6130,11 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
     return (b.id || '').localeCompare(a.id || '');
   })[0];
   const sortedInvoices = [...invoices].sort((a,b) => (a.sent_at||'').localeCompare(b.sent_at||''));
-  const chargeInvoice = invoices.find(inv => inv.proposal_id === proposal?.id
-    && ['sent', 'viewed', 'unpaid', 'open', 'partial', 'overdue'].includes(String(inv.status || '').toLowerCase())
-    && Number(inv.amount_cents || 0) > 0) || null;
 
   // P1 modals - proposal/invoice builders. State lives at this level so the
   // modals stay open across re-renders from realtime updates.
   const [proposalModalOpen, setProposalModalOpen] = React.useState(false);
   const [invoiceModalOpen,  setInvoiceModalOpen]  = React.useState(false);
-  const [receiptModalOpen,  setReceiptModalOpen]  = React.useState(false);
   // V3: edit-mode targets (id only - we look up the row at render time so
   // realtime updates flow through automatically).
   const [editingProposalId, setEditingProposalId] = React.useState(null);
@@ -6141,57 +6171,78 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
     return () => window.removeEventListener('crm-open-new-proposal', onOpen);
   }, [contact.id]);
 
+  // Mark paid - manual override for cash/check payments. Optimistic; rolls
+  // back if the DB update fails.
   const markingRef = React.useRef(new Set());
-
-  const tierLabel = t => t === 'premium_plus' ? 'Premium+' : t === 'premium' ? 'Premium' : 'Standard';
-
-  // Cancel and Undo are row-locked, revisioned server actions. Local truth
-  // changes only after an exact receipt, so a stale tab cannot overwrite a
-  // customer signature or a newer operator transition.
-  const cancelProposal = async (prop) => {
-    if (!CRM.__invokeFn) return;
-    if (prop?.superseded_at || prop?.superseded_by) {
-      window.showToast?.('This proposal was replaced. Use the current proposal.');
-      return;
-    }
-    if (markingRef.current.has('cancel:' + prop.id)) return;
-    markingRef.current.add('cancel:' + prop.id);
-    const live = (CRM.proposals || []).find(x => x.id === prop.id) || prop;
+  const markPaid = async (inv) => {
+    if (markingRef.current.has(inv.id)) return;
+    markingRef.current.add(inv.id);
     try {
-      const receipt = await mutateProposalLifecycle({
-        invoke: CRM.__invokeFn,
-        proposal: live,
-        action: 'cancel',
-      });
-      if (!receipt.ok) {
-        window.showToast?.(receipt.statusChanged
-          ? 'This proposal changed. Refresh before cancelling it.'
-          : `Cancel failed: ${receipt.error}`);
+      const now = new Date().toISOString();
+      // Look up the live invoice by id - `inv` may be a stale closure if
+      // realtime swapped the array between when the row rendered and now.
+      const live = (CRM.invoices || []).find(x => x.id === inv.id) || inv;
+      const prevStatus = live.status;
+      const prevPaidAt = live.paid_at;
+      // Optimistic update so the pill flips immediately.
+      live.status = 'paid'; live.paid_at = now;
+      window.dispatchEvent(new CustomEvent('crm-data-changed'));
+      const { error } = await CRM.__db.from('invoices').update({ status: 'paid', paid_at: now }).eq('id', inv.id);
+      if (error) {
+        live.status = prevStatus; live.paid_at = prevPaidAt;
+        window.dispatchEvent(new CustomEvent('crm-data-changed'));
+        window.showToast?.(`Mark paid failed: ${error.message}`);
         return;
       }
-      applyProposalLifecycleReceipt(live, receipt);
-      window.dispatchEvent(new CustomEvent('crm-data-changed'));
-      window.showToast?.('Proposal cancelled', {
+      // 5-second undo - fat-finger insurance. Pattern matches archiveJob.
+      // Re-resolve the live invoice on undo because realtime may have
+      // swapped CRM.invoices since the optimistic mutation.
+      window.showToast?.('Marked paid', {
         undo: async () => {
-          const liveNow = (CRM.proposals || []).find(x => x.id === prop.id) || live;
-          const undoReceipt = await mutateProposalLifecycle({
-            invoke: CRM.__invokeFn,
-            proposal: liveNow,
-            action: 'undo_cancel',
-            relatedCancelKey: receipt.operationKey,
-          });
-          if (!undoReceipt.ok) {
-            window.showToast?.(`Undo failed: ${undoReceipt.error}`);
-            return;
-          }
-          applyProposalLifecycleReceipt(liveNow, undoReceipt);
+          const liveNow = (CRM.invoices || []).find(x => x.id === inv.id) || live;
+          liveNow.status = prevStatus; liveNow.paid_at = prevPaidAt;
           window.dispatchEvent(new CustomEvent('crm-data-changed'));
+          if (CRM.__db) {
+            const { error: undoErr } = await CRM.__db.from('invoices').update({ status: prevStatus, paid_at: prevPaidAt }).eq('id', inv.id);
+            if (undoErr) window.showToast?.(`Undo failed: ${undoErr.message}`);
+          }
         },
         duration: 5000,
       });
     } finally {
-      markingRef.current.delete('cancel:' + prop.id);
+      markingRef.current.delete(inv.id);
     }
+  };
+
+  const tierLabel = t => t === 'premium_plus' ? 'Premium+' : t === 'premium' ? 'Premium' : 'Standard';
+
+  // Cancel a sent proposal - flips status to declined with a 5-second
+  // undo window. Uses the same optimistic-then-rollback pattern as
+  // markPaid so realtime can't fight us.
+  const cancelProposal = async (prop) => {
+    if (!CRM.__db) return;
+    if (markingRef.current.has('cancel:' + prop.id)) return;
+    markingRef.current.add('cancel:' + prop.id);
+    const live = (CRM.proposals || []).find(x => x.id === prop.id) || prop;
+    const prev = live.status;
+    live.status = 'declined';
+    window.dispatchEvent(new CustomEvent('crm-data-changed'));
+    const { error } = await CRM.__db.from('proposals').update({ status: 'declined' }).eq('id', prop.id);
+    if (error) {
+      live.status = prev;
+      window.dispatchEvent(new CustomEvent('crm-data-changed'));
+      window.showToast?.(`Cancel failed: ${error.message}`);
+      return;
+    }
+    window.showToast?.('Proposal cancelled', {
+      undo: async () => {
+        const liveNow = (CRM.proposals || []).find(x => x.id === prop.id) || live;
+        liveNow.status = prev;
+        window.dispatchEvent(new CustomEvent('crm-data-changed'));
+        if (CRM.__db) await CRM.__db.from('proposals').update({ status: prev }).eq('id', prop.id);
+      },
+      duration: 5000,
+    });
     // The 14-day auto-re-engagement todo that used to queue here was retired
     // 2026-07-01 with the rest of the bpp_todos system (Key: "i dont use the
     // todo list anymore"); nothing displayed the rows it wrote.
@@ -6201,67 +6252,29 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
   // (or "cancelled" if your schema uses that). Uses 'voided' to align
   // with the FIN_PILL palette below.
   const voidInvoice = async (inv) => {
-    if (!CRM.__invokeFn) return;
+    if (!CRM.__db) return;
     if (markingRef.current.has('void:' + inv.id)) return;
     markingRef.current.add('void:' + inv.id);
     const live = (CRM.invoices || []).find(x => x.id === inv.id) || inv;
-    try {
-      const receipt = await mutateInvoiceLifecycle({ invoke: CRM.__invokeFn, invoice: live, action: 'void' });
-      if (!receipt.ok) {
-        window.showToast?.(`Void failed: ${receipt.error}`);
-        return;
-      }
-      applyInvoiceLifecycleReceipt(live, receipt);
-      window.dispatchEvent(new CustomEvent('crm-data-changed'));
-      window.showToast?.('Invoice voided');
-    } finally {
-      markingRef.current.delete('void:' + inv.id);
-    }
-  };
-
-  const recordOfflineApproval = async (proposal) => {
-    if (!CRM.__invokeFn || !proposal) return;
-    if (proposal.superseded_at || proposal.superseded_by) {
-      window.showToast?.('This proposal was replaced. Use the current proposal.');
-      return;
-    }
-    if (proposal.require_deposit !== false) {
-      window.showToast?.('Deposit-required proposals must be accepted through customer checkout.');
-      return;
-    }
-    const rawChannel = window.prompt('How did the customer approve? Enter phone, text, email, or in person.', 'phone');
-    if (rawChannel == null) return;
-    const channelMap = { phone:'phone', text:'text', email:'email', 'in person':'in_person', in_person:'in_person' };
-    const channel = channelMap[String(rawChannel).trim().toLowerCase()];
-    if (!channel) { window.showToast?.('Use phone, text, email, or in person'); return; }
-    const note = window.prompt('Approval note or reference. Optional.', '') || '';
-    const ok = await window.confirmAction?.({
-      title:'Record customer approval?',
-      body:'This records an offline approval. It is not an electronic signature, card authorization, or payment.',
-      confirmLabel:'Record approval',
-    });
-    if (!ok) return;
-    const storageKey = `bpp-offline-approval:${proposal.id}:${proposal.signature_revision || 1}:${channel}:${note}`;
-    let idempotencyKey = '';
-    try { idempotencyKey = localStorage.getItem(storageKey) || ''; } catch (_) {}
-    if (!idempotencyKey) {
-      idempotencyKey = crypto.randomUUID();
-      try { localStorage.setItem(storageKey, idempotencyKey); } catch (_) {}
-    }
-    const { data, error } = await CRM.__invokeFn('proposal-mutate', { body: {
-      action:'record_offline_approval', proposal_id:proposal.id,
-      proposal_revision:Number(proposal.signature_revision || 1),
-      approval_channel:channel, note, idempotency_key:idempotencyKey,
-    } });
-    if (error || !data?.ok) {
-      window.showToast?.(`Approval failed: ${error?.message || data?.error || 'unknown'}`);
-      return;
-    }
-    try { localStorage.removeItem(storageKey); } catch (_) {}
-    proposal.status = String(data.status || 'Signed').toLowerCase();
-    proposal.approval_source = 'operator_recorded';
+    const prev = live.status;
+    live.status = 'voided';
     window.dispatchEvent(new CustomEvent('crm-data-changed'));
-    window.showToast?.('Customer approval recorded');
+    const { error } = await CRM.__db.from('invoices').update({ status: 'voided' }).eq('id', inv.id);
+    if (error) {
+      live.status = prev;
+      window.dispatchEvent(new CustomEvent('crm-data-changed'));
+      window.showToast?.(`Void failed: ${error.message}`);
+      return;
+    }
+    window.showToast?.('Invoice voided', {
+      undo: async () => {
+        const liveNow = (CRM.invoices || []).find(x => x.id === inv.id) || live;
+        liveNow.status = prev;
+        window.dispatchEvent(new CustomEvent('crm-data-changed'));
+        if (CRM.__db) await CRM.__db.from('invoices').update({ status: prev }).eq('id', inv.id);
+      },
+      duration: 5000,
+    });
   };
 
   // V3: bring a cancelled proposal back to life. The 5-second undo on
@@ -6269,71 +6282,78 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
   // this last week and now I want to follow up after all" - a real case
   // when a customer goes silent and then circles back.
   const reviveProposal = async (prop) => {
-    if (!CRM.__invokeFn) return;
-    if (prop?.superseded_at || prop?.superseded_by) {
-      window.showToast?.('This proposal was replaced. Use the current proposal.');
-      return;
-    }
+    if (!CRM.__db) return;
     if (markingRef.current.has('revive:'+prop.id)) return;
     markingRef.current.add('revive:'+prop.id);
     const live = (CRM.proposals || []).find(x => x.id === prop.id) || prop;
-    try {
-      const receipt = await mutateProposalLifecycle({
-        invoke: CRM.__invokeFn,
-        proposal: live,
-        action: 'revive',
-      });
-      if (!receipt.ok) {
-        window.showToast?.(receipt.statusChanged
-          ? 'This proposal changed. Refresh before reviving it.'
-          : `Revive failed: ${receipt.error}`);
-        return;
-      }
-      applyProposalLifecycleReceipt(live, receipt);
+    const prev = live.status;
+    live.status = 'sent';
+    window.dispatchEvent(new CustomEvent('crm-data-changed'));
+    // Server-side status guard: only revive rows actually in a cancelled
+    // state. Prevents a stale tab or direct API call from flipping a
+    // paid/approved proposal back to Sent. Mirrors the lock cancelProposal
+    // already implements via `prev` / rollback, but enforced server-side.
+    const { error } = await CRM.__db.from('proposals')
+      .update({ status: 'Sent' })
+      .eq('id', prop.id)
+      .in('status', ['declined', 'cancelled', 'expired', 'Cancelled', 'Declined', 'Expired']);
+    markingRef.current.delete('revive:'+prop.id);
+    if (error) {
+      live.status = prev;
       window.dispatchEvent(new CustomEvent('crm-data-changed'));
-      window.showToast?.('Proposal revived');
-    } finally {
-      markingRef.current.delete('revive:'+prop.id);
+      window.showToast?.(`Revive failed: ${error.message}`);
+      return;
     }
+    window.showToast?.('Proposal revived');
   };
   const reviveInvoice = async (inv) => {
-    if (!CRM.__invokeFn) return;
+    if (!CRM.__db) return;
     if (markingRef.current.has('revive:'+inv.id)) return;
     markingRef.current.add('revive:'+inv.id);
     const live = (CRM.invoices || []).find(x => x.id === inv.id) || inv;
-    try {
-      const receipt = await mutateInvoiceLifecycle({ invoke: CRM.__invokeFn, invoice: live, action: 'reopen' });
-      if (!receipt.ok) {
-        window.showToast?.(`Revive failed: ${receipt.error}`);
-        return;
-      }
-      applyInvoiceLifecycleReceipt(live, receipt);
+    const prev = live.status;
+    live.status = 'sent';
+    window.dispatchEvent(new CustomEvent('crm-data-changed'));
+    const { error } = await CRM.__db.from('invoices')
+      .update({ status: 'unpaid' })
+      .eq('id', inv.id)
+      // 'cancelled' is the RETIRED v1 CRM's word for a killed invoice (v3 writes
+      // 'voided'). Two legacy 'cancelled' rows exist; include them so the revive
+      // UPDATE matches and they are no longer stranded.
+      .in('status', ['voided', 'refunded', 'cancelled', 'Voided', 'Refunded', 'Cancelled']);
+    markingRef.current.delete('revive:'+inv.id);
+    if (error) {
+      live.status = prev;
       window.dispatchEvent(new CustomEvent('crm-data-changed'));
-      window.showToast?.('Invoice revived');
-    } finally {
-      markingRef.current.delete('revive:'+inv.id);
-    }
-  };
-
-  // Hard delete is reserved for untouched drafts. The service RPC row-locks
-  // and refuses any issued document or document with money history.
-  const deleteProposal = async (prop) => {
-    if (!CRM.__invokeFn) return;
-    if (prop?.superseded_at || prop?.superseded_by) {
-      window.showToast?.('This proposal was replaced. Use the current proposal.');
+      window.showToast?.(`Revive failed: ${error.message}`);
       return;
     }
+    window.showToast?.('Invoice revived');
+  };
+
+  // V3: hard delete (distinct from cancel/void which is reversible). Used
+  // for proposals/invoices Key created by mistake or wants gone entirely.
+  const deleteProposal = async (prop) => {
+    if (!CRM.__db) return;
     const ok = await window.confirmAction?.({
       title: 'Delete this proposal?',
-      body: 'This permanently removes an untouched draft. Issued proposals must be cancelled so their history stays intact.',
+      body: 'This permanently removes the proposal and breaks the customer link. Cannot be undone. Use Cancel instead if you might need it back.',
       confirmLabel: 'Delete permanently',
       destructive: true,
     });
     if (!ok) return;
-    const receipt = await deleteDraftMoneyDocument({
-      invoke: CRM.__invokeFn, documentType: 'proposal', document: prop,
-    });
-    if (!receipt.ok) { window.showToast?.(`Delete refused: ${receipt.error}`); return; }
+    // The proposals table has a self-referential FK (superseded_by) created by
+    // the auto-supersede trigger when a newer proposal lands for the same
+    // contact. Postgres rejects deletes that leave dangling references, so
+    // we clear the FK on any rows pointing at us BEFORE deleting. SET NULL
+    // matches the auto-supersede semantics - the old proposal is just no
+    // longer marked as superseded by anything.
+    await CRM.__db.from('proposals').update({ superseded_by: null }).eq('superseded_by', prop.id);
+    // Same treatment for invoices that point at this proposal: keep the
+    // invoice (it may have been sent / paid) but detach the link.
+    await CRM.__db.from('invoices').update({ proposal_id: null }).eq('proposal_id', prop.id);
+    const { error } = await CRM.__db.from('proposals').delete().eq('id', prop.id);
+    if (error) { window.showToast?.(`Delete failed: ${error.message}`); return; }
     const arr = CRM.proposals || [];
     const idx = arr.findIndex(x => x.id === prop.id);
     if (idx >= 0) arr.splice(idx, 1);
@@ -6341,18 +6361,16 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
     window.showToast?.('Proposal deleted');
   };
   const deleteInvoice = async (inv) => {
-    if (!CRM.__invokeFn) return;
+    if (!CRM.__db) return;
     const ok = await window.confirmAction?.({
       title: 'Delete this invoice?',
-      body: 'This permanently removes an untouched draft. Issued invoices must be voided so their history stays intact.',
+      body: 'This permanently removes the invoice and breaks the customer link. Cannot be undone. Use Void instead if you might need it back.',
       confirmLabel: 'Delete permanently',
       destructive: true,
     });
     if (!ok) return;
-    const receipt = await deleteDraftMoneyDocument({
-      invoke: CRM.__invokeFn, documentType: 'invoice', document: inv,
-    });
-    if (!receipt.ok) { window.showToast?.(`Delete refused: ${receipt.error}`); return; }
+    const { error } = await CRM.__db.from('invoices').delete().eq('id', inv.id);
+    if (error) { window.showToast?.(`Delete failed: ${error.message}`); return; }
     const arr = CRM.invoices || [];
     const idx = arr.findIndex(x => x.id === inv.id);
     if (idx >= 0) arr.splice(idx, 1);
@@ -6373,11 +6391,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
   // misleading "An email is already in progress" toast that reads like a failure
   // while the first send proceeds fine (audit 2026-06-22 [19]).
   const [sendingEmail, setSendingEmail] = React.useState(false);
-  const emailDoc = async ({ template, contact_id, proposal, invoice, payment }) => {
-    if (proposal?.superseded_at || proposal?.superseded_by) {
-      window.showToast?.('This proposal was replaced. Use the current proposal.');
-      return;
-    }
+  const emailDoc = async ({ template, contact_id, proposal, invoice }) => {
     if (!contact?.email) { window.showToast?.('No email on contact, add one first'); return; }
     // In-flight guard: a double-tap must not fire two identical customer emails
     // (irreversible). Set before the confirm so a second tap is blocked at once;
@@ -6397,9 +6411,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
     // so url=null (the templates carry no link var for them).
     const isBalanceReceipt = template === 'receipt-deposit' || template === 'receipt-partial';
     const url = template === 'receipt'
-      ? (payment?.receipt_token
-        ? `https://backuppowerpro.com/receipt.html?receipt=${encodeURIComponent(payment.receipt_token)}`
-        : (invoice?.token ? `https://backuppowerpro.com/receipt.html?token=${invoice.token}` : null))
+      ? (invoice?.token ? `https://backuppowerpro.com/receipt.html?token=${invoice.token}` : null)
       : isBalanceReceipt ? null
       : (proposal ? proposalUrl(proposal) : (invoice ? invoiceUrl(invoice) : null));
     const total = (proposal?.amount_cents || invoice?.amount_cents || 0) / 100;
@@ -6409,7 +6421,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
     const SUBJECTS = {
       proposal:    `Your generator inlet quote from Backup Power Pro`,
       invoice:     `Invoice from Backup Power Pro`,
-      receipt:     `Payment receipt from Backup Power Pro`,
+      receipt:     `Paid in full, your receipt from Backup Power Pro`,
       'receipt-deposit': `Deposit received, your install is booked`,
       'receipt-partial': `Payment received, your updated balance`,
       'refund-receipt': `Your refund from Backup Power Pro`,
@@ -6425,10 +6437,11 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
       amp_type: proposal?.amp_type || '30',
       first_name: firstName,
     };
-    // Prefer the server-assigned public number. Historical documents retain a
-    // short legacy reference without altering their stored bytes.
+    // Bind a real, stable document number so the email never shows the sample
+    // "BPP-2026-0142". Same 8-char id scheme the receipt uses, so an invoice and
+    // its paid receipt share one number (continuity for the customer).
     if (template === 'invoice' && invoice) {
-      variables.invoice_num = invoice.document_number || (invoice.id || '').slice(0, 8).toUpperCase();
+      variables.invoice_num = (invoice.id || '').slice(0, 8).toUpperCase();
       // Balance-aware total: once money is in (paid_cents > 0, cumulative net
       // of refunds, loaded in crm-data.js), the invoice email's "Pay {{total}}
       // securely" carries the REMAINING balance, never the full job price
@@ -6441,31 +6454,14 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
         variables.total = fmtC(Math.max(0, totalC - paidC));
       }
     }
-    if (template === 'proposal' && proposal) variables.quote_num = proposal.document_number || (proposal.id || '').slice(0, 8).toUpperCase();
+    if (template === 'proposal' && proposal) variables.quote_num = (proposal.id || '').slice(0, 8).toUpperCase();
     // Receipt-specific facts the receipt template binds. Derived from the
     // invoice row exactly as receipt-comp.html does, so the email matches the
     // view page (receipt number = first 8 of the id, uppercased).
     if (template === 'receipt' && invoice) {
-      const receiptToken = payment?.receipt_token ? String(payment.receipt_token).replace(/-/g, '') : '';
-      variables.receipt_num = payment?.document_number || (receiptToken
-        ? receiptToken.slice(0, 8).toUpperCase()
-        : (invoice.id || '').slice(0, 8).toUpperCase());
-      variables.paid_date = payment?.received_at
-        ? formatDate(payment.received_at, { month:'long', day:'numeric', year:'numeric' })
-        : (invoice.paid_at ? formatDate(invoice.paid_at, { month:'long', day:'numeric', year:'numeric' }) : '');
-      variables.payment_method = payment?.method || invoice.payment_method || '';
-      variables.receipt_url = url || '';
-      if (payment) {
-        const paymentC = Math.round((Number(payment.amount) || 0) * 100);
-        const remaining = payment.remaining_after != null
-          ? Number(payment.remaining_after)
-          : Math.max(0, ((invoice.amount_cents || 0) - (invoice.paid_cents || 0)) / 100);
-        variables.total = '$' + (paymentC / 100).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-        variables.balance_remaining = '$' + Number(remaining).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-      } else {
-        const remainingC = Math.max(0, (invoice.amount_cents || 0) - (invoice.paid_cents || 0));
-        variables.balance_remaining = '$' + (remainingC / 100).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-      }
+      variables.receipt_num = (invoice.id || '').slice(0, 8).toUpperCase();
+      variables.paid_date = invoice.paid_at ? formatDate(invoice.paid_at, { month:'long', day:'numeric', year:'numeric' }) : '';
+      variables.payment_method = invoice.payment_method || '';
     }
     // Deposit/partial receipts show the HONEST remaining balance, never $0.
     // All numbers come from the invoice aggregate: amount_cents (job total) and
@@ -6481,7 +6477,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
       variables.amount_paid = fmtC(paidC);
       variables.paid_to_date = fmtC(paidC);
       variables.balance_remaining = fmtC(balC);
-      variables.receipt_num = invoice.document_number || (invoice.id || '').slice(0, 8).toUpperCase();
+      variables.receipt_num = (invoice.id || '').slice(0, 8).toUpperCase();
       variables.paid_date = formatDate(invoice.paid_at || new Date().toISOString(), { month:'long', day:'numeric', year:'numeric' });
       variables.payment_method = invoice.payment_method || '';
     }
@@ -6512,14 +6508,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
       variables.amount = fmtC(dueC);
       variables.retry_url = url || invoiceUrl(invoice) || '';
     }
-    const currentPayload = {
-      template,
-      contact_id,
-      document_id: proposal?.id || invoice?.id,
-      subject,
-      variables,
-      trigger_source: 'crm_v3_finance_action',
-    };
+    const currentPayload = { template, contact_id, subject, variables, trigger_source: 'crm_v3_finance_action' };
     const emailIntent = __manualEmailIntentIdentity({ ...currentPayload, to_email: contact.email });
     const sendPayload = await __manualEmailRememberedPayload(emailIntent) || currentPayload;
     const sendVariables = sendPayload.variables || {};
@@ -6529,7 +6518,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
     // catastrophic mistakes (wrong email, wrong amount, wrong document); the
     // link opens the customer page the email mirrors for a full-content check.
     const TPL_LABEL = {
-      proposal: 'quote', invoice: 'invoice', receipt: 'payment receipt',
+      proposal: 'quote', invoice: 'invoice', receipt: 'paid-in-full receipt',
       'receipt-deposit': 'deposit receipt', 'receipt-partial': 'balance receipt',
       'refund-receipt': 'refund receipt', 'ach-failed': 'bank-transfer retry notice',
       'permit-approved': 'permit-approved note', completion: 'completion note', review: 'review request',
@@ -6546,7 +6535,6 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
     const amountVal = isRefundReceipt ? sendVariables.refund_amount
       : isAchFailed ? sendVariables.amount
       : isBalanceReceipt ? sendVariables.balance_remaining
-      : template === 'receipt' ? sendVariables.total
       : template === 'invoice' ? sendVariables.total
       : (total ? '$' + total.toLocaleString() : null);
     // #202 durable half: fetch the exact rendered email HTML via dry_run
@@ -6572,7 +6560,6 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
     } catch (_) { /* dry-run is a preview enhancement, never blocks the send flow */ }
     const pvLabel = { fontSize:11, fontWeight:700, color:MUTED, minWidth:54, textTransform:'uppercase', letterSpacing:'0.04em', flexShrink:0 };
     const pvVal = { fontSize:13, color:NAVY, wordBreak:'break-word' };
-    const safePagePreviewUrl = operatorDocumentPreviewUrl(sendUrl);
     const previewBody = (
       <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
         <div style={{ fontSize:12.5, color:MUTED, lineHeight:1.45 }}>Review before it sends. This goes out by email via Resend.</div>
@@ -6584,8 +6571,8 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
           {docNum && <div style={{ display:'flex', gap:8 }}><span style={pvLabel}>Doc #</span><span style={{ ...pvVal, fontFamily:"'JetBrains Mono','DM Mono',monospace" }}>{docNum}</span></div>}
         </div>
         {emailPreviewUrl && <a href={emailPreviewUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize:12.5, fontWeight:700, color:'#1e40af', textDecoration:'none' }}>Preview the exact email body ›</a>}
-        {safePagePreviewUrl
-          ? <a href={safePagePreviewUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize:12.5, fontWeight:700, color:'#1e40af', textDecoration:'none' }}>Preview the page this email links to ›</a>
+        {sendUrl
+          ? <a href={sendUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize:12.5, fontWeight:700, color:'#1e40af', textDecoration:'none' }}>Preview the page this email links to ›</a>
           : <div style={{ fontSize:12, color:MUTED }}>Record only. No customer page link.</div>}
       </div>
     );
@@ -6635,16 +6622,11 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
       window.showToast?.('Email status is unclear. Retry the same send or reconcile it before creating another.', { kind: 'error' });
       return;
     }
-    const promotion = await promoteDeliveredLink(sendUrl);
     __finishManualEmailAttempt(dispatchAttempt);
+    window.showToast?.(`Email sent to ${contact.email}`);
     // #213: send-email already logged this to messages_email; tell the open
     // thread to refetch so the internal "Email sent" note appears right away.
     window.dispatchEvent(new CustomEvent('crm-email-logged', { detail: { contact_id } }));
-    if (!promotion.ok) {
-      window.showToast?.(deliverySyncMessage('email'), { kind:'error', duration:4200 });
-      return;
-    }
-    window.showToast?.(`Email sent to ${contact.email}`);
     } finally {
       sendingEmailRef.current = false;
       setSendingEmail(false);
@@ -6652,8 +6634,8 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
   };
 
   // remake-2 (approved comp, the .spill tint families): quiet tinted pills
-  // instead of solid blocks. Draft gray, Sent blue, Viewed purple, legacy
-  // unpaid signatures as Not accepted, Approved/Paid green,
+  // instead of solid blocks. Draft gray, Sent blue, Viewed purple, Signed
+  // gold-tint (signed-unpaid must never read as booked), Approved/Paid green,
   // Cancelled gray + struck. Red tint reserved for Overdue, the one state
   // where money is actually at risk. Status KEYS + labels unchanged (the
   // left-pane lens mirrors these labels; logic reads keys only).
@@ -6663,9 +6645,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
     viewed:    { bg:'#f5f3ff', color:'#7c3aed', label:'Viewed' },
     overdue:   { bg:'#fef2f2', color:'#991b1b', label:'Overdue' },
     approved:  { bg:'#f0fdf4', color:'#16a34a', label:'Approved' },
-    signed:    { bg:'#fff8e1', color:'#8a5a00', label:'Not accepted' },
-    approved_offline: { bg:'#f0fdf4', color:'#16a34a', label:'Offline approved' },
-    accepted_offline: { bg:'#fff8e1', color:'#8a5a00', label:'Not accepted' },
+    signed:    { bg:'#fff8e1', color:'#8a5a00', label:'Signed' },
     declined:  { bg:'#f3f4f6', color:'#6b7280', label:'Cancelled', struck:true },
     // Some legacy v1/v2 rows write `cancelled` instead of `declined`
     // (proposals) or `voided` (invoices). Treat them as the same surface
@@ -6674,7 +6654,6 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
     voided:    { bg:'#f3f4f6', color:'#6b7280', label:'Voided' },
     refunded:  { bg:'#f3f4f6', color:'#6b7280', label:'Refunded' },
     expired:   { bg:'#f3f4f6', color:'#6b7280', label:'Expired' },
-    replaced:  { bg:'#f3f4f6', color:'#6b7280', label:'Replaced', struck:true },
     draft:     { bg:'#f3f4f6', color:'#6b7280', label:'Draft' },
   };
   const Pill = ({ status }) => {
@@ -6697,9 +6676,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
 
   // Both proposal.html and invoice.html parse `?token=<uuid>` from the query
   // string - verified against proposal.html:403 and invoice.html:189.
-  const proposalUrl = (p) => p?.token && !p.superseded_at && !p.superseded_by
-    ? `https://backuppowerpro.com/proposal.html?token=${p.token}`
-    : null;
+  const proposalUrl = (p) => p?.token ? `https://backuppowerpro.com/proposal.html?token=${p.token}` : null;
   const invoiceUrl  = (i) => i?.token ? `https://backuppowerpro.com/invoice.html?token=${i.token}`  : null;
   const proposalHasFirmFacts = (p) => window.CRM?.proposalHasFirmFacts
     ? window.CRM.proposalHasFirmFacts(p)
@@ -6745,36 +6722,10 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
   // two contacts share a token (data bug or migration race) from one
   // accidentally suppressing the other's send.
   const sendingRef = React.useRef(new Set());
-  const promoteDeliveredLink = async (linkUrl) => {
-    const tokenMatch = String(linkUrl).match(/[?&]token=([0-9a-f-]{8,})/i);
-    const token = tokenMatch?.[1];
-    const kind = linkUrl.includes('/invoice.html') ? 'invoice' : linkUrl.includes('/proposal.html') ? 'proposal' : null;
-    if (!token || !kind) return { ok:true, changed:false, row:null };
-    const collection = kind === 'proposal' ? (CRM.proposals || []) : (CRM.invoices || []);
-    const live = collection.find(row => row.token === token) || null;
-    const result = await promoteDocumentAfterDelivery({
-      db: CRM.__db,
-      kind,
-      token,
-      currentStatus: live?.status,
-      testMode: CRM.__testMode === true,
-    });
-    if (result.ok && result.changed && live) {
-      live.status = 'sent';
-      live.sent_at = result.row?.sent_at || live.sent_at;
-      if (kind === 'proposal') live.copied_at = result.row?.copied_at || live.copied_at;
-      window.dispatchEvent(new CustomEvent('crm-data-changed'));
-    }
-    return result;
-  };
   // depositAsk: a Signed (awaiting deposit) proposal sends deposit-chase copy
   // instead of the generic update line (#114). Same link, same dedupe, the
   // promote-to-Sent block below cannot touch it (status guard excludes Signed).
   const sendLink = async (linkUrl, depositAsk = false, proposal = null) => {
-    if (proposal?.superseded_at || proposal?.superseded_by) {
-      window.showToast?.('This proposal was replaced. Use the current proposal.');
-      return;
-    }
     // Guard: a draft proposal or invoice that hasn't been issued a token
     // yet has linkUrl=null. Sending "null" as a URL would deliver the
     // literal word to the customer. Refuse + tell Key why.
@@ -6800,26 +6751,53 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
     const body = depositAsk
       ? `Here's the deposit link for your signed proposal from Backup Power Pro: ${linkUrl}`
       : `Here's your update from Backup Power Pro: ${linkUrl}`;
+    // Stable idempotency: same key for the same contact+link combo for 60s
+    // window. If Key clicks twice within seconds, the server sees the same
+    // key and only fires one SMS.
+    const minute = Math.floor(Date.now() / 60000);
+    // Don't include the linkUrl directly - that base64s the customer-facing
+    // proposal/invoice token into edge-fn telemetry. We just need the key
+    // to be stable per-contact + per-minute, so a deterministic non-token
+    // hash is enough to dedupe rapid double-clicks without leaking entropy.
     const linkKind = linkUrl.includes('/invoice.html') ? 'inv' : linkUrl.includes('/proposal.html') ? 'prop' : 'link';
+    const idempotencyKey = `v3-send-${contact.id}-${linkKind}-${minute}`;
     window.showToast?.(`Sending to ${firstName}…`);
     try {
-      const sent = await sendManualSmsWithReceipt({
-        invoke: CRM.__invokeFn,
-        scope: linkKind === 'inv' ? 'invoice-link' : linkKind === 'prop' ? 'proposal-link' : 'money-link',
-        contactId: contact.id,
-        body,
-        semanticId: proposal?.id || linkKind,
-        testMode: CRM.__testMode === true,
+      const { data, error } = await CRM.__invokeFn('send-sms', {
+        body: { contactId: contact.id, body, idempotencyKey },
       });
-      if (!sent.ok) {
-        window.showToast?.(sent.error, { kind:'error', duration:4200 });
+      if (error || (data && data.success === false)) {
+        window.showToast?.(`Send failed: ${error?.message || data?.error || 'unknown'}`);
         return;
       }
-      const promotion = await promoteDeliveredLink(linkUrl);
-      if (!promotion.ok) {
-        window.showToast?.(`${firstName}, ${deliverySyncMessage('sms')}`, { kind:'error', duration:4200 });
-        return;
-      }
+      // Promote draft → sent status. Pulled from linkKind: token in URL
+      // matches the row's token, so we can flip the right one server-side.
+      // Only promote if currently in a draft-equivalent state - never
+      // downgrade approved/paid/etc.
+      try {
+        const tokenMatch = linkUrl.match(/[?&]token=([0-9a-f-]{8,})/i);
+        const token = tokenMatch?.[1];
+        if (token && CRM.__db) {
+          if (linkKind === 'prop') {
+            // 2026-05-26: also stamp sent_at, not just copied_at. Without
+            // this, every proposal Key sends via Copy-link goes out with
+            // sent_at=null, which broke the stale-quote / rotting signal
+            // (which filters on sent_at). 21 historical rows were backfilled
+            // via the normalize_contact_phones / Copy-link audit migration.
+            const nowIso = new Date().toISOString();
+            await CRM.__db.from('proposals')
+              .update({ status: 'Sent', copied_at: nowIso, sent_at: nowIso })
+              .eq('token', token)
+              .in('status', ['Created', 'Draft', 'draft']);
+          } else if (linkKind === 'inv') {
+            await CRM.__db.from('invoices')
+              .update({ status: 'unpaid', sent_at: new Date().toISOString() })
+              .eq('token', token)
+              .in('status', ['draft', 'Draft']);
+          }
+          window.dispatchEvent(new CustomEvent('crm-data-changed'));
+        }
+      } catch (_) { /* status flip best-effort; the SMS already sent */ }
       window.showToast?.(`SMS sent to ${firstName}`);
     } finally {
       // Release the lock after 2s so a second click within that window
@@ -6828,20 +6806,12 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
     }
   };
   const copyLink = async (linkUrl, proposal = null) => {
-    if (proposal?.superseded_at || proposal?.superseded_by) {
-      window.showToast?.('This proposal was replaced. Use the current proposal.');
-      return;
-    }
     if (!linkUrl) { window.showToast?.('No link yet, save the draft first'); return; }
     if (proposal && !proposalHasFirmFacts(proposal)) {
       window.showToast?.('Confirm amperage and run distance before copying this proposal');
       return;
     }
     const ok = await window.copyText(linkUrl);
-    if (!ok) {
-      window.showToast?.('Copy failed');
-      return;
-    }
     // 2026-05-26: stamp copied_at + sent_at + flip to 'Sent' status when
     // Key copies a draft proposal link, because the act of copying means
     // he's about to paste it to the customer via iMessage/email/etc.
@@ -6850,12 +6820,27 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
     // trail of who got which quote. The Send button does the same DB
     // updates AND fires Twilio; Copy does the same DB updates without
     // the Twilio fire so Key can use any channel.
-    const promotion = await promoteDeliveredLink(linkUrl);
-    if (!promotion.ok) {
-      window.showToast?.(deliverySyncMessage('clipboard'), { kind:'error', duration:4200 });
-      return;
-    }
-    window.showToast?.('Link copied');
+    try {
+      const tokenMatch = String(linkUrl).match(/[?&]token=([0-9a-f-]{8,})/i);
+      const token = tokenMatch?.[1];
+      const linkKind = linkUrl.includes('/invoice.html') ? 'inv' : linkUrl.includes('/proposal.html') ? 'prop' : null;
+      if (token && linkKind && CRM.__db) {
+        const nowIso = new Date().toISOString();
+        if (linkKind === 'prop') {
+          await CRM.__db.from('proposals')
+            .update({ status: 'Sent', copied_at: nowIso, sent_at: nowIso })
+            .eq('token', token)
+            .in('status', ['Created', 'Draft', 'draft']);
+        } else if (linkKind === 'inv') {
+          await CRM.__db.from('invoices')
+            .update({ status: 'unpaid', sent_at: nowIso })
+            .eq('token', token)
+            .in('status', ['draft', 'Draft']);
+        }
+        window.dispatchEvent(new CustomEvent('crm-data-changed'));
+      }
+    } catch (_) { /* status flip is best-effort; clipboard copy already succeeded */ }
+    window.showToast?.(ok ? 'Link copied' : 'Copy failed');
   };
   const viewAsCustomer = (linkUrl) => {
     if (!linkUrl) { window.showToast?.('No link yet, save the draft first'); return; }
@@ -6869,7 +6854,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
     window.open(linkUrl + sep + 'preview=1', '_blank', 'noopener,noreferrer');
   };
 
-  const FinanceRow = ({ left, money, status, pillStatus, activity, linkUrl, proposal, paymentReceipts, onRecordReversal, onEmailPaymentReceipt, onMarkPaid, onOfflineApprove, onCancel, onVoid, onEdit, onDelete, onEmail, onRevive, onRefund, divided, kind = 'head', paidDate }) => {
+  const FinanceRow = ({ left, money, status, activity, linkUrl, proposal, onMarkPaid, onCancel, onVoid, onEdit, onDelete, onEmail, onRevive, onRefund, divided, kind = 'head', paidDate }) => {
     // 40px on touch (Apple HIG = 44; 40 keeps the row visually compact
     // while staying above the "frustration threshold" Material flags at
     // 48px). Cursor-driven desktop is fine at 32 - but the inline style
@@ -6880,9 +6865,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
     // unprofessional and confuses the customer. View link still shows
     // for everything except voided/refunded so Key can re-open the
     // customer's view.
-    // Legacy Signed deposit rows are closed to Send. Their old authorization
-    // cannot be reused, and the customer page stays fail closed until audit/reset.
-    const FINAL_PROPOSAL = ['signed', 'approved', 'declined', 'expired', 'replaced'];
+    const FINAL_PROPOSAL = ['approved', 'declined', 'expired'];
     // 'cancelled' = legacy v1 word for a killed invoice (and a cancelled proposal);
     // treat it as a closed/final state so a cancelled row never offers Send/Copy/View.
     const FINAL_INVOICE = ['paid', 'voided', 'refunded', 'cancelled'];
@@ -6892,8 +6875,8 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
     const isFinalInvoice = FINAL_INVOICE.includes(status);
     const isFinalProposal = FINAL_PROPOSAL.includes(status);
     const showSend = !isFinalInvoice && !isFinalProposal;
-    const showCopy = !['voided','refunded','cancelled','replaced'].includes(status);
-    const showView = !['voided','refunded','cancelled','replaced'].includes(status);
+    const showCopy = !['voided','refunded','cancelled'].includes(status);
+    const showView = !['voided','refunded','cancelled'].includes(status);
     // CRM revamp 2026-06-10 (validated crm-finance-row.html): collapse the
     // old two button rows (up to 7 ghosts) into ONE primary action + a "⋯"
     // overflow menu, all on the header row. Same handlers + guards, fewer
@@ -6905,7 +6888,9 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
     // renderer reads them).
     const primary = onMarkPaid
       ? { label:'Mark paid', onClick:onMarkPaid }
-      : (showSend && linkUrl)
+      : (status === 'signed' && showSend && linkUrl)
+        ? { label:'Send deposit link', onClick:() => sendLink(linkUrl, true, proposal), icon:SendIcon }
+        : (showSend && linkUrl)
           ? { label:'Send', onClick:() => sendLink(linkUrl, false, proposal), icon:SendIcon }
           : null;
     const confirmThen = (cfg, fn) => async () => { const ok = await window.confirmAction?.(cfg); if (ok) fn(); };
@@ -6916,38 +6901,12 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
       (showSend && linkUrl && onMarkPaid) && { label:'Send link', onClick:() => sendLink(linkUrl, false, proposal) },
       (showCopy && linkUrl) && { label:'Copy link', onClick:() => copyLink(linkUrl, proposal) },
       (showView && linkUrl) && { label:'View as customer', onClick:() => viewAsCustomer(linkUrl) },
-      ...(paymentReceipts || []).map(payment => ({
-        label:`Open ${formatMoneyCents(Math.round(Number(payment.amount || 0) * 100))} payment receipt`,
-        onClick:() => {
-          const receiptUrl = `https://backuppowerpro.com/receipt.html?receipt=${encodeURIComponent(payment.receipt_token)}`;
-          window.open(operatorDocumentPreviewUrl(receiptUrl), '_blank', 'noopener,noreferrer');
-        },
-      })),
-      ...(paymentReceipts || []).map(payment => ({
-        label:`Copy ${formatMoneyCents(Math.round(Number(payment.amount || 0) * 100))} payment receipt link`,
-        onClick:async () => {
-          const receiptUrl = `https://backuppowerpro.com/receipt.html?receipt=${encodeURIComponent(payment.receipt_token)}`;
-          const copied = await window.copyText(receiptUrl);
-          window.showToast?.(copied ? 'Payment receipt link copied' : 'Copy failed');
-        },
-      })),
-      ...(paymentReceipts || []).map(payment => ({
-        label:`Email ${formatMoneyCents(Math.round(Number(payment.amount || 0) * 100))} payment receipt`,
-        onClick:() => onEmailPaymentReceipt?.(payment),
-      })),
-      ...(paymentReceipts || []).filter(payment => payment.record_source === 'operator_recorded'
-        && Number(payment.amount || 0) - Number(payment.refunded_amount || 0) > 0.005)
-        .map(payment => ({
-          label:`Record reversal for ${formatMoneyCents(Math.round(Number(payment.amount || 0) * 100))} payment`,
-          tone:'danger', onClick:() => onRecordReversal?.(payment),
-        })),
       onEmail && { label: sendingEmail ? 'Sending…' : 'Email', onClick:onEmail, disabled: sendingEmail },
-      onOfflineApprove && { label:'Record customer approval', onClick:onOfflineApprove },
       onEdit && { label:'Edit', onClick:onEdit },
       onRevive && { label:'Revive', onClick:onRevive, tone:'good' },
       (onCancel || onVoid || onRefund || onDelete) && { divider:true },
       onCancel && { label:'Cancel proposal', tone:'danger', onClick: confirmThen({ title:'Cancel this proposal?', body:'The customer\'s link will show "Cancelled". You can undo within 5 seconds.', confirmLabel:'Cancel proposal', destructive:true }, onCancel) },
-      onVoid && { label:'Void invoice', tone:'danger', onClick: confirmThen({ title:'Void this invoice?', body:'The customer\'s link will show "Voided". Invoices with collected funds cannot be voided.', confirmLabel:'Void invoice', destructive:true }, onVoid) },
+      onVoid && { label:'Void invoice', tone:'danger', onClick: confirmThen({ title:'Void this invoice?', body:'The customer\'s link will show "Voided". You can undo within 5 seconds.', confirmLabel:'Void invoice', destructive:true }, onVoid) },
       // Refund opens the RefundPanel (amount + 6-digit 2FA before any money returns),
       // so no pre-confirm here, the panel IS the gate.
       onRefund && { label:'Refund payment', tone:'danger', onClick: onRefund },
@@ -6988,7 +6947,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
         }}>
           <span style={{ flex:1, minWidth:0, fontSize:13, fontWeight:600, color:'#5a6478', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{left}</span>
           <span style={moneyStyle(13)}>{money}</span>
-          <Pill status={pillStatus || status} />
+          <Pill status={status} />
           {paidDate && <span style={{ fontFamily:"'JetBrains Mono', monospace", fontSize:11, color:'#8a93a6', flexShrink:0 }}>{paidDate}</span>}
           {primaryBtn}
           <FinanceOverflowMenu items={overflowItems} />
@@ -7006,7 +6965,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
         <div style={{ display:'flex', alignItems:'center', gap:10, minWidth:0 }}>
           <span style={{ flex:1, minWidth:0, fontSize:15, fontWeight:700, color:NAVY, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{left}</span>
           <span style={moneyStyle(15)}>{money}</span>
-          <Pill status={pillStatus || status} />
+          <Pill status={status} />
           <FinanceOverflowMenu items={overflowItems} />
         </div>
         {activity && (
@@ -7044,48 +7003,8 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
   const [chargeCardFor, setChargeCardFor] = React.useState(null);
   // The specific completed payment the operator is refunding (opens RefundPanel).
   const [refundFor, setRefundFor] = React.useState(null);
-  const manualReversalInFlight = React.useRef(new Set());
-
-  const recordManualReversal = async (payment) => {
-    if (manualReversalInFlight.current.has(payment.id)) return;
-    const available = Math.max(0, Number(payment.amount || 0) - Number(payment.refunded_amount || 0));
-    const amount = Number(window.prompt(`Amount already reversed outside BPP, up to $${available.toFixed(2)}`));
-    if (!(amount > 0) || amount > available + 0.005) { window.showToast?.('Enter a valid reversal amount'); return; }
-    const reason = String(window.prompt('Reason for the reversal') || '').trim();
-    if (reason.length < 3) { window.showToast?.('A reason is required'); return; }
-    const externalReference = String(window.prompt('External reference, optional') || '').trim();
-    const confirmed = await window.confirmAction?.({
-      title:'Confirm external reversal',
-      body:'Confirm the cash return, check cancellation, or external card refund was already completed. BPP will only record it.',
-      confirmLabel:'Record reversal', destructive:true,
-    });
-    if (!confirmed) return;
-    const semantic = JSON.stringify([payment.id, amount, reason, externalReference]);
-    const storageKey = `bpp-payment-adjustment:${semantic}`;
-    let key = null;
-    try { key = localStorage.getItem(storageKey); } catch (_) {}
-    if (!key) {
-      key = crypto.randomUUID();
-      try { localStorage.setItem(storageKey, key); } catch (_) {}
-    }
-    manualReversalInFlight.current.add(payment.id);
-    try {
-      const { data, error } = await CRM.__invokeFn('record-payment', { body: {
-        action:'adjust_payment', payment_id:payment.id, amount,
-        adjustment_type:'reversal', reason, external_reference:externalReference || null,
-        external_action_confirmed:true, idempotency_key:key,
-      } });
-      if (error || !data?.ok) { window.showToast?.(`Reversal failed: ${error?.message || data?.error || 'unknown'}`); return; }
-      try { localStorage.removeItem(storageKey); } catch (_) {}
-      window.dispatchEvent(new CustomEvent('crm-data-changed'));
-      window.showToast?.('Payment reversal recorded');
-    } finally {
-      manualReversalInFlight.current.delete(payment.id);
-    }
-  };
 
   const DealCard = ({ proposal, invoices, moneyManaged }) => {
-    const proposalReplaced = !!(proposal?.superseded_at || proposal?.superseded_by);
     const showInvoiceComposer = proposal && composeInvoiceFor === proposal.id;
     // Approved proposal with no invoice yet → surface "Generate invoice"
     // CTA right inside the card. Approved proposal that already has
@@ -7098,7 +7017,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
     // When the Money Card manages this deal, IT is the collect surface (Record
     // payment). Suppress the old "Generate deposit/next invoice" CTA here so the
     // signed deal never shows competing money machinery (the 2026-06-12 scar).
-    const canGenerateInvoice = proposal?.status === 'approved' && !proposalReplaced && !fullyBilled && !moneyManaged;
+    const canGenerateInvoice = proposal?.status === 'approved' && !fullyBilled && !moneyManaged;
 
     return (
       <div data-card style={{
@@ -7112,20 +7031,16 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
       }}>
         {proposal && (
           <FinanceRow
-            left={[proposal.document_number, tierLabel(proposal.tier)].filter(Boolean).join(' · ')}
+            left={tierLabel(proposal.tier)}
             money={formatMoneyCents(proposal.amount_cents)}
-            status={proposalReplaced ? 'replaced' : proposal.status}
-            pillStatus={proposalReplaced ? 'replaced' : proposal.approval_source === 'operator_recorded'
-              ? (proposal.status === 'approved' ? 'approved_offline' : (proposal.status === 'signed' ? 'accepted_offline' : proposal.status))
-              : proposal.status}
+            status={proposal.status}
             activity={propActivity(proposal)}
             linkUrl={proposalUrl(proposal)}
             proposal={proposal}
-            onOfflineApprove={!proposalReplaced && proposal.require_deposit === false && ['sent','viewed'].includes(proposal.status) ? () => recordOfflineApproval(proposal) : null}
-            onCancel={!proposalReplaced && (proposal.status === 'sent' || proposal.status === 'viewed') ? () => cancelProposal(proposal) : null}
-            onRevive={!proposalReplaced && ['declined','cancelled','expired'].includes(proposal.status) ? () => reviveProposal(proposal) : null}
-            onEdit={!proposalReplaced && ['draft','created'].includes(String(proposal.status || '').toLowerCase()) ? () => { setProposalModalOpen(false); setEditingProposalId(proposal.id); } : null}
-            onDelete={!proposalReplaced && ['draft','created'].includes(String(proposal.status || '').toLowerCase()) ? () => deleteProposal(proposal) : null}
+            onCancel={proposal.status === 'sent' || proposal.status === 'viewed' ? () => cancelProposal(proposal) : null}
+            onRevive={['declined','cancelled','expired'].includes(proposal.status) ? () => reviveProposal(proposal) : null}
+            onEdit={['draft','sent','viewed'].includes(proposal.status) ? () => { setProposalModalOpen(false); setEditingProposalId(proposal.id); } : null}
+            onDelete={['draft','sent','viewed','declined','cancelled','expired'].includes(proposal.status) ? () => deleteProposal(proposal) : null}
             // send-email is built + deployed; emailDoc gates each send behind
             // a Key-confirm modal and passes trigger_source crm_v3_*. Only
             // offer the button on a proposal that actually has a customer
@@ -7134,7 +7049,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
             // (superseding sets superseded_at and leaves status untouched),
             // so a status-array literal would let a replaced ghost draft
             // still be emailed to a customer as if it were live.
-            onEmail={(proposalUrl(proposal) && proposalHasFirmFacts(proposal) && !proposalReplaced && !['declined','cancelled','expired'].includes(proposal.status)) ? () => emailDoc({ template: 'proposal', contact_id: contact.id, proposal }) : null}
+            onEmail={(proposalUrl(proposal) && proposalHasFirmFacts(proposal) && !proposal.superseded_at && !['declined','cancelled','expired'].includes(proposal.status)) ? () => emailDoc({ template: 'proposal', contact_id: contact.id, proposal }) : null}
           />
         )}
 
@@ -7179,7 +7094,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
             edge fns are NOT deployed yet; the panel fails closed with an
             honest toast until the Key-gated supervised session activates
             them. Ghost styling: rarer + heavier action than invoicing. */}
-        {!moneyManaged && chargeInvoice && proposal?.status === 'approved' && contact.has_card_on_file && chargeCardFor !== proposal.id && (
+        {!moneyManaged && proposal?.status === 'approved' && contact.has_card_on_file && chargeCardFor !== proposal.id && (
           <div style={{ padding:'0 14px 12px' }}>
             <button
               onClick={() => setChargeCardFor(proposal.id)}
@@ -7193,9 +7108,9 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
             </button>
           </div>
         )}
-        {proposal && chargeInvoice && chargeCardFor === proposal.id && (
+        {proposal && chargeCardFor === proposal.id && (
           <div style={{ padding:'0 14px 12px' }}>
-            <ChargeCardPanel contact={contact} proposal={proposal} invoice={chargeInvoice} onClose={() => setChargeCardFor(null)} />
+            <ChargeCardPanel contact={contact} proposal={proposal} onClose={() => setChargeCardFor(null)} />
           </div>
         )}
 
@@ -7203,19 +7118,16 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
           <FinanceRow
             key={inv.id}
             kind="inv"
-            left={[inv.document_number, capitalize(inv.kind)].filter(Boolean).join(' · ')}
+            left={capitalize(inv.kind)}
             money={formatMoneyCents(inv.amount_cents)}
             status={inv.status}
             activity={invActivity(inv)}
             paidDate={inv.paid_at ? fmtShort(inv.paid_at) : null}
-            paymentReceipts={(inv.payments || []).filter(payment => payment.receipt_token && payment.status === 'completed')}
-            onRecordReversal={recordManualReversal}
-            onEmailPaymentReceipt={(payment) => emailDoc({ template:'receipt', contact_id:contact.id, invoice:inv, payment })}
             linkUrl={invoiceUrl(inv)}
             divided
-            onMarkPaid={null}
+            onMarkPaid={['sent','viewed','overdue'].includes(inv.status) ? () => markPaid(inv) : null}
             onVoid={['sent','viewed','overdue'].includes(inv.status) ? () => voidInvoice(inv) : null}
-            onRevive={['voided','cancelled'].includes(inv.status) ? () => reviveInvoice(inv) : null}
+            onRevive={['voided','refunded','cancelled'].includes(inv.status) ? () => reviveInvoice(inv) : null}
             onRefund={(() => {
               // Only a PAID invoice with a completed, not-fully-refunded payment that
               // carries a proposal_id (the 2FA code is issued per proposal) can refund.
@@ -7224,16 +7136,14 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
                 && ((Number(pp.amount) || 0) - (Number(pp.refunded_amount) || 0)) > 0.005);
               return p ? () => setRefundFor(p) : null;
             })()}
-            onEdit={String(inv.status || '').toLowerCase() === 'draft' ? () => { setInvoiceModalOpen(false); setEditingInvoiceId(inv.id); } : null}
-            onDelete={String(inv.status || '').toLowerCase() === 'draft' ? () => deleteInvoice(inv) : null}
+            onEdit={['draft','sent','viewed','overdue'].includes(inv.status) ? () => { setInvoiceModalOpen(false); setEditingInvoiceId(inv.id); } : null}
+            onDelete={['draft','sent','viewed','overdue','voided','refunded','cancelled'].includes(inv.status) ? () => deleteInvoice(inv) : null}
             // send-email is built; emailDoc confirms with Key + passes
             // trigger_source crm_v3_*. Function 503s until RESEND_API_KEY set.
             // A PAID invoice gets a receipt instead of an invoice email (the
             // invoice email carries a Pay button, wrong for an already-paid
             // invoice). Drafts with no token offer no Email.
-            onEmail={!invoiceUrl(inv) ? null : (inv.status === 'paid'
-              ? (String(inv.creator_version || '').toLowerCase() === 'v4' ? null : () => emailDoc({ template:'receipt', contact_id:contact.id, invoice:inv }))
-              : (['voided','refunded','cancelled'].includes(inv.status) ? null : () => emailDoc({ template:'invoice', contact_id:contact.id, invoice:inv })))}
+            onEmail={!invoiceUrl(inv) ? null : (inv.status === 'paid' ? () => emailDoc({ template: 'receipt', contact_id: contact.id, invoice: inv }) : (['voided','refunded','cancelled'].includes(inv.status) ? null : () => emailDoc({ template: 'invoice', contact_id: contact.id, invoice: inv })))}
           />
         ))}
         {refundFor && (
@@ -7246,9 +7156,9 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
   };
 
   // ── MoneyCard wiring (2026-06-13): the primary post-sign deal becomes the
-  // dead-simple money surface. Only an approved proposal reads as AMOUNT DUE
+  // dead-simple money surface. A signed/approved proposal reads as AMOUNT DUE
   // -> Record payment -> PAID; the document rows demote into "Documents" below.
-  const isPostSign = s => String(s || '').toLowerCase() === 'approved';
+  const isPostSign = s => ['signed', 'approved'].includes(String(s || '').toLowerCase());
   const primaryDeal = dealCards.find(d => d.proposal && isPostSign(d.proposal.status)) || null;
   const moneyProposal = primaryDeal?.proposal || null;
   const moneyInvoices = primaryDeal?.invoices || [];
@@ -7296,29 +7206,23 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
   // record-payment edge fn. Never charges a card; reversible (void in Documents).
   const recordPaymentNow = async (amountDollars, method) => {
     if (!moneyProposal) return false;
-    const methodApi = method;
+    // UI labels can be clearer than the ledger enum; map before the edge call.
+    const methodApi = method === 'Card (offline)' ? 'Card'
+      : method === 'Paid elsewhere' ? 'Other'
+      : method;
     const attemptId = `${liveInv?.id || moneyProposal.id}:${amountDollars}:${methodApi}`;
-    const storageKey = `bpp-payment:${attemptId}`;
-    let attempt = null;
-    try { attempt = JSON.parse(localStorage.getItem(storageKey) || 'null'); } catch (_) {}
-    if (!attempt) {
-      attempt = {
-        key: crypto.randomUUID ? crypto.randomUUID() : `payment_${Date.now()}_${Math.random().toString(36).slice(2)}`,
-        receivedAt: new Date().toISOString(),
-      };
-      try { localStorage.setItem(storageKey, JSON.stringify(attempt)); } catch (_) {}
-    }
+    window.__bppPaymentAttemptKeys = window.__bppPaymentAttemptKeys || new Map();
+    const attemptKeys = window.__bppPaymentAttemptKeys;
+    const idempotencyKey = attemptKeys.get(attemptId)
+      || (crypto.randomUUID ? crypto.randomUUID() : `payment_${Date.now()}_${Math.random().toString(36).slice(2)}`);
+    attemptKeys.set(attemptId, idempotencyKey);
     try {
       const { data, error } = await CRM.__invokeFn('record-payment', {
-        body: {
-          proposal_id: moneyProposal.id, invoice_id: liveInv?.id || undefined,
-          amount: amountDollars, method: methodApi,
-          received_at: attempt.receivedAt, idempotency_key: attempt.key,
-        },
+        body: { proposal_id: moneyProposal.id, invoice_id: liveInv?.id || undefined, amount: amountDollars, method: methodApi, idempotency_key: idempotencyKey },
       });
       if (error || (data && data.ok === false)) { window.showToast?.(`Record failed: ${error?.message || data?.error || 'unknown'}`); return false; }
-      try { localStorage.removeItem(storageKey); } catch (_) {}
-      window.showToast?.(`Recorded ${method} payment`);
+      attemptKeys.delete(attemptId);
+      window.showToast?.(`Recorded ${method} payment` + (moneyProposal?.status === 'signed' ? '. Still Signed until deposit Approved path runs' : ''));
       window.dispatchEvent(new CustomEvent('crm-data-changed'));
       return true;
     } catch (e) { window.showToast?.(`Record failed: ${e.message}`); return false; }
@@ -7345,17 +7249,8 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
         const items = Array.isArray(liveInv.line_items) && liveInv.line_items.length
           ? liveInv.line_items.map((x, i) => i === 0 ? { ...x, amount: newDollars } : x)
           : [{ id: 'li_' + Math.random().toString(36).slice(2, 8), kind: 'item', name: 'Final balance', amount: newDollars, checked: true }];
-        const semantic = JSON.stringify([liveInv.id, newDollars, items, liveInv.due_at || null, liveInv.payment_terms || 'Due upon receipt']);
-        const storageKey = `bpp-draft-invoice-update:${semantic}`;
-        let key = localStorage.getItem(storageKey);
-        if (!key) { key = crypto.randomUUID(); localStorage.setItem(storageKey, key); }
-        const { data, error } = await CRM.__invokeFn('record-payment', { body: {
-          action: 'update_draft_invoice', invoice_id: liveInv.id,
-          amount: newDollars, line_items: items, due_at: liveInv.due_at || null,
-          payment_terms: liveInv.payment_terms || 'Due upon receipt', idempotency_key: key,
-        } });
-        if (error || !data?.ok) { window.showToast?.(`Price update refused: ${error?.message || data?.error || 'unknown'}`); return; }
-        localStorage.removeItem(storageKey);
+        const { error } = await CRM.__db.from('invoices').update({ total: newDollars, line_items: items }).eq('id', liveInv.id);
+        if (error) { window.showToast?.(`Price update failed: ${error.message}`); return; }
       } else if (moneyProposal?.id) {
         const { error } = await CRM.__db.from('invoices').insert({
           contact_id: contact.id,
@@ -7389,7 +7284,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
         liveInv && invoiceUrl(liveInv) && { label: sendingEmail ? 'Sending…' : 'Email invoice', onClick: () => emailDoc({ template: 'invoice', contact_id: contact.id, invoice: liveInv }), disabled: sendingEmail },
         // Booking-tone deposit receipt, only once a deposit/partial is actually in
         // (isPartial = paid > 0 but balance remains). Shows the honest remaining balance.
-        liveInv && isPartial && String(liveInv.creator_version || '').toLowerCase() !== 'v4' && { label: sendingEmail ? 'Sending…' : 'Send deposit receipt', onClick: () => emailDoc({ template: 'receipt-deposit', contact_id: contact.id, invoice: liveInv }), disabled: sendingEmail },
+        liveInv && isPartial && { label: sendingEmail ? 'Sending…' : 'Send deposit receipt', onClick: () => emailDoc({ template: 'receipt-deposit', contact_id: contact.id, invoice: liveInv }), disabled: sendingEmail },
         // Bank-transfer retry: ONLY when this invoice has a status='failed' payment
         // (the webhook flips the ACH row to failed). Never offered otherwise, so it can
         // never tell a customer their transfer failed when none did.
@@ -7413,11 +7308,9 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
           paidMethod={liveInv?.payment_method || null}
           paidDate={liveInv?.paid_at ? fmtShort(liveInv.paid_at) : null}
           onRecord={recordPaymentNow}
-          onEdit={!liveInv || String(liveInv.status || '').toLowerCase() === 'draft' ? editMoneyPrice : null}
+          onEdit={editMoneyPrice}
           onSendReceipt={() => liveInv && emailDoc({ template: 'receipt', contact_id: contact.id, invoice: liveInv })}
-          onSendPartialReceipt={liveInv && String(liveInv.creator_version || '').toLowerCase() !== 'v4'
-            ? () => emailDoc({ template: 'receipt-partial', contact_id: contact.id, invoice: liveInv })
-            : null}
+          onSendPartialReceipt={() => liveInv && emailDoc({ template: 'receipt-partial', contact_id: contact.id, invoice: liveInv })}
           sending={sendingEmail}
           overflow={moneyOverflow}
           awaitingDeposit={isAwaitingDeposit}
@@ -7432,26 +7325,20 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
           standalone invoice (no proposal link) if no approved proposal
           is in scope; if there IS one, the per-card "Generate invoice"
           button inside that DealCard is the better path. */}
-      {!proposalModalOpen && !invoiceModalOpen && !receiptModalOpen && (
+      {!proposalModalOpen && !invoiceModalOpen && (
         <div style={{ display:'flex', gap:8, marginBottom:12 }}>
-          <button onClick={() => { setInvoiceModalOpen(false); setReceiptModalOpen(false); setProposalModalOpen(true); }} style={{
+          <button onClick={() => { setInvoiceModalOpen(false); setProposalModalOpen(true); }} style={{
             flex:1, height:44, borderRadius:8,
             background:GOLD, color:NAVY, border:'none',
             fontSize:13, fontWeight:700, fontFamily:'inherit', cursor:'pointer',
             display:'flex', alignItems:'center', justifyContent:'center', gap:6,
           }}>+ New proposal</button>
-          <button onClick={() => { setProposalModalOpen(false); setReceiptModalOpen(false); setInvoiceModalOpen(true); }} style={{
+          <button onClick={() => { setProposalModalOpen(false); setInvoiceModalOpen(true); }} style={{
             flex:1, height:44, borderRadius:8,
             background:'white', color:NAVY, border:'1px solid rgba(11,31,59,0.15)',
             fontSize:13, fontWeight:600, fontFamily:'inherit', cursor:'pointer',
             display:'flex', alignItems:'center', justifyContent:'center', gap:6,
           }}>+ New invoice</button>
-          <button onClick={() => { setProposalModalOpen(false); setInvoiceModalOpen(false); setReceiptModalOpen(true); }} style={{
-            flex:1, height:44, borderRadius:8,
-            background:'white', color:NAVY, border:'1px solid rgba(11,31,59,0.15)',
-            fontSize:13, fontWeight:600, fontFamily:'inherit', cursor:'pointer',
-            display:'flex', alignItems:'center', justifyContent:'center', gap:6,
-          }}>+ New receipt</button>
         </div>
       )}
 
@@ -7470,17 +7357,6 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
           invoices={invoices}
           onClose={() => setInvoiceModalOpen(false)}
           inline
-        />
-      )}
-
-      {receiptModalOpen && (
-        <NewInvoiceModal
-          contact={contact}
-          latestSignedProposal={null}
-          invoices={invoices}
-          onClose={() => setReceiptModalOpen(false)}
-          inline
-          receiptMode
         />
       )}
 
@@ -7519,7 +7395,7 @@ function ContactFinance({ contact, proposals, invoices, highlightId }) {
         );
       })()}
 
-      {dealCards.length === 0 && !proposalModalOpen && !invoiceModalOpen && !receiptModalOpen && (
+      {dealCards.length === 0 && !proposalModalOpen && !invoiceModalOpen && (
         <div style={{ padding:'48px 24px', textAlign:'center', color:MUTED, fontSize:13 }}>Use the buttons above to send a proposal or invoice.</div>
       )}
     </div>
@@ -8623,24 +8499,55 @@ function ContactMessages({ contact, thread, isDnc }) {
   // changing the total count (a fresh inbound arriving as an old message rolls
   // off the 90-day / 2000-row window) still re-fires the mark-as-read. The old
   // [thread.length] dep missed that case and the inbox badge lingered on a
-  // thread Key was staring at (logic audit 2026-06-22 [10]).
+  // thread Key was staring at (logic audit 2026-06-22 [10]; same pattern as
+  // unlistenedVmKey below).
   const unreadInboundKey = React.useMemo(
     () => (thread || []).filter(m => m.direction === 'in' && m.read_at == null).map(m => m.id).sort().join(','),
     [thread]
   );
-  // Mark inbound messages read when this exact thread opens. The shared
-  // operator RPC owns the mutation and local badges move only after its exact
-  // receipt, so an outage cannot silently erase triage work.
+  // Mark inbound messages as read whenever this thread is opened. Without
+  // this the unread badge / inbox badge / "needs reply" pill never clear,
+  // even after Key has obviously seen the conversation. Optimistic - flips
+  // the in-memory rows immediately so the UI updates without a refetch,
+  // then patches Supabase in the background.
   React.useEffect(() => {
-    const state = CRM.operatorCommunicationsState;
-    if (!state) return;
-    let active = true;
-    state.markThreadRead(contact.id).then(result => {
-      if (active && !result.ok) {
-        window.showToast?.('Read status could not update. Reopen the thread to retry.');
+    if (!CRM.__db) return;
+    const unread = (CRM.messages || []).filter(m =>
+      m.contact_id === contact.id &&
+      m.direction === 'in' &&
+      m.read_at == null
+    );
+    if (unread.length === 0) return;
+    const stamp = new Date().toISOString();
+    const ids = unread.map(m => m.id);
+    // [15]: register these ids as locally-read BEFORE the optimistic stamp so a
+    // realtime full-refetch landing before our UPDATE commits re-applies the
+    // read stamp (applyLocalReads in crm-data.js) instead of mapping read_at
+    // back to null and re-lighting the badge for the thread Key is looking at.
+    // The id self-clears from the map once the DB row reports read; on a failed
+    // write we clear it here.
+    const localReads = (window.CRM.__localReads = window.CRM.__localReads || new Map());
+    for (const id of ids) localReads.set(id, stamp);
+    // Optimistic UI update - mutate in-place so the existing CRM data
+    // pipeline (signal map, inbox badges) sees fresh values immediately.
+    for (const m of unread) m.read_at = stamp;
+    // Fire the change event so anything that derives from the messages
+    // array (badge counts, "needs reply" filter, signal map) re-renders.
+    window.dispatchEvent(new CustomEvent('crm-data-changed'));
+    // Persist. .in() handles the chunk in one round-trip; if the patch
+    // fails we revert the optimistic write so badges stay accurate.
+    CRM.__db.from('messages').update({ read_at: stamp }).in('id', ids).then(({ error }) => {
+      if (error) {
+        for (const id of ids) localReads.delete(id);
+        // Re-resolve the live rows by id (the realtime channel may have swapped
+        // the message objects since the stamp) before clearing read_at, so the
+        // revert lands on the array the UI actually renders, not orphans.
+        const live = new Map((CRM.messages || []).map(m => [m.id, m]));
+        for (const id of ids) { const m = live.get(id); if (m) m.read_at = null; }
+        window.dispatchEvent(new CustomEvent('crm-data-changed'));
+        console.warn('[CRM] mark-as-read failed:', error.message);
       }
     });
-    return () => { active = false; };
   }, [contact.id, unreadInboundKey]);
 
   // Revoke any remaining blob URLs on unmount.
@@ -9016,15 +8923,18 @@ function ContactMessages({ contact, thread, isDnc }) {
         if (a.type === 'image') mediaUrls.push(url); else fileLinks.push(url);
       }
       const finalBody = body + (fileLinks.length ? (body ? '\n' : '') + fileLinks.join('\n') : '');
-      const sent = await sendManualSmsWithReceipt({
-        invoke: CRM.__invokeFn,
-        scope: 'conversation',
-        contactId: contact.id,
-        body: finalBody,
-        mediaUrls,
-        testMode: CRM.__testMode === true,
+      // Stable idempotency: contact + a content hash + minute bucket. Defends
+      // against double-click / repeated submit during transient errors. Keying
+      // on a hash of the body (not just its length) so two DIFFERENT texts of
+      // equal length in the same minute no longer collide (the second was
+      // silently swallowed before). Hash the FINAL body so an identical caption
+      // with a different attachment still gets a distinct key.
+      let _bh = 0; for (let _i = 0; _i < finalBody.length; _i++) { _bh = (_bh * 31 + finalBody.charCodeAt(_i)) | 0; }
+      const idempotencyKey = `v3-msg-${contact.id}-${(_bh >>> 0).toString(36)}-${mediaUrls.length}-${Math.floor(Date.now() / 60000)}-r${sendRetryRef.current}`;
+      const { data, error } = await CRM.__invokeFn('send-sms', {
+        body: { contactId: contact.id, body: finalBody, mediaUrls, idempotencyKey },
       });
-      if (!sent.ok) {
+      if (error || (data && data.success === false)) {
         // Rollback the optimistic bubble + restore the compose AND attachments
         // so Key can retry. Better than silently leaving a phantom "sent"
         // message or losing the photo he just attached. Peek at
@@ -9033,7 +8943,23 @@ function ContactMessages({ contact, thread, isDnc }) {
         setLocalMsgs(m => m.filter(x => x.id !== tempId));
         setMsg(body);
         if (atts.length) setAttachments(atts);
-        window.showToast?.(`Send failed: ${sent.error}`);
+        let detail = data?.error || error?.message || 'unknown';
+        // Only bump the idempotency nonce when the SERVER definitively responded
+        // that Twilio did NOT send (a success:false body, or a non-2xx HTTP error
+        // with a parseable body , both mean the function ran + did not dispatch).
+        // A bare network/timeout error has NO response body and is AMBIGUOUS: the
+        // SMS may already have gone out, so we KEEP the same key and let send-sms's
+        // idempotency guard suppress a DUPLICATE customer text on the retry
+        // (audit 2026-06-22, the duplicate-send bug). Cross-minute retries are
+        // only fully closed by the durable server-side idempotency , see
+        // docs/OPEN-DECISIONS.md.
+        let definitive = !!(data && data.success === false);
+        try {
+          const errBody = error?.context ? await error.context.json() : null;
+          if (errBody?.error) { detail = errBody.error + (errBody.detail ? `: ${errBody.detail}` : ''); definitive = true; }
+        } catch (_) {}
+        if (definitive) sendRetryRef.current++;
+        window.showToast?.(`Send failed: ${detail}`);
         return;
       }
       window.showToast?.('Sent');
@@ -9042,7 +8968,7 @@ function ContactMessages({ contact, thread, isDnc }) {
       // it dedups against the realtime copy by EXACT id (and an agreeing
       // timestamp), not a minute bucket that can straddle a boundary and
       // double-render the same text (audit 2026-06-22 [1]).
-      const _saved = sent.data && sent.data.message;
+      const _saved = data && data.message;
       if (_saved && _saved.id != null) {
         setLocalMsgs(ms => ms.map(x => x.id === tempId
           ? { ...x, serverId: _saved.id, sent_at: _saved.created_at || _saved.sent_at || x.sent_at }
@@ -9837,7 +9763,7 @@ function CallNote({ call }) {
 // proxy response (expired Twilio media, rate-limit), not a stale URL. A bare
 // <audio> just plays nothing silently; this names the failure. Control height
 // raised to 44px (folds in CM-33).
-function CallAudio({ src, onPlayback }) {
+function CallAudio({ src }) {
   // A native audio element cannot attach Key's operator session. On Play,
   // fetch the protected bytes with that session and hand audio a blob URL.
   // Lazy (only on tap, so the calls list never eager-fetches every recording)
@@ -9875,8 +9801,7 @@ function CallAudio({ src, onPlayback }) {
   if (state === 'ready' && blobUrl) {
     return (
       <div>
-        <audio controls autoPlay src={blobUrl} style={{ width:'100%', height:44 }}
-          onPlay={() => onPlayback?.()} onError={() => setState('error')} />
+        <audio controls autoPlay src={blobUrl} style={{ width:'100%', height:44 }} onError={() => setState('error')} />
       </div>
     );
   }
@@ -9947,7 +9872,8 @@ function ContactCalls({ contact, calls, isDnc }) {
   // browser-dial path). Mirrors the dialer's setCalling, and closes the
   // missing double-tap guard at the same time.
   const [callingId, setCallingId] = React.useState(null);
-  // Call back remains fail-closed until the durable browser rail is released.
+  // Call back a missed caller. DNC-guarded; browser-first via BPPVoice, tel:
+  // fallback. Real dial, so only on Key's explicit tap (never auto).
   const callBack = async (cl) => {
     if (isDnc) { window.showToast?.('Marked do not contact, cannot call'); return; }
     if (callingId) return; // guard the async window against a double-tap = double call
@@ -9957,14 +9883,57 @@ function ContactCalls({ contact, calls, isDnc }) {
     setCallingId(cl.id);
     try {
       const ok = window.BPPVoice ? await window.BPPVoice.call(e164, contact?.name) : false;
-      if (!ok) window.showToast?.('Calling is not released yet.');
+      if (!ok) window.location.href = 'tel:' + e164;
     } catch (e) {
-      console.warn('[callBack] browser call failed closed:', e?.message || e);
-      window.showToast?.('Calling is not released yet.');
+      // A REJECTED browser call (device/registration error) used to leave Key
+      // with nothing: no call, no fallback, no signal, because the tel: fallback
+      // only ran on a falsy RESOLVE. Fall back to the system dialer on reject too
+      // (audit 2026-06-22).
+      console.warn('[callBack] browser call failed, using tel: fallback:', e?.message || e);
+      window.location.href = 'tel:' + e164;
     } finally {
       setCallingId(null);
     }
   };
+
+  // Key that changes whenever THIS contact's set of UNLISTENED voicemails
+  // changes, so a later realtime UPDATE that adds voicemail_url to an existing
+  // call row (same calls.length) still re-fires the auto-mark. The old
+  // [calls.length] dep missed that case, the badge lingered (audit 2026-06-22).
+  const unlistenedVmKey = React.useMemo(
+    () => (calls || []).filter(c => c.contact_id === contact.id && c.voicemail_url && c.listened_at == null).map(c => c.id).sort().join(','),
+    [calls, contact.id]
+  );
+  // Clear voicemail badge on view - same class as the mark-message-read
+  // pattern shipped 2026-05-09 for messages. Whenever this tab mounts or
+  // the contact's unlistened-voicemail set changes, mark them listened_at=now.
+  // Optimistic + revert on error.
+  React.useEffect(() => {
+    if (!CRM.__db) return;
+    const unlistened = (CRM.calls || []).filter(c =>
+      c.contact_id === contact.id &&
+      c.voicemail_url &&
+      c.listened_at == null
+    );
+    if (unlistened.length === 0) return;
+    const stamp = new Date().toISOString();
+    const ids = unlistened.map(c => c.id);
+    // Record the optimistic stamp in __localListened so a realtime calls
+    // refetch mid-flight (a transcript landing on the same row) cannot wipe it
+    // back to unheard; applyLocalListened re-applies it after every mapCall
+    // pass and self-clears once the DB reports listened (audit 2026-06-23 r2).
+    // Mirrors the messages __localReads pattern.
+    const ll = (window.CRM.__localListened || (window.CRM.__localListened = new Map()));
+    for (const c of unlistened) { ll.set(c.id, stamp); c.listened_at = stamp; }
+    window.dispatchEvent(new CustomEvent('crm-data-changed'));
+    CRM.__db.from('calls').update({ listened_at: stamp }).in('id', ids).then(({ error }) => {
+      if (error) {
+        for (const c of unlistened) { c.listened_at = null; ll.delete(c.id); }
+        window.dispatchEvent(new CustomEvent('crm-data-changed'));
+        console.warn('[CRM] mark-voicemail-listened failed:', error.message);
+      }
+    });
+  }, [contact.id, unlistenedVmKey]);
 
   const ICON_OUT = (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
@@ -9996,13 +9965,33 @@ function ContactCalls({ contact, calls, isDnc }) {
 
   return (
     <div style={{ flex:1, overflowY:'auto', minHeight:0, padding:'12px 16px var(--tabbar-clear, calc(env(safe-area-inset-bottom, 0px) + 92px))' }}>
-      <button disabled style={{
-        width:'100%', height:44, borderRadius:8,
-        background:'#E5E7EB', color:MUTED,
-        border:'none', cursor:'not-allowed',
-        fontSize:14, fontWeight:600, fontFamily:'inherit',
-        marginBottom:12, padding:'12px 16px',
-      }}>{isDnc ? 'DNC, calls disabled' : 'Calling is not released yet'}</button>
+      {/* Real tel: handoff - opens the system dialer. No fake "Starting
+          call…" toast that doesn't actually do anything. Twilio Voice SDK
+          dial-from-browser is a future feature; today this routes through
+          the iPhone's native phone app (which is what Key wants anyway). */}
+      {isDnc ? (
+        <button disabled style={{
+          width:'100%', height:44, borderRadius:8,
+          background:'#E5E7EB', color:MUTED,
+          border:'none', cursor:'not-allowed',
+          fontSize:14, fontWeight:600, fontFamily:'inherit',
+          marginBottom:12, padding:'12px 16px',
+        }}>DNC, calls disabled</button>
+      ) : (
+        <a href={contact?.phone ? `tel:${contact.phone}` : undefined}
+           aria-disabled={!contact?.phone}
+           style={{
+            display:'flex', alignItems:'center', justifyContent:'center',
+            width:'100%', height:44, borderRadius:8,
+            background: contact?.phone ? GOLD : '#E5E7EB',
+            color: contact?.phone ? NAVY : MUTED,
+            border:'none', textDecoration:'none',
+            cursor: contact?.phone ? 'pointer' : 'not-allowed',
+            fontSize:14, fontWeight:600, fontFamily:'inherit',
+            marginBottom:12,
+            pointerEvents: contact?.phone ? 'auto' : 'none',
+          }}>{contact?.phone ? `Call ${formatPhone(contact.phone)}` : 'No phone on file'}</a>
+      )}
 
       {sorted.map(cl => {
         const isSpam = cl.status === 'spam';
@@ -10061,15 +10050,7 @@ function ContactCalls({ contact, calls, isDnc }) {
                 ) : (
                   <div style={{ fontSize:11, color:MUTED, marginBottom:8 }}>{window.transcriptUnavailable?.(cl.started_at) ? 'Transcript unavailable' : 'Transcribing…'}</div>
                 )}
-                <CallAudio src={cl.voicemail_url} onPlayback={async () => {
-                  const state = CRM.operatorCommunicationsState;
-                  const result = state
-                    ? await state.markVoicemailListened(cl.id)
-                    : { ok: false };
-                  if (!result.ok) {
-                    window.showToast?.('Voicemail status was not saved. Play again to retry.');
-                  }
-                }} />
+                <CallAudio src={cl.voicemail_url} />
                 {/* CM-24: a voicemail is the highest-intent inbound, so it gets the
                     same DNC-guarded one-tap Call back the missed-call card has. */}
                 {!isDnc && (
@@ -10610,8 +10591,7 @@ function NewProposalModal({ contact, onClose, inline = false, editingProposal = 
       };
       let data, error;
       if (isEdit) {
-        ({ data, error } = await CRM.__db.from('proposals').update(payload).eq('id', ep.id)
-          .in('status', ['Created', 'Draft', 'draft']).select().single());
+        ({ data, error } = await CRM.__db.from('proposals').update(payload).eq('id', ep.id).select().single());
       } else {
         // Initial status 'Created' (renders as Draft pill via mapProposal). The
         // Send button on the FinanceRow is the trigger for SMS dispatch - Create
@@ -10635,8 +10615,8 @@ function NewProposalModal({ contact, onClose, inline = false, editingProposal = 
           } catch (_) { /* non-fatal - supersede is a hygiene win, not critical */ }
         }
       }
-      if (error || !data || data.ok === false) {
-        window.showToast?.(`${isEdit ? 'Update' : 'Create'} failed: ${error?.message || data?.error || 'unknown'}`);
+      if (error || !data) {
+        window.showToast?.(`${isEdit ? 'Update' : 'Create'} failed: ${error?.message || 'unknown'}`);
         setBusy(false);
         return;
       }
@@ -10821,7 +10801,7 @@ function NewProposalModal({ contact, onClose, inline = false, editingProposal = 
         <div className="cm2-scope-grid">
           <Scope on={includeCord}   onClick={() => setIncludeCord(v => !v)}   label="Cord"   price={fmt$((QA_PRICES.cordOff  || {})[amp] || 0)} />
           <Scope on={includeInlet}  onClick={() => setIncludeInlet(v => !v)}  label="Inlet"  price={fmt$((QA_PRICES.inletOff || {})[amp] || 0)} />
-          <Scope on={includePermit} onClick={() => setIncludePermit(v => !v)} label="Permit" price={fmt$(QA_PRICES.permitOff || 150)} />
+          <Scope on={includePermit} onClick={() => setIncludePermit(v => !v)} label="Permit" price={fmt$(QA_PRICES.permitOff || 125)} />
           <Scope on={pomOffered}    onClick={() => setPomOffered(v => !v)}    label="Peace of Mind" price={fmt$(QA_PRICES.pom || 447)} />
         </div>
         {pomOffered && (
@@ -10955,10 +10935,9 @@ function NewProposalModal({ contact, onClose, inline = false, editingProposal = 
 // no deposit toggle (per Key's spec). Type picker (Deposit/Final/Balance)
 // is a one-click preset that pre-fills line items; Key can then add /
 // remove / reorder / discount before sending.
-function NewInvoiceModal({ contact, latestSignedProposal, invoices, onClose, inline = false, editingInvoice = null, receiptMode = false }) {
+function NewInvoiceModal({ contact, latestSignedProposal, invoices, onClose, inline = false, editingInvoice = null }) {
   const isEdit = !!editingInvoice;
   const ei = editingInvoice || {};
-  const usesV4Terms = !isEdit || String(ei.creator_version || '').toLowerCase() === 'v4';
 
   const proposalTotal = (latestSignedProposal?.amount_cents || 0) / 100;
   const billedSum = invoices
@@ -10994,20 +10973,6 @@ function NewInvoiceModal({ contact, latestSignedProposal, invoices, onClose, inl
     return [];
   });
   const [busy, setBusy] = React.useState(false);
-  const [paymentMethod, setPaymentMethod] = React.useState('Cash');
-  const [paymentNote, setPaymentNote] = React.useState('');
-  const [dueAt, setDueAt] = React.useState(() => {
-    if (isEdit && ei.due_at) return String(ei.due_at).slice(0, 10);
-    const now = new Date();
-    return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
-  });
-  const [paymentTerms, setPaymentTerms] = React.useState(() => (
-    isEdit && ei.payment_terms ? ei.payment_terms : 'Due upon receipt'
-  ));
-  const [receivedAt, setReceivedAt] = React.useState(() => {
-    const now = new Date();
-    return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-  });
   const [dragIdx, setDragIdx] = React.useState(null);
   // ref shadow so onDrop reads the live value, not the stale closure value.
   // React state updates from onDragStart aren't visible to onDrop's render
@@ -11018,13 +10983,13 @@ function NewInvoiceModal({ contact, latestSignedProposal, invoices, onClose, inl
     let t = 0;
     for (const li of lineItems) {
       if (li.kind === 'discount') {
-        if (li.discountType === 'percent') t -= t * (Number(li.amount) || 0) / 100;
+        if (li.discountType === 'percent') t -= Math.round(t * (Number(li.amount) || 0) / 100);
         else                                 t -= Number(li.amount) || 0;
       } else {
         t += Number(li.amount) || 0;
       }
     }
-    return Math.max(0, Math.round(t * 100) / 100);
+    return Math.max(0, Math.round(t));
   }, [lineItems]);
 
   const hasDiscount = lineItems.some(li => li.kind === 'discount');
@@ -11065,11 +11030,7 @@ function NewInvoiceModal({ contact, latestSignedProposal, invoices, onClose, inl
       window.showToast?.('Total must be greater than 0');
       return;
     }
-    if (receiptMode && (!receivedAt || Number.isNaN(new Date(receivedAt).getTime()))) {
-      window.showToast?.('Choose when the payment was received');
-      return;
-    }
-    if (!isEdit && !receiptMode && contact.do_not_contact) {
+    if (!isEdit && contact.do_not_contact) {
       window.showToast?.('Marked do not contact, cannot send');
       return;
     }
@@ -11097,46 +11058,9 @@ function NewInvoiceModal({ contact, latestSignedProposal, invoices, onClose, inl
         line_items: storedItems,
         total,
       };
-      if (!receiptMode && usesV4Terms) {
-        payload.due_at = dueAt ? new Date(`${dueAt}T23:59:59`).toISOString() : null;
-        payload.payment_terms = paymentTerms.trim() || 'Due upon receipt';
-      }
       let data, error;
-      if (receiptMode) {
-        const receivedAtIso = new Date(receivedAt).toISOString();
-        const semantic = JSON.stringify([contact.id, storedItems, total, paymentMethod, paymentNote, receivedAtIso]);
-        const storageKey = `bpp-standalone-receipt:${semantic}`;
-        let attempt = null;
-        try { attempt = JSON.parse(localStorage.getItem(storageKey) || 'null'); } catch (_) {}
-        if (!attempt) {
-          attempt = { key: crypto.randomUUID() };
-          try { localStorage.setItem(storageKey, JSON.stringify(attempt)); } catch (_) {}
-        }
-        ({ data, error } = await CRM.__invokeFn('record-payment', { body: {
-          standalone: {
-            contact_id:contact.id, contact_name:contact.name || '', contact_email:contact.email || '',
-            contact_phone:contact.phone || '', contact_address:contact.address || '', line_items:storedItems,
-          },
-          amount:total, method:paymentMethod, note:paymentNote,
-          received_at:receivedAtIso, idempotency_key:attempt.key,
-        } }));
-        if (!error && data?.ok) {
-          try { localStorage.removeItem(storageKey); } catch (_) {}
-        }
-      } else if (isEdit) {
-        const semantic = JSON.stringify([ei.id, payload.total, payload.line_items, payload.due_at || null, payload.payment_terms || null]);
-        const storageKey = `bpp-draft-invoice-update:${semantic}`;
-        let key = localStorage.getItem(storageKey);
-        if (!key) { key = crypto.randomUUID(); localStorage.setItem(storageKey, key); }
-        ({ data, error } = await CRM.__invokeFn('record-payment', { body: {
-          action: 'update_draft_invoice', invoice_id: ei.id, amount: payload.total,
-          line_items: payload.line_items, due_at: payload.due_at || null,
-          payment_terms: payload.payment_terms || 'Due upon receipt', idempotency_key: key,
-        } }));
-        if (!error && data?.ok) {
-          try { localStorage.removeItem(storageKey); } catch (_) {}
-          data = { ...ei, ...payload, ...data };
-        }
+      if (isEdit) {
+        ({ data, error } = await CRM.__db.from('invoices').update(payload).eq('id', ei.id).select().single());
       } else {
         // Initial status 'draft' so the invoice doesn't surface as a live
         // bill before Key actually sends it. The Send button on the
@@ -11155,14 +11079,12 @@ function NewInvoiceModal({ contact, latestSignedProposal, invoices, onClose, inl
       // crm-data.js) so the optimistic row can never drift from the
       // canonical shape (the hand-rolled copy here used a $1,500 kind
       // cutoff that diverged from mapInvoice's 90%-of-proposal rule).
-      const mapped = receiptMode ? null : mapInvoice(data);
+      const mapped = mapInvoice(data);
       const arr = (window.CRM.invoices = window.CRM.invoices || []);
-      if (mapped) {
-        const idx = arr.findIndex(i => i.id === mapped.id);
-        if (idx >= 0) arr[idx] = mapped; else arr.unshift(mapped);
-      }
+      const idx = arr.findIndex(i => i.id === mapped.id);
+      if (idx >= 0) arr[idx] = mapped; else arr.unshift(mapped);
       window.dispatchEvent(new CustomEvent('crm-data-changed'));
-      window.showToast?.(receiptMode ? 'Payment receipt created' : (isEdit ? 'Invoice updated' : 'Invoice created'));
+      window.showToast?.(isEdit ? 'Invoice updated' : 'Invoice created');
       onClose();
     } catch (e) {
       window.showToast?.(`Failed: ${e.message || e}`);
@@ -11276,7 +11198,7 @@ function NewInvoiceModal({ contact, latestSignedProposal, invoices, onClose, inl
           <span style={{ fontSize:12, color:'#666' }}>Linked to approved proposal</span>
           <span style={{ fontSize:12, fontWeight:600, color:NAVY, fontFamily:"'JetBrains Mono','DM Mono',monospace" }}>{fmt$(proposalTotal)}</span>
         </div>
-      ) : !isEdit && !receiptMode && (
+      ) : !isEdit && (
         <div style={{ padding:'8px 12px', background:'#FFFBEB', border:'1px solid #FDE68A', borderRadius:8, fontSize:12, color:'#92400E', marginBottom:18 }}>
           No approved proposal. Use Balance preset for custom amount.
         </div>
@@ -11287,7 +11209,7 @@ function NewInvoiceModal({ contact, latestSignedProposal, invoices, onClose, inl
           expression so what the pill says is exactly what the tap fills.
           No pressed state: presets are momentary actions, not a stored
           invoice field. */}
-      {!isEdit && !receiptMode && (
+      {!isEdit && (
         <div className="cm2-zone">
           <p className="cm2-zlabel">Type</p>
           <div className="cm2-type-row">
@@ -11317,51 +11239,22 @@ function NewInvoiceModal({ contact, latestSignedProposal, invoices, onClose, inl
         )}
         <div className="cm2-add-pair">
           <button type="button" className="cm2-ghost" onClick={addItem}>{PLUS_SVG}Line item</button>
-          {!receiptMode && <button type="button" className="cm2-ghost" onClick={addDiscount} disabled={hasDiscount}>{PLUS_SVG}Discount</button>}
+          <button type="button" className="cm2-ghost" onClick={addDiscount} disabled={hasDiscount}>{PLUS_SVG}Discount</button>
         </div>
       </div>
-      {!receiptMode && usesV4Terms && (
-        <div className="cm2-zone" style={{ marginTop:18 }}>
-          <p className="cm2-zlabel">Payment terms</p>
-          <input value={paymentTerms} onChange={(e) => setPaymentTerms(e.target.value)} maxLength={160}
-            placeholder="Due upon receipt" aria-label="Payment terms"
-            style={{ width:'100%', minHeight:44, border:'1px solid #d9dee8', borderRadius:8, padding:'0 12px', fontSize:16, boxSizing:'border-box', marginBottom:10 }} />
-          <input type="date" value={dueAt} onChange={(e) => setDueAt(e.target.value)} aria-label="Invoice due date"
-            style={{ width:'100%', minHeight:44, border:'1px solid #d9dee8', borderRadius:8, padding:'0 12px', fontSize:16, boxSizing:'border-box' }} />
-        </div>
-      )}
-      {receiptMode && (
-        <div className="cm2-zone" style={{ marginTop:18 }}>
-          <p className="cm2-zlabel">Payment</p>
-          <div style={{ padding:'10px 12px', background:'#f5f7fa', borderRadius:8, color:'#5a6478', fontSize:12, lineHeight:1.45, marginBottom:10 }}>
-            This records money already received and creates a receipt. It does not charge or collect payment.
-          </div>
-          <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}
-            style={{ width:'100%', minHeight:44, border:'1px solid #d9dee8', borderRadius:8, padding:'0 12px', fontSize:16, background:'white', marginBottom:10 }}>
-            {['Cash','External card payment','Check','Other external payment'].map(method => <option key={method}>{method}</option>)}
-          </select>
-          <input type="datetime-local" value={receivedAt} onChange={(e) => setReceivedAt(e.target.value)}
-            aria-label="Payment received at"
-            style={{ width:'100%', minHeight:44, border:'1px solid #d9dee8', borderRadius:8, padding:'0 12px', fontSize:16, boxSizing:'border-box', marginBottom:10 }} />
-          <input value={paymentNote} onChange={(e) => setPaymentNote(e.target.value)}
-            placeholder="Payment note or reference (optional)" aria-label="Payment note"
-            style={{ width:'100%', minHeight:44, border:'1px solid #d9dee8', borderRadius:8, padding:'0 12px', fontSize:16, boxSizing:'border-box' }} />
-        </div>
-      )}
     </div>
   );
 
   // THE NUMBER: total (18px mono) + single gold CTA. Disabled logic
   // identical to the old footer button (busy / DNC / non-positive total).
-  const ctaDisabled = busy || (!isEdit && !receiptMode && contact.do_not_contact) || total <= 0
-    || (receiptMode && !receivedAt) || (!receiptMode && usesV4Terms && (!dueAt || !paymentTerms.trim()));
+  const ctaDisabled = busy || (!isEdit && contact.do_not_contact) || total <= 0;
   const numberBar = (flat) => (
     <div className={'cm2-numbar' + (flat ? ' cm2-flat' : ' cm2-inline')}>
       <span className="cm2-nw">
         <span className="cm2-total">{fmt$(total)}</span>
       </span>
       <button type="button" className="cm2-cta" onClick={submit} disabled={ctaDisabled}>
-        {busy ? (isEdit ? 'Saving…' : 'Creating…') : (receiptMode ? 'Create payment receipt' : (isEdit ? 'Save changes' : 'Create invoice'))}
+        {busy ? (isEdit ? 'Saving…' : 'Creating…') : (isEdit ? 'Save changes' : 'Create invoice')}
       </button>
     </div>
   );
@@ -11375,7 +11268,7 @@ function NewInvoiceModal({ contact, latestSignedProposal, invoices, onClose, inl
         <div style={{ display:'flex', alignItems:'center', gap:10, padding:'14px 16px 12px', borderBottom:'1px solid rgba(27,43,75,0.08)' }}>
           <div style={{ flex:1, minWidth:0 }}>
             <div style={{ fontSize:17, fontWeight:800, letterSpacing:'-0.01em', color:NAVY }}>
-              {receiptMode ? 'New receipt' : (isEdit ? 'Edit invoice' : (latestSignedProposal ? 'Generate invoice' : 'New invoice'))}
+              {isEdit ? 'Edit invoice' : (latestSignedProposal ? 'Generate invoice' : 'New invoice')}
             </div>
             <div style={{ fontSize:12, color:'#5a6478', marginTop:1, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{contact.name || formatPhone(contact.phone)}</div>
           </div>
@@ -11395,7 +11288,7 @@ function NewInvoiceModal({ contact, latestSignedProposal, invoices, onClose, inl
     <ModalShell
       open={true}
       onClose={onClose}
-      title={`${receiptMode ? 'New receipt' : (isEdit ? 'Edit invoice' : 'New invoice')}: ${contact.name || formatPhone(contact.phone)}`}
+      title={`${isEdit ? 'Edit invoice' : 'New invoice'}: ${contact.name || formatPhone(contact.phone)}`}
       footer={numberBar(true)}
     >
       {formBody}
