@@ -2,7 +2,7 @@
 <html lang="en" class="qw-template-document-root">
 <head>
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-YiAMwnOBiDZVG+8DnjFIM44UXD+Os1UXM1qxWgwHDRg='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-nsJN+rYohRfvQKZrSnH/9ru/eYnYxfkNeGaH2tVU8O4='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://reowtzedjflwmlptupbk.supabase.co; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-RrmjnStKixs6rqRkYso1EQnlENANrRKMCXShZtj+eTA='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-nsJN+rYohRfvQKZrSnH/9ru/eYnYxfkNeGaH2tVU8O4='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://reowtzedjflwmlptupbk.supabase.co; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script src="/walk-v2/token-bootstrap.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
 <meta name="robots" content="noindex, nofollow" />
@@ -164,6 +164,11 @@
       </section>
       <button class="btn range-primary-action" type="button" data-accept="">Yes, prepare my proposal</button>
     </div>
+    <div class="qw-range-payoff hidden" data-not-fit-hero="">
+      <p class="qw-template-eyebrow">Quote Walk saved</p>
+      <h1>This is where your Quote Walk pauses.</h1>
+      <p class="range-next-step">No proposal has been requested. Your answers stay saved, so you can return to this project range whenever you are ready.</p>
+    </div>
   </section>
   <section class="proof-carousel qw-range-proof-carousel hidden" aria-label="What your project can include" data-range-proof-carousel="">
     <div class="proof-track" role="group" aria-roledescription="carousel" aria-label="Installed work and customer reviews" tabindex="0" data-proof-track="" data-autoplay-ms="8000">
@@ -257,9 +262,20 @@
       <button class="link-btn qw-secondary-action options-return" type="button" data-close-options="">Back to the current range</button>
     </section>
 
-    <section class="notice hidden" data-not-fit-terminal="" role="status">
-      <strong>Your Quote Walk is saved.</strong><br />
-      No proposal has been requested or prepared.
+    <section class="card hidden" data-not-fit-terminal="" aria-labelledby="notFitTitle">
+      <h2 id="notFitTitle">What Backup Power Pro handles</h2>
+      <p>A complete, permanent connection for your portable generator, coordinated from installation through final inspection.</p>
+      <ul class="history">
+        <li>Outdoor generator connection box</li>
+        <li>Panel interlock or approved transfer equipment</li>
+        <li>Permit and required inspection</li>
+        <li>Installation, testing, and system walkthrough</li>
+        <li>One-year workmanship support</li>
+      </ul>
+      <p>If you change your mind, return to your saved project range and continue from this point.</p>
+      <div class="actions">
+        <button class="btn" type="button" data-resume-range="">Return to my project range</button>
+      </div>
     </section>
 
     <section class="card hidden" data-distance-revision="">
@@ -296,6 +312,9 @@
   var phoneError = acceptedDelivery.querySelector('[data-phone-error]');
   var phoneStatus = acceptedDelivery.querySelector('[data-phone-status]');
   var proofCarousel = document.querySelector('[data-range-proof-carousel]');
+  var notFitHero = document.querySelector('[data-not-fit-hero]');
+  var notFitTerminal = main.querySelector('[data-not-fit-terminal]');
+  var resumeRange = main.querySelector('[data-resume-range]');
   var revisionContext = main.querySelector('[data-revision-context]');
   var revisionCopy = main.querySelector('[data-revision-copy]');
   var restoreDistance = main.querySelector('[data-restore-distance]');
@@ -431,6 +450,7 @@
       document.querySelector('.qw-range-hero').classList.add('is-accepted');
       renderDelivery();
       show(rangeCard, true);
+      show(notFitHero, false);
       show(proofCarousel, true);
       show(revisionContext, false);
       show(scope, true);
@@ -502,6 +522,7 @@
     var editingOptions = !notFitClosed && v2().range_fit_answer === 'no' && !v2().accepted_range_snapshot_id;
     document.querySelector('.qw-range-hero').classList.toggle('is-recovery', notFitClosed);
     show(rangeCard, !notFitClosed);
+    show(notFitHero, notFitClosed);
     show(scope, !editingOptions && !notFitClosed && !v2().accepted_range_snapshot_id);
     var showAcceptance = !notFitClosed && !v2().accepted_range_snapshot_id && !editingOptions;
     show(proofCarousel, showAcceptance);
@@ -510,7 +531,8 @@
       window.requestAnimationFrame(function () { window.BPPRangeProofCarousel.init(proofCarousel); });
     }
     show(options, editingOptions);
-    show(main.querySelector('[data-not-fit-terminal]'), notFitClosed);
+    show(notFitTerminal, notFitClosed);
+    if (notFitClosed) show(revisionContext, false);
     show(main.querySelector('[data-alt-30]'), observed.indexOf('30') !== -1 && observed.indexOf('50') !== -1 && v2().pricing_basis === '50');
     show(main.querySelector('[data-alt-50]'), observed.indexOf('30') !== -1 && observed.indexOf('50') !== -1 && v2().pricing_basis === '30');
     show(main.querySelector('[data-alt-distance]'), DISTANCE_ORDER[v2().distance_band] > 1);
@@ -702,6 +724,20 @@
     WALK.confirm(t, { not_fit_status: 'closed' })
       .then(refresh)
       .catch(function () { fail('That choice did not save. Your current range remains available. Try again.'); });
+  });
+  resumeRange.addEventListener('click', function () {
+    var observed = Array.isArray(v2().observed_connections) ? v2().observed_connections : [];
+    if (!observed.length) {
+      fail('Your saved generator connection could not be loaded. Return to the connection question and choose it again.');
+      return;
+    }
+    resumeRange.disabled = true;
+    WALK.confirm(t, { observed_connections: observed })
+      .then(function () { return stateAction('create_range', { revision_reason: 'initial' }); })
+      .catch(function () {
+        resumeRange.disabled = false;
+        fail('Your project range did not reopen. Your saved answers are still available. Try again.');
+      });
   });
   main.querySelector('[data-distance-options]').addEventListener('click', function (event) {
     var button = event.target.closest('[data-distance]');
