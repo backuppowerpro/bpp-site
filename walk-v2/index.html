@@ -1,12 +1,12 @@
 <!doctype html>
 <html lang="en" class="no-js">
 <head>
-<meta name="referrer" content="no-referrer">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 
 
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-TSf9hPr43r9T9eJr1YlgW7NyDImqpOyAsfxnE3OQYwY=' 'sha256-FSOigB9Hw/yv7EcF27yy9fVdKc9Gx6NXaLCo1uAC8Ww=' 'sha256-+T5op8typ5zwDU0nVsVOCZT3OorC+NH+eRNx9RiUzow='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-BuvqUh7iB0AoDfKg/8gV96gGldTNPPeIA/fLsxb6ADs='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self' https://api.mapbox.com https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-TSf9hPr43r9T9eJr1YlgW7NyDImqpOyAsfxnE3OQYwY=' 'sha256-FSOigB9Hw/yv7EcF27yy9fVdKc9Gx6NXaLCo1uAC8Ww=' 'sha256-AO+oNBssRIOYW/yWH37F4znkVm5BWkR8jRs1i7NnO9E='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-BuvqUh7iB0AoDfKg/8gV96gGldTNPPeIA/fLsxb6ADs='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self' https://api.mapbox.com https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script src="/walk-v2/token-bootstrap.js?v=20260815-bearer"></script>
 <script src="/walk-v2/no-js-bootstrap.js"></script>
 <script>/* Entry mode + dynamic hero (Key 2026-07-01 / 2026-07-13 / paid fast lane 2026-07-13):
@@ -1311,7 +1311,7 @@
               Turn on JavaScript, then reload this page to start your quote.
             </div>
           </noscript>
-          <form autocomplete="off">
+          <form autocomplete="on">
             <div class="fields">
               <div class="field">
                 <label for="fName">Name</label>
@@ -1324,7 +1324,7 @@
               </div>
               <div class="field" data-addr-field="">
                 <label for="fAddr">Home address</label>
-                <input id="fAddr" name="address" type="text" inputmode="text" placeholder="Start typing your address" data-f="addr" />
+                <input id="fAddr" name="address" type="text" inputmode="text" autocomplete="street-address" placeholder="Start typing your address" data-f="addr" />
                 <div class="addr-drop" data-addr-drop=""></div>
               </div>
               <div class="field" data-email-field="" hidden>
@@ -1501,7 +1501,7 @@
   function paintFieldOk() {
     if (nameField) nameField.classList.toggle('ok', nameIn.value.trim().length > 0);
     if (phoneField) phoneField.classList.toggle('ok', phoneValid(phoneIn.value));
-    if (addrField) addrField.classList.toggle('ok', addrOk());
+    if (addrField) addrField.classList.toggle('ok', addrLooksReady());
   }
   /* funnel step events, each at most once per visit (drop-off tracking) */
   var fired = {};
@@ -1609,11 +1609,16 @@
     if (d.length > 3) return '(' + d.slice(0, 3) + ') ' + d.slice(3);
     return d;
   }
-  /* address is valid only when a suggestion (or the explicit escape) was picked AND
-     the field has not been edited since (Key 2026-07-21 soft-block). */
+  /* A picked suggestion is trusted immediately. A complete typed, pasted, or browser
+     filled street address may continue as unverified, then the server keeps price and
+     proposal preparation blocked until service area is verified. */
   function addrOk() { return addrValidated && addrIn.value.trim() === addrValidatedValue; }
+  function addressLooksComplete() {
+    var value = addrIn.value.trim();
+    return value.length >= 8 && /^\d+[A-Za-z]?\s+\S.{2,}/.test(value);
+  }
   function addrLooksReady() {
-    return addrOk();
+    return addrOk() || addressLooksComplete();
   }
   function part1Done() {
     return nameIn.value.trim().length > 0 && phoneValid(phoneIn.value) && addrLooksReady();
@@ -1641,7 +1646,7 @@
     if (!nameIn.value.trim()) return 'Add your name to continue.';
     if (!phoneValid(phoneIn.value)) return 'Add your phone number to continue.';
     if (addrIn.value.trim().length < 3) return 'Add your address to continue.';
-    if (!addrLooksReady()) return 'Add your address to continue.';
+    if (!addrLooksReady()) return 'Add your full street address to continue.';
     return '';
   }
   function refresh() {
@@ -1659,9 +1664,9 @@
     ctaLabelEl.textContent = 'Continue';
     var ready = part1Done();
     cta.disabled = submitting || !ready;
-    if (ready && !submitting) closeDrop();
+    if (ready && addrOk() && !submitting) closeDrop();
     if (unconfirmedAddressNote) {
-      unconfirmedAddressNote.style.display = addrUnverified && ready ? '' : 'none';
+      unconfirmedAddressNote.style.display = (addrUnverified || (!addrOk() && addressLooksComplete())) && ready ? '' : 'none';
     }
     if (ctaHint) {
       var begun = nameIn.value.trim() || phoneIn.value.trim() || addrIn.value.trim();
@@ -1697,6 +1702,11 @@
     refresh();
   });
   addrIn.addEventListener('input', function () { once('walk_v2_form_started'); suggest(); refresh(); });
+  [nameIn, phoneIn, addrIn].forEach(function (field) {
+    field.addEventListener('change', refresh);
+  });
+  [0, 300, 1200].forEach(function (delay) { window.setTimeout(refresh, delay); });
+  window.addEventListener('pageshow', refresh);
   if (emailIn) emailIn.addEventListener('input', refreshAreaCapture);
 
   /* channel attribution for the first-party event stream + payload.leadChannel.
@@ -1768,6 +1778,10 @@
 
   async function doSubmit(smsGiven) {
     if (submitting || !part1Done()) return;
+    if (!addrOk() && addressLooksComplete()) {
+      addrUnverified = true;
+      addrValidatedValue = addrIn.value.trim();
+    }
     if (smsGiven) once('walk_v2_consent_checked');
     submitting = true;
     cta.disabled = true;
