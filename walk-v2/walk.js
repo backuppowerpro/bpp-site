@@ -61,12 +61,73 @@
     if (prevPage) { go(prevPage, t); return; }
     go('', t);
   }
+  var OPERATIONAL_EVENTS = {
+    walk_v2_address_lookup_result: true,
+    walk_v2_address_suggestion_selected: true,
+    walk_v2_address_fallback_used: true
+  };
+  function operationalSessionId() {
+    var key = 'bpp:qwv2:operational-session';
+    try {
+      var current = sessionStorage.getItem(key) || '';
+      if (/^wv2_[a-zA-Z0-9_-]{12,80}$/.test(current)) return current;
+      var random = (typeof crypto !== 'undefined' && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : Date.now().toString(36) + '_' + Math.random().toString(36).slice(2);
+      current = 'wv2_' + random;
+      sessionStorage.setItem(key, current);
+      return current;
+    } catch (_) {
+      return 'wv2_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2);
+    }
+  }
+  function sendOperationalEvent(event, props) {
+    if (!OPERATIONAL_EVENTS[event]) return;
+    if (navigator.globalPrivacyControl === true || navigator.doNotTrack === '1') return;
+    var details = props || {};
+    var safe = {
+      channel: window.__WALK_CHANNEL || 'direct',
+      walk_entry: window.__WALK_ENTRY || 'direct',
+      input_method: details.input_method || 'unknown'
+    };
+    if (event === 'walk_v2_address_lookup_result') {
+      safe.outcome = details.outcome;
+      safe.duration_bucket = details.duration_bucket;
+      safe.suggestion_count = details.suggestion_count;
+      safe.trigger = details.trigger;
+    } else if (event === 'walk_v2_address_suggestion_selected') {
+      safe.rank = details.rank;
+      safe.service_area_group = details.service_area_group;
+    } else {
+      safe.reason = details.reason;
+    }
+    try {
+      fetch(BASE + '/quo-ai-new-lead', {
+        method: 'POST',
+        keepalive: true,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'walk_operational_event',
+          event: event,
+          session_id: operationalSessionId(),
+          properties: safe
+        })
+      }).catch(function () {});
+    } catch (_) {}
+  }
   function ph(event, props) {
     try {
       window.dispatchEvent(new CustomEvent('bpp:walk-event', {
         detail: Object.assign({ event: event, funnel: 'walkv2' }, props || {})
       }));
     } catch (_) {}
+    sendOperationalEvent(event, props);
+  }
+  function durationBucket(milliseconds) {
+    if (milliseconds < 250) return 'under_250ms';
+    if (milliseconds < 1000) return '250_to_999ms';
+    if (milliseconds < 3000) return '1_to_2999ms';
+    return '3s_or_more';
   }
   function hydrationGuard() {
     var revision = 0;
@@ -839,10 +900,12 @@
         return left.rank - right.rank || left.index - right.index;
       }).map(function (entry) { return entry.feature; });
     },
-    addrSuggest: function (q, timeoutMs) {
+    addrSuggest: function (q, timeoutMs, telemetry) {
       var MB = 'pk.eyJ1Ijoia2V5ZWxlY3RyaWN1cHN0YXRlIiwiYSI6ImNtcm8zZ3NkeTFodmgyeG9hY284Z3F4YXcifQ.3mLKvFGpDEdkjEMQNVQhmg';
       var url = 'https://api.mapbox.com/geocoding/v5/mapbox.places/' + encodeURIComponent(q)
         + '.json?access_token=' + MB + '&country=us&types=address&autocomplete=true&limit=10&proximity=-82.3940,34.8526';
+      var startedAt = Date.now();
+      var context = telemetry || {};
       return getJson(url, timeoutMs || 8000)
         .then(function (d) { return (d.features || []).map(function (f) {
           /* pull structured city/state/zip from the Mapbox feature context so the
@@ -878,8 +941,30 @@
             zip: ctxText('postcode'),
           };
         }); })
-        .then(function (features) { return window.WALK.rankAddressSuggestions(features).slice(0, 5); })
-        .catch(function () { return []; });
+        .then(function (features) {
+          var ranked = window.WALK.rankAddressSuggestions(features).slice(0, 5);
+          ph('walk_v2_address_lookup_result', {
+            outcome: ranked.length ? 'success' : 'empty',
+            duration_bucket: durationBucket(Date.now() - startedAt),
+            suggestion_count: ranked.length,
+            input_method: context.input_method || 'unknown',
+            trigger: context.trigger || 'unknown'
+          });
+          return ranked;
+        })
+        .catch(function (error) {
+          var outcome = error && error.name === 'TimeoutError'
+            ? 'timeout'
+            : (Number(error && error.status || 0) ? 'http_error' : 'network_error');
+          ph('walk_v2_address_lookup_result', {
+            outcome: outcome,
+            duration_bucket: durationBucket(Date.now() - startedAt),
+            suggestion_count: 0,
+            input_method: context.input_method || 'unknown',
+            trigger: context.trigger || 'unknown'
+          });
+          return [];
+        });
     },
     newLead: function (payload) { return postJson(BASE + '/quo-ai-new-lead', payload); },
     submitLead: function (payload, timeoutMs) {

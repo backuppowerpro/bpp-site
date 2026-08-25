@@ -6,7 +6,7 @@
 
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-TSf9hPr43r9T9eJr1YlgW7NyDImqpOyAsfxnE3OQYwY=' 'sha256-FSOigB9Hw/yv7EcF27yy9fVdKc9Gx6NXaLCo1uAC8Ww=' 'sha256-AO+oNBssRIOYW/yWH37F4znkVm5BWkR8jRs1i7NnO9E='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-BuvqUh7iB0AoDfKg/8gV96gGldTNPPeIA/fLsxb6ADs='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self' https://api.mapbox.com https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-TSf9hPr43r9T9eJr1YlgW7NyDImqpOyAsfxnE3OQYwY=' 'sha256-FSOigB9Hw/yv7EcF27yy9fVdKc9Gx6NXaLCo1uAC8Ww=' 'sha256-AO+oNBssRIOYW/yWH37F4znkVm5BWkR8jRs1i7NnO9E=' 'sha256-3XB23Oi41sxff8CMbKvhzNf+bPBDEO+JTnJnsMNjiY4='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-BuvqUh7iB0AoDfKg/8gV96gGldTNPPeIA/fLsxb6ADs='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self' https://api.mapbox.com https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script src="/walk-v2/token-bootstrap.js?v=20260815-bearer"></script>
 <script src="/walk-v2/no-js-bootstrap.js"></script>
 <script>/* Entry mode + dynamic hero (Key 2026-07-01 / 2026-07-13 / paid fast lane 2026-07-13):
@@ -1359,7 +1359,7 @@
 
 </div>
 
-<script src="/walk-v2/walk.js?v=acd71b9339d0"></script>
+<script src="/walk-v2/walk.js?v=20260825-address-monitor"></script>
 <script>
 
 (function () {
@@ -1510,6 +1510,8 @@
   /* Address auto-suggest via the server-side Places proxy. Debounced; a pick
      fills the field. The field still works as a plain input if Google is down. */
   var addrTimer = null, addrPicked = false, addrSel = { city: '', state: '', zip: '' }, lastAddrPreds = [];
+  var lastAddressInputMethod = 'unknown';
+  var lastAddressLookupTrigger = 'unknown';
   /* Soft-block (Key 2026-07-21): the Next gate requires a VALIDATED address, a real
      picked suggestion OR the explicit "not listed" escape, not just >=6 chars, so a
      lazy fake free-text address can no longer pass. addrValidatedValue pins the exact
@@ -1554,15 +1556,19 @@
     drop.classList.add('open');
     requestAnimationFrame(fitDropToViewport);
   }
-  function suggest() {
+  function suggest(trigger) {
     if (addrPicked) { addrPicked = false; return; }
     addrSel = { city: '', state: '', zip: '' }; // editing after a pick invalidates the structured parts
     addrValidated = false; addrUnverified = false; // and re-locks Next until a fresh pick
     var q = addrIn.value.trim();
+    lastAddressLookupTrigger = trigger || 'unknown';
     if (addrTimer) clearTimeout(addrTimer);
     if (q.length < 3) { closeDrop(); return; }
     addrTimer = setTimeout(function () {
-      WALK.addrSuggest(q).then(renderDrop);
+      WALK.addrSuggest(q, 8000, {
+        input_method: lastAddressInputMethod,
+        trigger: lastAddressLookupTrigger
+      }).then(renderDrop);
     }, 220);
   }
   drop.addEventListener('click', function (e) {
@@ -1572,6 +1578,10 @@
       addrPicked = true; addrValidated = true; addrUnverified = true;
       addrValidatedValue = addrIn.value.trim();
       addrSel = { city: '', state: '', zip: '' };
+      WALK.ph('walk_v2_address_fallback_used', {
+        reason: 'manual_escape',
+        input_method: lastAddressInputMethod
+      });
       closeDrop(); refresh();
       return;
     }
@@ -1586,12 +1596,23 @@
     }
     if (match) addrSel = { city: match.city || '', state: match.state || '', zip: match.zip || '' };
     addrValidated = true; addrUnverified = false; addrValidatedValue = picked;
+    var selectedRank = Array.prototype.indexOf.call(drop.querySelectorAll('[data-addr-pick]'), b) + 1;
+    var serviceAreaGroup = match && ['Greenville', 'Spartanburg', 'Pickens'].indexOf(match.county || '') !== -1
+      ? 'authorized'
+      : (match && String(match.state || '').toUpperCase() === 'SC'
+        ? 'other_sc'
+        : (match && match.state ? 'out_of_state' : 'unknown'));
+    WALK.ph('walk_v2_address_suggestion_selected', {
+      rank: selectedRank || 1,
+      service_area_group: serviceAreaGroup,
+      input_method: lastAddressInputMethod
+    });
     closeDrop(); refresh();
   });
   addrIn.addEventListener('blur', function () { setTimeout(closeDrop, 150); });
   /* Re-open the list on focus when the address is typed but not yet validated, so
      "Pick your address from the list" is never a dead end with no visible list. */
-  addrIn.addEventListener('focus', function () { if (!addrOk() && addrIn.value.trim().length >= 3) suggest(); });
+  addrIn.addEventListener('focus', function () { if (!addrOk() && addrIn.value.trim().length >= 3) suggest('focus'); });
   window.addEventListener('resize', fitDropToViewport);
   if (window.visualViewport) window.visualViewport.addEventListener('resize', fitDropToViewport);
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDrop(); });
@@ -1701,7 +1722,14 @@
     if (phoneIn.value.trim() && !phoneValid(phoneIn.value)) phoneField.classList.add('has-error');
     refresh();
   });
-  addrIn.addEventListener('input', function () { once('walk_v2_form_started'); suggest(); refresh(); });
+  addrIn.addEventListener('input', function (event) {
+    once('walk_v2_form_started');
+    if (event.inputType === 'insertFromPaste') lastAddressInputMethod = 'paste';
+    else if (event.inputType === 'insertReplacementText' || !event.inputType) lastAddressInputMethod = 'autofill_or_unknown';
+    else lastAddressInputMethod = 'typed';
+    suggest('typing');
+    refresh();
+  });
   [nameIn, phoneIn, addrIn].forEach(function (field) {
     field.addEventListener('change', refresh);
   });
@@ -1781,6 +1809,10 @@
     if (!addrOk() && addressLooksComplete()) {
       addrUnverified = true;
       addrValidatedValue = addrIn.value.trim();
+      WALK.ph('walk_v2_address_fallback_used', {
+        reason: 'complete_unselected',
+        input_method: lastAddressInputMethod
+      });
     }
     if (smsGiven) once('walk_v2_consent_checked');
     submitting = true;
@@ -1817,7 +1849,10 @@
       addrSel = { city: '', state: '', zip: '' };
     } else if (!addrSel.state) {
       try {
-        var bf = await WALK.addrSuggest(addrIn.value.trim());
+        var bf = await WALK.addrSuggest(addrIn.value.trim(), 8000, {
+          input_method: lastAddressInputMethod,
+          trigger: 'submit_backfill'
+        });
         var hit = null;
         for (var bi = 0; bf && bi < bf.length; bi++) {
           if (featureMatchesTyped(bf[bi], addrIn.value)) { hit = bf[bi]; break; }
