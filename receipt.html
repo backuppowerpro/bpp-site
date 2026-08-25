@@ -518,7 +518,7 @@ function renderBreakdownRows(){
 // ── BLACK & WHITE PDF DOWNLOAD (the printable record) ───────────────
 // Grayscale only (printer-friendly, ink-light, formal). Vector text via
 // jsPDF, same proven engine as invoice.html, recolored to black + grays.
-function fmtPhonePDF(p){
+function fmtPhone(p){
   var d=String(p||'').replace(/[^0-9]/g,'');
   if(d.length===11 && d[0]==='1') d=d.slice(1);
   if(d.length===10) return '('+d.slice(0,3)+') '+d.slice(3,6)+'-'+d.slice(6);
@@ -572,7 +572,7 @@ function downloadReceiptPDF(){
   function billedLine(t){ var L=doc.splitTextToSize(String(t),120); doc.text(L,20,by); by+=6*L.length; }
   if(INV.contact_name){ billedLine(INV.contact_name); }
   if(INV.contact_address){ billedLine(INV.contact_address); }
-  if(INV.contact_phone){ billedLine(fmtPhonePDF(INV.contact_phone)); }
+  if(INV.contact_phone){ billedLine(fmtPhone(INV.contact_phone)); }
   if(INV.contact_email){ billedLine(INV.contact_email); }
 
   // Receipt meta (right)
@@ -757,7 +757,7 @@ function renderReceipt(){
     var lines=[];
     if(name) lines.push('<b style="color:#0b1f3b;">'+esc(name)+'</b>');
     if(INV.contact_address) lines.push(esc(INV.contact_address));
-    if(INV.contact_phone)   lines.push(esc(INV.contact_phone));
+    if(INV.contact_phone)   lines.push(esc(fmtPhone(INV.contact_phone)));
     if(INV.contact_email)   lines.push(esc(INV.contact_email));
     billed.innerHTML = lines.join('<br>');
   }
