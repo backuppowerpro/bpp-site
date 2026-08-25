@@ -6,7 +6,7 @@
 
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-TSf9hPr43r9T9eJr1YlgW7NyDImqpOyAsfxnE3OQYwY=' 'sha256-EBQqMZpTmStvRsfqOSCOTHHYQ7FCXVDhWxfvqhagtNE=' 'sha256-+T5op8typ5zwDU0nVsVOCZT3OorC+NH+eRNx9RiUzow='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-BuvqUh7iB0AoDfKg/8gV96gGldTNPPeIA/fLsxb6ADs='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self' https://api.mapbox.com https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-TSf9hPr43r9T9eJr1YlgW7NyDImqpOyAsfxnE3OQYwY=' 'sha256-FSOigB9Hw/yv7EcF27yy9fVdKc9Gx6NXaLCo1uAC8Ww=' 'sha256-+T5op8typ5zwDU0nVsVOCZT3OorC+NH+eRNx9RiUzow='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-BuvqUh7iB0AoDfKg/8gV96gGldTNPPeIA/fLsxb6ADs='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self' https://api.mapbox.com https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script src="/walk-v2/token-bootstrap.js?v=20260815-bearer"></script>
 <script src="/walk-v2/no-js-bootstrap.js"></script>
 <script>/* Entry mode + dynamic hero (Key 2026-07-01 / 2026-07-13 / paid fast lane 2026-07-13):
@@ -1126,11 +1126,18 @@
         function widePairMode() {
           return window.matchMedia('(min-width: 1024px)').matches;
         }
+        function slideContentLeft(slide) {
+          return slide.offsetLeft - proofTrack.offsetLeft;
+        }
+        function slideGap() {
+          return parseFloat(window.getComputedStyle(proofTrack).columnGap) || 0;
+        }
         function slideOffset(index) {
           var slide = slides()[index];
           if (!slide) return proofTrack.scrollLeft;
-          if (widePairMode()) return slide.offsetLeft - proofTrack.offsetLeft;
-          return slide.offsetLeft - proofTrack.offsetLeft - (proofTrack.clientWidth - slide.offsetWidth) / 2;
+          var visibleWidth = slide.offsetWidth;
+          if (widePairMode()) visibleWidth = slide.offsetWidth * 2 + slideGap();
+          return slideContentLeft(slide) - (proofTrack.clientWidth - visibleWidth) / 2;
         }
         function jumpTo(index, smooth) {
           proofTrack.scrollTo({
@@ -1147,14 +1154,13 @@
           });
         }
         function currentIndex() {
-          var target = widePairMode()
-            ? proofTrack.scrollLeft
-            : proofTrack.scrollLeft + proofTrack.clientWidth / 2;
+          var target = proofTrack.scrollLeft + proofTrack.clientWidth / 2;
           var nearest = 0;
           var distance = Infinity;
           slides().forEach(function (slide, index) {
-            var slideTarget = slide.offsetLeft - proofTrack.offsetLeft;
-            if (!widePairMode()) slideTarget += slide.offsetWidth / 2;
+            var visibleWidth = slide.offsetWidth;
+            if (widePairMode()) visibleWidth = slide.offsetWidth * 2 + slideGap();
+            var slideTarget = slideContentLeft(slide) + visibleWidth / 2;
             var nextDistance = Math.abs(slideTarget - target);
             if (nextDistance < distance) {
               nearest = index;

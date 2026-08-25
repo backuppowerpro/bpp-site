@@ -1408,7 +1408,7 @@ body.qw-template-document .page > .foot {
   .page[data-screen-label="Landing page (interactive, mobile)"] .proof-slide {
     flex-basis: calc((100% - 18px) / 2.18);
     height: 242px;
-    scroll-snap-align: start;
+    scroll-snap-align: none;
   }
 
   .page[data-screen-label="Landing page (interactive, mobile)"] .proof-review {
