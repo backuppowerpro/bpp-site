@@ -1,12 +1,13 @@
 <!doctype html>
 <html lang="en" class="no-js">
 <head>
-<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="referrer" content="no-referrer">
 
 
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-TSf9hPr43r9T9eJr1YlgW7NyDImqpOyAsfxnE3OQYwY=' 'sha256-FSOigB9Hw/yv7EcF27yy9fVdKc9Gx6NXaLCo1uAC8Ww=' 'sha256-AO+oNBssRIOYW/yWH37F4znkVm5BWkR8jRs1i7NnO9E=' 'sha256-3XB23Oi41sxff8CMbKvhzNf+bPBDEO+JTnJnsMNjiY4=' 'sha256-0AaT9Vrjl+1GnmlnNQ1/YzeHgi1az05zyXyeof3vgzs='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-BuvqUh7iB0AoDfKg/8gV96gGldTNPPeIA/fLsxb6ADs='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self' https://api.mapbox.com https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-TSf9hPr43r9T9eJr1YlgW7NyDImqpOyAsfxnE3OQYwY=' 'sha256-Abi/3ZmzoNEOD/TAXkdnQ80T+uqPAATq74oTlIXUTZs=' 'sha256-/3oq7I1KLvrqZCNx0/Ass4FLtvAIo/bdZQS3bJFQ4nY='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-BuvqUh7iB0AoDfKg/8gV96gGldTNPPeIA/fLsxb6ADs='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self' https://api.mapbox.com https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<script src="/assets/js/bpp-analytics.js?v=20260825-scope3"></script>
 <script src="/walk-v2/token-bootstrap.js?v=20260815-bearer"></script>
 <script src="/walk-v2/no-js-bootstrap.js"></script>
 <script>/* Entry mode + dynamic hero (Key 2026-07-01 / 2026-07-13 / paid fast lane 2026-07-13):
@@ -955,7 +956,7 @@
     .state-label { display: none; }
   }
 </style>
-<link rel="stylesheet" href="/walk-v2/mobile-canvas.css?v=20260824-balanced-peeks" />
+<link rel="stylesheet" href="/walk-v2/mobile-canvas.css?v=b2000f10529a" />
 <link rel="stylesheet" href="/walk-v2/no-js-recovery.css" />
 </head>
 <body>
@@ -1123,21 +1124,10 @@
         function slides() {
           return Array.prototype.slice.call(proofTrack.querySelectorAll('.proof-slide'));
         }
-        function widePairMode() {
-          return window.matchMedia('(min-width: 1024px)').matches;
-        }
-        function slideContentLeft(slide) {
-          return slide.offsetLeft - proofTrack.offsetLeft;
-        }
-        function slideGap() {
-          return parseFloat(window.getComputedStyle(proofTrack).columnGap) || 0;
-        }
         function slideOffset(index) {
           var slide = slides()[index];
           if (!slide) return proofTrack.scrollLeft;
-          var visibleWidth = slide.offsetWidth;
-          if (widePairMode()) visibleWidth = slide.offsetWidth * 2 + slideGap();
-          return slideContentLeft(slide) - (proofTrack.clientWidth - visibleWidth) / 2;
+          return slide.offsetLeft - proofTrack.offsetLeft - (proofTrack.clientWidth - slide.offsetWidth) / 2;
         }
         function jumpTo(index, smooth) {
           proofTrack.scrollTo({
@@ -1154,14 +1144,12 @@
           });
         }
         function currentIndex() {
-          var target = proofTrack.scrollLeft + proofTrack.clientWidth / 2;
+          var center = proofTrack.scrollLeft + proofTrack.clientWidth / 2;
           var nearest = 0;
           var distance = Infinity;
           slides().forEach(function (slide, index) {
-            var visibleWidth = slide.offsetWidth;
-            if (widePairMode()) visibleWidth = slide.offsetWidth * 2 + slideGap();
-            var slideTarget = slideContentLeft(slide) + visibleWidth / 2;
-            var nextDistance = Math.abs(slideTarget - target);
+            var slideCenter = slide.offsetLeft - proofTrack.offsetLeft + slide.offsetWidth / 2;
+            var nextDistance = Math.abs(slideCenter - center);
             if (nextDistance < distance) {
               nearest = index;
               distance = nextDistance;
@@ -1311,7 +1299,7 @@
               Turn on JavaScript, then reload this page to start your quote.
             </div>
           </noscript>
-          <form autocomplete="on">
+          <form autocomplete="off">
             <div class="fields">
               <div class="field">
                 <label for="fName">Name</label>
@@ -1324,7 +1312,7 @@
               </div>
               <div class="field" data-addr-field="">
                 <label for="fAddr">Home address</label>
-                <input id="fAddr" name="address" type="text" inputmode="text" autocomplete="street-address" placeholder="Start typing your address" data-f="addr" />
+                <input id="fAddr" name="address" type="text" inputmode="text" placeholder="Start typing your address" data-f="addr" />
                 <div class="addr-drop" data-addr-drop=""></div>
               </div>
               <div class="field" data-email-field="" hidden>
@@ -1359,7 +1347,7 @@
 
 </div>
 
-<script src="/walk-v2/walk.js?v=20260825-address-monitor-r2"></script>
+<script src="/walk-v2/walk.js?v=335dde1d9ae2"></script>
 <script>
 
 (function () {
@@ -1501,7 +1489,7 @@
   function paintFieldOk() {
     if (nameField) nameField.classList.toggle('ok', nameIn.value.trim().length > 0);
     if (phoneField) phoneField.classList.toggle('ok', phoneValid(phoneIn.value));
-    if (addrField) addrField.classList.toggle('ok', addrLooksReady());
+    if (addrField) addrField.classList.toggle('ok', addrOk());
   }
   /* funnel step events, each at most once per visit (drop-off tracking) */
   var fired = {};
@@ -1667,7 +1655,7 @@
     if (!nameIn.value.trim()) return 'Add your name to continue.';
     if (!phoneValid(phoneIn.value)) return 'Add your phone number to continue.';
     if (addrIn.value.trim().length < 3) return 'Add your address to continue.';
-    if (!addrLooksReady()) return 'Add your full street address to continue.';
+    if (!addrLooksReady()) return 'Add your address to continue.';
     return '';
   }
   function refresh() {
@@ -1685,9 +1673,9 @@
     ctaLabelEl.textContent = 'Continue';
     var ready = part1Done();
     cta.disabled = submitting || !ready;
-    if (ready && addrOk() && !submitting) closeDrop();
+    if (ready && !submitting) closeDrop();
     if (unconfirmedAddressNote) {
-      unconfirmedAddressNote.style.display = (addrUnverified || (!addrOk() && addressLooksComplete())) && ready ? '' : 'none';
+      unconfirmedAddressNote.style.display = addrUnverified && ready ? '' : 'none';
     }
     if (ctaHint) {
       var begun = nameIn.value.trim() || phoneIn.value.trim() || addrIn.value.trim();
@@ -1730,14 +1718,6 @@
     suggest('typing');
     refresh();
   });
-  [nameIn, phoneIn, addrIn].forEach(function (field) {
-    field.addEventListener('change', refresh);
-  });
-  [0, 300, 1200].forEach(function (delay) { window.setTimeout(refresh, delay); });
-  var autofillWatch = window.setInterval(refresh, 250);
-  window.setTimeout(function () { window.clearInterval(autofillWatch); }, 15000);
-  window.addEventListener('focus', refresh);
-  window.addEventListener('pageshow', refresh);
   if (emailIn) emailIn.addEventListener('input', refreshAreaCapture);
 
   /* channel attribution for the first-party event stream + payload.leadChannel.
@@ -1766,6 +1746,44 @@
     else if (ref && ref.indexOf(location.hostname) === -1) ch = 'referral';
     return { channel: ch, source: p.get('utm_source') || '', medium: p.get('utm_medium') || '', campaign: p.get('utm_campaign') || '' };
   }
+
+  function currentMarketingTouch() {
+    var p = new URLSearchParams(window.location.search);
+    var attr = attribution();
+    return {
+      occurredAt: new Date().toISOString(),
+      sourceUrl: window.location.href,
+      referrer: document.referrer || '',
+      channel: attr.channel,
+      utmSource: p.get('utm_source') || '',
+      utmMedium: p.get('utm_medium') || '',
+      utmCampaign: p.get('utm_campaign') || '',
+      utmContent: p.get('utm_content') || '',
+      utmId: p.get('utm_id') || '',
+      campaignId: p.get('utm_id') || p.get('campaign_id') || '',
+      adsetId: p.get('utm_adset_id') || p.get('adset_id') || '',
+      adId: p.get('utm_ad_id') || p.get('ad_id') || '',
+      placement: p.get('utm_placement') || p.get('placement') || '',
+      siteSourceName: p.get('utm_site_source') || p.get('site_source_name') || '',
+      fbclid: p.get('fbclid') || '',
+      fbp: (document.cookie.match(/(?:^|;\s*)_fbp=([^;]*)/) || [])[1] || '',
+      fbc: (document.cookie.match(/(?:^|;\s*)_fbc=([^;]*)/) || [])[1] || ''
+    };
+  }
+
+  function savedMarketingTouches() {
+    var current = currentMarketingTouch();
+    var first = null;
+    try { first = JSON.parse(localStorage.getItem('bpp_meta_first_touch') || 'null'); } catch (_) {}
+    if (!first || !first.occurredAt) {
+      first = current;
+      try { localStorage.setItem('bpp_meta_first_touch', JSON.stringify(first)); } catch (_) {}
+    }
+    try { localStorage.setItem('bpp_meta_latest_touch', JSON.stringify(current)); } catch (_) {}
+    return { first: first, current: current };
+  }
+
+  savedMarketingTouches();
 
   /* single submit path: tapping the button submits AND grants SMS consent via the
      disclosure beneath it. The texts are about the customer's own requested quote;
@@ -1825,6 +1843,7 @@
 
     var name = nameIn.value.trim();
     var attr = attribution();
+    var touches = savedMarketingTouches();
     var eventId = 'wv2-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
 
     /* Structured city/state/zip come only from a picked Mapbox feature.
@@ -1890,7 +1909,9 @@
       fbp: (document.cookie.match(/(?:^|;\s*)_fbp=([^;]*)/) || [])[1] || '',
       fbc: (document.cookie.match(/(?:^|;\s*)_fbc=([^;]*)/) || [])[1] || '',
       fbclid: new URLSearchParams(window.location.search).get('fbclid') || '',
-      pageUrl: window.location.href, referrer: document.referrer || ''
+      pageUrl: window.location.href, referrer: document.referrer || '',
+      firstTouch: touches.first,
+      currentTouch: touches.current
     };
 
     /* resilient delivery: the keepalive fetch below already survives page unload

@@ -377,6 +377,8 @@
     .state-spin{width:34px;height:34px;margin:0 auto 16px;border:3px solid var(--plan-line);border-top-color:var(--plan-navy);border-radius:50%;animation:state-spin .7s linear infinite}
     @keyframes state-spin{to{transform:rotate(360deg)}}
     .state-action{display:flex;align-items:center;justify-content:center;min-height:52px;margin:20px auto 0;padding:0 22px;border:0;border-radius:26px;background:var(--plan-gold);color:var(--plan-navy);font:800 14px/1 Outfit,sans-serif;text-decoration:none;cursor:pointer}
+    .state-action + .state-action{margin-top:10px}
+    .state-action-secondary{background:#fff;color:var(--plan-navy);box-shadow:inset 0 0 0 1.5px rgba(11,31,59,.22)}
     @media (min-width:600px){
       .page{padding-top:22px}
       .hero-photo{height:245px}
@@ -1196,6 +1198,10 @@
         return null;
       }
       function setApprovalError(message){document.getElementById('approvalError').textContent=message||'';}
+      function recoveryActionsHtml(){
+        return '<a class="state-action" href="sms:+18648637800">Text Key for a fresh link</a>'+
+          '<a class="state-action state-action-secondary" href="tel:+18648637800">Call Key</a>';
+      }
       function stateView(title,message,actionHtml){
         document.body.classList.remove('booting');
         document.querySelector('.sticky').style.display='none';
@@ -1794,10 +1800,10 @@
         }
         if(!isPreview&&!authorizationFullRedoPending&&row.require_deposit!==false&&hasCheckoutReturnHint()
             &&['sent','viewed','copied'].indexOf(status)>-1)return reconcileCheckoutReturn(row);
-        if(!isPreview&&['sent','viewed','copied'].indexOf(status)===-1) return stateView('Proposal not available','This proposal has not been issued. Please use the latest link from Key, or call (864) 863-7800.','<a class="state-action" href="tel:+18648637800">Call Key</a>');
+        if(!isPreview&&['sent','viewed','copied'].indexOf(status)===-1) return stateView('Proposal not available','This proposal has not been issued. Ask Key for the latest personal link.',recoveryActionsHtml());
         var prepared=row.sent_at||row.created_at;
         var expires=row.expires_at?new Date(row.expires_at):(prepared?new Date(new Date(prepared).getTime()+14*86400000):null);
-        if(expires&&!isNaN(expires.getTime())&&expires.getTime()<Date.now()&&!row.signed_at) return stateView('This quote has expired','Text or call Key for a refreshed proposal. It only takes a few minutes.','<a class="state-action" href="sms:+18648637800">Text Key</a>');
+        if(expires&&!isNaN(expires.getTime())&&expires.getTime()<Date.now()&&!row.signed_at) return stateView('This quote has expired','Text or call Key for a refreshed proposal. It only takes a few minutes.',recoveryActionsHtml());
         bootProposal(row);
         if(resetAfterHistoryRestore){
           historyAuthorizationResetPending=false;
@@ -1809,7 +1815,7 @@
       }
       function loadLiveProposal(){
         var token=params.get('token')||'';
-        if(!/^[a-zA-Z0-9-]{8,64}$/.test(token)){stateView('Proposal link not found','Use the personal proposal link Key sent you, or call (864) 863-7800 for a fresh link.','<a class="state-action" href="tel:+18648637800">Call Key</a>');return;}
+        if(!/^[a-zA-Z0-9-]{8,64}$/.test(token)){stateView('Proposal link not found','Use the personal proposal link Key sent you, or ask Key for a fresh link.',recoveryActionsHtml());return;}
         setAuthorizationGateState(isPreview?'preview':'pending');
         var controller=new AbortController();var timer=setTimeout(function(){controller.abort();},10000);
         var proposalPromise=fetch(SUPABASE_URL+'/functions/v1/proposal-view?token='+encodeURIComponent(token),{headers:{'Authorization':'Bearer '+SUPABASE_KEY},cache:'no-store',signal:controller.signal});
@@ -1829,7 +1835,7 @@
             routeProposal(row);
           }).catch(function(error){
             clearTimeout(timer);
-            stateView(error&&error.name==='AbortError'?'This is taking too long':'Proposal not available','Please refresh, or call Key at (864) 863-7800 if the problem continues.','<a class="state-action" href="tel:+18648637800">Call Key</a>');
+            stateView(error&&error.name==='AbortError'?'This is taking too long':'Proposal not available','Please refresh, or ask Key for a fresh link if the problem continues.',recoveryActionsHtml());
           });
       }
 

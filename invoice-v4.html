@@ -60,6 +60,9 @@
 .state-wrap{text-align:center;padding:56px 24px}
 .state-wrap h2{font-family:var(--font-display);font-size:20px;font-weight:800;color:var(--navy);margin-bottom:8px}
 .state-wrap p{font-size:13.5px;color:var(--text3);line-height:1.55;max-width:340px;margin:0 auto}
+.state-recovery-actions{width:100%;max-width:340px;margin:20px auto 0}
+.state-recovery-actions .btn-navy,.state-recovery-actions .btn-ghost{box-sizing:border-box;margin:0}
+.state-recovery-actions .btn-ghost{margin-top:10px}
 .state-spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--navy);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 16px}
 @keyframes spin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.state-spin{animation:none}}
@@ -240,6 +243,10 @@ function showState(title,msg){
   var h2=document.createElement('h2'); h2.textContent=String(title||'');
   var p=document.createElement('p'); p.textContent=String(msg||'');
   wrap.appendChild(h2); wrap.appendChild(p);
+  var actions=document.createElement('div'); actions.className='state-recovery-actions';
+  var text=document.createElement('a'); text.className='btn-navy'; text.href='sms:+18648637800'; text.textContent='Text Key for a fresh link';
+  var call=document.createElement('a'); call.className='btn-ghost'; call.href='tel:+18648637800'; call.textContent='Call Key';
+  actions.appendChild(text); actions.appendChild(call); wrap.appendChild(actions);
   card.appendChild(wrap); page.appendChild(card);
   requestAnimationFrame(function(){ card.classList.add('in'); });
 }

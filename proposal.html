@@ -6,6 +6,7 @@
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://js.stripe.com 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co https://api.stripe.com https://maps.googleapis.com https://*.google.com; frame-src https://js.stripe.com https://www.google.com;">
+<script src="/assets/js/bpp-analytics.js?v=20260825-scope3"></script>
 <title>Proposal | Backup Power Pro</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Inter:wght@400;500;600&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
@@ -283,6 +284,9 @@ html,body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:va
 .state-wrap svg{width:48px;height:48px;opacity:.25;margin-bottom:14px}
 .state-wrap h2{font-family:'Outfit',sans-serif;font-size:20px;font-weight:800;color:var(--navy);margin-bottom:8px}
 .state-wrap p{font-size:14px;color:var(--text3)}
+.state-recovery-actions{width:100%;max-width:340px;margin:20px auto 0}
+.state-recovery-actions .approve-btn,.state-recovery-actions .dl-btn{box-sizing:border-box;min-height:52px;margin:0;text-decoration:none}
+.state-recovery-actions .dl-btn{margin-top:10px}
 .spinner-large{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--navy);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 16px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
@@ -374,51 +378,6 @@ body.preview-mode a.approve-btn[href],body.preview-mode button[onclick^="payDepo
   var query=params.toString();
   window.history.replaceState(null,'',window.location.pathname+(query?'?'+query:'')+window.location.hash);
 })();
-</script>
-<!-- PostHog, customer-facing proposal view tracking. Closes the growth
-     loop: we can see how long customers spend on their quote, whether they
-     click the Pay Deposit button, whether they bounce. Combined with
-     proposals.view_count + stripe-webhook capture('deposit_paid') we get
-     the full funnel from ad click → quote viewed → deposit paid. -->
-<script>window.__BPP_MONEY_PREVIEW__=new URLSearchParams(window.location.search).get('preview')==='1';if(!window.__BPP_MONEY_PREVIEW__){!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+" (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);posthog.init('phc_qoA51lePZqXYtPJYkrIpdA4U8iMDJ79L1kje7r4pD4O',{api_host:'https://us.i.posthog.com',person_profiles:'identified_only',session_recording:{recordCrossOriginIframes:false,maskAllInputs:true},capture_pageview:true,capture_pageleave:true,enable_heatmaps:true,capture_dead_clicks:true});}</script>
-<script>
-  // Tag this pageview with proposal context so PostHog can group all events
-  // from this customer's quote session together.
-  (function() {
-    if (window.__BPP_MONEY_PREVIEW__ || typeof posthog === 'undefined') return;
-    var token = new URLSearchParams(window.location.search).get('token') || '';
-    posthog.register({ page_type: 'proposal', proposal_token: token.slice(0, 8) });
-    // Track time-on-page milestones, helps us spot where customers stall
-    // reading the quote (pricing? terms? deposit button?).
-    var timeMilestones = [10, 30, 60, 120, 300]; // seconds
-    timeMilestones.forEach(function(t) {
-      setTimeout(function() {
-        posthog.capture('proposal_time_on_page', { seconds: t });
-      }, t * 1000);
-    });
-    // Mark when customer hits bottom of proposal, strong intent signal.
-    var bottomSeen = false;
-    window.addEventListener('scroll', function() {
-      if (bottomSeen) return;
-      var h = document.documentElement;
-      if ((h.scrollTop + h.clientHeight) / h.scrollHeight > 0.9) {
-        bottomSeen = true;
-        posthog.capture('proposal_scrolled_to_bottom');
-      }
-    }, { passive: true });
-    // Delegate click tracking on Pay / Approve / Decline buttons, don't
-    // have to wire up every button individually; match by text content.
-    document.addEventListener('click', function(ev) {
-      var el = ev.target.closest('button, a');
-      if (!el) return;
-      var text = (el.textContent || '').trim().toLowerCase();
-      if (/pay (deposit|full|now)|lock in|pay \$|approve|accept/.test(text)) {
-        posthog.capture('proposal_payment_cta_clicked', { label: text.slice(0, 50) });
-      } else if (/decline|reject|not interested/.test(text)) {
-        posthog.capture('proposal_declined_cta', { label: text.slice(0, 50) });
-      }
-    }, { capture: true });
-  })();
 </script>
 <link rel="icon" href="/favicon.png" type="image/png">
 <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.jpg">
@@ -2921,6 +2880,17 @@ function showError(title, msg, action) {
     }
     control.textContent = String(action.label);
     wrap.appendChild(control);
+  } else {
+    const actions = document.createElement('div'); actions.className = 'state-recovery-actions';
+    const text = document.createElement('a');
+    text.className = 'approve-btn';
+    text.href = 'sms:+18648637800';
+    text.textContent = 'Text Key for a fresh link';
+    const call = document.createElement('a');
+    call.className = 'dl-btn';
+    call.href = 'tel:+18648637800';
+    call.textContent = 'Call Key';
+    actions.appendChild(text); actions.appendChild(call); wrap.appendChild(actions);
   }
   main.appendChild(wrap);
   syncAuthorizationGateUI();

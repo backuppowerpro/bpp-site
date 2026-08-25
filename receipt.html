@@ -10,6 +10,7 @@
 <meta name="supported-color-schemes" content="light only">
 <!-- View-only receipt. Every display, font, image, and PDF dependency is local; only its customer DTO crosses the network. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https://*.supabase.co; connect-src 'self' https://*.supabase.co;">
+<script src="/assets/js/bpp-analytics.js?v=20260825-scope3"></script>
 <title>Your receipt | Backup Power Pro</title>
 <link rel="stylesheet" href="assets/css/bpp-money-fonts.css?v=20260808a">
 <!-- SRI-pinned jsPDF 2.5.1 is stored locally so a CDN failure cannot remove the customer's printable receipt. -->
@@ -84,6 +85,9 @@
   .state-card h2{margin:0 0 8px;font-family:'Outfit',Arial,sans-serif;font-size:21px;font-weight:800;color:#0b1f3b}
   .state-card p{margin:0 auto;font-family:'Inter',Arial,sans-serif;font-size:14px;line-height:1.6;color:#6b7280;max-width:34em}
   .state-card a{color:#0b1f3b;font-weight:600}
+  .state-recovery-actions{width:100%;max-width:340px;margin:20px auto 0}
+  .state-recovery-action{box-sizing:border-box;display:flex;align-items:center;justify-content:center;min-height:52px;padding:0 16px;border:1.5px solid #0b1f3b;border-radius:10px;background:#0b1f3b;color:#fff!important;font-family:'Inter',Arial,sans-serif;font-size:14px;font-weight:700!important;text-decoration:none}
+  .state-recovery-action + .state-recovery-action{margin-top:10px;background:#fff;color:#0b1f3b!important}
   .preview-bar{position:fixed;top:0;left:0;right:0;z-index:99999;background:#f59e0b;color:#1c1003;font-family:'Outfit',Arial,sans-serif;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;text-align:center;padding:8px 16px;box-shadow:0 2px 12px rgba(0,0,0,.18)}
   .preview-bar[hidden],.preview-watermark[hidden]{display:none}
   .preview-watermark{position:fixed;inset:0;pointer-events:none;z-index:99998;display:flex;align-items:center;justify-content:center;overflow:hidden}
@@ -110,6 +114,7 @@
         <div class="state-spin" id="state-spin"></div>
         <h2 id="state-title">Loading your receipt...</h2>
         <p id="state-msg">One moment while we pull up your receipt.</p>
+        <div class="state-recovery-actions" id="state-actions"></div>
       </div>
     </td>
   </tr>
@@ -354,6 +359,16 @@ function showState(title,msg,spin){
   if(spinEl) spinEl.style.display = spin ? 'block' : 'none';
   var t=document.getElementById('state-title'); if(t) t.textContent=String(title||'');
   var m=document.getElementById('state-msg');   if(m) m.innerHTML=String(msg||'');
+  var actions=document.getElementById('state-actions');
+  if(actions){
+    actions.innerHTML='';
+    actions.style.display=spin?'none':'block';
+    if(!spin){
+      var text=document.createElement('a'); text.className='state-recovery-action'; text.href='sms:+18648637800'; text.textContent='Text Key for a fresh link';
+      var call=document.createElement('a'); call.className='state-recovery-action'; call.href='tel:+18648637800'; call.textContent='Call Key';
+      actions.appendChild(text); actions.appendChild(call);
+    }
+  }
 }
 
 // Swap to the rendered receipt (hide state layer).
