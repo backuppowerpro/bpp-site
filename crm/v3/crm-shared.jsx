@@ -1,6 +1,12 @@
 // crm-shared.jsx, primitives, icons, nav bar
 // Exports: NavBar, TabIcon, ContactAvatar, StatusPill, GoldDot, fmt
 
+import {
+  fetchOperatorPropertyImage,
+  isCompletePropertyAddress,
+  propertyImageIdentity,
+} from '../v3-app/src/property-image.js';
+
 // Haptic feedback, routed through the Capacitor native bridge on iOS (real
 // Taptic Engine) with a navigator.vibrate fallback for the web/PWA. iOS
 // WKWebView ignores navigator.vibrate entirely, so on-device the old calls
@@ -702,61 +708,11 @@ function SegmentedControl({ value, onChange, options, ariaLabel }) {
   );
 }
 
-// ── Contact Avatar ────────────────────────────────────────────────
-// Street View is disabled in browser code. A privileged provider credential
-// belongs behind an authenticated server adapter, never in a shipped bundle.
-// Existing satellite and initials fallbacks keep the CRM usable when absent.
-const SV_KEY = '';
-const MAPBOX_TOKEN = 'pk.eyJ1Ijoia2V5ZWxlY3RyaWN1cHN0YXRlIiwiYSI6ImNtcm8zZ3NkeTFodmgyeG9hY284Z3F4YXcifQ.3mLKvFGpDEdkjEMQNVQhmg';
-
-// Satellite fallback: geocode via Mapbox (not Nominatim, avoids the shared
-// rate-limit queue and bad cache entries) then fetch mapbox/satellite-v9.
-// Used when Street View has no coverage.
-const __satGeoCache = new Map(); // address → {lng, lat}
-async function mapboxSatUrl(address, w, h) {
-  if (!address) return null;
-  try {
-    if (!__satGeoCache.has(address)) {
-      const r = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(address)}.json` +
-        `?access_token=${MAPBOX_TOKEN}&country=us&limit=1&types=address`
-      );
-      if (!r.ok) return null;
-      const d = await r.json();
-      const f = d.features?.[0];
-      if (!f) return null;
-      const [lng, lat] = f.center;
-      __satGeoCache.set(address, { lng, lat });
-    }
-    const { lng, lat } = __satGeoCache.get(address);
-    return `https://api.mapbox.com/styles/v1/mapbox/satellite-v9/static/${lng},${lat},19/${w}x${h}?access_token=${MAPBOX_TOKEN}`;
-  } catch { return null; }
-}
-
-// Returns a Street View Static URL only when the address looks like an
-// actual street, has a number AND a road word (drive/street/lane/etc).
-// Test contacts with junk addresses (e.g. just "(800) 555-0007 ·") would
-// otherwise fetch Google's "no imagery available" placeholder, which
-// renders as the watermark cropped inside the avatar circle. Better to
-// fall back to the initials avatar for those.
-const ROAD_RE = /\b(st|street|rd|road|ave|avenue|dr|drive|ln|lane|ct|court|blvd|boulevard|way|hwy|highway|pkwy|parkway|cir|circle|trl|trail|pl|place|pt|point|ter|terrace|loop|run|crossing|ridge|hill)\b\.?/i;
-function isAddressableStreet(address) {
-  if (!address || typeof address !== 'string') return false;
-  const a = address.trim();
-  if (a.length < 8) return false;
-  if (!/\d/.test(a)) return false; // need a number
-  return ROAD_RE.test(a);
-}
-function streetViewUrlFor(address, size = 80) {
-  if (!SV_KEY || !isAddressableStreet(address)) return null;
-  // Always request the API max (640x640 + scale=2 = ~1280px source). The
-  // browser scales down to the avatar's actual rendered size, that's
-  // sharper than letting Google return a smaller image and the browser
-  // upscale. CSS object-fit crops Google's bottom-left watermark.
-  return `https://maps.googleapis.com/maps/api/streetview?size=640x640` +
-         `&scale=2&location=${encodeURIComponent(address.trim())}` +
-         `&fov=80&pitch=5&source=outdoor&key=${SV_KEY}`;
-}
+// ── Contact Avatar and property image contract ───────────────────
+// A customer's verified current-address home photo is also their profile
+// picture. Initials remain the truthful fallback until protected bytes load,
+// or when the address is incomplete, removed, or cannot be verified.
+const isAddressableStreet = isCompletePropertyAddress;
 
 // Curated avatar palette, Gmail/Material-style. Hand-picked rich
 // 600-shade colors that all read cleanly with bold white text and avoid
@@ -788,77 +744,108 @@ function colorFromString(s) {
   return AVATAR_PALETTE[h % AVATAR_PALETTE.length];
 }
 
-// Street View imagery presence cache. The Places metadata API is free
-// and returns instantly with `status: "OK"` if a panorama exists at the
-// address, or "ZERO_RESULTS" if not. We cache the result per-address so
-// we don't re-check on every render. Without this check, Google returns
-// HTTP 200 with a gray placeholder for no-imagery addresses, and our
-// onError handler never fires, leaving an empty-looking avatar.
-const __svImageryCache = new Map(); // address → 'ok' | 'none' | Promise
-async function checkSvImagery(address) {
-  if (!SV_KEY || !address) return 'none';
-  if (__svImageryCache.has(address)) {
-    const v = __svImageryCache.get(address);
-    if (typeof v === 'string') return v;
-    return v; // pending promise
-  }
-  const promise = (async () => {
-    try {
-      const url = `https://maps.googleapis.com/maps/api/streetview/metadata?location=${encodeURIComponent(address)}&source=outdoor&key=${SV_KEY}`;
-      const r = await fetch(url);
-      if (!r.ok) return 'none';
-      const j = await r.json();
-      return j?.status === 'OK' ? 'ok' : 'none';
-    } catch {
-      return 'none';
-    }
-  })().then(result => {
-    __svImageryCache.set(address, result);
-    return result;
+function useContactPropertyImage(contact, enabled = true) {
+  const contactID = contact?.id || '';
+  const address = contact?.address || '';
+  const eligible = enabled && isCompletePropertyAddress(address);
+  const inputKey = eligible && contactID ? `${contactID}\n${address}` : null;
+  const [attempt, setAttempt] = React.useState(0);
+  const [state, setState] = React.useState({
+    status: eligible ? 'loading' : 'empty',
+    url: null,
+    propertyImageIdentity: null,
+    inputKey,
   });
-  __svImageryCache.set(address, promise);
-  return promise;
+
+  React.useEffect(() => {
+    const controller = new AbortController();
+    let active = true;
+    let objectURL = null;
+    if (!eligible || !contactID) {
+      setState({ status: 'empty', url: null, propertyImageIdentity: null, inputKey: null });
+      return () => controller.abort();
+    }
+    setState({ status: 'loading', url: null, propertyImageIdentity: null, inputKey });
+    fetchOperatorPropertyImage({ contactID, address, signal: controller.signal, forceRefresh: attempt > 0 })
+      .then(result => {
+        if (!active) {
+          if (result.url) URL.revokeObjectURL(result.url);
+          return;
+        }
+        if (result.kind !== 'ready') {
+          setState({ status: 'empty', url: null, propertyImageIdentity: result.identity, inputKey });
+          return;
+        }
+        objectURL = result.url;
+        setState({
+          status: 'ready',
+          url: result.url,
+          propertyImageIdentity: result.identity,
+          inputKey,
+        });
+      })
+      .catch(error => {
+        if (!active || error?.name === 'AbortError') return;
+        setState({
+          status: error?.retryable === false ? 'empty' : 'error',
+          url: null,
+          propertyImageIdentity: null,
+          inputKey,
+        });
+      });
+    return () => {
+      active = false;
+      controller.abort();
+      if (objectURL) URL.revokeObjectURL(objectURL);
+    };
+  }, [contactID, address, eligible, inputKey, attempt]);
+
+  const retryPropertyImage = React.useCallback(() => setAttempt(value => value + 1), []);
+  const reportPropertyImageFailure = React.useCallback(() => {
+    setState(current => {
+      if (current.url) URL.revokeObjectURL(current.url);
+      return { status: 'error', url: null, propertyImageIdentity: null, inputKey };
+    });
+  }, [inputKey]);
+  const currentState = state.inputKey === inputKey
+    ? state
+    : { status: eligible ? 'loading' : 'empty', url: null, propertyImageIdentity: null, inputKey };
+  return { ...currentState, retryPropertyImage, reportPropertyImageFailure };
 }
 
-function ContactAvatar({ contact, size = 40, ringColor = null }) {
+function useLazyAvatarVisibility() {
+  const avatarRef = React.useRef(null);
+  const [visible, setVisible] = React.useState(false);
+  React.useEffect(() => {
+    const node = avatarRef.current;
+    if (!node) return undefined;
+    if (typeof IntersectionObserver !== 'function') {
+      setVisible(true);
+      return undefined;
+    }
+    const observer = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) {
+        setVisible(true);
+        observer.disconnect();
+      }
+    }, { rootMargin: '80px' });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+  return { avatarRef, visible };
+}
+
+function ContactAvatar({ contact, size = 40, ringColor = null, lazy = true }) {
   // Defensive: contact can be null/undefined when a proposal/invoice references
   // a contact that's been archived or wasn't returned in the 500-row contacts
   // window. Show as anonymous in that case rather than crashing.
   const isAnon = !contact || !contact.name;
   const bg = isAnon ? '#E8EAF0' : colorFromString(contact.name || contact.id || 'X');
-  // Street View URL: built only when the address looks addressable
-  // (number + road word). Real imagery is verified async via metadata;
-  // until then, we show colored initials. This avoids rendering
-  // Google's gray "no imagery" placeholder for un-mapped addresses.
-  const addr = !isAnon ? contact.address : null;
-  const addressable = addr && isAddressableStreet(addr);
-  const svUrl = addressable ? streetViewUrlFor(addr, size) : null;
-  const cached = addressable ? __svImageryCache.get(addr) : null;
-  const initialReady = cached === 'ok';
-  const initialNone = cached === 'none';
-  const [hasImagery, setHasImagery] = React.useState(initialReady);
-  const [verified, setVerified] = React.useState(initialReady || initialNone);
-  const [satUrl, setSatUrl] = React.useState(null);
-
-  React.useEffect(() => {
-    setSatUrl(null);
-    if (!addressable) return;
-    let cancelled = false;
-    (async () => {
-      const result = await checkSvImagery(addr);
-      if (cancelled) return;
-      setHasImagery(result === 'ok');
-      setVerified(true);
-      if (result === 'none') {
-        const url = await mapboxSatUrl(addr, size * 2, size * 2);
-        if (!cancelled) setSatUrl(url);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [addr, addressable]);
-
+  const { avatarRef, visible } = useLazyAvatarVisibility();
+  const propertyImage = useContactPropertyImage(contact, lazy ? visible : true);
+  const homePhoto = propertyImage.status === 'ready' ? propertyImage.url : null;
   return (
-    <div style={{
+    <div ref={avatarRef} style={{
       width: size, height: size, borderRadius: '50%',
       background: bg,
       color: isAnon ? MUTED : 'white',
@@ -874,36 +861,18 @@ function ContactAvatar({ contact, size = 40, ringColor = null }) {
         ? `inset 0 0 0 1px rgba(0,0,0,0.05), 0 0 0 2px ${ringColor}`
         : 'inset 0 0 0 1px rgba(0,0,0,0.05)',
     }}>
-      {/* Colored initials sit underneath as the base, visible while SV
-          metadata is verifying, and the only thing visible if SV has no
-          imagery for this address. */}
-      {isAnon ? <div style={{width: size*0.42, height: size*0.42}}>{Icons.hash}</div> : contact.avatar}
-      {svUrl && hasImagery && (
+      {homePhoto ? (
         <img
-          src={svUrl}
+          src={homePhoto}
           alt=""
           loading="lazy"
-          decoding="async"
-          onError={() => setHasImagery(false)}
-          style={{
-            position:'absolute', inset:0, width:'100%', height:'100%',
-            objectFit:'cover', objectPosition:'70% 30%', display:'block',
-            filter: 'saturate(1.25) contrast(1.08) brightness(1.02)',
-          }}
+          data-home-photo-avatar-identity={propertyImage.propertyImageIdentity}
+          onError={propertyImage.reportPropertyImageFailure}
+          style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }}
         />
-      )}
-      {!hasImagery && satUrl && (
-        <img
-          src={satUrl}
-          alt=""
-          loading="lazy"
-          decoding="async"
-          style={{
-            position:'absolute', inset:0, width:'100%', height:'100%',
-            objectFit:'cover', objectPosition:'center center', display:'block',
-          }}
-        />
-      )}
+      ) : isAnon ? (
+        <div style={{width: size*0.42, height: size*0.42}}>{Icons.hash}</div>
+      ) : contact.avatar}
     </div>
   );
 }
@@ -1489,7 +1458,8 @@ function formatPhoneInput(raw) {
   return `(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`;
 }
 
-// Linkify a message body, phone numbers (tel:), URLs (target=_blank),
+// Linkify a message body, URLs (target=_blank), and addresses. Phone numbers
+// remain selectable text while outbound calling is not released.
 // and addressable street references (Apple Maps deeplink). Returns an
 // array of React nodes; pass into a span/div as children. The light
 // regex set is tuned for SMS bodies, not arbitrary text.
@@ -1532,7 +1502,7 @@ function linkify(body) {
     if (x.kind === 'url') {
       out.push(<a key={'l'+i} href={x.text} target="_blank" rel="noopener noreferrer" style={linkStyle} onClick={e=>e.stopPropagation()}>{x.text}</a>);
     } else if (x.kind === 'phone') {
-      out.push(<a key={'l'+i} href={`tel:${x.digits}`} style={linkStyle} onClick={e=>e.stopPropagation()}>{x.text}</a>);
+      out.push(<span key={'l'+i}>{x.text}</span>);
     } else {
       const q = encodeURIComponent(x.text);
       out.push(<a key={'l'+i} href={`https://maps.apple.com/?q=${q}`} target="_blank" rel="noopener noreferrer" style={linkStyle} onClick={e=>e.stopPropagation()}>{x.text}</a>);
@@ -1671,7 +1641,8 @@ function buildContactSignals({ contacts, messages, calls, proposals, invoices, e
     const DEAD_STATUSES = ['cancelled', 'declined', 'expired'];
     const sentProposals = cProps
       .filter(p => (p.sent_at || p.copied_at)
-        && !p.approved_at  /* 2026-07-04 audit: mapProposal maps DB signed_at -> approved_at, so p.signed_at here was ALWAYS undefined and signed customers leaked into the Rotting lens */
+        && !p.approved_at
+        && p.status !== 'signed' /* Legacy unpaid signatures require an explicit audit/reset, not an automated stale-proposal chase. */
         && !p.superseded_at
         && !DEAD_STATUSES.includes(p.status))
       .map(p => ({ ...p, _sentTs: p.sent_at || p.copied_at }))
@@ -1693,7 +1664,8 @@ function buildContactSignals({ contacts, messages, calls, proposals, invoices, e
     // surfaced 10 of these totaling ~$13.5k in unrealized revenue.
     const staleViewed = cProps
       .filter(p => p.viewed_at
-        && !p.approved_at  /* 2026-07-04 audit: same dead-field bug, use the mapped approved_at so signed customers do not show as stale-viewed */
+        && !p.approved_at
+        && p.status !== 'signed' /* Preserve legacy evidence without reporting or chasing it as acceptance. */
         && !p.superseded_at
         && (now - new Date(p.viewed_at).getTime()) >= 3 * 24 * 3600 * 1000
         && !DEAD_STATUSES.includes(p.status))
@@ -2286,7 +2258,7 @@ function snoozedUntil(contactId) {
 // When v1 changes, mirror here.
 const QB_C = {
   inlet30: 55, inlet50: 85, interlock: 25,
-  permitActual: 75, permitCustomer: 125, licenseAmortized: 25,
+  permitActual: 75, permitCustomer: 150, licenseAmortized: 25,
   surgeProtector: 85, cord30Cost: 60, cord50Cost: 125,
   adCost: 150, minProfit: 500,
 };
@@ -2295,7 +2267,7 @@ const QB_S = {
   longRun30perFt: 12, longRun50perFt: 14,
   surge: 446, pom: 447,
   cordValue30: 129, cordValue50: 198,
-  permitCustomer: 125,
+  permitCustomer: 150,
 };
 // Tier upgrades (additive, applied after base+addons). Standard is the floor.
 const TIER_META = {
@@ -2378,7 +2350,7 @@ const V3_PRICING = {
   // total stays at $1,497 for 50A all-included.
   cordOff:   { 30: 129,  50: 249  }, // discount when cord toggled off
   inletOff:  { 30: 129,  50: 179  }, // discount when inlet toggled off
-  permitOff: 125,                     // discount when permit toggled off
+  permitOff: 150,                     // discount when permit toggled off
   pom:       447,                     // peace-of-mind add-on (not in total)
   // Quick-add adders, Key's calculator design (2026-05-09). These are NOT
   // baked into the base, they're optional one-click line items that get
@@ -2769,7 +2741,8 @@ Object.assign(window, {
   relTime, fmtTime, fmtDate,
   QB_C, QB_S, TIER_META, TIER_IDS, quickQuoteTotal, quickQuoteCompute,
   V3_PRICING, quoteV3Total,
-  safeSetItem, checkSvImagery, mapboxSatUrl, isAddressableStreet, copyText, SV_KEY,
+  safeSetItem, isAddressableStreet, copyText,
+  useContactPropertyImage, propertyImageIdentity,
   readSnoozeMap, snoozeContact, unsnoozeContact, isSnoozed, snoozedUntil,
   readSchedQueue, scheduleMessage, cancelScheduledMessage, startScheduledQueueRunner,
   usePinned, readPinnedSet, useHScrollFade,

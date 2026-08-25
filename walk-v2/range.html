@@ -1,9 +1,10 @@
 <!doctype html>
-<html lang="en" class="qw-template-document-root">
+<html lang="en" class="no-js qw-template-document-root">
 <head>
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-RrmjnStKixs6rqRkYso1EQnlENANrRKMCXShZtj+eTA='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-nsJN+rYohRfvQKZrSnH/9ru/eYnYxfkNeGaH2tVU8O4='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://reowtzedjflwmlptupbk.supabase.co; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
-<script src="/walk-v2/token-bootstrap.js"></script>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-SImJDOelUcX+iP3jnf9pA1aoUT6E+zA6cs0mUWgkynI='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-oy8BBmKR81N7mZJF/Mlkt18/mt1YBTZQMPYdlXc+IIY='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://reowtzedjflwmlptupbk.supabase.co; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<script src="/walk-v2/token-bootstrap.js?v=20260815-bearer"></script>
+<script src="/walk-v2/no-js-bootstrap.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
 <meta name="robots" content="noindex, nofollow" />
 <title>Your project range | Backup Power Pro</title>
@@ -103,6 +104,11 @@
   .range .range-basis { margin-top: 12px; font-size: 13px; line-height: 1.45; }
   .range .range-basis:empty { display: none; }
   .scope-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .included {
+    flex: 0 0 auto; padding: 5px 9px; border-radius: 100px; color: #8a5a00;
+    background: var(--gold-tint); font-size: 10px; font-weight: 800; letter-spacing: .07em;
+    text-transform: uppercase; box-shadow: inset 0 0 0 1px rgba(255,186,0,.4);
+  }
   .scope-list { display: grid; margin-top: 10px; }
   .scope-row { display: grid; grid-template-columns: 64px 1fr; gap: 10px; align-items: center; padding: 10px 0; border-top: 1px solid rgba(11,31,59,.08); }
   button.scope-row { width: 100%; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
@@ -133,14 +139,16 @@
     main { padding: 34px 40px 48px; }
   }
 </style>
-<link rel="stylesheet" href="/walk-v2/mobile-canvas.css?v=20260823-smooth-loading" />
+<link rel="stylesheet" href="/walk-v2/mobile-canvas.css?v=b2000f10529a" />
+<link rel="stylesheet" href="/walk-v2/no-js-recovery.css" />
 </head>
 <body class="qw-template-document">
+<div class="qw-no-js-note qw-script-recovery" role="alert">JavaScript is required to review your current range. Your saved answers remain on file. Turn it on and reload, or call <a href="tel:+18648637800">(864) 863-7800</a>.</div>
 <div class="page qw-template-page qw-range-page" data-screen-label="Quote walk range acceptance">
   <header class="site-head">
-    <span class="lockup" aria-label="Backup Power Pro">
+    <a class="lockup" href="https://backuppowerpro.com" aria-label="Backup Power Pro" style="text-decoration:none;">
       <img src="/assets/images/logo-white-v2.png" alt="Backup Power Pro" style="height:28px;display:block;width:auto;" />
-    </span>
+    </a>
   </header>
   <section class="qw-template-hero qw-range-hero">
     <div class="qw-range-payoff hidden" data-range-card="">
@@ -163,11 +171,6 @@
         <p class="accepted-phone-status hidden" data-phone-status="" role="status"></p>
       </section>
       <button class="btn range-primary-action" type="button" data-accept="">Yes, prepare my proposal</button>
-    </div>
-    <div class="qw-range-payoff hidden" data-not-fit-hero="">
-      <p class="qw-template-eyebrow">Quote Walk saved</p>
-      <h1>This is where your Quote Walk pauses.</h1>
-      <p class="range-next-step">No proposal has been requested. Your answers stay saved, so you can return to this project range whenever you are ready.</p>
     </div>
   </section>
   <section class="proof-carousel qw-range-proof-carousel hidden" aria-label="What your project can include" data-range-proof-carousel="">
@@ -211,14 +214,10 @@
   </section>
   <main id="rangePage">
     <div class="notice" data-loading="" role="status">Checking your saved setup...</div>
-    <div class="notice error hidden" data-error="" role="alert" tabindex="-1">
-      <span data-error-copy=""></span>
-      <button class="btn secondary" type="button" data-retry-load="">Try loading again</button>
-    </div>
+    <div class="notice error hidden" data-error="" role="alert" tabindex="-1"></div>
 
     <section class="notice hidden" data-revision-context="" role="status">
       <span data-revision-copy=""></span>
-      <button class="btn secondary hidden" type="button" data-restore-distance="">Use my original connection path</button>
       <button class="btn secondary hidden" type="button" data-restore-cord="">Add the compatible cord back</button>
     </section>
 
@@ -226,11 +225,12 @@
       <div class="actions">
         <div class="scope-expansion" id="includedScope" data-scope="">
           <div class="scope-head">
-            <h2 tabindex="-1">Your project setup</h2>
+            <h2 tabindex="-1">Included in your project range</h2>
           </div>
           <p class="scope-summary-copy" data-scope-summary-copy=""></p>
           <div class="scope-list" data-scope-list=""></div>
-          <button class="btn" type="button" data-accept="">Yes, prepare my proposal</button>
+          <button class="btn" type="button" data-accept-bottom="">Yes, prepare my proposal</button>
+          <button class="btn hidden" type="button" data-retry-handoff="">Continue with this saved setup</button>
         </div>
         <button class="link-btn qw-secondary-action" type="button" data-no="">No, show me my options</button>
       </div>
@@ -238,7 +238,7 @@
 
     <section class="card hidden" data-options="">
       <h2>Would a different setup work better?</h2>
-      <p>These choices change the saved setup. Required installation work, permit, and required inspection remain part of every option.</p>
+      <p>These choices change the saved setup. Required installation work, permit, and required inspection stay included.</p>
       <button class="choice hidden" type="button" data-alt-30="">
         <strong>Choose a 30 Amp installation</strong>
         <small>Both observed connections stay saved. The revised range will use the selected 30 Amp installation.</small>
@@ -262,20 +262,9 @@
       <button class="link-btn qw-secondary-action options-return" type="button" data-close-options="">Back to the current range</button>
     </section>
 
-    <section class="card hidden" data-not-fit-terminal="" aria-labelledby="notFitTitle">
-      <h2 id="notFitTitle">What Backup Power Pro handles</h2>
-      <p>A complete, permanent connection for your portable generator, coordinated from installation through final inspection.</p>
-      <ul class="history">
-        <li>Outdoor generator connection box</li>
-        <li>Panel interlock or approved transfer equipment</li>
-        <li>Permit and required inspection</li>
-        <li>Installation, testing, and system walkthrough</li>
-        <li>One-year workmanship support</li>
-      </ul>
-      <p>If you change your mind, return to your saved project range and continue from this point.</p>
-      <div class="actions">
-        <button class="btn" type="button" data-resume-range="">Return to my project range</button>
-      </div>
+    <section class="notice hidden" data-not-fit-terminal="" role="status">
+      <strong>Your Quote Walk is saved.</strong><br />
+      No proposal has been requested or prepared.
     </section>
 
     <section class="card hidden" data-distance-revision="">
@@ -293,7 +282,7 @@
     <span class="foot-process">Every project is reviewed and permitted by Key, completed with trusted local installation partners, and coordinated through final inspection.</span>
   </footer>
 </div>
-<script src="/walk-v2/walk.js?v=20260823-smooth-loading"></script>
+<script src="/walk-v2/walk.js?v=acd71b9339d0"></script>
 <script src="/walk-v2/range-proof-carousel.js"></script>
 <script>
 (function () {
@@ -301,8 +290,6 @@
   var main = document.getElementById('rangePage');
   var loading = main.querySelector('[data-loading]');
   var error = main.querySelector('[data-error]');
-  var errorCopy = error.querySelector('[data-error-copy]');
-  var retryLoad = error.querySelector('[data-retry-load]');
   var rangeCard = document.querySelector('[data-range-card]');
   var acceptedDelivery = document.querySelector('[data-accepted-delivery]');
   var deliveryCopy = acceptedDelivery.querySelector('[data-delivery-copy]');
@@ -312,13 +299,10 @@
   var phoneError = acceptedDelivery.querySelector('[data-phone-error]');
   var phoneStatus = acceptedDelivery.querySelector('[data-phone-status]');
   var proofCarousel = document.querySelector('[data-range-proof-carousel]');
-  var notFitHero = document.querySelector('[data-not-fit-hero]');
-  var notFitTerminal = main.querySelector('[data-not-fit-terminal]');
-  var resumeRange = main.querySelector('[data-resume-range]');
   var revisionContext = main.querySelector('[data-revision-context]');
   var revisionCopy = main.querySelector('[data-revision-copy]');
-  var restoreDistance = main.querySelector('[data-restore-distance]');
   var restoreCord = main.querySelector('[data-restore-cord]');
+  var retryHandoff = main.querySelector('[data-retry-handoff]');
   var scopeSummaryCopy = main.querySelector('[data-scope-summary-copy]');
   var cordRemovalCopy = main.querySelector('[data-cord-removal-copy]');
   var scope = main.querySelector('[data-scope]');
@@ -328,6 +312,8 @@
   var view = null;
   var selectedDistance = null;
   var finalizing = false;
+  var reviewingAlternatives = true;
+  var handoffReviewRequired = false;
   var DISTANCES = [
     ['about_5', 'About 5 ft or less'],
     ['5_10', 'About 6 to 10 ft'],
@@ -350,7 +336,7 @@
   function show(el, yes) { el.classList.toggle('hidden', !yes); }
   function fail(message) {
     loading.classList.add('hidden');
-    errorCopy.textContent = message;
+    error.textContent = message;
     error.classList.remove('hidden');
   }
   function money(cents) { return '$' + Math.round(Number(cents) / 100).toLocaleString('en-US'); }
@@ -360,6 +346,22 @@
   function formatPhone(value) {
     var digits = phoneDigits(value);
     return digits.length === 10 ? '(' + digits.slice(0, 3) + ') ' + digits.slice(3, 6) + '-' + digits.slice(6) : digits;
+  }
+  function clearStaleRange(currentState) {
+    if (currentState) view = currentState;
+    var state = v2();
+    state.current_range_snapshot = null;
+    state.current_range_snapshot_id = null;
+    show(rangeCard, false);
+    show(scope, false);
+    show(proofCarousel, false);
+    show(fitCard, false);
+    show(options, false);
+    document.querySelectorAll('[data-accept], [data-accept-bottom], [data-no]').forEach(function (button) {
+      button.disabled = true;
+      button.hidden = true;
+      button.classList.add('hidden');
+    });
   }
   function phoneIsValid(value) { return /^[2-9][0-9]{2}[2-9][0-9]{6}$/.test(phoneDigits(value)); }
   function renderDelivery() {
@@ -381,7 +383,7 @@
   function renderScope(snapshot) {
     var rows = Array.isArray(snapshot.scope_rows) ? snapshot.scope_rows : [];
     var keys = rows.map(function (row) { return String(row && row.key || ''); });
-    var requiredKeys = [
+    var expectedKeys = [
       'installation',
       'metal_outdoor_connection_box',
       'system_walkthrough',
@@ -389,12 +391,16 @@
       'permit_and_required_inspection',
       'one_year_workmanship_support'
     ];
-    if (snapshot.cord_included === true) requiredKeys.splice(2, 0, 'heavy_duty_compatible_cord');
-    var valid = typeof snapshot.cord_included === 'boolean'
-      && rows.length === requiredKeys.length
-      && new Set(keys).size === requiredKeys.length
-      && requiredKeys.every(function (key) { return keys.indexOf(key) !== -1; })
-      && rows.every(function (row) { return row && SCOPE_CATALOG[row.key] && row.included === true; });
+    if (snapshot.cord_included === true) expectedKeys.push('heavy_duty_compatible_cord');
+    var valid = rows.length === expectedKeys.length
+      && new Set(keys).size === expectedKeys.length
+      && expectedKeys.every(function (key) { return keys.indexOf(key) !== -1; })
+      && rows.every(function (row) {
+      if (!row || !SCOPE_CATALOG[row.key]) return false;
+      return row.key === 'heavy_duty_compatible_cord'
+        ? row.included === snapshot.cord_included
+        : row.included === true;
+      });
     if (!valid) {
       fail('The included scope does not match the saved range. No scope details or proposal readiness have been assumed.');
       show(scope, false);
@@ -450,7 +456,6 @@
       document.querySelector('.qw-range-hero').classList.add('is-accepted');
       renderDelivery();
       show(rangeCard, true);
-      show(notFitHero, false);
       show(proofCarousel, true);
       show(revisionContext, false);
       show(scope, true);
@@ -458,7 +463,7 @@
       show(options, false);
       show(revision, false);
       show(main.querySelector('[data-not-fit-terminal]'), false);
-      document.querySelectorAll('[data-accept], [data-no]').forEach(function (button) {
+      document.querySelectorAll('[data-accept], [data-accept-bottom], [data-no]').forEach(function (button) {
         button.classList.add('hidden');
         button.hidden = true;
       });
@@ -471,9 +476,10 @@
       });
       return;
     }
-    document.querySelectorAll('[data-accept], [data-no]').forEach(function (button) {
-      button.classList.remove('hidden');
-      button.hidden = false;
+    var standardActionsAvailable = !v2().accepted_range_snapshot_id;
+    document.querySelectorAll('[data-accept], [data-accept-bottom], [data-no]').forEach(function (button) {
+      button.classList.toggle('hidden', !standardActionsAvailable);
+      button.hidden = !standardActionsAvailable;
     });
     show(rangeCard.querySelector('[data-range-heading]'), true);
     show(rangeCard.querySelector('[data-accepted-heading]'), false);
@@ -484,15 +490,21 @@
     var observed = Array.isArray(v2().observed_connections) ? v2().observed_connections : [];
     if (!renderScope(snapshot)) return;
     var distanceCopy = (DISTANCE_LABELS[v2().distance_band] || 'the confirmed path').toLowerCase();
-    var basisCopy = observed.length === 2 && v2().pricing_basis === '50'
+    var pricingBasis = snapshot.pricing_basis || v2().pricing_basis || '';
+    if (pricingBasis === '50A') pricingBasis = '50';
+    if (pricingBasis === '30A') pricingBasis = '30';
+    if (pricingBasis !== '30' && pricingBasis !== '50') pricingBasis = '';
+    var basisCopy = observed.length === 2 && pricingBasis === '50'
       ? 'the higher 50 Amp connection'
-      : observed.length === 2 && v2().pricing_basis === '30'
+      : observed.length === 2 && pricingBasis === '30'
         ? 'the 30 Amp setup you selected'
-        : 'a ' + String(v2().pricing_basis) + ' Amp connection';
+        : pricingBasis
+          ? 'a ' + pricingBasis + ' Amp connection'
+          : 'the confirmed generator connection';
     var isRevisedRange = Boolean(snapshot.revision_reason && snapshot.revision_reason !== 'initial');
     var qualifier = 'Based on ' + basisCopy + ' and a connection path of ' + distanceCopy + ', this is the ' + (isRevisedRange ? 'revised ' : '') + 'range I expect for your permanent, permitted backup power connection.';
     if (observed.length === 2) {
-      qualifier += v2().pricing_basis === '30'
+      qualifier += pricingBasis === '30'
         ? ' Both connections remain saved.'
         : ' Your 30 Amp connection remains saved.';
     }
@@ -504,70 +516,57 @@
     } else if (snapshot.revision_reason === 'cord_removed') {
       revisionMessage = 'Revised setup: You will provide the approved compatible cord. This range is ' + money(cordCredit(snapshot)) + ' lower.';
     } else if (snapshot.revision_reason === 'cord_restored') {
-      revisionMessage = 'Revised setup: The approved compatible cord is included again. This range reflects your current saved setup.';
-    } else if (snapshot.revision_reason === 'distance_restored') {
-      revisionMessage = 'Revised setup: Your original connection path of ' + (DISTANCE_LABELS[snapshot.distance_band] || 'the saved distance') + ' is restored. A fresh range was created for that setup.';
-    } else if (snapshot.revision_reason === 'both_to_30') {
-      revisionMessage = 'Revised setup: Your range now uses the 30 Amp installation. Both observed connections remain saved.';
-    } else if (snapshot.revision_reason === 'return_to_50') {
-      revisionMessage = 'Revised setup: Your range now uses the 50 Amp installation. Both observed connections remain saved.';
+      revisionMessage = 'Revised setup: The approved compatible cord is included again, and the original range has been restored.';
     }
     revisionCopy.textContent = revisionMessage;
-    restoreDistance.disabled = false;
     restoreCord.disabled = false;
-    show(restoreDistance, Boolean(v2().original_distance_band) && v2().distance_band !== v2().original_distance_band);
     show(restoreCord, snapshot.revision_reason === 'cord_removed' && snapshot.cord_included === false);
-    show(revisionContext, Boolean(revisionMessage) || !restoreDistance.classList.contains('hidden') || !restoreCord.classList.contains('hidden'));
+    show(revisionContext, Boolean(revisionMessage) || !restoreCord.classList.contains('hidden'));
     var notFitClosed = v2().not_fit_status === 'closed';
-    var editingOptions = !notFitClosed && v2().range_fit_answer === 'no' && !v2().accepted_range_snapshot_id;
+    var editingOptions = reviewingAlternatives && !notFitClosed && v2().range_fit_answer === 'no' && !v2().accepted_range_snapshot_id;
+    var awaitingHandoffReview = handoffReviewRequired && acceptedCurrent && v2().handoff_recorded !== true;
     document.querySelector('.qw-range-hero').classList.toggle('is-recovery', notFitClosed);
     show(rangeCard, !notFitClosed);
-    show(notFitHero, notFitClosed);
-    show(scope, !editingOptions && !notFitClosed && !v2().accepted_range_snapshot_id);
+    show(scope, !editingOptions && !notFitClosed && (!v2().accepted_range_snapshot_id || awaitingHandoffReview));
     var showAcceptance = !notFitClosed && !v2().accepted_range_snapshot_id && !editingOptions;
     show(proofCarousel, showAcceptance);
-    show(fitCard, showAcceptance);
+    show(fitCard, showAcceptance || awaitingHandoffReview);
+    show(retryHandoff, awaitingHandoffReview);
     if (showAcceptance && window.BPPRangeProofCarousel) {
       window.requestAnimationFrame(function () { window.BPPRangeProofCarousel.init(proofCarousel); });
     }
     show(options, editingOptions);
-    show(notFitTerminal, notFitClosed);
-    if (notFitClosed) show(revisionContext, false);
-    show(main.querySelector('[data-alt-30]'), observed.indexOf('30') !== -1 && observed.indexOf('50') !== -1 && v2().pricing_basis === '50');
-    show(main.querySelector('[data-alt-50]'), observed.indexOf('30') !== -1 && observed.indexOf('50') !== -1 && v2().pricing_basis === '30');
+    show(main.querySelector('[data-not-fit-terminal]'), notFitClosed);
+    show(main.querySelector('[data-alt-30]'), observed.indexOf('30') !== -1 && observed.indexOf('50') !== -1 && pricingBasis === '50');
+    show(main.querySelector('[data-alt-50]'), observed.indexOf('30') !== -1 && observed.indexOf('50') !== -1 && pricingBasis === '30');
     show(main.querySelector('[data-alt-distance]'), DISTANCE_ORDER[v2().distance_band] > 1);
-    show(main.querySelector('[data-alt-cord]'), snapshot.cord_included === true);
     if (v2().accepted_range_snapshot_id) {
-      finalizeHandoff();
+      finalizeHandoff(false);
     }
   }
   function refresh() {
     return WALK.view(t).then(function (value) { view = value; render(); return value; });
   }
-  function retryCurrentRange() {
-    retryLoad.disabled = true;
-    error.classList.add('hidden');
-    loading.textContent = 'Checking your saved setup...';
-    loading.classList.remove('hidden');
-    ensureRange().catch(function (cause) {
-      if (String(cause && cause.message) !== 'readiness_incomplete') {
-        fail('Your current range could not be loaded. Your saved answers are still available.');
-      }
-    }).finally(function () { retryLoad.disabled = false; });
-  }
-  function stateAction(action, payload) {
+  function stateAction(action, payload, localErrorOnly) {
     loading.textContent = 'Saving your current setup...';
     loading.classList.remove('hidden');
-    return WALK.stateAction(t, action, payload || {}).then(function (actionResult) {
-      return refresh().then(function () {
-        return { view: view, actionResult: actionResult };
-      });
-    }).catch(function (cause) {
+    return WALK.stateAction(t, action, payload || {}).then(refresh).catch(function (cause) {
       loading.classList.add('hidden');
-      var code = cause && cause.body && cause.body.error;
-      fail(code === 'readiness_incomplete'
-        ? 'Your range is still locked because a required answer or photo is missing.'
-        : 'That change did not save. Your prior range remains current. Try again.');
+      var code = cause && (cause.code || cause.body && cause.body.error);
+      if (code === 'stale_customer_authorization') {
+        clearStaleRange(cause.currentState);
+        if (action === 'handoff') handoffReviewRequired = true;
+        fail('Your saved setup changed. The old range is no longer available while the current setup is checked.');
+        ensureRange().catch(function () {
+          if (view) WALK.routeRecoveryFromState(t, view);
+        });
+        throw cause;
+      }
+      if (!localErrorOnly) {
+        fail(code === 'readiness_incomplete'
+          ? 'Your range is still locked because a required answer or photo is missing.'
+          : 'That change did not save. Your prior range remains current. Try again.');
+      }
       throw cause;
     });
   }
@@ -575,8 +574,7 @@
     return refresh().then(function () {
       var readiness = v2().readiness || {};
       if (!readiness.inputs_ready) {
-        var blockers = Array.isArray(readiness.input_blockers) ? readiness.input_blockers : [];
-        WALK.go('incomplete.html', t);
+        WALK.routeRecoveryFromState(t, view);
         throw new Error('readiness_incomplete');
       }
       if (!v2().current_range_snapshot || v2().current_range_snapshot.status !== 'available') return stateAction('create_range', {});
@@ -584,12 +582,15 @@
     });
   }
 
-  function finalizeHandoff() {
+  function finalizeHandoff(explicitRetry) {
     if (finalizing) return;
+    if (handoffReviewRequired && explicitRetry !== true) return;
     if (v2().handoff_recorded === true) {
       render();
       return;
     }
+    handoffReviewRequired = false;
+    show(retryHandoff, false);
     finalizing = true;
     stateAction('handoff', {}).then(function () {
       finalizing = false;
@@ -601,22 +602,23 @@
   function acceptCurrentRange() {
     if (finalizing) return;
     finalizing = true;
-    document.querySelectorAll('[data-accept]').forEach(function (button) { button.disabled = true; });
+    document.querySelectorAll('[data-accept], [data-accept-bottom]').forEach(function (button) { button.disabled = true; });
     stateAction('accept_range', {}).then(function () {
       finalizing = false;
       finalizeHandoff();
     }).catch(function () {
       finalizing = false;
-      document.querySelectorAll('[data-accept]').forEach(function (button) { button.disabled = false; });
+      document.querySelectorAll('[data-accept], [data-accept-bottom]').forEach(function (button) { button.disabled = false; });
       error.focus();
       error.scrollIntoView({ block: 'center' });
     });
   }
-  document.querySelectorAll('[data-accept]').forEach(function (button) {
+  document.querySelectorAll('[data-accept], [data-accept-bottom]').forEach(function (button) {
     button.addEventListener('click', acceptCurrentRange);
   });
-  retryLoad.addEventListener('click', retryCurrentRange);
+  retryHandoff.addEventListener('click', function () { finalizeHandoff(true); });
   editPhone.addEventListener('click', function () {
+    error.classList.add('hidden');
     phoneStatus.textContent = '';
     show(phoneStatus, false);
     show(phoneError, false);
@@ -646,46 +648,40 @@
     }
     var save = acceptedDelivery.querySelector('[data-save-phone]');
     save.disabled = true;
-    stateAction('update_phone', { phone: nextPhone }).then(function (saved) {
+    stateAction('update_phone', { phone: nextPhone }, true).then(function () {
       var confirmation = v2().confirmation_event || {};
-      var result = saved && saved.actionResult || {};
-      var opener = result.opener_resend || {};
-      phoneStatus.textContent = ['sent', 'accepted_ambiguous'].indexOf(opener.action) !== -1
-        ? 'Your number is updated and a fresh confirmation was sent to the number ending in ' + nextPhone.slice(-4) + '.'
-        : result.opener_resend_requested
-          ? 'Your number is updated. A fresh confirmation is queued for the number ending in ' + nextPhone.slice(-4) + '.'
-          : confirmation.manual_resend_required
-            ? 'Your number is updated. Key will use the new number when he resends the proposal link.'
-            : 'Got it. I’ll use the number ending in ' + nextPhone.slice(-4) + ' for your proposal.';
+      phoneStatus.textContent = confirmation.manual_resend_required
+        ? 'Your number is updated. Key will use the new number when he resends the proposal link.'
+        : 'Got it. I’ll use the number ending in ' + nextPhone.slice(-4) + ' for your proposal.';
       show(phoneStatus, true);
       show(phoneForm, false);
     }).catch(function (cause) {
       var code = cause && cause.body && cause.body.error;
-      phoneError.textContent = code === 'phone_already_in_use'
-        ? 'That mobile number already has a saved Quote Walk. Your previous number is still on this Quote Walk.'
-        : code === 'phone_suppressed'
-          ? 'That mobile number cannot receive texts from Backup Power Pro. Your previous number is still on file.'
-          : 'That number did not save. Your previous number is still on file. Try again.';
+      phoneError.textContent = code === 'phone_suppressed'
+        ? 'That number is opted out of texts. Use a different mobile number.'
+        : 'That number did not save. Your previous number is still on file. Try again.';
       show(phoneError, true);
     }).finally(function () { save.disabled = false; });
   });
   main.querySelector('[data-no]').addEventListener('click', function () {
+    reviewingAlternatives = true;
     WALK.confirm(t, { range_fit_answer: 'no' }).then(refresh).catch(function () { fail('That answer did not save. Try again.'); });
   });
   main.querySelector('[data-close-options]').addEventListener('click', function () {
-    WALK.confirm(t, { range_fit_answer: null }).then(refresh).catch(function () {
-      fail('That choice did not save. Your current range remains available. Try again.');
-    });
+    reviewingAlternatives = false;
+    render();
+    var accept = main.querySelector('[data-accept-bottom]');
+    if (accept) accept.focus();
   });
   main.querySelector('[data-alt-30]').addEventListener('click', function () {
     WALK.confirm(t, { pricing_basis: '30', revision_reason: 'both_to_30' })
       .then(function () { return stateAction('create_range', { revision_reason: 'both_to_30' }); })
-      .catch(function () {});
+      .catch(function () { fail('That revised setup did not save. Your current range remains available. Try again.'); });
   });
   main.querySelector('[data-alt-50]').addEventListener('click', function () {
     WALK.confirm(t, { pricing_basis: '50', revision_reason: 'return_to_50' })
       .then(function () { return stateAction('create_range', { revision_reason: 'return_to_50' }); })
-      .catch(function () {});
+      .catch(function () { fail('That revised setup did not save. Your current range remains available. Try again.'); });
   });
   main.querySelector('[data-alt-distance]').addEventListener('click', function () {
     options.classList.add('hidden');
@@ -702,7 +698,7 @@
   main.querySelector('[data-alt-cord]').addEventListener('click', function () {
     WALK.confirm(t, { cord_included: false, revision_reason: 'cord_removed' })
       .then(function () { return stateAction('create_range', { revision_reason: 'cord_removed' }); })
-      .catch(function () {});
+      .catch(function () { fail('That cord choice did not save. Your current range remains available. Try again.'); });
   });
   restoreCord.addEventListener('click', function () {
     restoreCord.disabled = true;
@@ -710,34 +706,10 @@
       .then(function () { return stateAction('create_range', { revision_reason: 'cord_restored' }); })
       .catch(function () { restoreCord.disabled = false; });
   });
-  restoreDistance.addEventListener('click', function () {
-    restoreDistance.disabled = true;
-    WALK.confirm(t, {
-      distance_band: v2().original_distance_band,
-      revision_reason: 'distance_restored'
-    }).then(function () {
-      return stateAction('create_range', { revision_reason: 'distance_restored' });
-    })
-      .catch(function () { restoreDistance.disabled = false; });
-  });
   main.querySelector('[data-no-alternative]').addEventListener('click', function () {
     WALK.confirm(t, { not_fit_status: 'closed' })
       .then(refresh)
       .catch(function () { fail('That choice did not save. Your current range remains available. Try again.'); });
-  });
-  resumeRange.addEventListener('click', function () {
-    var observed = Array.isArray(v2().observed_connections) ? v2().observed_connections : [];
-    if (!observed.length) {
-      fail('Your saved generator connection could not be loaded. Return to the connection question and choose it again.');
-      return;
-    }
-    resumeRange.disabled = true;
-    WALK.confirm(t, { observed_connections: observed })
-      .then(function () { return stateAction('create_range', { revision_reason: 'initial' }); })
-      .catch(function () {
-        resumeRange.disabled = false;
-        fail('Your project range did not reopen. Your saved answers are still available. Try again.');
-      });
   });
   main.querySelector('[data-distance-options]').addEventListener('click', function (event) {
     var button = event.target.closest('[data-distance]');
@@ -753,7 +725,7 @@
     WALK.confirm(t, { distance_band: selectedDistance, revision_reason: 'shorter_distance' })
       .then(function () { return stateAction('create_range', { revision_reason: 'shorter_distance' }); })
       .then(function () { revision.classList.add('hidden'); selectedDistance = null; })
-      .catch(function () {});
+      .catch(function () { fail('That shorter path did not save. Your current range remains available. Try again.'); });
   });
   main.querySelector('[data-cancel-distance]').addEventListener('click', function () {
     revision.classList.add('hidden');
@@ -762,9 +734,7 @@
   });
   WALK.ph('walk_v2_screen_view', { screen: 'range' });
   ensureRange().catch(function (cause) {
-    if (String(cause && cause.message) !== 'readiness_incomplete') {
-      fail('Your current range could not be loaded. Your saved answers are still available.');
-    }
+    if (String(cause && cause.message) !== 'readiness_incomplete') fail('Your current range could not be loaded. Try again.');
   });
 })();
 </script>

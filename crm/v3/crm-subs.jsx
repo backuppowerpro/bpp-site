@@ -181,26 +181,43 @@ function SubsButton({ asHost = false } = {}) {
   };
 
   const markPaid = async (payoutId, method) => {
-    if (!CRM.__db) return;
+    if (!CRM.__invokeFn) return;
     // One tap to mark a payout paid (tap-audit #9): no blocking window.prompt
     // for an optional reference, picking the method IS the action. The
     // paid_reference is captured separately + optionally via saveReference()
     // (the inline edit affordance on a paid row below), reusing this file's
     // existing input/button controls, so it needs no fresh Claude Design comp.
-    const { error } = await CRM.__db.from('sub_payouts')
-      .update({ paid_at: new Date().toISOString(), paid_method: method })
-      .eq('id', payoutId);
-    if (error) { window.showToast?.(`Mark-paid failed: ${error.message}`); return; }
+    const semantic = `mark:${payoutId}:${method}`;
+    const storageKey = `bpp-sub-payout:${semantic}`;
+    let key = localStorage.getItem(storageKey);
+    if (!key) { key = crypto.randomUUID(); localStorage.setItem(storageKey, key); }
+    const { data, error } = await CRM.__invokeFn('sub-upsert', { body: {
+      action:'mark_payout_paid', payout_id:payoutId, method, idempotency_key:key,
+    } });
+    if (error || !data?.ok) { window.showToast?.(`Mark-paid failed: ${error?.message || data?.error || 'unknown'}`); return; }
+    localStorage.removeItem(storageKey);
     window.showToast?.('Marked paid');
     refresh();
   };
 
   const unmarkPaid = async (payoutId) => {
-    if (!CRM.__db) return;
-    const { error } = await CRM.__db.from('sub_payouts')
-      .update({ paid_at: null, paid_method: null, paid_reference: null })
-      .eq('id', payoutId);
-    if (error) { window.showToast?.(`Undo failed: ${error.message}`); return; }
+    if (!CRM.__invokeFn) return;
+    const ok = await window.confirmAction?.({
+      title:'Reopen this payout?',
+      body:'Use this only to correct a payout that was marked paid by mistake. The audit history stays intact.',
+      confirmLabel:'Reopen payout', destructive:true,
+    });
+    if (!ok) return;
+    const semantic = `reopen:${payoutId}`;
+    const storageKey = `bpp-sub-payout:${semantic}`;
+    let key = localStorage.getItem(storageKey);
+    if (!key) { key = crypto.randomUUID(); localStorage.setItem(storageKey, key); }
+    const { data, error } = await CRM.__invokeFn('sub-upsert', { body: {
+      action:'reopen_payout', payout_id:payoutId,
+      reason:'Operator corrected payout paid status', idempotency_key:key,
+    } });
+    if (error || !data?.ok) { window.showToast?.(`Reopen failed: ${error?.message || data?.error || 'unknown'}`); return; }
+    localStorage.removeItem(storageKey);
     window.showToast?.('Marked unpaid');
     refresh();
   };
@@ -210,12 +227,18 @@ function SubsButton({ asHost = false } = {}) {
   // uncontrolled input by ref (only one row edits at a time, keyed by
   // refEditId), so a sub_payouts realtime refresh mid-edit cannot blur it.
   const saveReference = async (payoutId) => {
-    if (!CRM.__db) return;
+    if (!CRM.__invokeFn) return;
     const val = (refInputRef.current?.value || '').trim().slice(0, 120);
-    const { error } = await CRM.__db.from('sub_payouts')
-      .update({ paid_reference: val || null })
-      .eq('id', payoutId);
-    if (error) { window.showToast?.(`Save failed: ${error.message}`); return; }
+    const semantic = `reference:${payoutId}:${val}`;
+    const storageKey = `bpp-sub-payout:${semantic}`;
+    let key = localStorage.getItem(storageKey);
+    if (!key) { key = crypto.randomUUID(); localStorage.setItem(storageKey, key); }
+    const { data, error } = await CRM.__invokeFn('sub-upsert', { body: {
+      action:'update_payout_reference', payout_id:payoutId,
+      reference:val || null, idempotency_key:key,
+    } });
+    if (error || !data?.ok) { window.showToast?.(`Save failed: ${error?.message || data?.error || 'unknown'}`); return; }
+    localStorage.removeItem(storageKey);
     window.showToast?.(val ? 'Reference saved' : 'Reference cleared');
     setRefEditId(null);
     refresh();

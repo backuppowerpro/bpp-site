@@ -20,6 +20,8 @@
 
 (function () {
   const V = (window.BPPVoice = window.BPPVoice || {});
+  const BROWSER_OUTBOUND_CALLS_RELEASED = false;
+  V.outboundReleased = BROWSER_OUTBOUND_CALLS_RELEASED;
   let device = null;
   let activeCall = null;
   let registerPromise = null;
@@ -253,7 +255,9 @@
   };
 
   async function fetchToken() {
-    const r = await window.CRM.__invokeFn('twilio-token', {});
+    const r = await window.CRM.__invokeFn('twilio-token', {
+      action: 'register_browser_inbound',
+    });
     const tok = r?.token || r?.data?.token;
     if (!tok) throw new Error('no token in twilio-token response');
     return tok;
@@ -348,7 +352,7 @@
         device = d;
         return d;
       } catch (e) {
-        console.warn('[bpp-voice] ensureDevice failed (tel: fallback stays available):', e.message);
+        console.warn('[bpp-voice] inbound device registration failed:', e.message);
         // Release the half-built Device so a later retry starts clean.
         try { d?.destroy?.(); } catch (_) { /* already dead */ }
         device = null;
@@ -363,6 +367,10 @@
   // Place an outbound browser call. Returns true if the browser leg started,
   // false if the caller should fall back to tel:. DNC is gated by the caller.
   V.call = async function (e164, label) {
+    if (!BROWSER_OUTBOUND_CALLS_RELEASED) {
+      window.showToast?.('Calling is not released yet.');
+      return false;
+    }
     // Second-call guard (audit 2026-06-10): placing a call while one is live
     // crossed the shared HUD/activeCall state. Return true (handled), NOT
     // false: false sends the caller to the tel: fallback, which would place

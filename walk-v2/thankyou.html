@@ -1,16 +1,18 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="no-js">
 <head>
 <meta name="referrer" content="strict-origin-when-cross-origin">
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-5V0i3duCeK56PWKnEGRixbV+nARhJewv2lZ3TGm4piw='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-vJTGL1d96TSIuABuUIQ8TUdUz5v/h9tVLGK35mlVJQ0='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
-<script src="/walk-v2/token-bootstrap.js"></script>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-ZXU70hPTo8KpJ4rlHHrurC/zWIwLOiNjIRM9BSa6NiU='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-vJTGL1d96TSIuABuUIQ8TUdUz5v/h9tVLGK35mlVJQ0='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<script src="/walk-v2/token-bootstrap.js?v=20260815-bearer"></script>
+<script src="/walk-v2/no-js-bootstrap.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
 <title>Backup Power Pro · Thank You</title>
 <link rel="icon" href="/favicon.png" type="image/png" />
 <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.jpg" />
 <meta name="theme-color" content="#0b1f3b" />
+<link rel="stylesheet" href="/walk-v2/no-js-recovery.css" />
 <style>
   :root {
     --navy: #0b1f3b;
@@ -587,9 +589,10 @@
     .state-label { display: none; }
   }
 </style>
-<link rel="stylesheet" href="/walk-v2/mobile-canvas.css?v=20260823-smooth-loading" />
+<link rel="stylesheet" href="/walk-v2/mobile-canvas.css?v=b2000f10529a" />
 </head>
 <body>
+<div class="qw-no-js-note qw-script-recovery" role="alert">JavaScript is required to load the current Quote Walk result. Your saved answers remain on file. Turn it on and reload, or call <a href="tel:+18648637800">(864) 863-7800</a>.</div>
 <div class="stack" id="stack">
 
   <!-- ============ MAIN PAGE (mobile, interactive) ============ -->
@@ -597,9 +600,9 @@
 
     <!-- 1. site header -->
     <header class="site-head">
-      <span class="lockup" aria-label="Backup Power Pro">
+      <a class="lockup" href="https://backuppowerpro.com" aria-label="Backup Power Pro" style="text-decoration:none;">
         <img src="/assets/images/logo-white-v2.png" alt="Backup Power Pro" style="height:28px;display:block;width:auto;" />
-      </span>
+      </a>
     </header>
 
     <section class="qw-template-hero qw-final-hero">
@@ -659,7 +662,7 @@
 
 </div>
 
-<script src="/walk-v2/walk.js?v=20260823-smooth-loading"></script>
+<script src="/walk-v2/walk.js?v=acd71b9339d0"></script>
 <script>
 
 (function () {
@@ -801,7 +804,12 @@
       WALK.ph('walk_v2_price_shown', { state: 'working', has_range: false });
     }
 
-  }).catch(function () { /* a read failure must NOT bounce them off the thank-you page; keep the honest no-number state */ if (kick) kick.textContent = 'Your quote'; num.style.display = 'none'; hideFollow(); line.textContent = 'Your setup is saved. The current range could not be loaded.'; });
+  }).catch(function (cause) {
+    if (kick) kick.textContent = 'Quote Walk not confirmed';
+    num.style.display = 'none';
+    hideFollow();
+    WALK.renderRecovery(line, cause);
+  });
 
   /* scroll reveal (comp behavior, unchanged) */
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;

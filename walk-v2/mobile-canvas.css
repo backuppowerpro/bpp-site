@@ -3,99 +3,6 @@
   Keep every Quote Walk page at the same compact mobile-first width on desktop.
   Real phone viewports continue to fill the available screen.
 */
-
-/* Shared page loading and navigation transition. This reuses the established
-   BPP spinner and calm reveal so saved state and first-view images settle behind
-   one short loading layer instead of assembling in front of the customer. */
-body::before,
-body::after {
-  position: fixed;
-  z-index: 2147483000;
-  pointer-events: none;
-  content: "";
-}
-
-body::before {
-  inset: 0;
-  background: #fafbfc;
-  opacity: 1;
-  visibility: visible;
-  transition: opacity 140ms ease, visibility 140ms ease;
-  animation: qw-loader-failsafe 0s linear 4s forwards;
-}
-
-body::after {
-  top: 50%;
-  left: 50%;
-  width: 34px;
-  height: 34px;
-  margin: -17px 0 0 -17px;
-  border: 4px solid rgba(11,31,59,.13);
-  border-top-color: #ffba00;
-  border-radius: 50%;
-  opacity: 1;
-  visibility: visible;
-  animation: qw-page-spinner 520ms linear infinite, qw-loader-failsafe 0s linear 4s forwards;
-}
-
-html.qw-ready body::before,
-html.qw-ready body::after {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  animation: none;
-}
-
-html.qw-ready .page .rv {
-  opacity: 1 !important;
-  transform: none !important;
-  transition: none !important;
-}
-
-html.qw-ready .page {
-  animation: qw-page-arrive 180ms ease-out both;
-}
-
-html.qw-leaving body::before,
-html.qw-leaving body::after {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-  animation: none;
-}
-
-html.qw-leaving body::after {
-  animation: qw-page-spinner 520ms linear infinite;
-}
-
-html.qw-leaving .page {
-  opacity: .86;
-  transition: opacity 110ms ease;
-}
-
-@keyframes qw-page-spinner { to { transform: rotate(360deg); } }
-@keyframes qw-page-arrive {
-  from { opacity: .72; }
-  to { opacity: 1; }
-}
-@keyframes qw-loader-failsafe {
-  to { opacity: 0; visibility: hidden; pointer-events: none; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  body::before,
-  html.qw-ready .page,
-  html.qw-leaving .page {
-    transition: none !important;
-    animation: none !important;
-  }
-
-  body::after,
-  html.qw-leaving body::after {
-    animation: qw-loader-failsafe 0s linear 4s forwards;
-  }
-}
-
 @media (min-width: 480px) {
   .stack {
     width: 100% !important;
@@ -519,7 +426,7 @@ html.qw-template-document-root {
 
 .accepted-phone-error {
   margin: 0 !important;
-  color: var(--red, #b42318) !important;
+  color: #fecaca !important;
   font-size: 12px !important;
   line-height: 1.4 !important;
 }
@@ -607,12 +514,12 @@ html.qw-template-document-root {
 .qw-range-page .proof-slide--image .proof-copy {
   position: absolute !important;
   inset: auto 0 0 !important;
-  min-height: 92px !important;
+  min-height: 52px !important;
   margin: 0 !important;
-  padding: 42px 16px 13px !important;
+  padding: 17px 16px 13px !important;
   align-items: flex-end !important;
   color: #fff !important;
-  background: linear-gradient(180deg, rgba(7,23,45,0) 0%, rgba(7,23,45,.12) 28%, rgba(7,23,45,.84) 72%, rgba(7,23,45,.96) 100%) !important;
+  background: linear-gradient(180deg, transparent, rgba(7,23,45,.9)) !important;
   font-family: var(--head) !important;
   font-size: 15px !important;
   font-weight: 700 !important;
@@ -1210,24 +1117,6 @@ html.qw-template-document-root {
   outline-offset: 1px !important;
 }
 
-/* Every Quote Walk control acknowledges a tap immediately. The brief hold
-   stays visible while a save or the next page begins loading. */
-.page button.qw-tap-feedback,
-.page [role="button"].qw-tap-feedback {
-  transform: scale(.98) !important;
-  filter: brightness(.9) !important;
-  box-shadow: inset 0 0 0 3px rgba(11,31,59,.16) !important;
-  transition: transform 70ms ease, filter 70ms ease, box-shadow 70ms ease !important;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .page button.qw-tap-feedback,
-  .page [role="button"].qw-tap-feedback {
-    transform: none !important;
-    transition: none !important;
-  }
-}
-
 .page .foot {
   margin-top: 18px !important;
   padding: 22px 24px 28px !important;
@@ -1390,9 +1279,8 @@ body.qw-template-document .page > .foot {
   display: contents;
 }
 
-/* Desktop Quote Walk shell. The opening and final payoff pages use their
-   approved wide compositions. The four guided question pages preserve the
-   same single-column reading order as mobile inside a wider centered canvas. */
+/* Desktop Quote Walk shell. The wide layout activates only when the approved
+   nested composition has enough room to read as two intentional columns. */
 @media (min-width: 1024px) {
   .stack {
     padding: 32px 24px 72px !important;
@@ -1422,25 +1310,30 @@ body.qw-template-document .page > .foot {
 
   .page[data-screen-label="Landing page (interactive, mobile)"] .intro-card {
     grid-area: intro;
-    display: flex;
+    display: flex !important;
     min-width: 0;
     height: 100%;
     flex-direction: column;
     border-radius: 22px;
-    background: linear-gradient(135deg, #17385f 0%, #0b1f3b 42%, #081a33 100%);
+    background: linear-gradient(135deg, #17385f 0%, #0b1f3b 42%, #081a33 100%) !important;
     overflow: hidden;
   }
 
   .page[data-screen-label="Landing page (interactive, mobile)"] .site-head {
     flex: 0 0 auto;
     padding: 0 42px !important;
-    background: transparent !important;
+    background: #0b1f3b !important;
   }
 
   .page[data-screen-label="Landing page (interactive, mobile)"] .hero {
     display: flex;
     min-width: 0;
     flex: 1 1 auto;
+    background: linear-gradient(135deg, #17385f 0%, #0b1f3b 42%, #081a33 100%) !important;
+  }
+
+  .page[data-screen-label="Landing page (interactive, mobile)"] .intro-card .site-head,
+  .page[data-screen-label="Landing page (interactive, mobile)"] .intro-card .hero {
     background: transparent !important;
   }
 
@@ -1514,7 +1407,7 @@ body.qw-template-document .page > .foot {
 
   .page[data-screen-label="Landing page (interactive, mobile)"] .proof-slide {
     flex-basis: calc((100% - 36px) / 3.18);
-    height: 230px;
+    height: 242px;
   }
 
   .page[data-screen-label="Landing page (interactive, mobile)"] .proof-review {
@@ -1677,39 +1570,6 @@ body.qw-template-document .page > .foot {
     grid-column: 2;
   }
 
-  .page[data-screen-label="Quote walk: generator connection"],
-  .page[data-screen-label="Quote walk step 1 (interactive, mobile)"],
-  .page[data-screen-label="Quote walk step 2 (interactive, mobile)"],
-  .page[data-screen-label="Quote walk step 3 (interactive, mobile)"] {
-    width: min(760px, calc(100vw - 64px)) !important;
-    max-width: 760px !important;
-  }
-
-  .page[data-screen-label="Quote walk: generator connection"] [data-question] {
-    display: block;
-  }
-
-  .page[data-screen-label="Quote walk step 1 (interactive, mobile)"] .col-main,
-  .page[data-screen-label="Quote walk step 3 (interactive, mobile)"] .col-main {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 22px;
-  }
-
-  .page[data-screen-label="Quote walk step 1 (interactive, mobile)"] .rooms {
-    grid-column: auto;
-    grid-row: auto;
-    align-self: stretch;
-  }
-
-  .page[data-screen-label="Quote walk step 2 (interactive, mobile)"] > .body {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 24px;
-  }
-
   .page[data-screen-label="Quote walk thank you (interactive, mobile)"] .col-main {
     display: grid !important;
     grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
@@ -1792,84 +1652,5 @@ body.qw-template-document .page > .foot {
     padding: 0 !important;
     background: transparent !important;
     box-shadow: none !important;
-  }
-}
-
-/* Pages without the outer .stack wrapper use the same desktop top breathing
-   room as the wrapped Quote Walk pages. Phones remain edge-to-edge. */
-@media (min-width: 480px) {
-  body > .page[data-screen-label] {
-    margin-top: 28px !important;
-  }
-}
-
-@media (min-width: 1024px) {
-  body > .page[data-screen-label] {
-    margin-top: 32px !important;
-  }
-}
-
-/* Key-selected closing-page pattern: the result, recovery, and confirmation
-   pages keep the same centered one-column reading order as the question pages. */
-@media (min-width: 1024px) {
-  .page[data-screen-label].qw-range-page,
-  .page[data-screen-label].qw-final-page,
-  .page[data-screen-label="Quote walk incomplete"] {
-    display: flex !important;
-    width: min(760px, calc(100vw - 64px)) !important;
-    max-width: 760px !important;
-  }
-
-  .page[data-screen-label].qw-range-page > .qw-range-hero,
-  .page[data-screen-label].qw-final-page > .qw-final-hero,
-  .page[data-screen-label].qw-range-page > #rangePage,
-  .page[data-screen-label].qw-final-page > .body-grid,
-  .page[data-screen-label].qw-range-page > .qw-range-proof-carousel {
-    width: 100% !important;
-    max-width: none !important;
-    height: auto !important;
-  }
-
-  .page[data-screen-label].qw-range-page > .qw-range-hero,
-  .page[data-screen-label].qw-final-page > .qw-final-hero {
-    min-height: 0 !important;
-    padding: 32px 34px !important;
-  }
-
-  .page[data-screen-label].qw-range-page > #rangePage,
-  .page[data-screen-label].qw-final-page > .body-grid {
-    display: block !important;
-    margin: 18px 0 0 !important;
-    padding: 30px !important;
-    border-radius: 20px;
-    background: #fff !important;
-    box-shadow: 0 8px 24px rgba(11,31,59,.07), inset 0 0 0 1px rgba(11,31,59,.07) !important;
-  }
-
-  .page[data-screen-label].qw-range-page > .qw-range-proof-carousel {
-    margin-top: 18px !important;
-  }
-
-  .page[data-screen-label].qw-range-page > .qw-range-proof-carousel .proof-track {
-    gap: 14px !important;
-    padding: 0 24px !important;
-    scroll-padding-inline: 24px !important;
-  }
-
-  .page[data-screen-label].qw-range-page > .qw-range-proof-carousel .proof-slide {
-    flex-basis: calc((100% - 28px) / 3) !important;
-    height: 210px !important;
-  }
-
-  .page[data-screen-label].qw-final-page > .body-grid .col-main,
-  .page[data-screen-label].qw-final-page > .body-grid .price {
-    height: auto !important;
-  }
-
-  .page[data-screen-label="Quote walk thank you (interactive, mobile)"] .col-main,
-  .page[data-screen-label="Quote walk incomplete"] .tasks {
-    display: flex !important;
-    flex-direction: column !important;
-    grid-template-columns: none !important;
   }
 }
