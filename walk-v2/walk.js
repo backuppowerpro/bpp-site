@@ -333,8 +333,8 @@
       });
     });
   }
-  function getJson(url, timeoutMs) {
-    return fetchWithTimeout(url, {}, timeoutMs || 12000).then(function (r) {
+  function getJson(url, timeoutMs, options) {
+    return fetchWithTimeout(url, options || {}, timeoutMs || 12000).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (body) {
         if (!r.ok) {
           var error = new Error(body && body.error || 'http_' + r.status);
@@ -851,7 +851,13 @@
         + '.json?access_token=' + MB + '&country=us&types=address&autocomplete=true&limit=10&proximity=-82.3940,34.8526';
       var startedAt = Date.now();
       var context = telemetry || {};
-      return getJson(url, timeoutMs || 8000)
+      return getJson(url, timeoutMs || 8000, {
+        /* The page keeps a no-referrer policy for customer privacy. Mapbox's
+           URL-restricted browser token still needs the BPP origin to authorize
+           this one provider request. Send only the origin, never the page path
+           or its query values. */
+        referrerPolicy: 'strict-origin-when-cross-origin'
+      })
         .then(function (d) { return (d.features || []).map(function (f) {
           /* pull structured city/state/zip from the Mapbox feature context so the
              contact + pre_read carry them (the every-detail rule), not just the
