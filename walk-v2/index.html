@@ -13,7 +13,7 @@
 
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://connect.facebook.net 'sha256-TSf9hPr43r9T9eJr1YlgW7NyDImqpOyAsfxnE3OQYwY=' 'sha256-w8HCc5pLnyEUBsQK1Ps0LrOL+NOHDQSgash7Zyno/4w=' 'sha256-oIOzguwV/UNcO25F83fzXoJ7a/mqUaDwmR33tWB/dJg='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-BuvqUh7iB0AoDfKg/8gV96gGldTNPPeIA/fLsxb6ADs='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://www.facebook.com; connect-src 'self' https://api.mapbox.com https://reowtzedjflwmlptupbk.supabase.co https://www.facebook.com; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://connect.facebook.net 'sha256-TSf9hPr43r9T9eJr1YlgW7NyDImqpOyAsfxnE3OQYwY=' 'sha256-w8HCc5pLnyEUBsQK1Ps0LrOL+NOHDQSgash7Zyno/4w=' 'sha256-EDQAa/LJB4JRXtTicuwiSqVbyBt19P8HjmHM9S4w1k4='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-BuvqUh7iB0AoDfKg/8gV96gGldTNPPeIA/fLsxb6ADs='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://www.facebook.com; connect-src 'self' https://api.mapbox.com https://reowtzedjflwmlptupbk.supabase.co https://www.facebook.com; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script src="/assets/js/bpp-analytics.js?v=20260825-scope3"></script>
 <script src="/walk-v2/token-bootstrap.js?v=29a627571994"></script>
 <script src="/walk-v2/meta-pixel.js?v=d618134d2b83"></script>
@@ -1518,7 +1518,7 @@
 
   /* Address auto-suggest via the server-side Places proxy. Debounced; a pick
      fills the field. The field still works as a plain input if Google is down. */
-  var addrTimer = null, addrPicked = false, addrSel = { city: '', state: '', zip: '' }, lastAddrPreds = [];
+  var addrTimer = null, addrLookupSequence = 0, addrPicked = false, addrSel = { city: '', state: '', zip: '' }, lastAddrPreds = [];
   var lastAddressInputMethod = 'unknown';
   var lastAddressLookupTrigger = 'unknown';
   /* Soft-block (Key 2026-07-21): the Next gate requires a VALIDATED address, a real
@@ -1565,11 +1565,15 @@
     drop.classList.add('open');
     requestAnimationFrame(fitDropToViewport);
   }
-  function suggest(trigger) {
+  function invalidateAddressEdit() {
     if (addrPicked) { addrPicked = false; return; }
     addrSel = { city: '', state: '', zip: '' }; // editing after a pick invalidates the structured parts
     addrValidated = false; addrUnverified = false; // and re-locks Next until a fresh pick
+  }
+  function suggest(trigger) {
+    invalidateAddressEdit();
     var q = addrIn.value.trim();
+    var lookupSequence = ++addrLookupSequence;
     lastAddressLookupTrigger = trigger || 'unknown';
     if (addrTimer) clearTimeout(addrTimer);
     if (q.length < 3) { closeDrop(); return; }
@@ -1577,7 +1581,10 @@
       WALK.addrSuggest(q, 8000, {
         input_method: lastAddressInputMethod,
         trigger: lastAddressLookupTrigger
-      }).then(renderDrop);
+      }).then(function (predictions) {
+        if (lookupSequence !== addrLookupSequence || addrIn.value.trim() !== q) return;
+        renderDrop(predictions);
+      });
     }, 220);
   }
   drop.addEventListener('click', function (e) {
@@ -1618,10 +1625,18 @@
     });
     closeDrop(); refresh();
   });
-  addrIn.addEventListener('blur', function () { setTimeout(closeDrop, 150); });
+  addrIn.addEventListener('blur', function () {
+    syncBrowserFilledValues('blur');
+    setTimeout(closeDrop, 150);
+  });
   /* Re-open the list on focus when the address is typed but not yet validated, so
      "Pick your address from the list" is never a dead end with no visible list. */
-  addrIn.addEventListener('focus', function () { if (!addrOk() && addrIn.value.trim().length >= 3) suggest('focus'); });
+  addrIn.addEventListener('focus', function () {
+    setTimeout(function () {
+      syncBrowserFilledValues('focus');
+      if (!addrOk() && !addressLooksComplete() && addrIn.value.trim().length >= 3) suggest('focus');
+    }, 0);
+  });
   window.addEventListener('resize', fitDropToViewport);
   if (window.visualViewport) window.visualViewport.addEventListener('resize', fitDropToViewport);
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDrop(); });
@@ -1645,7 +1660,7 @@
   function addrOk() { return addrValidated && addrIn.value.trim() === addrValidatedValue; }
   function addressLooksComplete() {
     var value = addrIn.value.trim();
-    return value.length >= 8 && /^\d+[A-Za-z]?\s+\S.{2,}/.test(value);
+    return value.length >= 8 && /^\d+[A-Za-z]?(?:-[A-Za-z0-9]+)?\s+\S.{2,}/.test(value);
   }
   function addrLooksReady() {
     return addrOk() || addressLooksComplete();
@@ -1711,33 +1726,80 @@
       return lead + letter.toUpperCase();
     });
   }
-  nameIn.addEventListener('input', function () {
-    var cursor = nameIn.selectionStart;
-    var capitalized = capitalizeName(nameIn.value);
-    if (capitalized !== nameIn.value) {
+  var lastSyncedName = '';
+  var lastSyncedPhone = '';
+  var lastSyncedAddress = '';
+  function inputMethod(event) {
+    if (event && event.inputType === 'insertFromPaste') return 'paste';
+    if (event && event.inputType && event.inputType !== 'insertReplacementText') return 'typed';
+    return 'autofill_or_unknown';
+  }
+  /* Browsers do not agree on how saved-contact autofill is announced. Chrome usually
+     fires input, Safari may fire change, and password/contact helpers can update a value
+     just before focus, blur, pageshow, or an autofill animation. Read the actual values
+     at each of those safe points so a visibly complete form never leaves Continue stale. */
+  function syncBrowserFilledValues(trigger, event) {
+    var rawName = nameIn.value;
+    var rawPhone = phoneIn.value;
+    var rawAddress = addrIn.value;
+    var changed = rawName !== lastSyncedName || rawPhone !== lastSyncedPhone || rawAddress !== lastSyncedAddress;
+
+    var nameCursor = document.activeElement === nameIn ? nameIn.selectionStart : null;
+    var capitalized = capitalizeName(rawName);
+    if (capitalized !== rawName) {
       nameIn.value = capitalized;
-      if (cursor !== null) nameIn.setSelectionRange(cursor, cursor);
+      if (nameCursor !== null) nameIn.setSelectionRange(nameCursor, nameCursor);
     }
-    once('walk_v2_form_started');
-    refresh();
-  });
-  phoneIn.addEventListener('input', function () {
-    once('walk_v2_form_started');
-    phoneIn.value = formatPhone(phoneIn.value);
+    var formattedPhone = formatPhone(rawPhone);
+    if (formattedPhone !== rawPhone) phoneIn.value = formattedPhone;
     if (phoneValid(phoneIn.value)) phoneField.classList.remove('has-error');
-    refresh();
+
+    var addressChanged = rawAddress !== lastSyncedAddress;
+    if (addressChanged) {
+      lastAddressInputMethod = trigger === 'input' ? inputMethod(event) : 'autofill_or_unknown';
+      if (trigger === 'input' || !addressLooksComplete()) suggest(trigger === 'input' ? 'typing' : 'browser_autofill');
+      else { invalidateAddressEdit(); closeDrop(); }
+    }
+
+    lastSyncedName = nameIn.value;
+    lastSyncedPhone = phoneIn.value;
+    lastSyncedAddress = addrIn.value;
+    if (changed && (lastSyncedName.trim() || lastSyncedPhone.trim() || lastSyncedAddress.trim())) once('walk_v2_form_started');
+    if (changed) {
+      persistDraft();
+      refresh();
+    }
+  }
+  nameIn.addEventListener('input', function () {
+    syncBrowserFilledValues('input');
   });
+  nameIn.addEventListener('change', function () { syncBrowserFilledValues('change'); });
+  phoneIn.addEventListener('input', function () {
+    syncBrowserFilledValues('input');
+  });
+  phoneIn.addEventListener('change', function () { syncBrowserFilledValues('change'); });
   phoneIn.addEventListener('blur', function () {
+    syncBrowserFilledValues('blur');
     if (phoneIn.value.trim() && !phoneValid(phoneIn.value)) phoneField.classList.add('has-error');
     refresh();
   });
   addrIn.addEventListener('input', function (event) {
-    once('walk_v2_form_started');
-    if (event.inputType === 'insertFromPaste') lastAddressInputMethod = 'paste';
-    else if (event.inputType === 'insertReplacementText' || !event.inputType) lastAddressInputMethod = 'autofill_or_unknown';
-    else lastAddressInputMethod = 'typed';
-    suggest('typing');
-    refresh();
+    syncBrowserFilledValues('input', event);
+  });
+  addrIn.addEventListener('change', function (event) { syncBrowserFilledValues('change', event); });
+  main.querySelector('form').addEventListener('focusin', function () {
+    setTimeout(function () { syncBrowserFilledValues('focusin'); }, 0);
+    setTimeout(function () { syncBrowserFilledValues('focusin_delayed'); }, 250);
+  });
+  main.querySelector('form').addEventListener('animationstart', function (event) {
+    if (event.target && event.target.matches && event.target.matches('input')) syncBrowserFilledValues('autofill_animation');
+  }, true);
+  window.addEventListener('pageshow', function () { syncBrowserFilledValues('pageshow'); });
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) syncBrowserFilledValues('visibility');
+  });
+  [0, 100, 350, 1000].forEach(function (delay) {
+    setTimeout(function () { syncBrowserFilledValues('initial_probe'); }, delay);
   });
   if (emailIn) emailIn.addEventListener('input', refreshAreaCapture);
 
