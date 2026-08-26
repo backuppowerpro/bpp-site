@@ -1,4 +1,9 @@
 /*
+  BPP-ROLE: CANONICAL-SOURCE
+  BPP-LIVE-URL: https://backuppowerpro.com/walk-v2/mobile-canvas.css
+  BPP-DEPLOYMENT: PENDING-PUBLICATION
+  BPP-LAST-VERIFIED: 2026-08-25
+
   Accepted customer canvas.
   Keep every Quote Walk page at the same compact mobile-first width on desktop.
   Real phone viewports continue to fill the available screen.
@@ -1406,8 +1411,9 @@ body.qw-template-document .page > .foot {
   }
 
   .page[data-screen-label="Landing page (interactive, mobile)"] .proof-slide {
-    flex-basis: calc((100% - 36px) / 3.18);
-    height: 242px;
+    flex-basis: calc((100% - 18px) / 2.18);
+    height: 230px;
+    scroll-snap-align: none;
   }
 
   .page[data-screen-label="Landing page (interactive, mobile)"] .proof-review {
