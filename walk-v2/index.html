@@ -13,7 +13,7 @@
 
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://connect.facebook.net 'sha256-TSf9hPr43r9T9eJr1YlgW7NyDImqpOyAsfxnE3OQYwY=' 'sha256-w8HCc5pLnyEUBsQK1Ps0LrOL+NOHDQSgash7Zyno/4w=' 'sha256-chrSJDo7eEesgI0xoQ2xao3ZMOfuHBm8MLCKC7fgNEY=' 'sha256-JYHK/Lg3IJISL7BS/FqZBAyD+jtRRtpbzJCiR8ezOuw='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-H+JbNkpdjYqb6G4/gPteqrHrXunHg9PyI7zv8fBsuk0='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://www.facebook.com; connect-src 'self' https://api.mapbox.com https://reowtzedjflwmlptupbk.supabase.co https://www.facebook.com; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://connect.facebook.net 'sha256-TSf9hPr43r9T9eJr1YlgW7NyDImqpOyAsfxnE3OQYwY=' 'sha256-w8HCc5pLnyEUBsQK1Ps0LrOL+NOHDQSgash7Zyno/4w=' 'sha256-chrSJDo7eEesgI0xoQ2xao3ZMOfuHBm8MLCKC7fgNEY=' 'sha256-BsLNwTf3PeI8ll6eEVrxblgX8HglUi/udahtIWxbDPU='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-H+JbNkpdjYqb6G4/gPteqrHrXunHg9PyI7zv8fBsuk0='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://www.facebook.com; connect-src 'self' https://api.mapbox.com https://reowtzedjflwmlptupbk.supabase.co https://www.facebook.com; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script src="/assets/js/bpp-analytics.js?v=22552c327759"></script>
 <script src="/walk-v2/token-bootstrap.js?v=29a627571994"></script>
 <script src="/walk-v2/meta-pixel.js?v=d618134d2b83"></script>
@@ -1618,7 +1618,7 @@
       .replace(/[\r\n\t|;]+/g, ', ')
       .replace(/\s*,\s*/g, ', ')
       .replace(/(?:,\s*){2,}/g, ', ')
-      .replace(/^(?:home|work|shipping|billing|address)\s*(?:(?:[:=,-]\s*)|(?=\d))/i, '')
+      .replace(/^(?:(?:home|work|shipping|billing|mailing|delivery|residential|residence|primary|current|street|contact|other)(?:\s*address)?|my\s*address|address(?:\s*line\s*[12])?)\s*(?:(?:[:=,-]\s*)|(?=\d))/i, '')
       .replace(/^,\s*|,\s*$/g, '')
       .trim();
     return normalizeBrowserStreetAddress(cleaned);
