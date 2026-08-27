@@ -13,7 +13,7 @@
 
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://connect.facebook.net 'sha256-TSf9hPr43r9T9eJr1YlgW7NyDImqpOyAsfxnE3OQYwY=' 'sha256-w8HCc5pLnyEUBsQK1Ps0LrOL+NOHDQSgash7Zyno/4w=' 'sha256-9W1CmeezO+PVl76GOsnwlQgYqpjwKomvKm3MYMujR8Q='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-BuvqUh7iB0AoDfKg/8gV96gGldTNPPeIA/fLsxb6ADs='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://www.facebook.com; connect-src 'self' https://api.mapbox.com https://reowtzedjflwmlptupbk.supabase.co https://www.facebook.com; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://connect.facebook.net 'sha256-TSf9hPr43r9T9eJr1YlgW7NyDImqpOyAsfxnE3OQYwY=' 'sha256-w8HCc5pLnyEUBsQK1Ps0LrOL+NOHDQSgash7Zyno/4w=' 'sha256-6fqI2V5pmfxwbYYDRPDk+TIqr4AT+BMf19BDv4SGA5Y='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-BuvqUh7iB0AoDfKg/8gV96gGldTNPPeIA/fLsxb6ADs='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://www.facebook.com; connect-src 'self' https://api.mapbox.com https://reowtzedjflwmlptupbk.supabase.co https://www.facebook.com; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script src="/assets/js/bpp-analytics.js?v=20260825-scope3"></script>
 <script src="/walk-v2/token-bootstrap.js?v=29a627571994"></script>
 <script src="/walk-v2/meta-pixel.js?v=d618134d2b83"></script>
@@ -1320,7 +1320,7 @@
               Turn on JavaScript, then reload this page to start your quote.
             </div>
           </noscript>
-          <form autocomplete="off">
+          <form autocomplete="on">
             <div class="fields">
               <div class="field">
                 <label for="fName">Name</label>
@@ -1333,7 +1333,7 @@
               </div>
               <div class="field" data-addr-field="">
                 <label for="fAddr">Home address</label>
-                <input id="fAddr" name="address" type="text" inputmode="text" autocomplete="off" placeholder="Start typing your address" data-f="addr" />
+                <input id="fAddr" name="address" type="text" inputmode="text" autocomplete="address-line1" placeholder="Start typing your address" data-f="addr" />
                 <div class="addr-drop" data-addr-drop=""></div>
               </div>
               <div class="field" data-email-field="" hidden>
@@ -1570,6 +1570,90 @@
     addrSel = { city: '', state: '', zip: '' }; // editing after a pick invalidates the structured parts
     addrValidated = false; addrUnverified = false; // and re-locks Next until a fresh pick
   }
+  function canonicalStreetLine(value) {
+    return String(value || '').split(',')[0].toLowerCase()
+      .replace(/[^a-z0-9-]+/g, ' ')
+      .replace(/\b(north|n)\b/g, 'n')
+      .replace(/\b(south|s)\b/g, 's')
+      .replace(/\b(east|e)\b/g, 'e')
+      .replace(/\b(west|w)\b/g, 'w')
+      .replace(/\b(northeast|ne)\b/g, 'ne')
+      .replace(/\b(northwest|nw)\b/g, 'nw')
+      .replace(/\b(southeast|se)\b/g, 'se')
+      .replace(/\b(southwest|sw)\b/g, 'sw')
+      .replace(/\b(street|st)\b/g, 'st')
+      .replace(/\b(road|rd)\b/g, 'rd')
+      .replace(/\b(avenue|ave)\b/g, 'ave')
+      .replace(/\b(court|ct)\b/g, 'ct')
+      .replace(/\b(lane|ln)\b/g, 'ln')
+      .replace(/\b(drive|dr)\b/g, 'dr')
+      .replace(/\b(circle|cir)\b/g, 'cir')
+      .replace(/\b(boulevard|blvd)\b/g, 'blvd')
+      .replace(/\b(highway|hwy)\b/g, 'hwy')
+      .replace(/\b(place|pl)\b/g, 'pl')
+      .replace(/\b(parkway|pkwy)\b/g, 'pkwy')
+      .replace(/\b(terrace|ter)\b/g, 'ter')
+      .replace(/\s+/g, ' ').trim();
+  }
+  /* Chrome can concatenate multiple saved street lines into this one-line field.
+     Collapse only a repeated house-number pair whose two street names are equivalent,
+     so ordinary apartment, unit, rural-route, and hyphenated addresses stay untouched. */
+  function normalizeBrowserStreetAddress(value) {
+    var trimmed = String(value || '').replace(/\s+/g, ' ').trim();
+    var repeated = trimmed.match(/^(\d+[A-Za-z]?(?:-[A-Za-z0-9]+)?)\s+(.+?)\s+\1\s+(.+)$/i);
+    if (!repeated) return trimmed;
+    var first = repeated[1] + ' ' + repeated[2];
+    var second = repeated[1] + ' ' + repeated[3];
+    return canonicalStreetLine(first) === canonicalStreetLine(second) ? second : trimmed;
+  }
+  function matchingAutofillPrediction(query, predictions) {
+    if (lastAddressInputMethod !== 'autofill_or_unknown') return null;
+    var wanted = canonicalStreetLine(query);
+    if (!/^\d/.test(wanted)) return null;
+    var queryParts = String(query || '').split(',');
+    var localityTokens = queryParts.slice(1).join(' ').toLowerCase()
+      .replace(/[^a-z0-9-]+/g, ' ').trim().split(/\s+/).filter(Boolean)
+      .filter(function (token) { return ['us', 'usa', 'united', 'states'].indexOf(token) === -1; });
+    var matches = [];
+    for (var i = 0; i < (predictions || []).length; i++) {
+      if (canonicalStreetLine(predictions[i].description) === wanted) {
+        matches.push({ prediction: predictions[i], rank: i + 1 });
+      }
+    }
+    if (localityTokens.length) {
+      matches = matches.filter(function (entry) {
+        var prediction = entry.prediction || {};
+        var locationText = [
+          String(prediction.description || '').split(',').slice(1).join(' '),
+          prediction.city || '', prediction.state || '', prediction.zip || ''
+        ].join(' ').toLowerCase().replace(/[^a-z0-9-]+/g, ' ');
+        var predictionTokens = locationText.split(/\s+/).filter(Boolean);
+        return localityTokens.every(function (token) { return predictionTokens.indexOf(token) !== -1; });
+      });
+    }
+    return matches.length === 1 ? matches[0] : null;
+  }
+  function acceptAddressPrediction(match, selectedRank) {
+    if (!match) return;
+    var picked = String(match.description || '');
+    addrPicked = true;
+    addrIn.value = picked;
+    addrSel = { city: match.city || '', state: match.state || '', zip: match.zip || '' };
+    addrValidated = true; addrUnverified = false; addrValidatedValue = picked;
+    lastSyncedAddress = picked;
+    persistDraft();
+    var serviceAreaGroup = ['Greenville', 'Spartanburg', 'Pickens'].indexOf(match.county || '') !== -1
+      ? 'authorized'
+      : (String(match.state || '').toUpperCase() === 'SC'
+        ? 'other_sc'
+        : (match.state ? 'out_of_state' : 'unknown'));
+    WALK.ph('walk_v2_address_suggestion_selected', {
+      rank: selectedRank || 1,
+      service_area_group: serviceAreaGroup,
+      input_method: lastAddressInputMethod
+    });
+    closeDrop(); refresh();
+  }
   function suggest(trigger) {
     invalidateAddressEdit();
     var q = addrIn.value.trim();
@@ -1583,6 +1667,11 @@
         trigger: lastAddressLookupTrigger
       }).then(function (predictions) {
         if (lookupSequence !== addrLookupSequence || addrIn.value.trim() !== q) return;
+        var autofillMatch = matchingAutofillPrediction(q, predictions);
+        if (autofillMatch) {
+          acceptAddressPrediction(autofillMatch.prediction, autofillMatch.rank);
+          return;
+        }
         renderDrop(predictions);
       });
     }, 220);
@@ -1602,28 +1691,14 @@
       return;
     }
     var b = e.target.closest('[data-addr-pick]'); if (!b) return;
-    addrPicked = true;
     var picked = decodeURIComponent(b.getAttribute('data-addr-pick'));
-    addrIn.value = picked;
     /* copy the picked prediction's structured parts so the lead carries city/state/zip */
     var match = null;
     for (var mi = 0; mi < lastAddrPreds.length; mi++) {
       if (String(lastAddrPreds[mi].description) === picked) { match = lastAddrPreds[mi]; break; }
     }
-    if (match) addrSel = { city: match.city || '', state: match.state || '', zip: match.zip || '' };
-    addrValidated = true; addrUnverified = false; addrValidatedValue = picked;
     var selectedRank = Array.prototype.indexOf.call(drop.querySelectorAll('[data-addr-pick]'), b) + 1;
-    var serviceAreaGroup = match && ['Greenville', 'Spartanburg', 'Pickens'].indexOf(match.county || '') !== -1
-      ? 'authorized'
-      : (match && String(match.state || '').toUpperCase() === 'SC'
-        ? 'other_sc'
-        : (match && match.state ? 'out_of_state' : 'unknown'));
-    WALK.ph('walk_v2_address_suggestion_selected', {
-      rank: selectedRank || 1,
-      service_area_group: serviceAreaGroup,
-      input_method: lastAddressInputMethod
-    });
-    closeDrop(); refresh();
+    acceptAddressPrediction(match, selectedRank);
   });
   addrIn.addEventListener('blur', function () {
     syncBrowserFilledValues('blur');
@@ -1764,8 +1839,14 @@
     var addressChanged = rawAddress !== lastSyncedAddress;
     if (addressChanged) {
       lastAddressInputMethod = trigger === 'input' ? inputMethod(event) : 'autofill_or_unknown';
-      if (trigger === 'input' || !addressLooksComplete()) suggest(trigger === 'input' ? 'typing' : 'browser_autofill');
-      else { invalidateAddressEdit(); closeDrop(); }
+      if (lastAddressInputMethod === 'autofill_or_unknown') {
+        var normalizedAddress = normalizeBrowserStreetAddress(rawAddress);
+        if (normalizedAddress !== rawAddress) {
+          addrIn.value = normalizedAddress;
+          rawAddress = normalizedAddress;
+        }
+      }
+      suggest(trigger === 'input' ? 'typing' : 'browser_autofill');
     }
 
     lastSyncedName = nameIn.value;
