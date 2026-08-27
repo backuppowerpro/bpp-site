@@ -1729,8 +1729,8 @@
   function splitNameForTracking(value) {
     var parts = String(value || '').trim().split(/\s+/).filter(Boolean);
     return {
-      firstName: parts.shift() || '',
-      lastName: parts.join(' ')
+      firstName: parts[0] || '',
+      lastName: parts.length > 1 ? parts[parts.length - 1] : ''
     };
   }
   var lastSyncedName = '';
