@@ -160,6 +160,7 @@
         method: 'POST',
         mode: 'same-origin',
         credentials: 'omit',
+        referrerPolicy: 'no-referrer',
         keepalive: true,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

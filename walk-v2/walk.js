@@ -9,6 +9,7 @@
     || 'https://reowtzedjflwmlptupbk.supabase.co/functions/v1';
   var TOKEN_STORAGE_KEY = 'bpp:qwv2:bearer';
   var AUTHORIZED_SERVICE_COUNTIES = ['Greenville', 'Spartanburg', 'Pickens'];
+  var MAPBOX_PUBLIC_TOKEN = 'pk.eyJ1Ijoia2V5ZWxlY3RyaWN1cHN0YXRlIiwiYSI6ImNtcm8zZ3NkeTFodmgyeG9hY284Z3F4YXcifQ.3mLKvFGpDEdkjEMQNVQhmg';
 
   function setToken(value) {
     var next = /^[a-zA-Z0-9_-]{32,160}$/.test(String(value || '')) ? String(value) : '';
@@ -846,16 +847,14 @@
       }).map(function (entry) { return entry.feature; });
     },
     addrSuggest: function (q, timeoutMs, telemetry) {
-      var MB = 'pk.eyJ1Ijoia2V5ZWxlY3RyaWN1cHN0YXRlIiwiYSI6ImNtcm8zZ3NkeTFodmgyeG9hY284Z3F4YXcifQ.3mLKvFGpDEdkjEMQNVQhmg';
       var url = 'https://api.mapbox.com/geocoding/v5/mapbox.places/' + encodeURIComponent(q)
-        + '.json?access_token=' + MB + '&country=us&types=address&autocomplete=true&limit=10&proximity=-82.3940,34.8526';
+        + '.json?access_token=' + MAPBOX_PUBLIC_TOKEN + '&country=us&types=address&autocomplete=true&limit=10&proximity=-82.3940,34.8526';
       var startedAt = Date.now();
       var context = telemetry || {};
       return getJson(url, timeoutMs || 8000, {
-        /* The page keeps a no-referrer policy for customer privacy. Mapbox's
-           URL-restricted browser token still needs the BPP origin to authorize
-           this one provider request. Send only the origin, never the page path
-           or its query values. */
+        /* The URL-restricted browser token needs the BPP origin to authorize
+           this provider request. Send only the origin, never the page path or
+           its query values. */
         referrerPolicy: 'strict-origin-when-cross-origin'
       })
         .then(function (d) { return (d.features || []).map(function (f) {
