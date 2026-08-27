@@ -13,7 +13,7 @@
 
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://connect.facebook.net 'sha256-TSf9hPr43r9T9eJr1YlgW7NyDImqpOyAsfxnE3OQYwY=' 'sha256-w8HCc5pLnyEUBsQK1Ps0LrOL+NOHDQSgash7Zyno/4w=' 'sha256-EDQAa/LJB4JRXtTicuwiSqVbyBt19P8HjmHM9S4w1k4='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-BuvqUh7iB0AoDfKg/8gV96gGldTNPPeIA/fLsxb6ADs='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://www.facebook.com; connect-src 'self' https://api.mapbox.com https://reowtzedjflwmlptupbk.supabase.co https://www.facebook.com; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://connect.facebook.net 'sha256-TSf9hPr43r9T9eJr1YlgW7NyDImqpOyAsfxnE3OQYwY=' 'sha256-w8HCc5pLnyEUBsQK1Ps0LrOL+NOHDQSgash7Zyno/4w=' 'sha256-k45gvh3Z4kJL6TPjiM6LMSlyWqiW77xGgGWwRZ8Y0EY='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-BuvqUh7iB0AoDfKg/8gV96gGldTNPPeIA/fLsxb6ADs='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://www.facebook.com; connect-src 'self' https://api.mapbox.com https://reowtzedjflwmlptupbk.supabase.co https://www.facebook.com; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script src="/assets/js/bpp-analytics.js?v=20260825-scope3"></script>
 <script src="/walk-v2/token-bootstrap.js?v=29a627571994"></script>
 <script src="/walk-v2/meta-pixel.js?v=d618134d2b83"></script>
@@ -1726,6 +1726,13 @@
       return lead + letter.toUpperCase();
     });
   }
+  function splitNameForTracking(value) {
+    var parts = String(value || '').trim().split(/\s+/).filter(Boolean);
+    return {
+      firstName: parts.shift() || '',
+      lastName: parts.join(' ')
+    };
+  }
   var lastSyncedName = '';
   var lastSyncedPhone = '';
   var lastSyncedAddress = '';
@@ -1974,8 +1981,9 @@
       } catch (_) { /* leave state empty */ }
     }
 
+    var trackingName = splitNameForTracking(name);
     var payload = {
-      firstName: name, lastName: '', phone: natDigits(phoneIn.value), email: '',
+      firstName: trackingName.firstName, lastName: trackingName.lastName, phone: natDigits(phoneIn.value), email: '',
       existingToken: editDetails ? resumeT : '',
       address: addrIn.value.trim(), addressStreet: '', addressCity: addrSel.city || '', addressCounty: '', addressState: addrSel.state || '', addressZip: addrSel.zip || '', addressCountry: 'US', addressUnverified: addrUnverified ? 'true' : '',
       leadChannel: attr.channel, utmSource: attr.source, utmMedium: attr.medium, utmCampaign: attr.campaign,
