@@ -13,7 +13,7 @@
 
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://connect.facebook.net 'sha256-TSf9hPr43r9T9eJr1YlgW7NyDImqpOyAsfxnE3OQYwY=' 'sha256-w8HCc5pLnyEUBsQK1Ps0LrOL+NOHDQSgash7Zyno/4w=' 'sha256-jIh0agd+B8odz/1AY3I2eY8/EHINRPon3ZT7iNjtfxM='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-H+JbNkpdjYqb6G4/gPteqrHrXunHg9PyI7zv8fBsuk0='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://www.facebook.com; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co https://www.facebook.com; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://connect.facebook.net 'sha256-TSf9hPr43r9T9eJr1YlgW7NyDImqpOyAsfxnE3OQYwY=' 'sha256-w8HCc5pLnyEUBsQK1Ps0LrOL+NOHDQSgash7Zyno/4w=' 'sha256-9R6BjzMdYgSkD1CW+0vgMYjHXA+YJ7eXxz7/2OqFQk4='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-H+JbNkpdjYqb6G4/gPteqrHrXunHg9PyI7zv8fBsuk0='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://www.facebook.com; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co https://www.facebook.com; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script src="/assets/js/bpp-analytics.js?v=22552c327759"></script>
 <script src="/walk-v2/token-bootstrap.js?v=29a627571994"></script>
 <script src="/walk-v2/meta-pixel.js?v=d618134d2b83"></script>
@@ -1350,7 +1350,7 @@
 
             <!-- 5. submit row: consent is the tap on the gold button, never required -->
             <div class="submit-row">
-              <p data-unconfirmed-address="" aria-live="polite" style="display:none; font-size:14px; line-height:1.5; color:var(--gold-ink, #8a5a00); text-align:center; margin:0 0 12px; font-weight:600;">Your address is saved exactly as entered. I will verify it before starting the setup questions.</p>
+              <p data-unconfirmed-address="" aria-live="polite" style="display:none; font-size:14px; line-height:1.5; color:var(--gold-ink, #8a5a00); text-align:center; margin:0 0 12px; font-weight:600;">Your address is saved exactly as entered. I will verify it while you finish the setup questions.</p>
               <button class="cta" type="submit" data-cta="" disabled="">
                 <svg viewBox="0 0 16 16"><path d="M2.5 3.5h11a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H6.5l-3 2.4V11.5h-1a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1z"></path></svg>
                 <span data-cta-label="">Continue</span>
@@ -1526,12 +1526,6 @@
      structured geography, while the explicit escape still lets a real address
      continue if the provider cannot find it. */
   var addrTimer = null, addrLookupSequence = 0, addrPicked = false, addrSel = { city: '', state: '', zip: '' }, lastAddrPreds = [];
-  var pendingServiceAreaKey = 'bpp:qwv2:pending-service-area';
-  var pendingServiceAreaToken = '';
-  try {
-    pendingServiceAreaToken = sessionStorage.getItem(pendingServiceAreaKey) || '';
-    if (!/^[a-zA-Z0-9_-]{32,160}$/.test(pendingServiceAreaToken)) pendingServiceAreaToken = '';
-  } catch (_) {}
   var lastDropSignature = '', viewportFitTimer = null;
   var lastAddressInputMethod = 'unknown';
   var lastAddressLookupTrigger = 'unknown';
@@ -2167,7 +2161,7 @@
     var trackingName = splitNameForTracking(name);
     var payload = {
       firstName: trackingName.firstName, lastName: trackingName.lastName, phone: natDigits(phoneIn.value), email: '',
-      existingToken: editDetails ? resumeT : pendingServiceAreaToken,
+      existingToken: editDetails ? resumeT : '',
       address: addrIn.value.trim(), addressStreet: '', addressCity: addrSel.city || '', addressCounty: '', addressState: addrSel.state || '', addressZip: addrSel.zip || '', addressCountry: 'US', addressUnverified: addrUnverified ? 'true' : '',
       leadChannel: attr.channel, utmSource: attr.source, utmMedium: attr.medium, utmCampaign: attr.campaign,
       hasCompatibleGenerator: 'Unanswered - connection check pending',
@@ -2258,29 +2252,17 @@
     if (delivered && tokenOut && !savedAddressRefresh && window.BPPMeta) {
       window.BPPMeta.trackLead(eventId);
     }
-    if (delivered && tokenOut && serviceAreaStatus !== 'verified_in_area' && serviceAreaStatus !== 'verified_out_of_area') {
-      pendingServiceAreaToken = tokenOut;
-      try { sessionStorage.setItem(pendingServiceAreaKey, tokenOut); } catch (_) {}
-      delivered = false;
-      failureMessage = 'Your details are saved, but I could not verify this address yet. Tap the button to try the address check again.';
-    }
     if (delivered && tokenOut && serviceAreaStatus === 'verified_out_of_area') {
-      pendingServiceAreaToken = '';
-      try { sessionStorage.removeItem(pendingServiceAreaKey); } catch (_) {}
       persistDraft();
       WALK.go('index.html', tokenOut, { area: 'out' });
       return;
     }
     if (delivered && tokenOut && savedAddressRefresh && editDetails) {
-      pendingServiceAreaToken = '';
-      try { sessionStorage.removeItem(pendingServiceAreaKey); } catch (_) {}
       persistDraft();
       WALK.go('incomplete.html', tokenOut, { resume: '1' });
       return;
     }
     if (delivered && tokenOut) {
-      pendingServiceAreaToken = '';
-      try { sessionStorage.removeItem(pendingServiceAreaKey); } catch (_) {}
       persistDraft();
       WALK.go('connection.html', tokenOut, { sequence: '1' });
       return;

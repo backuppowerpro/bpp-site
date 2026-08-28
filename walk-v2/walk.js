@@ -974,14 +974,14 @@
           go('index.html', t, { area: 'out' });
           return;
         }
-        if (v2.blockers.indexOf('service_area') !== -1) return go('index.html', t, { edit: 'details' });
-        if (v2.blockers.indexOf('generator_connection') !== -1) return go('connection.html', t);
-        if (v2.blockers.indexOf('panel_location') !== -1) return go('location.html', t);
-        if (v2.blockers.indexOf('distance') !== -1) return go('distance.html', t);
+        var blockers = v2.blockers.filter(function (blocker) { return blocker !== 'service_area'; });
+        if (blockers.indexOf('generator_connection') !== -1) return go('connection.html', t);
+        if (blockers.indexOf('panel_location') !== -1) return go('location.html', t);
+        if (blockers.indexOf('distance') !== -1) return go('distance.html', t);
         if (
-          v2.blockers.indexOf('generator_connection_photo') !== -1
-          || v2.blockers.indexOf('panel_photo') !== -1
-          || v2.blockers.indexOf('panel_context_photo') !== -1
+          blockers.indexOf('generator_connection_photo') !== -1
+          || blockers.indexOf('panel_photo') !== -1
+          || blockers.indexOf('panel_context_photo') !== -1
         ) return go('photos.html', t);
         return go('range.html', t);
       }
@@ -1008,7 +1008,7 @@
         go('index.html', t, { area: 'out' });
         return;
       }
-      if (blockers.indexOf('service_area') !== -1) return go('index.html', t, { edit: 'details' });
+      blockers = blockers.filter(function (blocker) { return blocker !== 'service_area'; });
       if (blockers.indexOf('generator_connection') !== -1) {
         if (v.generator_ownership_status === 'not_owned'
             || v.connection_status === 'no_generator'

@@ -4,7 +4,7 @@
 <meta name="referrer" content="strict-origin-when-cross-origin">
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-wygnGpICbMppymZ/+XZT8Vgnv0wtsjTA4zJ1JolzPtc=' 'sha256-jD7bXyAbGLRXUSgeb8YFgT7marimKY68axXzPzvpQGQ='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-TR5WsvRLJrBeuhBlf0r8jNpbnwt9KX6aRmecxwF1rHg='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://reowtzedjflwmlptupbk.supabase.co; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data: https://reowtzedjflwmlptupbk.supabase.co; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-9eQXMmftFTwPL8t3EiPigz+rqx6XboJplY4tgmVeCaE=' 'sha256-jD7bXyAbGLRXUSgeb8YFgT7marimKY68axXzPzvpQGQ='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' https://fonts.googleapis.com 'sha256-TR5WsvRLJrBeuhBlf0r8jNpbnwt9KX6aRmecxwF1rHg='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://reowtzedjflwmlptupbk.supabase.co; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data: https://reowtzedjflwmlptupbk.supabase.co; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script src="/assets/js/bpp-analytics.js?v=22552c327759"></script>
 <script src="/walk-v2/token-bootstrap.js?v=20260815-bearer"></script>
 <script src="/walk-v2/no-js-bootstrap.js"></script>
@@ -1206,7 +1206,11 @@
     WALK.ph('walk_v2_photos_finalized', { count: photos.length, required_count: requirements.length });
     WALK.view(t).then(function (latest) {
       var state = latest.quote_walk_v2 || {};
-      if (Array.isArray(state.blockers) && state.blockers.length) WALK.go('incomplete.html', t);
+      var blockers = Array.isArray(state.blockers)
+        ? state.blockers.filter(function (blocker) { return blocker !== 'service_area'; })
+        : [];
+      if (state.service_area_status === 'verified_out_of_area') WALK.go('index.html', t, { area: 'out' });
+      else if (blockers.length) WALK.go('incomplete.html', t);
       else WALK.go('range.html', t);
     }).catch(function () {
       WALK.go('incomplete.html', t);

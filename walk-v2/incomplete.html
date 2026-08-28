@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="robots" content="noindex,nofollow,noarchive" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-vT3zdfGLntaJYu+e4hzDYnsY+XY/W3xkbYEvKxjinlY='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-/P0+VP8oVslqAneMUkckrhcltOLuYNU8dDGRnjNXVQ0='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; form-action 'self'; frame-src 'none'" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-nJgOSd/3pRvOuD2NyJv0ZjyPihariIdKeEqugxqMZ8Q='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-/P0+VP8oVslqAneMUkckrhcltOLuYNU8dDGRnjNXVQ0='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; form-action 'self'; frame-src 'none'" />
 <script src="/assets/js/bpp-analytics.js?v=22552c327759"></script>
 <script src="/walk-v2/token-bootstrap.js?v=20260815-bearer"></script>
 <script src="/walk-v2/no-js-bootstrap.js"></script>
@@ -166,10 +166,7 @@ h1 { margin:0 0 8px; color:var(--navy); font-family:var(--head); font-size:22px;
       WALK.go('index.html', t, { area: 'out' });
       return;
     }
-    if (blockers.indexOf('service_area') !== -1) {
-      WALK.go('index.html', t, { edit: 'details' });
-      return;
-    }
+    blockers = blockers.filter(function (blocker) { return blocker !== 'service_area'; });
     if (!blockers.length) {
       WALK.routeFromState(t, value);
       return;
