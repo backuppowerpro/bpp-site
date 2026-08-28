@@ -9,7 +9,7 @@
     || 'https://reowtzedjflwmlptupbk.supabase.co/functions/v1';
   var TOKEN_STORAGE_KEY = 'bpp:qwv2:bearer';
   var AUTHORIZED_SERVICE_COUNTIES = ['Greenville', 'Spartanburg', 'Pickens'];
-  var MAPBOX_PUBLIC_TOKEN = 'pk.eyJ1Ijoia2V5ZWxlY3RyaWN1cHN0YXRlIiwiYSI6ImNtcm8zZ3NkeTFodmgyeG9hY284Z3F4YXcifQ.3mLKvFGpDEdkjEMQNVQhmg';
+  var ADDRESS_LOOKUP_PATH = '/api/address-suggest';
 
   function setToken(value) {
     var next = /^[a-zA-Z0-9_-]{32,160}$/.test(String(value || '')) ? String(value) : '';
@@ -829,9 +829,8 @@
     },
     saveLater: function (t) { return postJson(BASE + '/pre-read-save-later', { token: t }); },
     emailCapture: function (t, email) { return postJson(BASE + '/walk-email-capture', { token: t, email: email }); },
-    /* address auto-suggest via Mapbox Geocoding, the same provider the rest of
-       BPP uses (quote.html, m/, pre-read). Publishable pk. token, US addresses,
-       biased to Greenville. Returns {description} so the dropdown render is shared. */
+    /* Address auto-suggest stays same-origin so iPhone privacy policy cannot
+       strip the site identity required by the restricted provider token. */
     rankAddressSuggestions: function (features) {
       return (Array.isArray(features) ? features : []).map(function (feature, index) {
         var county = String(feature && feature.county || '').replace(/\s+County$/i, '');
@@ -847,15 +846,23 @@
       }).map(function (entry) { return entry.feature; });
     },
     addrSuggest: function (q, timeoutMs, telemetry) {
-      var url = 'https://api.mapbox.com/geocoding/v5/mapbox.places/' + encodeURIComponent(q)
-        + '.json?access_token=' + MAPBOX_PUBLIC_TOKEN + '&country=us&types=address&autocomplete=true&limit=10&proximity=-82.3940,34.8526';
       var startedAt = Date.now();
       var context = telemetry || {};
-      return getJson(url, timeoutMs || 8000, {
-        /* The URL-restricted browser token needs the BPP origin to authorize
-           this provider request. Send only the origin, never the page path or
-           its query values. */
-        referrerPolicy: 'strict-origin-when-cross-origin'
+      return fetchWithTimeout(ADDRESS_LOOKUP_PATH, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: q }),
+        referrerPolicy: 'no-referrer'
+      }, timeoutMs || 8000).then(function (response) {
+        return response.json().catch(function () { return {}; }).then(function (body) {
+          if (!response.ok) {
+            var error = new Error(body && body.error || 'http_' + response.status);
+            error.status = response.status;
+            error.body = body;
+            throw error;
+          }
+          return body;
+        });
       })
         .then(function (d) { return (d.features || []).map(function (f) {
           /* pull structured city/state/zip from the Mapbox feature context so the
@@ -1059,12 +1066,6 @@
     var viewport = window.visualViewport;
     var viewportBottom = viewport ? viewport.offsetTop + viewport.height : window.innerHeight;
     var available = Math.floor(viewportBottom - addressDrop.getBoundingClientRect().top - 12);
-    if (available < 96) {
-      var addressInput = document.querySelector('#fAddr');
-      if (addressInput) addressInput.scrollIntoView({ block: 'start' });
-      viewportBottom = viewport ? viewport.offsetTop + viewport.height : window.innerHeight;
-      available = Math.floor(viewportBottom - addressDrop.getBoundingClientRect().top - 12);
-    }
     available = Math.max(96, available);
     addressDrop.style.setProperty('--addr-drop-max-height', available + 'px');
   }
