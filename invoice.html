@@ -477,6 +477,8 @@ async function renderPropertyBanner() {
       ${addr ? labelHtml : `<div class="property-banner-label"><div class="property-banner-addr">${esc(name)}</div></div>`}
     </div>`;
 
+  if (INV.show_property_image === false) return;
+
   const token = new URLSearchParams(window.location.search).get('token');
   if (!token) return;
   const img = document.createElement('img');

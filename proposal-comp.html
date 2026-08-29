@@ -1471,6 +1471,7 @@ function bindData(row){
   // never fall back to a bundled stranger house or a browser-side map request.
   var sv=document.querySelector('.streetview');
   if(sv) sv.style.setProperty('--sv-img','none');
+  if(row.show_property_image===false) return;
   if(sv){
     var tok=new URLSearchParams(window.location.search).get('token');
     if(tok){
