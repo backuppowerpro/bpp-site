@@ -13,7 +13,7 @@
 
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://connect.facebook.net 'sha256-TSf9hPr43r9T9eJr1YlgW7NyDImqpOyAsfxnE3OQYwY=' 'sha256-w8HCc5pLnyEUBsQK1Ps0LrOL+NOHDQSgash7Zyno/4w=' 'sha256-9R6BjzMdYgSkD1CW+0vgMYjHXA+YJ7eXxz7/2OqFQk4='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-H+JbNkpdjYqb6G4/gPteqrHrXunHg9PyI7zv8fBsuk0='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://www.facebook.com; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co https://www.facebook.com; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://connect.facebook.net 'sha256-TSf9hPr43r9T9eJr1YlgW7NyDImqpOyAsfxnE3OQYwY=' 'sha256-w8HCc5pLnyEUBsQK1Ps0LrOL+NOHDQSgash7Zyno/4w=' 'sha256-Dv0KvWJiZ9J/JX+VYOy0Jbvmuw+q+qD9aTLVU1Uvy2A='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-H+JbNkpdjYqb6G4/gPteqrHrXunHg9PyI7zv8fBsuk0='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://www.facebook.com; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co https://www.facebook.com; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script src="/assets/js/bpp-analytics.js?v=7c57ff22b3f1"></script>
 <script src="/walk-v2/token-bootstrap.js?v=29a627571994"></script>
 <script src="/walk-v2/meta-pixel.js?v=d618134d2b83"></script>
@@ -2189,7 +2189,7 @@
        unload; the sync-XHR fallback covers a fetch throw. */
     var body = JSON.stringify(payload);
     var url = 'https://reowtzedjflwmlptupbk.supabase.co/functions/v1/quo-ai-new-lead';
-    var delivered = false, tokenOut = null, serviceAreaStatus = '', savedAddressRefresh = false, failureMessage = '';
+    var delivered = false, tokenOut = null, serviceAreaStatus = '', savedAddressRefresh = false, metaLeadOut = null, failureMessage = '';
     var savedWalkRecoveryMessage = 'This form cannot open an existing saved Quote Walk. Use your saved Quote Walk link, or call Backup Power Pro for help.';
     try {
       var resp = await fetch(url, { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: body });
@@ -2200,6 +2200,7 @@
           tokenOut = j && j.preReadToken || null;
           serviceAreaStatus = j && j.service_area_status || '';
           savedAddressRefresh = j && j.saved_address_refresh === true;
+          metaLeadOut = j && j.metaLeadEvent || null;
           if (j && j.accepted === true && !tokenOut) {
             delivered = false;
             failureMessage = savedWalkRecoveryMessage;
@@ -2231,6 +2232,7 @@
             tokenOut = fallbackBody.preReadToken || null;
             serviceAreaStatus = fallbackBody.service_area_status || '';
             savedAddressRefresh = fallbackBody.saved_address_refresh === true;
+            metaLeadOut = fallbackBody.metaLeadEvent || null;
             if (fallbackBody.accepted === true && !tokenOut) {
               delivered = false;
               failureMessage = savedWalkRecoveryMessage;
@@ -2249,8 +2251,8 @@
       }
     }
     WALK.ph('walk_v2_submitted', { connection_status: 'unanswered', delivered: delivered });
-    if (delivered && tokenOut && !savedAddressRefresh && window.BPPMeta) {
-      window.BPPMeta.trackLead(eventId);
+    if (delivered && tokenOut && metaLeadOut && metaLeadOut.eligible === true && window.BPPMeta) {
+      window.BPPMeta.trackLead(metaLeadOut.eventId);
     }
     if (delivered && tokenOut && serviceAreaStatus === 'verified_out_of_area') {
       persistDraft();
