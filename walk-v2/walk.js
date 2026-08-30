@@ -941,12 +941,53 @@
     markThankyou: function (t) {
       return postJson(BASE + '/pre-read-confirm', { token: t, mark_thankyou: true });
     },
+    touchActivity: function (t, keepalive) {
+      return fetch(BASE + '/quote-walk-v2-state', {
+        method: 'POST',
+        keepalive: keepalive === true,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'touch_activity',
+          credential: t,
+          expected_version: null,
+          request_key: requestKey(t, 'touch_activity', {}, 0),
+          payload: {}
+        })
+      }).then(function (response) {
+        if (!response.ok) throw new Error('activity_touch_failed');
+        return response.json();
+      });
+    },
     /* require a token or bounce to the start (no dead ends) */
     requireToken: function () {
       var t = token();
       if (!t) { window.location.replace('/walk-v2/'); return null; }
       if (!window.__BPP_WALK_ABANDON_ARMED__) {
         window.__BPP_WALK_ABANDON_ARMED__ = true;
+        var lastActivityTouch = 0;
+        var lastCustomerSignalAt = Date.now();
+        var touchActivity = function (keepalive) {
+          if (document.visibilityState === 'hidden' && keepalive !== true) return;
+          var now = Date.now();
+          if (!keepalive && now - lastActivityTouch < 45000) return;
+          lastActivityTouch = now;
+          window.WALK.touchActivity(t, keepalive).catch(function () {});
+        };
+        var recordCustomerSignal = function () {
+          lastCustomerSignalAt = Date.now();
+          touchActivity(false);
+        };
+        touchActivity(false);
+        window.setInterval(function () {
+          if (Date.now() - lastCustomerSignalAt <= 90000) touchActivity(false);
+        }, 60000);
+        window.addEventListener('focus', recordCustomerSignal);
+        document.addEventListener('visibilitychange', function () {
+          if (document.visibilityState === 'visible') recordCustomerSignal();
+        });
+        ['pointerdown', 'keydown', 'touchstart'].forEach(function (eventName) {
+          document.addEventListener(eventName, recordCustomerSignal, { passive: true });
+        });
         window.addEventListener('pagehide', function () {
           if (insideWalkNav) return;
           var path = String(window.location && window.location.pathname || '');
