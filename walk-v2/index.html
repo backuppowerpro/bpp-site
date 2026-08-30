@@ -13,7 +13,7 @@
 
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://connect.facebook.net 'sha256-TSf9hPr43r9T9eJr1YlgW7NyDImqpOyAsfxnE3OQYwY=' 'sha256-w8HCc5pLnyEUBsQK1Ps0LrOL+NOHDQSgash7Zyno/4w=' 'sha256-Dv0KvWJiZ9J/JX+VYOy0Jbvmuw+q+qD9aTLVU1Uvy2A='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-H+JbNkpdjYqb6G4/gPteqrHrXunHg9PyI7zv8fBsuk0='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://www.facebook.com; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co https://www.facebook.com; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' https://connect.facebook.net 'sha256-TSf9hPr43r9T9eJr1YlgW7NyDImqpOyAsfxnE3OQYwY=' 'sha256-w8HCc5pLnyEUBsQK1Ps0LrOL+NOHDQSgash7Zyno/4w=' 'sha256-JxnYI5FkrbiQpkV2XHwAYef7cE+bepQN06iPPBJcX88='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-RcmkJnINZymDYh41jjaPMjO88fpHiWtQa/PfOICVVFg='; style-src-attr 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://www.facebook.com; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co https://www.facebook.com; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script src="/assets/js/bpp-analytics.js?v=7c57ff22b3f1"></script>
 <script src="/walk-v2/token-bootstrap.js?v=29a627571994"></script>
 <script src="/walk-v2/meta-pixel.js?v=d618134d2b83"></script>
@@ -417,6 +417,11 @@
   }
   .proof-slide--image .proof-image {
     width: 100%;
+  }
+  .proof-slide--image picture {
+    display: block;
+    width: 100%;
+    height: 100%;
   }
   .proof-slide--image {
     background: transparent;
@@ -1012,7 +1017,10 @@
     <section class="proof-carousel" aria-label="Installed work and customer reviews">
       <div class="proof-track" role="group" aria-roledescription="carousel" tabindex="0" data-proof-track="" data-autoplay-ms="8000" data-autoplay-paused="false">
         <article class="proof-slide proof-slide--image" role="group" aria-roledescription="slide" aria-label="Carousel item 1 of 10" data-proof-slide="">
-          <img class="proof-image" src="/img/connected-generator-current.jpg" alt="Portable generator connected by a yellow cord to an outdoor home inlet" />
+          <picture>
+            <source srcset="/img/connected-generator-current-1200.avif" type="image/avif" />
+            <img class="proof-image" src="/img/connected-generator-current-1200.jpg" width="1200" height="769" decoding="async" fetchpriority="high" alt="Portable generator connected by a yellow cord to an outdoor home inlet" />
+          </picture>
           <p class="proof-copy">One hookup. Power what matters.</p>
         </article>
         <article class="proof-slide proof-slide--review" role="group" aria-roledescription="slide" aria-label="Carousel item 2 of 10" data-proof-slide="">
@@ -1023,7 +1031,10 @@
           </blockquote>
         </article>
         <article class="proof-slide proof-slide--image" role="group" aria-roledescription="slide" aria-label="Carousel item 3 of 10" data-proof-slide="">
-          <img class="proof-image" src="/img/essentials-powered-current.png" alt="A lit home, a cold refrigerator, and a phone charging at night" />
+          <picture>
+            <source srcset="/img/essentials-powered-current-1200.avif" type="image/avif" />
+            <img class="proof-image" src="/img/essentials-powered-current-1200.jpg" width="1200" height="769" loading="lazy" decoding="async" alt="A lit home, a cold refrigerator, and a phone charging at night" />
+          </picture>
           <p class="proof-copy">Keep your essentials on.</p>
         </article>
         <article class="proof-slide proof-slide--review" role="group" aria-roledescription="slide" aria-label="Carousel item 4 of 10" data-proof-slide="">
@@ -1034,7 +1045,10 @@
           </blockquote>
         </article>
         <article class="proof-slide proof-slide--image" role="group" aria-roledescription="slide" aria-label="Carousel item 5 of 10" data-proof-slide="">
-          <img class="proof-image" src="/img/outdoor-inlets-current.png" alt="Two BPP-installed metal outdoor generator connection boxes with weather-rated covers" />
+          <picture>
+            <source srcset="/img/outdoor-inlets-current-1200.avif" type="image/avif" />
+            <img class="proof-image" src="/img/outdoor-inlets-current-1200.jpg" width="1200" height="769" loading="lazy" decoding="async" alt="Two BPP-installed metal outdoor generator connection boxes with weather-rated covers" />
+          </picture>
           <p class="proof-copy">A permanent outdoor connection.</p>
         </article>
         <article class="proof-slide proof-slide--review" role="group" aria-roledescription="slide" aria-label="Carousel item 6 of 10" data-proof-slide="">
@@ -1045,7 +1059,10 @@
           </blockquote>
         </article>
         <article class="proof-slide proof-slide--image" role="group" aria-roledescription="slide" aria-label="Carousel item 7 of 10" data-proof-slide="">
-          <img class="proof-image" src="/img/transfer-systems-current.jpg" alt="Two installed breaker-panel interlock systems that prevent utility and generator power from being on at the same time" />
+          <picture>
+            <source srcset="/img/transfer-systems-current-1200.avif" type="image/avif" />
+            <img class="proof-image" src="/img/transfer-systems-current-1200.jpg" width="1200" height="769" loading="lazy" decoding="async" alt="Two installed breaker-panel interlock systems that prevent utility and generator power from being on at the same time" />
+          </picture>
           <p class="proof-copy">Safely switch to generator power.</p>
         </article>
         <article class="proof-slide proof-slide--review" role="group" aria-roledescription="slide" aria-label="Carousel item 8 of 10" data-proof-slide="">
@@ -1056,7 +1073,10 @@
           </blockquote>
         </article>
         <article class="proof-slide proof-slide--image" role="group" aria-roledescription="slide" aria-label="Carousel item 9 of 10" data-proof-slide="">
-          <img class="proof-image" src="/img/cord-permit-current.jpg" alt="A compatible yellow generator cord and electrical permit paperwork posted for inspection" />
+          <picture>
+            <source srcset="/img/cord-permit-current-1200.avif" type="image/avif" />
+            <img class="proof-image" src="/img/cord-permit-current-1200.jpg" width="1200" height="769" loading="lazy" decoding="async" alt="A compatible yellow generator cord and electrical permit paperwork posted for inspection" />
+          </picture>
           <p class="proof-copy">Cord included. Permit handled.</p>
         </article>
         <article class="proof-slide proof-slide--review" role="group" aria-roledescription="slide" aria-label="Carousel item 10 of 10" data-proof-slide="">
@@ -2058,7 +2078,58 @@
     return { first: first, current: current };
   }
 
+  function currentGoogleTouch() {
+    var p = new URLSearchParams(window.location.search);
+    return {
+      occurredAt: new Date().toISOString(),
+      sourceUrl: window.location.href,
+      referrer: document.referrer || '',
+      channel: attribution().channel,
+      utmSource: p.get('utm_source') || '',
+      utmMedium: p.get('utm_medium') || '',
+      utmCampaign: p.get('utm_campaign') || '',
+      utmContent: p.get('utm_content') || '',
+      utmId: p.get('utm_id') || '',
+      campaignId: p.get('utm_id') || p.get('campaign_id') || '',
+      adGroupId: p.get('google_adgroup_id') || p.get('adgroupid') || '',
+      creativeId: p.get('utm_content') || p.get('creative') || '',
+      keyword: p.get('utm_term') || p.get('keyword') || '',
+      matchType: p.get('google_matchtype') || p.get('matchtype') || '',
+      device: p.get('google_device') || p.get('device') || '',
+      network: p.get('google_network') || p.get('network') || '',
+      gclid: p.get('gclid') || '',
+      gbraid: p.get('gbraid') || '',
+      wbraid: p.get('wbraid') || ''
+    };
+  }
+
+  function freshGoogleTouch(value) {
+    if (!value || !(value.gclid || value.gbraid || value.wbraid)) return null;
+    var occurred = new Date(value.occurredAt || 0).getTime();
+    if (!Number.isFinite(occurred) || Date.now() - occurred > 90 * 24 * 60 * 60 * 1000) return null;
+    return value;
+  }
+
+  function savedGoogleTouches() {
+    if (navigator.globalPrivacyControl === true || navigator.doNotTrack === '1') {
+      return { first: null, current: null };
+    }
+    var current = freshGoogleTouch(currentGoogleTouch());
+    var first = null;
+    var latest = null;
+    try { first = freshGoogleTouch(JSON.parse(localStorage.getItem('bpp_google_first_touch') || 'null')); } catch (_) {}
+    try { latest = freshGoogleTouch(JSON.parse(localStorage.getItem('bpp_google_latest_touch') || 'null')); } catch (_) {}
+    if (current) {
+      if (!first) first = current;
+      latest = current;
+      try { localStorage.setItem('bpp_google_first_touch', JSON.stringify(first)); } catch (_) {}
+      try { localStorage.setItem('bpp_google_latest_touch', JSON.stringify(latest)); } catch (_) {}
+    }
+    return { first: first, current: latest };
+  }
+
   savedMarketingTouches();
+  savedGoogleTouches();
 
   /* single submit path: tapping the button submits AND grants SMS consent via the
      disclosure beneath it. The texts are about the customer's own requested quote;
@@ -2111,6 +2182,7 @@
     var name = nameIn.value.trim();
     var attr = attribution();
     var touches = savedMarketingTouches();
+    var googleTouches = savedGoogleTouches();
     var eventId = 'wv2-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
 
     /* Structured city/state/zip come only from a picked Mapbox feature.
@@ -2177,9 +2249,16 @@
       fbp: (document.cookie.match(/(?:^|;\s*)_fbp=([^;]*)/) || [])[1] || '',
       fbc: (document.cookie.match(/(?:^|;\s*)_fbc=([^;]*)/) || [])[1] || '',
       fbclid: new URLSearchParams(window.location.search).get('fbclid') || '',
+      gclid: googleTouches.current && googleTouches.current.gclid || '',
+      gbraid: googleTouches.current && googleTouches.current.gbraid || '',
+      wbraid: googleTouches.current && googleTouches.current.wbraid || '',
       pageUrl: window.location.href, referrer: document.referrer || '',
       firstTouch: touches.first,
-      currentTouch: touches.current
+      currentTouch: touches.current,
+      googleFirstTouch: googleTouches.first,
+      googleCurrentTouch: googleTouches.current,
+      walkEntry: window.__WALK_ENTRY || 'direct',
+      analyticsOptOut: navigator.globalPrivacyControl === true || navigator.doNotTrack === '1'
     };
 
     /* resilient delivery: the keepalive fetch below already survives page unload
@@ -2250,7 +2329,6 @@
         WALK.ph('lead_submit_failed', { err: String(err).slice(0, 200), method: 'xhr-threw', form: 'walkv2-landing' });
       }
     }
-    WALK.ph('walk_v2_submitted', { connection_status: 'unanswered', delivered: delivered });
     if (delivered && tokenOut && metaLeadOut && metaLeadOut.eligible === true && window.BPPMeta) {
       window.BPPMeta.trackLead(metaLeadOut.eventId);
     }
