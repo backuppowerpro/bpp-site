@@ -79,14 +79,18 @@ export function proposalDeliveryPending(proposal, messages = []) {
 async function definitiveError(error, data) {
   let detail = data?.error || error?.message || 'Message send did not receive a receipt.'
   let definitive = data?.definite_failure === true
+  let providerContacted = data?.provider_contacted === true
+  let retrySafe = data?.retry_safe === true
   try {
     const body = error?.context ? await error.context.json() : null
     if (body?.error) {
       detail = body.error + (body.detail ? `: ${body.detail}` : '')
     }
     definitive = definitive || body?.definite_failure === true
+    providerContacted = providerContacted || body?.provider_contacted === true
+    retrySafe = retrySafe || body?.retry_safe === true
   } catch (_) {}
-  return { detail, definitive }
+  return { detail, definitive, providerContacted, retrySafe }
 }
 
 export async function sendManualSmsWithReceipt({
@@ -141,10 +145,14 @@ export async function sendManualSmsWithReceipt({
   const error = response?.error
   if (error || data?.success === false) {
     const failure = await definitiveError(error, data)
-    if (failure.definitive) clearOperationKey(storageKey, operationKey)
+    if (failure.definitive && !failure.providerContacted && failure.retrySafe) {
+      clearOperationKey(storageKey, operationKey)
+    }
     return {
       ok: false,
       ambiguous: !failure.definitive,
+      providerContacted: failure.providerContacted,
+      retrySafe: failure.retrySafe,
       operationKey,
       error: failure.definitive
         ? failure.detail
