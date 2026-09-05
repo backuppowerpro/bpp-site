@@ -56,7 +56,7 @@
   function cancelPendingUploadReconciliations() {
     pendingUploadReconciliationCancels.slice().forEach(function (cancel) { cancel(); });
   }
-  function go(page, t, extra) {
+  function go(page, t, extra, replaceHistory) {
     cancelPendingUploadReconciliations();
     insideWalkNav = true;
     var retained = setToken(t);
@@ -88,6 +88,7 @@
     var query = params.toString();
     var target = '/walk-v2/' + page + (query ? '?' + query : '');
     if (window.__QW_NAVIGATE__) window.__QW_NAVIGATE__(target);
+    else if (replaceHistory === true) window.location.replace(target);
     else window.location.href = target;
   }
   /* explicit back-a-step, token preserved everywhere. With no prevPage we send
@@ -321,16 +322,7 @@
     go('incomplete.html', t);
   }
   function applyNewJourneyProgress(t, value) {
-    if (typeof document === 'undefined') return;
-    var authority = journeyContractAuthority(value || null, t);
-    if (!authority.loaded || authority.contract !== NEW_JOURNEY_VERSION) return;
-    document.querySelectorAll('.qw-progress .pstep').forEach(function (step) {
-      var label = step.querySelector('.pl');
-      if (String(label && label.textContent || '').trim().toLowerCase() === 'photos') step.remove();
-    });
-    document.querySelectorAll('.qw-progress .qw-progress-rail, .prog .rail').forEach(function (rail) {
-      rail.setAttribute('data-steps', String(rail.querySelectorAll('.pstep').length));
-    });
+    if (typeof document !== 'undefined') paintProgress(document, value);
   }
   function readJourneyState(t) {
     try { return JSON.parse(sessionStorage.getItem(journeyStateKey(t)) || 'null') || {}; } catch (_) { return {}; }
@@ -464,29 +456,22 @@
     var scope = root && root.querySelector ? root : document;
     var progress = scope.querySelector('.qw-progress');
     if (!progress) return progressTruth(view);
+    var subject = progress.querySelector('[data-position-subject]');
+    var count = progress.querySelector('[data-position-count]');
+    if (!subject || !count) return progressTruth(view);
     var current = String(progress.getAttribute('data-qw-step') || '').toLowerCase();
-    var truth = progressTruth(view);
-    var labels = [];
-    var steps = Array.from(progress.querySelectorAll('.pstep'));
-    var currentIndex = steps.findIndex(function (step) {
-      var labelNode = step.querySelector('.pl');
-      return String(labelNode && labelNode.textContent || '').trim().toLowerCase() === current;
-    });
-    steps.forEach(function (step, index) {
-      var labelNode = step.querySelector('.pl');
-      var key = String(labelNode && labelNode.textContent || '').trim().toLowerCase();
-      var complete = truth[key] === true && currentIndex >= 0 && index < currentIndex;
-      step.classList.toggle('done', complete);
-      step.classList.toggle('on', key === current);
-      step.classList.toggle('reached', currentIndex >= 0 && index < currentIndex);
-      step.toggleAttribute('data-complete', complete);
-      if (key === current) step.setAttribute('aria-current', 'step');
-      else step.removeAttribute('aria-current');
-      labels.push((key === current ? 'Current ' : '') + key + (complete ? ' complete' : ' incomplete'));
-    });
-    var rail = progress.querySelector('.qw-progress-rail');
-    if (rail) rail.setAttribute('aria-label', labels.join('. ') + '.');
-    return truth;
+    var state = view && view.quote_walk_v2;
+    // Only this response can establish the step count. URL and storage hints
+    // cannot briefly advertise a different journey during loading or recovery.
+    var loaded = state && Object.prototype.hasOwnProperty.call(state, 'intake_contract');
+    var steps = ['generator', 'panel', 'distance'];
+    if (loaded && state.intake_contract !== NEW_JOURNEY_VERSION) steps.push('photos');
+    var index = steps.indexOf(current);
+    var ready = Boolean(loaded && index >= 0);
+    count.textContent = ready ? 'Step ' + (index + 1) + ' of ' + steps.length + ' ·' : '';
+    count.setAttribute('aria-hidden', ready ? 'false' : 'true');
+    progress.setAttribute('data-position-ready', ready ? 'true' : 'false');
+    return progressTruth(view);
   }
   function fetchWithTimeout(url, options, timeoutMs) {
     var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
@@ -720,6 +705,20 @@
   }
 
   window.WALK = {
+    copyReturnLink: function (t, screen) {
+      if (!navigator.clipboard || !navigator.clipboard.writeText) {
+        return Promise.reject(new Error('Link copying is unavailable in this browser. Keep this tab open to return to your saved answers.'));
+      }
+      var returnURL = new URL('/walk-v2/incomplete.html', window.location.origin);
+      returnURL.searchParams.set('t', t);
+      return Promise.resolve().then(function () {
+        return navigator.clipboard.writeText(returnURL.href);
+      }).then(function () {
+        window.WALK.ph('walk_v2_return_link_copied', { screen: screen });
+      }, function () {
+        throw new Error('The link could not be copied. Keep this tab open, or try copying again.');
+      });
+    },
     token: token,
     setToken: setToken,
     go: go,
@@ -756,12 +755,6 @@
       return getJson(BASE + '/pre-read-view?token=' + encodeURIComponent(t)).then(function (value) {
         rememberJourneyState(t, value);
         applyNewJourneyProgress(t, value);
-        if (typeof document !== 'undefined') {
-          document.querySelectorAll('.qw-progress .qw-progress-rail, .prog .rail').forEach(function (rail) {
-            rail.setAttribute('data-steps', String(rail.querySelectorAll('.pstep').length));
-          });
-          paintProgress(document, value);
-        }
         var state = value && value.quote_walk_v2 || {};
         var path = String(window.location && window.location.pathname || '').replace(/\/index\.html$/, '/');
         if (state.service_area_status === 'verified_out_of_area' && path !== '/walk-v2/') {
@@ -1216,20 +1209,20 @@
     /* Resume at the first unanswered step. New records always carry a
        connection_status. Amperage remains a legacy fallback for saved walks
        created before the connection step was separated from the lead form. */
-    routeFromState: function (t, v) {
+    routeFromState: function (t, v, replaceHistory) {
       var v2 = v.quote_walk_v2 || {};
       var newJourney = isNewJourney(v, t);
       if (v2.service_area_status === 'verified_out_of_area') {
-        go('index.html', t, { area: 'out' });
+        go('index.html', t, { area: 'out' }, replaceHistory);
         return;
       }
-      if (isGeneratorNeeded(v)) return go('generator-needed.html', t);
+      if (isGeneratorNeeded(v)) return go('generator-needed.html', t, null, replaceHistory);
       if (hasIncompleteInputs(v, t)) return goIncompleteIfNeeded(t);
       if (!newJourney && (
         (Array.isArray(v2.blockers) && v2.blockers.some(function (blocker) { return /_photo$/.test(String(blocker)); }))
         || (!v.photo_count && !v.photo_received)
-      )) return go('photos.html', t);
-      return go(newJourney ? 'range.html' : (v2 && v2.blockers ? 'range.html' : 'thankyou.html'), t);
+      )) return go('photos.html', t, null, replaceHistory);
+      return go(newJourney ? 'range.html' : (v2 && v2.blockers ? 'range.html' : 'thankyou.html'), t, null, replaceHistory);
     },
     /* Recovery is task-directed. It re-opens only the first truly unresolved
        requirement, then skips every answer that is already complete. */
