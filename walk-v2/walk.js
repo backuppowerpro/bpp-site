@@ -1,6 +1,5 @@
-/* Walk v2 shared wiring (staging). The pages are the approved Claude Design
- * comps; this file only moves data: token plumbing, the four endpoints,
- * PostHog events. No visual decisions live here. */
+/* Shared Quote Walk routing, credential transport, state actions and events.
+ * Guided visual provenance is recorded in the reviewed build evidence. */
 (function () {
   /* Production keeps the canonical Supabase endpoint. The local release gate
      sets this before the shared script loads so the exact customer pages can
@@ -20,6 +19,8 @@
     }
   } catch (_) {}
   var NEW_JOURNEY_VERSION = 'intake-no-upload-v1';
+  var GUIDED_JOURNEY_VERSION = 'guided-quote-walk-v1';
+  var memoryStates = Object.create(null);
   /* Public policy mirror for NEW_JOURNEY_VERSION. The server owns delivery and
      permits only the post-Yes photo opener. */
   var NEW_JOURNEY_OPENER_POLICY = Object.freeze({
@@ -34,6 +35,8 @@
 
   function setToken(value) {
     var next = /^[a-zA-Z0-9_-]{32,160}$/.test(String(value || '')) ? String(value) : '';
+    window.__BPP_WALK_TOKEN = next;
+    window.__BPP_CAPABILITY_ENTRY = Boolean(next);
     try {
       if (next) {
         sessionStorage.setItem(TOKEN_STORAGE_KEY, next);
@@ -46,9 +49,13 @@
     }
   }
   function token() {
-    var t = '';
-    try { t = sessionStorage.getItem(TOKEN_STORAGE_KEY) || ''; } catch (_) {}
-    if (!t) t = new URLSearchParams(window.location.search).get('t') || '';
+    // Bootstrap's current document authority wins even when writing a new link
+    // over an older stored credential failed. An explicit clear also wins.
+    var t = typeof window.__BPP_WALK_TOKEN === 'string' ? window.__BPP_WALK_TOKEN : null;
+    if (t === null) {
+      try { t = sessionStorage.getItem(TOKEN_STORAGE_KEY) || ''; } catch (_) {}
+      if (!t) t = new URLSearchParams(window.location.search).get('t') || '';
+    }
     return /^[a-zA-Z0-9_-]{32,160}$/.test(t) ? t : '';
   }
   var insideWalkNav = false;
@@ -79,7 +86,7 @@
     var extraNj = extra && extra.nj;
     var journeyAuthority = journeyContractAuthority(null, njToken);
     var nextIsNewJourney = journeyAuthority.loaded
-      ? journeyAuthority.contract === NEW_JOURNEY_VERSION
+      ? [NEW_JOURNEY_VERSION, GUIDED_JOURNEY_VERSION].indexOf(journeyAuthority.contract) !== -1
       : isNewJourney(null, njToken) || extraNj === '1' || extraNj === 1;
     if (nextIsNewJourney) {
       params.set('nj', '1');
@@ -238,9 +245,13 @@
   }
   function isNewJourney(value, t) {
     var authority = journeyContractAuthority(value, t);
-    if (authority.loaded) return authority.contract === NEW_JOURNEY_VERSION;
+    if (authority.loaded) return [NEW_JOURNEY_VERSION, GUIDED_JOURNEY_VERSION].indexOf(authority.contract) !== -1;
     if (urlSaysNewJourney()) return true;
     try { return sessionStorage.getItem(newJourneyKey(t)) === NEW_JOURNEY_VERSION; } catch (_) { return false; }
+  }
+  function isGuidedJourney(value, t) {
+    var authority = journeyContractAuthority(value, t);
+    return authority.loaded && authority.contract === GUIDED_JOURNEY_VERSION;
   }
   function connectionStatusOf(value) {
     var v2 = value && value.quote_walk_v2 || {};
@@ -325,6 +336,7 @@
     if (typeof document !== 'undefined') paintProgress(document, value);
   }
   function readJourneyState(t) {
+    if (memoryStates[t]) return memoryStates[t];
     try { return JSON.parse(sessionStorage.getItem(journeyStateKey(t)) || 'null') || {}; } catch (_) { return {}; }
   }
   function rememberJourneyState(t, value) {
@@ -340,12 +352,14 @@
       version: version || null,
       panels: Array.isArray(v2.panels) ? v2.panels : (current.panels || []),
       blockers: Array.isArray(v2.blockers) ? v2.blockers : (Array.isArray(value && value.blockers) ? value.blockers : (current.blockers || [])),
+      photo_review: v2.photo_review || value && value.photo_review || current.photo_review || null,
       media: Array.isArray(v2.media) ? v2.media : (current.media || []),
       intake_contract_loaded: receivedIntakeContract || current.intake_contract_loaded === true,
       intake_contract: receivedIntakeContract
         ? String(v2.intake_contract || '')
         : String(current.intake_contract || '')
     };
+    memoryStates[t] = next;
     try { sessionStorage.setItem(journeyStateKey(t), JSON.stringify(next)); } catch (_) {}
     return next;
   }
@@ -468,7 +482,7 @@
     // cannot briefly advertise a different journey during loading or recovery.
     var loaded = state && Object.prototype.hasOwnProperty.call(state, 'intake_contract');
     var steps = ['generator', 'panel', 'distance'];
-    if (loaded && state.intake_contract !== NEW_JOURNEY_VERSION) steps.push('photos');
+    if (loaded && [NEW_JOURNEY_VERSION, GUIDED_JOURNEY_VERSION].indexOf(state.intake_contract) === -1) steps.push('photos');
     var index = steps.indexOf(current);
     var ready = Boolean(loaded && index >= 0);
     count.textContent = ready ? 'Step ' + (index + 1) + ' of ' + steps.length + ' ·' : '';
@@ -707,6 +721,99 @@
     });
   }
 
+  // A receipt can authorize navigation, never replace the destination's fresh read.
+  function guidedReceiptMatches(receipt, expected, followup) {
+    if (!receipt || !expected || !expected.preReadId || !expected.snapshotId || !expected.scopeHash
+        || !Number.isSafeInteger(expected.version) || expected.version < 1) return false;
+    var readiness = receipt.readiness || {};
+    if (receipt.ok !== true || receipt.intake_contract !== GUIDED_JOURNEY_VERSION
+        || receipt.pre_read_id !== expected.preReadId || receipt.version !== expected.version
+        || receipt.range_snapshot_id !== expected.snapshotId || receipt.accepted_range_snapshot_id !== expected.snapshotId
+        || receipt.handoff_recorded !== true || !receipt.handoff_id
+        || ['ready', 'claimed', 'completed'].indexOf(receipt.handoff_status) === -1
+        || readiness.pre_read_id !== expected.preReadId || readiness.journey_version !== expected.version
+        || readiness.snapshot_id !== expected.snapshotId || readiness.scope_hash !== expected.scopeHash
+        || !Array.isArray(receipt.blockers) || receipt.blockers.some(function (value) { return value !== 'panel_photo'; })) return false;
+    if (!followup) return Boolean(receipt.acceptance_id && readiness.acceptance_id === receipt.acceptance_id);
+    var review = receipt.photo_review || {}, choice = review.followup || {}, correction = review.current_correction;
+    var active = correction && !correction.resolved_at ? correction : null;
+    return Boolean(expected.acceptanceId && readiness.acceptance_id === expected.acceptanceId
+      && choice.current === true && choice.completion_choice === 'text_later'
+      && review.packet_revision === followup.packet_revision
+      && (active ? active.id : null) === followup.correction_request_id
+      && (active ? active.revision : null) === followup.correction_revision);
+  }
+  function guidedPhotoReceiptMatches(receipt, expected, operation) {
+    if (!receipt || !expected || !operation || !expected.preReadId || !expected.snapshotId || !expected.acceptanceId
+        || !Number.isSafeInteger(expected.version) || expected.version < 1
+        || !Number.isSafeInteger(operation.packet_revision) || operation.packet_revision < 0
+        || !Array.isArray(operation.media_ids) || !operation.media_ids.length) return false;
+    function sameMedia(values) {
+      return Array.isArray(values) && values.length === operation.media_ids.length
+        && new Set(values).size === values.length
+        && JSON.stringify(values.slice().sort()) === JSON.stringify(operation.media_ids.slice().sort());
+    }
+    function matchingSubmission(value) {
+      return value && value.id === receipt.photo_submission_id && value.snapshot_id === expected.snapshotId
+        && value.acceptance_id === expected.acceptanceId && value.packet_revision === operation.packet_revision
+        && value.correction_request_id === operation.correction_request_id
+        && value.correction_revision === operation.correction_revision && sameMedia(value.media_ids);
+    }
+    var review = receipt.photo_review || {}, followup = review.followup || {}, correction = review.current_correction;
+    return Boolean(receipt.ok === true && receipt.intake_contract === GUIDED_JOURNEY_VERSION
+      && receipt.pre_read_id === expected.preReadId && receipt.photo_submission_id
+      && matchingSubmission(receipt.submission) && matchingSubmission(review.latest_submission)
+      && receipt.acknowledged_packet_revision === operation.packet_revision
+      && review.packet_revision === operation.packet_revision && review.acknowledged_revision === operation.packet_revision
+      && review.submission_current === true && review.newer_photo_draft === false
+      && Array.isArray(review.pending_uploads) && review.pending_uploads.length === 0 && sameMedia(review.draft_media_ids)
+      && followup.current === true && followup.completion_choice === 'send_photos'
+      && (correction ? correction.id : null) === operation.correction_request_id
+      && (correction ? correction.revision : null) === operation.correction_revision
+      && (!correction || correction.response_submission_id === receipt.photo_submission_id));
+  }
+  function guidedReceiptContext(state) {
+    var snapshot = state.current_range_snapshot || {};
+    return { preReadId: state.pre_read_id, version: state.version, snapshotId: snapshot.snapshot_id,
+      scopeHash: snapshot.scope_hash, acceptanceId: (state.readiness || {}).acceptance_id };
+  }
+  function guidedDestination(t, view) {
+    var state = view.quote_walk_v2 || {};
+    var review = state.photo_review || {};
+    var correction = review.current_correction;
+    var activeCorrection = correction && !correction.resolved_at && correction.can_submit !== false;
+    var deeper = state.deeper_journey;
+    if (deeper && deeper.url && !(activeCorrection && correction.effective_deeper_override === true)) {
+      var target;
+      try { target = new URL(deeper.url, window.location.origin); } catch (_) {}
+      if (target && target.origin === window.location.origin && /^\/(?:proposal|invoice|receipt)(?:\.html|\/)/.test(target.pathname)) {
+        return { reason: 'deeper', url: target.pathname + target.search };
+      }
+    }
+    if (state.service_area_status === 'verified_out_of_area') return { reason: 'area', page: 'index.html', extra: { area: 'out' } };
+    if (review.followup && review.followup.current === true) return { reason: 'submitted', page: (review.followup.completion_choice || review.followup.choice) === 'text_later' ? 'photos-later.html' : 'thankyou.html' };
+    if (activeCorrection) return { reason: 'correction', page: correction.response_submission_id && review.submission_current === true && !review.newer_photo_draft ? 'thankyou.html' : 'photos.html', extra: { correction: '1' } };
+    if (isGeneratorNeeded(view) || hasIncompleteInputs(view, t)) {
+      var edit = isGeneratorNeeded(view) || isUnansweredConnection(view) || isPendingAccess(view) ? 'connection' : isUnansweredPanel(view) ? 'location' : 'distance';
+      return { reason: 'missing', page: 'index.html', extra: { edit: edit } };
+    }
+    var snapshotId = state.current_range_snapshot_id || state.current_range_snapshot && state.current_range_snapshot.snapshot_id;
+    var currentAcceptance = state.accepted_range_snapshot_id && state.accepted_range_snapshot_id === snapshotId;
+    if (!currentAcceptance) return { reason: 'range', page: 'range.html' };
+    if (review.manual_review_current === true) return { reason: 'submitted', page: 'thankyou.html' };
+    if (review.submission_current === true && review.latest_submission && !review.newer_photo_draft && review.packet_status === 'submitted') return { reason: 'submitted', page: 'thankyou.html' };
+    return { reason: 'photos', page: 'photos.html' };
+  }
+  function routeGuided(t, view, replaceHistory) {
+    var destination = guidedDestination(t, view);
+    if (destination.url) {
+      insideWalkNav = true;
+      if (window.__QW_NAVIGATE__) window.__QW_NAVIGATE__(destination.url);
+      else window.location.replace(destination.url);
+      return;
+    }
+    return go(destination.page, t, destination.extra, replaceHistory);
+  }
   window.WALK = {
     copyReturnLink: function (t, screen) {
       if (!navigator.clipboard || !navigator.clipboard.writeText) {
@@ -738,6 +845,13 @@
     paintProgress: paintProgress,
     markNewJourney: markNewJourney,
     isNewJourney: isNewJourney,
+    isGuidedJourney: isGuidedJourney,
+    guidedDestination: guidedDestination,
+    guidedReceiptMatches: guidedReceiptMatches,
+    guidedPhotoReceiptMatches: guidedPhotoReceiptMatches,
+    guidedReceiptContext: guidedReceiptContext,
+    rememberJourneyState: rememberJourneyState,
+    guidedJourneyVersion: GUIDED_JOURNEY_VERSION,
     afterDistancePage: afterDistancePage,
     connectionStatusOf: connectionStatusOf,
     isPendingAccess: isPendingAccess,
@@ -798,7 +912,7 @@
       return send(false);
     },
     stateAction: function (t, action, fields) {
-      if (['create_range', 'accept_range', 'supersede_media', 'update_phone', 'handoff'].indexOf(action) === -1) {
+      if (['create_range', 'accept_range', 'supersede_media', 'update_phone', 'handoff', 'save_guided_answers', 'submit_photos', 'remove_guided_photo', 'cancel_guided_upload'].indexOf(action) === -1) {
         return Promise.reject(new Error('invalid_state_action'));
       }
       var payloadFields = fields || {};
@@ -832,8 +946,16 @@
         })
         && payloadFields.journey_version === NEW_JOURNEY_VERSION
         && payloadFields.lead_event === 'range_accepted_lead'));
-      var validEmpty = action === 'handoff' && payloadKeys.length === 0;
-      if (!validCreateRange && !validSupersedeMedia && !validUpdatePhone && !validAccept && !validEmpty) {
+      var validGuidedAnswers = action === 'save_guided_answers'
+        && payloadKeys.length === 1 && payloadKeys[0] === 'walkDraft'
+        && payloadFields.walkDraft && payloadFields.walkDraft.schema === GUIDED_JOURNEY_VERSION;
+      var validPhotoOperation = ['submit_photos', 'remove_guided_photo', 'cancel_guided_upload'].indexOf(action) !== -1
+        && Number.isInteger(payloadFields.packet_revision) && payloadFields.packet_revision >= 0
+        && (action === 'submit_photos'
+          ? payloadKeys.length === 4 && payloadKeys.every(function (key) { return ['packet_revision', 'media_ids', 'correction_request_id', 'correction_revision'].indexOf(key) !== -1; }) && Array.isArray(payloadFields.media_ids) && payloadFields.media_ids.length > 0
+          : payloadKeys.length === 2 && payloadKeys.indexOf(action === 'remove_guided_photo' ? 'media_id' : 'reservation_id') !== -1);
+      var validEmpty = action === 'handoff' && (payloadKeys.length === 0 || payloadKeys.length === 4 && payloadKeys.every(function (key) { return ['photo_followup','packet_revision','correction_request_id','correction_revision'].indexOf(key) !== -1; }) && payloadFields.photo_followup === 'text_later');
+      if (!validCreateRange && !validSupersedeMedia && !validUpdatePhone && !validAccept && !validEmpty && !validGuidedAnswers && !validPhotoOperation) {
         return Promise.reject(new Error('invalid_state_payload'));
       }
       function send(retried) {
@@ -860,7 +982,7 @@
             return getJson(BASE + '/pre-read-view?token=' + encodeURIComponent(t))
               .then(function (value) {
                 rememberJourneyState(t, value);
-                if (action === 'accept_range' || action === 'handoff') {
+                if (action === 'accept_range' || action === 'handoff' || action === 'save_guided_answers' || ['submit_photos', 'remove_guided_photo', 'cancel_guided_upload'].indexOf(action) !== -1) {
                   var staleAuthorization = new Error('stale_customer_authorization');
                   staleAuthorization.code = 'stale_customer_authorization';
                   staleAuthorization.body = { error: 'stale_customer_authorization' };
@@ -909,7 +1031,9 @@
           panel_id: null,
           image: digest,
           replacement_media_id: replacementMediaId || null,
-          replacement_attempt_id: replacementAttemptId || null
+          replacement_attempt_id: replacementAttemptId || null,
+          attempt_id: suppliedIdentity && suppliedIdentity.attempt_id || null,
+          packet_revision: suppliedIdentity && suppliedIdentity.packet_revision != null ? suppliedIdentity.packet_revision : state.photo_review && state.photo_review.packet_revision
         };
       }
       function hexFromBuffer(buffer) {
@@ -1004,14 +1128,20 @@
           payload.expected_version = state.version;
           payload.request_key = requestKey(t, 'register_media', identity, state.version);
         }
-        return postJson(BASE + '/pre-read-photo', payload).then(function (value) {
+        if (isGuidedJourney(null, t)) {
+          payload.packet_revision = identity.packet_revision;
+          var capsule = suppliedIdentity && suppliedIdentity.frozen_request;
+          if (capsule && capsule.payload) payload = capsule.payload;
+          else if (capsule) capsule.payload = JSON.parse(JSON.stringify(payload));
+        }
+        return postJson(BASE + '/pre-read-photo', payload, 30000).then(function (value) {
           if (state.version && (!value || value.receipt_settled !== true)) {
             throw new Error('media_receipt_unsettled');
           }
           rememberJourneyState(t, value);
           return value;
         }).catch(function (error) {
-          if (!retried && error && error.body && error.body.error === 'stale_journey_version') {
+          if (!isGuidedJourney(null, t) && !retried && error && error.body && error.body.error === 'stale_journey_version') {
             return getJson(BASE + '/pre-read-view?token=' + encodeURIComponent(t))
               .then(function (value) { rememberJourneyState(t, value); return sendImage(true); });
           }
@@ -1030,6 +1160,11 @@
       return getJson(BASE + '/pre-read-view?token=' + encodeURIComponent(t))
         .then(function (value) { rememberJourneyState(t, value); }, function () {})
         .then(function () { return start(); });
+    },
+    textPhotoAction: function (t, mode, fields) {
+      if (['prepare_text_photos', 'check_text_photos', 'import_text_photo'].indexOf(mode) === -1 || !isGuidedJourney(null, t)) return Promise.reject(new Error('invalid_text_photo_action'));
+      var payload = Object.assign({}, fields || {}, { token: t, mode: mode });
+      return postJson(BASE + '/pre-read-photo', payload, 30000).then(function (value) { rememberJourneyState(t, value); return value; });
     },
     saveLater: function (t) { return postJson(BASE + '/pre-read-save-later', { token: t }); },
     emailCapture: function (t, email) { return postJson(BASE + '/walk-email-capture', { token: t, email: email }); },
@@ -1128,6 +1263,17 @@
         });
     },
     newLead: function (payload) { return postJson(BASE + '/quo-ai-new-lead', payload); },
+    submitLeadBody: function (body, timeoutMs) {
+      if (typeof body !== 'string') return Promise.reject(new Error('invalid_intake_body'));
+      return fetchWithTimeout(BASE + '/quo-ai-new-lead', {
+        method: 'POST', keepalive: true,
+        headers: { 'Content-Type': 'application/json' }, body: body
+      }, timeoutMs || 20000).then(function (response) {
+        return response.json().catch(function () { return {}; }).then(function (value) {
+          return { ok: response.ok, status: response.status, body: value };
+        });
+      });
+    },
     submitLead: function (payload, timeoutMs) {
       return fetchWithTimeout(BASE + '/quo-ai-new-lead', {
         method: 'POST',
@@ -1215,6 +1361,7 @@
     routeFromState: function (t, v, replaceHistory) {
       var v2 = v.quote_walk_v2 || {};
       var newJourney = isNewJourney(v, t);
+      if (isGuidedJourney(v, t)) return routeGuided(t, v, replaceHistory);
       if (v2.service_area_status === 'verified_out_of_area') {
         go('index.html', t, { area: 'out' }, replaceHistory);
         return;
@@ -1230,6 +1377,7 @@
     /* Recovery is task-directed. It re-opens only the first truly unresolved
        requirement, then skips every answer that is already complete. */
     routeRecoveryFromState: function (t, v) {
+      if (isGuidedJourney(v, t)) return routeGuided(t, v, true);
       var state = v && v.quote_walk_v2 || {};
       if (state.service_area_status === 'verified_out_of_area') {
         go('index.html', t, { area: 'out' });
@@ -1254,19 +1402,32 @@
       return new Promise(function (resolve, reject) {
         var url = URL.createObjectURL(file);
         var img = new Image();
+        var finished = false;
+        var timer = setTimeout(function () { settle(new Error('image_decode_timeout')); }, 30000);
+        function settle(error, value) {
+          if (finished) return;
+          finished = true; clearTimeout(timer); img.onload = img.onerror = null;
+          URL.revokeObjectURL(url); img.removeAttribute('src');
+          if (error) reject(error); else resolve(value);
+        }
         img.onload = function () {
           try {
+            if (!img.width || !img.height || !Number.isFinite(maxPx) || maxPx < 1) throw new Error('bad_image');
             var scale = Math.min(1, maxPx / Math.max(img.width, img.height));
             var w = Math.max(1, Math.round(img.width * scale));
             var h = Math.max(1, Math.round(img.height * scale));
             var cv = document.createElement('canvas');
             cv.width = w; cv.height = h;
-            cv.getContext('2d').drawImage(img, 0, 0, w, h);
-            URL.revokeObjectURL(url);
-            resolve(cv.toDataURL('image/jpeg', 0.85));
-          } catch (e) { reject(e); }
+            var context = cv.getContext('2d');
+            if (!context) throw new Error('canvas_unavailable');
+            context.drawImage(img, 0, 0, w, h);
+            var data = cv.toDataURL('image/jpeg', 0.85);
+            cv.width = cv.height = 0;
+            if (!/^data:image\/jpeg;base64,/.test(data)) throw new Error('image_encoding_failed');
+            settle(null, data);
+          } catch (e) { settle(e); }
         };
-        img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('bad_image')); };
+        img.onerror = function () { settle(new Error('bad_image')); };
         img.src = url;
       });
     },
@@ -1302,7 +1463,9 @@
   }
   if (urlSaysNewJourney() && token()) markNewJourney(token());
   applyNewJourneyProgress(token(), null);
-  if (typeof window.BPPQuoteWalkMarkReady === 'function') {
+  // Guided entry and saved pages announce readiness from their own controllers.
+  // Legacy pages continue to use this shared readiness signal.
+  if (!document.querySelector('[data-guided-flow], [data-guided-saved-page]') && typeof window.BPPQuoteWalkMarkReady === 'function') {
     window.BPPQuoteWalkMarkReady();
   }
 })();
