@@ -911,6 +911,14 @@
       }
       return send(false);
     },
+    previewRange: function (draft) {
+      return postJson(BASE + '/quote-walk-v2-state', { action: 'preview_range', payload: { walkDraft: draft } });
+    },
+    acceptPreview: function (t, version, operationKey, previewHash) {
+      return postJson(BASE + '/quote-walk-v2-state', { action: 'accept_preview', credential: t,
+        expected_version: version, request_key: operationKey, payload: { preview_hash: previewHash } })
+        .then(function (value) { rememberJourneyState(t, value); return value; });
+    },
     stateAction: function (t, action, fields) {
       if (['create_range', 'accept_range', 'supersede_media', 'update_phone', 'handoff', 'save_guided_answers', 'submit_photos', 'remove_guided_photo', 'cancel_guided_upload'].indexOf(action) === -1) {
         return Promise.reject(new Error('invalid_state_action'));

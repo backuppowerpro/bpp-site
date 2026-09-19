@@ -530,7 +530,12 @@
     sizeAddrBox();
     ctaLabelEl.textContent = options.submitLabel || 'See my estimate';
     var ready = part1Done();
-    cta.disabled = submitting || !ready;
+    cta.disabled = submitting || !ready || Boolean(options.canSubmit && !options.canSubmit());
+    var textLaterButton = main.querySelector('[data-contact-text-later]');
+    if (textLaterButton) {
+      textLaterButton.hidden = editDetails || !options.estimatePreview;
+      textLaterButton.disabled = cta.disabled;
+    }
     if (ready && !submitting) closeDrop();
     if (unconfirmedAddressNote) {
       unconfirmedAddressNote.style.display = addrUnverified && ready ? '' : 'none';
@@ -688,10 +693,10 @@
   main.querySelector('form').addEventListener('submit', function (e) {
     e.preventDefault();
     closeDrop();
-    doSubmit(true);
+    doSubmit(true, Boolean(e.submitter && e.submitter.hasAttribute('data-contact-text-later')));
   });
 
-  async function doSubmit(smsGiven) {
+  async function doSubmit(smsGiven, textLater) {
     if (submitting || !part1Done() || (options.canSubmit && !options.canSubmit())) return;
     if (smsGiven) once('walk_v2_consent_checked');
     submitting = true;
@@ -797,6 +802,10 @@
     if (options.walkDraft) {
       payload.walkDraft = options.walkDraft();
       payload.journeyVersion = payload.journey_version = 'guided-quote-walk-v1';
+    }
+    if (options.estimatePreview && !editDetails) {
+      payload.estimatePreviewHash = options.estimatePreview();
+      payload.photoChoice = textLater ? 'text_later' : 'upload';
     }
     try { await options.onSubmit(payload); }
     catch (_) { showError('Your details did not save. Please try again.'); }
