@@ -5,6 +5,19 @@
   var entryURL = new URL(window.location.href);
   entryURL.searchParams.delete('t');
   var marketingEntryTime = new Date().toISOString();
+  function matchingClickCookie(fbclid, fbc, occurredAt) {
+    var cookie = /^fb\.\d+\.\d{13}\.(.+)$/.exec(fbc || '');
+    if (cookie && (!fbclid || cookie[1] === fbclid)) return fbc;
+    var observed = Date.parse(occurredAt || '');
+    return fbclid && Number.isFinite(observed) && observed > 0 ? 'fb.1.' + observed + '.' + fbclid : '';
+  }
+  function privateIntakeUrl(value, originOnly) {
+    try {
+      var url = new URL(value);
+      if (url.protocol !== 'https:' && url.protocol !== 'http:') return '';
+      return originOnly ? url.origin : url.origin + url.pathname;
+    } catch (_) { return ''; }
+  }
   /* channel attribution for the first-party event stream + payload.leadChannel.
      Server deriveLeadChannel also reads ?src= / fbclid / gclid from pageUrl
      (audit 2026-07-13). Keep client labels in the contacts whitelist where
@@ -55,7 +68,7 @@
       gbraid: p.get('gbraid') || '',
       wbraid: p.get('wbraid') || '',
       fbp: (document.cookie.match(/(?:^|;\s*)_fbp=([^;]*)/) || [])[1] || '',
-      fbc: (document.cookie.match(/(?:^|;\s*)_fbc=([^;]*)/) || [])[1] || ''
+      fbc: matchingClickCookie(p.get('fbclid') || '', (document.cookie.match(/(?:^|;\s*)_fbc=([^;]*)/) || [])[1] || '', marketingEntryTime)
     };
   }
 
@@ -67,7 +80,10 @@
       if (age >= 0 && age <= 90 * 24 * 60 * 60 * 1000
           && ['backuppowerpro.com', 'www.backuppowerpro.com'].indexOf(url.hostname) !== -1
           && !url.searchParams.has('t') && !url.searchParams.has('analytics_test')
-          && !url.searchParams.has('preview')) return touch;
+          && !url.searchParams.has('preview')) {
+        touch.fbc = matchingClickCookie(touch.fbclid || '', touch.fbc || '', touch.occurredAt);
+        return touch;
+      }
     } catch (_) {}
     return null;
   }
@@ -772,7 +788,7 @@
       firstName: trackingName.firstName, lastName: trackingName.lastName, phone: natDigits(phoneIn.value), email: '',
       existingToken: editDetails ? resumeT : '',
       address: addrIn.value.trim(), addressStreet: '', addressCity: addrSel.city || '', addressCounty: '', addressState: addrSel.state || '', addressZip: addrSel.zip || '', addressCountry: 'US', addressUnverified: addrUnverified ? 'true' : '',
-      leadChannel: attr.channel, utmSource: attr.source, utmMedium: attr.medium, utmCampaign: attr.campaign,
+      leadChannel: attr.channel, utmSource: analyticsOptOut ? '' : attr.source, utmMedium: analyticsOptOut ? '' : attr.medium, utmCampaign: analyticsOptOut ? '' : attr.campaign,
       hasCompatibleGenerator: 'Unanswered - connection check pending',
       outletAmps: [],
       outletUnsure: '',
@@ -787,15 +803,16 @@
       journeyVersion: 'intake-no-upload-v1',
       journey_version: 'intake-no-upload-v1',
       clientUserAgent: navigator.userAgent || '',
-      fbp: (document.cookie.match(/(?:^|;\s*)_fbp=([^;]*)/) || [])[1] || '',
-      fbc: (document.cookie.match(/(?:^|;\s*)_fbc=([^;]*)/) || [])[1] || '',
-      fbclid: new URLSearchParams(entryURL.search).get('fbclid') || '',
-      gclid: new URLSearchParams(entryURL.search).get('gclid') || '',
-      gbraid: new URLSearchParams(entryURL.search).get('gbraid') || '',
-      wbraid: new URLSearchParams(entryURL.search).get('wbraid') || '',
-      pageUrl: entryURL.href, referrer: document.referrer || '',
-      firstTouch: touches.first,
-      currentTouch: touches.current
+      fbp: analyticsOptOut ? '' : (document.cookie.match(/(?:^|;\s*)_fbp=([^;]*)/) || [])[1] || '',
+      fbc: analyticsOptOut ? '' : matchingClickCookie(new URLSearchParams(entryURL.search).get('fbclid') || '', (document.cookie.match(/(?:^|;\s*)_fbc=([^;]*)/) || [])[1] || '', marketingEntryTime),
+      fbclid: analyticsOptOut ? '' : new URLSearchParams(entryURL.search).get('fbclid') || '',
+      gclid: analyticsOptOut ? '' : new URLSearchParams(entryURL.search).get('gclid') || '',
+      gbraid: analyticsOptOut ? '' : new URLSearchParams(entryURL.search).get('gbraid') || '',
+      wbraid: analyticsOptOut ? '' : new URLSearchParams(entryURL.search).get('wbraid') || '',
+      pageUrl: analyticsOptOut ? privateIntakeUrl(entryURL.href) : entryURL.href,
+      referrer: analyticsOptOut ? privateIntakeUrl(document.referrer, true) : document.referrer || '',
+      firstTouch: analyticsOptOut ? null : touches.first,
+      currentTouch: analyticsOptOut ? null : touches.current
     };
 
 
