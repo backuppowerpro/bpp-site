@@ -34,6 +34,10 @@ const SERVER_OWNED_RANGE_EVENTS = new Set([
   'walk_v2_range_accepted_lead',
   'walk_v2_range_non_yes_reason_saved',
 ])
+const GUIDED_SAVE_EVENTS = new Set([
+  'save_for_later_opened', 'share_invoked', 'share_cancelled_or_unavailable',
+  'share_failed', 'copy_link_succeeded', 'copy_link_failed',
+])
 const SAFE_KEYS = new Set([
   'surface', 'document_variant', 'funnel', 'screen', 'blocker_count',
   'field', 'value', 'from', 'state', 'has_range', 'unsure_count',
@@ -85,6 +89,7 @@ function allowedOrigin(request) {
   if (!originUrl || originUrl.origin !== requestUrl.origin) return false
   return originUrl.hostname === 'backuppowerpro.com'
     || originUrl.hostname === 'www.backuppowerpro.com'
+    || originUrl.hostname === 'qa.backuppowerpro.com'
     || originUrl.hostname.endsWith('.bpp-site.pages.dev')
     || originUrl.hostname.endsWith('.bpp-qa-site.pages.dev')
 }
@@ -198,9 +203,12 @@ async function forward(payload) {
   const response = await fetch(POSTHOG_CAPTURE_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    signal: AbortSignal.timeout(5000),
     body: JSON.stringify({
       api_key: POSTHOG_PROJECT_KEY,
       event: payload.event,
+      uuid: payload.uuid,
+      timestamp: payload.timestamp,
       properties: payload.properties,
     }),
   })
@@ -208,9 +216,15 @@ async function forward(payload) {
 }
 
 export async function onRequestPost(context) {
-  const { request, waitUntil, env } = context
-  if (!allowedOrigin(request) || request.headers.get('Sec-Fetch-Site') !== 'same-origin') {
+  const { request, env } = context
+  const fetchSite = request.headers.get('Sec-Fetch-Site')
+  // Some embedded browsers omit Fetch Metadata. Exact Origin and JSON remain
+  // mandatory; an explicitly cross-origin context is still rejected.
+  if (!allowedOrigin(request) || (fetchSite !== null && fetchSite !== 'same-origin')) {
     return json({ error: 'forbidden' }, 403)
+  }
+  if (request.headers.get('Sec-GPC') === '1' || /^(1|yes)$/i.test(request.headers.get('DNT') || '')) {
+    return json({ accepted: false, excluded: true }, 200)
   }
   if (!(request.headers.get('Content-Type') || '').toLowerCase().startsWith('application/json')) {
     return json({ error: 'unsupported_content_type' }, 415)
@@ -228,7 +242,8 @@ export async function onRequestPost(context) {
   }
 
   const event = String(body && body.event || '')
-  if (!/^(?:\$pageview|lead_submit_failed|(?:walk_v2_|proposal_|invoice_|receipt_)[a-z0-9_]{1,70})$/.test(event)) {
+  if (!GUIDED_SAVE_EVENTS.has(event)
+    && !/^(?:\$pageview|lead_submit_failed|(?:walk_v2_|proposal_|invoice_|receipt_)[a-z0-9_]{1,70})$/.test(event)) {
     return json({ error: 'invalid_event' }, 400)
   }
   if (SERVER_OWNED_RANGE_EVENTS.has(event)) {
@@ -237,6 +252,13 @@ export async function onRequestPost(context) {
   const origin = new URL(request.url).origin
   const properties = sanitizeProperties(body.properties, origin, request)
   if (!properties) return json({ error: 'invalid_properties' }, 400)
+  const uuid = body.uuid === undefined ? crypto.randomUUID() : body.uuid
+  const timestamp = body.timestamp === undefined ? new Date().toISOString() : body.timestamp
+  if (typeof uuid !== 'string' || !/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(uuid)
+    || typeof timestamp !== 'string' || timestamp.length > 32
+    || !Number.isFinite(Date.parse(timestamp))) {
+    return json({ error: 'invalid_event_identity' }, 400)
+  }
 
   const rate = await claimAnalyticsRateSlot(env, request)
   if (!rate) return json({ error: 'measurement_unavailable' }, 503)
@@ -244,8 +266,11 @@ export async function onRequestPost(context) {
     return json({ error: 'rate_limited' }, 429, { 'Retry-After': String(rate.retryAfter) })
   }
 
-  const task = forward({ event, properties }).catch(() => {})
-  if (typeof waitUntil === 'function') waitUntil(task)
-  else await task
-  return json({ accepted: true }, 202)
+  try {
+    await forward({ event, properties, uuid, timestamp })
+    return json({ accepted: true }, 202)
+  } catch (_) {
+    console.warn('analytics_provider_unavailable')
+    return json({ error: 'provider_unavailable' }, 502)
+  }
 }

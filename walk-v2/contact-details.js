@@ -800,6 +800,7 @@
       actionSource: 'website', eventName: 'QuoteWalkStarted', eventId: eventId,
       intakeNonce: intakeNonce,
       analyticsOptOut: analyticsOptOut,
+      analyticsDistinctId: !analyticsOptOut && typeof window.BPPAnalytics?.anonymousId === 'function' ? window.BPPAnalytics.anonymousId() : '',
       journeyVersion: 'intake-no-upload-v1',
       journey_version: 'intake-no-upload-v1',
       clientUserAgent: navigator.userAgent || '',
