@@ -278,6 +278,13 @@
               || acceptance.preview_hash !== original.estimatePreviewHash || !acceptance.snapshot_id
               || acceptance.accepted_range_snapshot_id !== acceptance.snapshot_id
               || acceptance.handoff_recorded !== true) throw new Error('acceptance_not_confirmed');
+          // Tracking follows the validated acceptance and cannot block photos.
+          try {
+            var acceptedMeta = acceptance.metaLeadEvent;
+            if (acceptedMeta && acceptedMeta.eligible === true && acceptedMeta.eventName === 'Lead' && window.BPPMeta) {
+              BPPMeta.trackLead(acceptedMeta.eventId);
+            }
+          } catch (_) {}
           if (original.photoChoice === 'text_later') {
             var latest = await WALK.view(token);
             var current = latest.quote_walk_v2 || {};
