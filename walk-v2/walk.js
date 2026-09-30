@@ -30,7 +30,6 @@
     automated_follow_ups: false,
     proposal_auto_send: false
   });
-  var AUTHORIZED_SERVICE_COUNTIES = ['Greenville', 'Spartanburg', 'Pickens'];
   var ADDRESS_LOOKUP_PATH = '/api/address-suggest';
 
   function setToken(value) {
@@ -321,7 +320,7 @@
   }
   function afterDistancePage(value, t) {
     if (isPendingAccess(value) || isUnansweredPanel(value) || isDistanceSkipped(value)) return 'incomplete.html';
-    return isNewJourney(value, t) ? 'range.html' : 'photos.html';
+    return !isNewJourney(value, t) && !isGuidedJourney(value, t) && !value.photo_count && !value.photo_received ? 'photos-later.html' : 'range.html';
   }
   function currentWalkPage() {
     try {
@@ -482,7 +481,6 @@
     // cannot briefly advertise a different journey during loading or recovery.
     var loaded = state && Object.prototype.hasOwnProperty.call(state, 'intake_contract');
     var steps = ['generator', 'panel', 'distance'];
-    if (loaded && [NEW_JOURNEY_VERSION, GUIDED_JOURNEY_VERSION].indexOf(state.intake_contract) === -1) steps.push('photos');
     var index = steps.indexOf(current);
     var ready = Boolean(loaded && index >= 0);
     count.textContent = ready ? 'Step ' + (index + 1) + ' of ' + steps.length + ' ·' : '';
@@ -791,8 +789,8 @@
       }
     }
     if (state.service_area_status === 'verified_out_of_area') return { reason: 'area', page: 'index.html', extra: { area: 'out' } };
-    if (review.followup && review.followup.current === true) return { reason: 'submitted', page: (review.followup.completion_choice || review.followup.choice) === 'text_later' ? 'photos-later.html' : 'thankyou.html' };
-    if (activeCorrection) return { reason: 'correction', page: correction.response_submission_id && review.submission_current === true && !review.newer_photo_draft ? 'thankyou.html' : 'photos.html', extra: { correction: '1' } };
+    if (review.followup && review.followup.current === true) return { reason: 'submitted', page: 'photos-later.html' };
+    if (activeCorrection) return { reason: 'correction', page: 'photos-later.html', extra: { correction: '1' } };
     if (isGeneratorNeeded(view) || hasIncompleteInputs(view, t)) {
       var edit = isGeneratorNeeded(view) || isUnansweredConnection(view) || isPendingAccess(view) ? 'connection' : isUnansweredPanel(view) ? 'location' : 'distance';
       return { reason: 'missing', page: 'index.html', extra: { edit: edit } };
@@ -800,9 +798,9 @@
     var snapshotId = state.current_range_snapshot_id || state.current_range_snapshot && state.current_range_snapshot.snapshot_id;
     var currentAcceptance = state.accepted_range_snapshot_id && state.accepted_range_snapshot_id === snapshotId;
     if (!currentAcceptance) return { reason: 'range', page: 'range.html' };
-    if (review.manual_review_current === true) return { reason: 'submitted', page: 'thankyou.html' };
-    if (review.submission_current === true && review.latest_submission && !review.newer_photo_draft && review.packet_status === 'submitted') return { reason: 'submitted', page: 'thankyou.html' };
-    return { reason: 'photos', page: 'photos.html' };
+    if (review.manual_review_current === true) return { reason: 'submitted', page: 'photos-later.html' };
+    if (review.submission_current === true && review.latest_submission && !review.newer_photo_draft && review.packet_status === 'submitted') return { reason: 'submitted', page: 'photos-later.html' };
+    return { reason: 'submitted', page: 'photos-later.html' };
   }
   function routeGuided(t, view, replaceHistory) {
     var destination = guidedDestination(t, view);
@@ -829,6 +827,7 @@
         throw new Error('The link could not be copied. Keep this tab open, or try copying again.');
       });
     },
+    textReplyOnly: true,
     token: token,
     setToken: setToken,
     go: go,
@@ -1180,13 +1179,11 @@
        strip the site identity required by the restricted provider token. */
     rankAddressSuggestions: function (features) {
       return (Array.isArray(features) ? features : []).map(function (feature, index) {
-        var county = String(feature && feature.county || '').replace(/\s+County$/i, '');
-        var state = String(feature && feature.state || '').toUpperCase();
-        var countyRank = AUTHORIZED_SERVICE_COUNTIES.indexOf(county);
+        var state = String(feature && feature.state || '').trim().toUpperCase();
         return {
           feature: feature,
           index: index,
-          rank: countyRank >= 0 ? countyRank : state === 'SC' ? 10 : 20
+          rank: state === 'SC' || state === 'SOUTH CAROLINA' ? 0 : 1
         };
       }).sort(function (left, right) {
         return left.rank - right.rank || left.index - right.index;
@@ -1379,8 +1376,10 @@
       if (!newJourney && (
         (Array.isArray(v2.blockers) && v2.blockers.some(function (blocker) { return /_photo$/.test(String(blocker)); }))
         || (!v.photo_count && !v.photo_received)
-      )) return go('photos.html', t, null, replaceHistory);
-      return go(newJourney ? 'range.html' : (v2 && v2.blockers ? 'range.html' : 'thankyou.html'), t, null, replaceHistory);
+      )) return go('photos-later.html', t, null, replaceHistory);
+      var snapshot = v2.current_range_snapshot || {};
+      var acceptedCurrent = snapshot.status === 'available' && snapshot.snapshot_id && v2.accepted_range_snapshot_id === snapshot.snapshot_id;
+      return go(acceptedCurrent ? 'photos-later.html' : 'range.html', t, null, replaceHistory);
     },
     /* Recovery is task-directed. It re-opens only the first truly unresolved
        requirement, then skips every answer that is already complete. */
@@ -1393,6 +1392,10 @@
       }
       if (isGeneratorNeeded(v)) return go('generator-needed.html', t);
       if (hasIncompleteInputs(v, t)) return goIncompleteIfNeeded(t);
+      var snapshot = state.current_range_snapshot || {};
+      if (snapshot.status === 'available' && snapshot.snapshot_id && state.accepted_range_snapshot_id === snapshot.snapshot_id) {
+        return go('photos-later.html', t, { recovery: '1' });
+      }
       if (!isNewJourney(v, t)) {
         var blockers = Array.isArray(state.blockers)
           ? state.blockers
@@ -1400,7 +1403,7 @@
             ? state.readiness.input_blockers
             : [];
         if (blockers.some(function (blocker) { return /_photo$/.test(String(blocker)); })) {
-          return go('photos.html', t, { recovery: '1' });
+          return go('photos-later.html', t, { recovery: '1' });
         }
       }
       return go('range.html', t);
