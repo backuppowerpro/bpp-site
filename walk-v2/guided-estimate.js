@@ -5,7 +5,7 @@
     installation: ['Generator connection installation', 'Installation matched to your panel, including breaker wiring, testing, and cleanup.'],
     metal_outdoor_connection_box: ['Outdoor connection box', 'A permanent, weather-rated outdoor connection for your portable generator.'],
     heavy_duty_compatible_cord: ['Matching generator cord', 'A factory-made cord matched to your generator and connection box.'],
-    system_walkthrough: ['Practice before you need it', 'We offer to test the system with you.'],
+    system_walkthrough: ['Practice before you need it', 'We show you how to connect your portable generator and select circuits safely. We offer to test the system with you.'],
     panel_guide: ['Steps where you need them', 'A step-by-step sticker stays inside your panel for outages.'],
     permit_and_required_inspection: ['Permit and inspection handled', 'We handle the application, permit fee, inspection scheduling, and follow-through.'],
     one_year_workmanship_support: ['One-year workmanship support', 'If an issue comes from our installation work during the first year, we return and correct it at no charge.']
@@ -54,16 +54,17 @@
     var list = element('ul', '', 'guided-scope');
     var rows = {};
     snapshot.scope_rows.forEach(function (row) { rows[row.key] = row; });
-    function scopeRow(key, description, artwork, title) {
+    function scopeRow(key, description, artwork, title, image) {
       var item = element('li', '', 'guided-scope-row');
       item.dataset.scopeKey = key;
       var scopeImages = {
         installation: '/assets/images/work-full-install.jpg',
+        system_walkthrough: '/assets/product-images/system-walkthrough.jpg',
         panel_guide: '/assets/product-images/panel-operating-guide.jpg',
         permit_and_required_inspection: '/assets/product-images/permit-inspection-photo.jpg',
         one_year_workmanship_support: '/assets/product-images/workmanship-support.jpg'
       };
-      var imageSrc = scopeImages[key] || (artwork && (basis === '30' || basis === '50') ? '/assets/product-images/' + artwork + '-' + basis + 'amp.jpg' : null);
+      var imageSrc = image || scopeImages[key] || (artwork && (basis === '30' || basis === '50') ? '/assets/product-images/' + artwork + '-' + basis + 'amp.jpg' : null);
       if (imageSrc) {
         var img = element('img'); img.src = imageSrc; img.alt = ''; img.width = 60; img.height = 60; item.appendChild(img);
       } else {
@@ -81,7 +82,10 @@
     scopeRow('metal_outdoor_connection_box', null, 'inlet');
     scopeRow('heavy_duty_compatible_cord', null, 'cord');
     scopeRow('installation');
-    scopeRow('panel_guide', scopeText(rows.system_walkthrough)[1] + ' ' + scopeText(rows.panel_guide)[1], null, 'Practice and a panel guide');
+    var transfer = scopeRow('installation', 'A panel-matched safety interlock prevents utility and generator power from feeding the panel at the same time.', null, 'Panel-matched power transfer system', '/assets/images/work-panel-interlock.jpg');
+    transfer.dataset.scopeDetail = 'power_transfer';
+    scopeRow('system_walkthrough', null, null, 'System walkthrough');
+    scopeRow('panel_guide', null, null, 'Step-by-step panel guide');
     scopeRow('permit_and_required_inspection');
     var guarantee = scopeRow('one_year_workmanship_support', scopeText(rows.one_year_workmanship_support)[1]); guarantee.classList.add('guided-range-guarantee');
     scope.appendChild(list);
