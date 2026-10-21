@@ -1,5 +1,8 @@
 User-agent: *
 Allow: /
+# Customer documents and continuation pages use noindex meta/response headers.
+# Allow their HTML shells to be crawled so those instructions can be read.
+# Data access still requires the existing authorization; robots is not access control.
 Disallow: /quote-calculator.html
 Disallow: /daily/
 Disallow: /crm/
