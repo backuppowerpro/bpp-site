@@ -153,10 +153,6 @@
       var choose = button('Upload a photo', 'data-initial-photo-file');
       var primaryControls = element('div', '', 'initial-photo-controls initial-photo-primary-controls');
       primaryControls.appendChild(choose);
-      var assistance = element('p', '', 'initial-photo-guidance');
-      var assistanceLink = element('a', 'Call Key for help with your photo', 'guided-link');
-      assistanceLink.href = 'tel:+18648637800';
-      assistance.appendChild(assistanceLink);
       var retry = button('Retry saving photo', 'data-initial-photo-retry');
       var remove = button('Remove photo', 'data-initial-photo-remove');
       var status = element('p', '', 'initial-photo-status'); status.id = prefix + '-status'; status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite'); status.setAttribute('aria-atomic', 'true'); status.dataset.initialPhotoStatus = '';
@@ -185,7 +181,7 @@
       var feedback = element('div', '', 'initial-photo-feedback'); feedback.appendChild(error); feedback.appendChild(status);
       var savedResult = element('div', '', 'initial-photo-result');
       exampleGroup.appendChild(savedResult);
-      root.replaceChildren(heading, introduction, primaryControls, assistance, feedback, controls, exampleGroup, timeWarning, chooseInput);
+      root.replaceChildren(heading, introduction, primaryControls, feedback, controls, exampleGroup, timeWarning, chooseInput);
       if (options.timeWarningRoot) options.timeWarningRoot.appendChild(timeWarning);
 
       function currentHash() { return String(options.previewHash ? options.previewHash() || '' : ''); }
