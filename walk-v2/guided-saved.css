@@ -118,6 +118,7 @@
 .guided-walk [data-screen="contact"] .guided-estimate-card .guided-range-caption.guided-range-explanation { display: block; margin: 14px 0 0; color: #dbe5f2; font-size: 16px; line-height: 1.5; }
 .guided-saved .guided-estimate-card .guided-range-condition { margin: 16px 0 0; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.2); color: #dbe5f2; }
 .guided-saved .guided-estimate-card .guided-power-guide-teaser { margin: 16px 0 0; color: inherit; font-size: 16px; line-height: 1.5; }
+.guided-estimate-card .guided-power-guide-teaser .guided-link { color: inherit; }
 .guided-saved .guided-range-card h2 { margin: 0; font-size: 22px !important; line-height: 1.25; }
 .guided-saved .guided-range-next > p { margin: 10px 0 0; color: #4d5a6e; }
 .guided-saved .guided-range-next .cta { margin: 18px 0 0; }
@@ -175,3 +176,7 @@
 /* Reserve a square without clipping the add label when text is enlarged. */
 .guided-photo-gallery .guided-upload-action::before { content: ""; grid-area: 1 / 1; width: 100%; aspect-ratio: 1; pointer-events: none; }
 .guided-saved .guided-photo-gallery .guided-add-label { grid-area: 1 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; min-width: 0; padding: 8px 0; font: inherit; color: inherit; }
+
+/* Standalone saved-request pages share the outlet task-card shape and shadow. */
+.guided-saved .guided-flow.form-card{border-radius:20px;background:#fff;box-shadow:0 18px 44px rgba(11,31,59,.14),0 4px 12px rgba(11,31,59,.06),inset 0 0 0 1px rgba(11,31,59,.07)}
+@media(min-width:1024px){.guided-saved .guided-flow.form-card{border-radius:22px;padding:28px}}

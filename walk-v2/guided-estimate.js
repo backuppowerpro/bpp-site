@@ -68,7 +68,11 @@
       guideNote.classList.remove('power-guide-revealing');
       guideNote.classList.add('guided-power-guide-teaser');
     } else {
-      guideNote = element('p', 'What Can My Generator Power? Our simple guide helps you plan your outage essentials.', 'guided-power-guide-teaser');
+      guideNote = element('p', '', 'guided-power-guide-teaser');
+      var guideLink = element('a', 'Your Guide to Home Generator Power', 'guided-link');
+      guideLink.href = '/generator-guide/';
+      guideNote.appendChild(guideLink);
+      guideNote.appendChild(element('span', ' helps you plan your outage essentials.'));
     }
     guideNote.dataset.powerGuideTeaser = '';
     estimate.appendChild(guideNote);

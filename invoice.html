@@ -387,11 +387,7 @@ function showError(title, msg) {
   text.className = 'dl-btn';
   text.href = 'sms:+18648637800';
   text.textContent = 'Text Key for a fresh link';
-  const call = document.createElement('a');
-  call.className = 'dl-btn';
-  call.href = 'tel:+18648637800';
-  call.textContent = 'Call Key';
-  actions.appendChild(text); actions.appendChild(call); wrap.appendChild(actions);
+  actions.appendChild(text); wrap.appendChild(actions);
   main.appendChild(wrap);
   h2.tabIndex = -1;
   h2.focus();
@@ -646,7 +642,7 @@ function renderInvoice() {
 
     <div style="font-size:12px;color:var(--text3);text-align:center;line-height:1.6">
       Questions? Call or text <strong style="color:var(--navy)">(864) 863-7800</strong>
-      <div style="margin-top:12px"><a href="/assets/docs/the-portable-generator-power-guide.pdf" target="_blank" style="color:#1d4ed8;font-weight:600;text-decoration:none" rel="noopener noreferrer">📘 Generator Safety Guide (PDF)</a></div>
+      <div style="margin-top:12px"><a href="/generator-guide/" target="_blank" style="color:#1d4ed8;font-weight:600;text-decoration:none" rel="noopener noreferrer">📘 Your Guide to Home Generator Power</a></div>
     </div>
 
     <!-- Download Invoice -->
@@ -816,7 +812,7 @@ function renderPaidInvoice() {
 
     <div style="font-size:12px;color:var(--text3);text-align:center;line-height:1.6;margin-top:8px">
       Questions? Call or text <strong style="color:var(--navy)">(864) 863-7800</strong>
-      <div style="margin-top:12px"><a href="/assets/docs/the-portable-generator-power-guide.pdf" target="_blank" style="color:#1d4ed8;font-weight:600;text-decoration:none" rel="noopener noreferrer">📘 Generator Safety Guide (PDF)</a></div>
+      <div style="margin-top:12px"><a href="/generator-guide/" target="_blank" style="color:#1d4ed8;font-weight:600;text-decoration:none" rel="noopener noreferrer">📘 Your Guide to Home Generator Power</a></div>
     </div>
   `;
 }

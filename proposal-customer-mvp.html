@@ -1207,7 +1207,7 @@
       function setApprovalError(message){document.getElementById('approvalError').textContent=message||'';}
       function recoveryActionsHtml(){
         return '<a class="state-action" href="sms:+18648637800">Text Key for a fresh link</a>'+
-          '<a class="state-action state-action-secondary" href="tel:+18648637800">Call Key</a>';
+          '';
       }
       function stateView(title,message,actionHtml){
         document.body.classList.remove('booting');
@@ -1775,7 +1775,7 @@
         var status=String(row.status||'').toLowerCase();
         var resetAfterHistoryRestore=historyAuthorizationResetPending&&['sent','viewed','copied'].indexOf(status)>-1;
         if(historyAuthorizationResetPending&&!resetAfterHistoryRestore)historyAuthorizationResetPending=false;
-        if(terminalProposalStatus(status)){if(hasCheckoutReturnHint())scrubCheckoutReturnHints(false);return stateView(status==='expired'?'This quote has expired':'This proposal is closed',status==='expired'?'This proposal cannot be signed. Call Key for a refreshed proposal.':'This proposal is no longer active. Call Key at (864) 863-7800 if you have questions.','<a class="state-action" href="tel:+18648637800">Call Key</a>');}
+        if(terminalProposalStatus(status)){if(hasCheckoutReturnHint())scrubCheckoutReturnHints(false);return stateView(status==='expired'?'This quote has expired':'This proposal is closed',status==='expired'?'This proposal cannot be signed. Call Key for a refreshed proposal.':'This proposal is no longer active. Call Key at (864) 863-7800 if you have questions.','');}
         if(status==='approved'){
           if(hasCheckoutReturnHint())scrubCheckoutReturnHints(false);
           if(row.approval_source==='operator_recorded')return stateView('Approval recorded','Key recorded your approval from '+String(row.approval_channel||'your conversation').replace('_',' ')+'. No electronic signature or card authorization was created. Key will contact you to confirm the next step.');
@@ -1793,7 +1793,7 @@
           proposal=row;fixture=proposalFixture(row);
           if(fixture.requireDeposit!==false){
             if(hasCheckoutReturnHint())scrubCheckoutReturnHints(false);
-            return stateView('Proposal not accepted','Payment was not confirmed, so this proposal was not accepted. Ask Key for a refreshed proposal, then review it, check the acknowledgment, enter your name, and accept again.','<a class="state-action" href="tel:+18648637800">Call Key</a>');
+            return stateView('Proposal not accepted','Payment was not confirmed, so this proposal was not accepted. Ask Key for a refreshed proposal, then review it, check the acknowledgment, enter your name, and accept again.','');
           }
           if(isPreview) return stateView('Payment step preview','This proposal is signed, but preview mode cannot open a real payment or card setup.');
           if(!authorizationFullRedoPending&&hasCheckoutReturnHint()) return reconcileCheckoutReturn(row);

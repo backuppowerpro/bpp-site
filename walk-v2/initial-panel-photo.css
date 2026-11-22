@@ -99,3 +99,13 @@
   .initial-panel-photo .initial-photo-controls .initial-photo-button { background: ButtonFace; color: ButtonText; border-color: ButtonText; box-shadow: none; }
   .initial-panel-photo :is(button, input, summary, a):focus-visible { outline-color: Highlight; }
 }
+
+/* Existing saved authority controls this cue, never file selection or a timer.
+   Animate only the existing checkmark; text and photo stay still and readable. */
+@media(prefers-reduced-motion:no-preference){
+ .initial-panel-photo.has-saved-photo[data-photo-phase="saved"] h2::before{animation:bpp-photo-confirmed 180ms ease-out both}
+}
+@keyframes bpp-photo-confirmed{from{transform:scale(.88)}to{transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){
+ .initial-panel-photo.has-saved-photo h2::before{animation:none!important}
+}

@@ -20,8 +20,22 @@
         return /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$/.test(label);
       });
   }
+  function publicGuideOnly(view) {
+    var delivery = view && view.quote_walk_v2 && view.quote_walk_v2.power_guide_delivery;
+    if (delivery && delivery.contract === CONTRACT && delivery.status === 'unavailable'
+        && delivery.providerAccepted === false && delivery.reason === 'guide_delivery_retired') return true;
+    var choice = view && view.communication_preferences && view.communication_preferences.email_promotions_choice;
+    return choice && choice.version === 'bpp-email-promotions-2026-11-11'
+      && typeof choice.promotions === 'boolean' && choice.dispatch_enabled === false;
+  }
+  function directLink(container, compact) {
+    var link = element('a', 'View your guide', compact ? 'guided-link guided-received-guide-link' : 'guided-link');
+    link.href = '/generator-guide/'; link.dataset.powerGuideDirect = '';
+    container.appendChild(link); return true;
+  }
   function render(container, view, localChoice) {
     if (!container || !window.BPPEstimateTerminal || !BPPEstimateTerminal.confirmed(view)) return false;
+    if (publicGuideOnly(view)) return directLink(container, false);
     var receipt = view.quote_walk_v2.power_guide_delivery;
     var valid = receipt && receipt.contract === CONTRACT
       && ['sent', 'pending', 'failed', 'not_requested', 'unavailable'].indexOf(receipt.status) !== -1;
@@ -37,24 +51,25 @@
     var section = element('section', '', 'guided-power-guide-receipt');
     section.dataset.powerGuideReceipt = status;
     section.setAttribute('aria-label', 'Your free generator guide');
-    section.appendChild(element('h3', 'What Can My Generator Power?'));
+    section.appendChild(element('h3', 'Your Guide to Home Generator Power'));
     section.appendChild(element('p', copy));
     var link = element('a', 'View your guide', 'guided-link');
     // No token, email, arbitrary projection URL or marketing identity leaves this page.
-    link.href = '/power-guide/';
+    link.href = '/generator-guide/';
     section.appendChild(link);
     container.appendChild(section);
     return true;
   }
   function renderCompact(container, view, localChoice) {
     if (!container || !window.BPPEstimateTerminal || !BPPEstimateTerminal.confirmed(view)) return false;
+    if (publicGuideOnly(view)) return directLink(container, true);
     var receipt = view.quote_walk_v2.power_guide_delivery;
     var valid = receipt && receipt.contract === CONTRACT
       && ['sent', 'pending', 'failed', 'not_requested', 'unavailable'].indexOf(receipt.status) !== -1;
     if (localChoice === false || localChoice !== true && valid && receipt.status === 'not_requested' && receipt.reason === 'guide_not_requested') {
       var link = element('a', 'View your guide', 'guided-link guided-received-guide-link');
       // Public access is separate from the optional email choice and carries no identity.
-      link.href = '/power-guide/'; link.dataset.powerGuideDirect = '';
+      link.href = '/generator-guide/'; link.dataset.powerGuideDirect = '';
       container.appendChild(link); return true;
     }
     if (localChoice !== true && (!valid || receipt.status === 'not_requested')) return false;
@@ -70,7 +85,7 @@
     container.appendChild(note);
     var fallback = element('a', 'View your guide', 'guided-link guided-received-guide-link');
     // Keep the identity-free guide available alongside every email status.
-    fallback.href = '/power-guide/'; fallback.dataset.powerGuideDirect = '';
+    fallback.href = '/generator-guide/'; fallback.dataset.powerGuideDirect = '';
     container.appendChild(fallback);
     return true;
   }

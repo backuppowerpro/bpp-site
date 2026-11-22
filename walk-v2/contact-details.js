@@ -214,6 +214,7 @@
     preSubmitSmsChoice: true,
     createSmsSubmitReminder: createSmsSubmitReminder,
     versionedConsentCapture: true,
+    emailPromotionsCapture: true,
     requiredEmailCapture: true,
     completeNameRecovery: true,
     anonymousAddressConfirmation: true,
@@ -1081,6 +1082,10 @@
     var guideOffer = !editDetails && typeof options.walkDraft === 'function'
       ? main.querySelector('[data-power-guide-offer]') : null;
     var guideGiven = guideOffer ? guideOffer.checked === true : undefined;
+    var promotionsOffer = !editDetails && typeof options.walkDraft === 'function'
+      ? main.querySelector('[data-email-promotions-offer]') : null;
+    var promotionsGiven = promotionsOffer ? promotionsOffer.checked === true : undefined;
+    var promotionsVersion = promotionsOffer && promotionsOffer.getAttribute('data-consent-version');
     // The rendered form owns its copy revision, including an older open page.
     var guideConsentVersion = guideOffer && typeof guideOffer.getAttribute === 'function'
       ? guideOffer.getAttribute('data-consent-version') : null;
@@ -1090,7 +1095,7 @@
     var reminderFlow = typeof main.closest === 'function' ? main.closest('[data-guided-flow]') : null;
     var smsReminderEligible = !editDetails && typeof options.walkDraft === 'function' && smsControl
         && reminderFlow && reminderFlow.getAttribute('data-sms-submit-reminder-version') === SMS_REMINDER_VERSION
-        && (guideConsentVersion === 'bpp-guide-consent-2026-10-16' || guideConsentVersion === 'bpp-guide-consent-2026-10-19');
+        && (guideConsentVersion === 'bpp-guide-consent-2026-10-16' || guideConsentVersion === 'bpp-guide-consent-2026-10-19' || promotionsVersion === 'bpp-email-promotions-2026-11-11');
     if (smsReminderEligible) {
       if (smsReminderPending) return;
       if (smsReminderDecision && (smsReminderDecision.decision === 'allow') !== smsGiven) smsReminderDecision = null;
@@ -1101,7 +1106,7 @@
         if (!addrUnverified && addrValidated && !addrSel.state) {
           var preparationAuthority = authorityRevision;
           var preparationValues = [nameIn.value, phoneIn.value, emailIn && emailIn.value, addrIn.value];
-          var preparationControls = [guideOffer, smsControl].filter(Boolean).map(function (control) { return { control: control, disabled: control.disabled }; });
+          var preparationControls = [guideOffer, promotionsOffer, smsControl].filter(Boolean).map(function (control) { return { control: control, disabled: control.disabled }; });
           var preparedPredictions = [];
           smsReminderPending = true;
           preparationControls.forEach(function (saved) { saved.control.disabled = true; });
@@ -1121,12 +1126,14 @@
         var reminderAuthority = authorityRevision;
         var reminderValues = [nameIn.value, phoneIn.value, emailIn && emailIn.value, addrIn.value];
         var reminderGuide = main.querySelector('[data-power-guide-offer]');
+        var reminderPromotions = promotionsOffer && promotionsOffer.checked;
         var reminderGuideChoice = reminderGuide && reminderGuide.checked;
         var reminderAddress = JSON.stringify([addrUnverified, addrValidated, addrSel]);
         function reminderCurrent() {
           return reminderAuthority === authorityRevision && !editDetails && !submitting
             && reminderValues.every(function (value, index) { return value === [nameIn.value, phoneIn.value, emailIn && emailIn.value, addrIn.value][index]; })
             && smsControl.checked === false && (!reminderGuide || reminderGuide.checked === reminderGuideChoice)
+            && (!promotionsOffer || promotionsOffer.checked === reminderPromotions)
             && reminderAddress === JSON.stringify([addrUnverified, addrValidated, addrSel])
             && (!emailRequired() || Boolean(normalizedEmail(emailIn.value))) && part1Done()
             && (!options.canSubmit || options.canSubmit())
@@ -1150,7 +1157,7 @@
     var submitAuthorityRevision = authorityRevision;
     if (smsGiven) once('walk_v2_consent_checked');
     submitting = true;
-    busyConsentControls = [guideOffer, main.querySelector('[data-quote-sms-consent]')].filter(Boolean).map(function (control) {
+    busyConsentControls = [guideOffer, promotionsOffer, main.querySelector('[data-quote-sms-consent]')].filter(Boolean).map(function (control) {
       return { control: control, disabled: control.disabled };
     });
     busyConsentControls.forEach(function (saved) { saved.control.disabled = true; });
@@ -1241,6 +1248,7 @@
       smsConsent: smsGiven ? 'true' : '',
       submittedAt: new Date().toISOString(), eventTimestamp: Math.floor(Date.now() / 1000),
       source: 'walkv2-landing',
+      serviceAreaPolicy: 'bpp-seven-counties-2026-11-11-v1',
       actionSource: 'website', eventName: 'QuoteWalkStarted', eventId: eventId,
       intakeNonce: intakeNonce,
       analyticsOptOut: analyticsOptOut,
@@ -1262,6 +1270,9 @@
     if (smsReminderEligible && smsReminderDecision) payload.smsConsentSelection = Object.assign({}, smsReminderDecision);
     if (typeof guideGiven === 'boolean') {
       payload.powerGuideChoice = { version: guideConsentVersion, guideAndNewsletter: guideGiven };
+    }
+    if (typeof promotionsGiven === 'boolean') {
+      payload.emailPromotionsChoice = { version: promotionsVersion, promotions: promotionsGiven };
     }
 
     if (options.walkDraft) {
@@ -1385,7 +1396,8 @@
         var needsAddressConfirmation = hydrationOptions && hydrationOptions.requiresAddressConfirmation === true;
         addrValidated = !needsAddressConfirmation && Boolean(addrIn.value.trim());
         addrValidatedValue = addrValidated ? addrIn.value.trim() : '';
-        addrUnverified = !needsAddressConfirmation && value.service_area_status === 'pending_verification';
+        var areaState = value.quote_walk_v2 || value;
+        addrUnverified = !needsAddressConfirmation && (areaState.service_area_pending_review === true || areaState.service_area_status === 'unconfirmed' || areaState.service_area_status === 'pending_verification');
       }
       lastSyncedName = nameIn.value; lastSyncedPhone = phoneIn.value; lastSyncedAddress = addrIn.value;
       lastSyncedEmail = emailIn ? emailIn.value : '';

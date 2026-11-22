@@ -174,11 +174,6 @@
       });
       actions.appendChild(startOver);
     }
-    var help = document.createElement('a');
-    help.className = 'qw-secondary-action';
-    help.href = 'tel:+18648637800';
-    help.textContent = 'Call or text Key';
-    actions.appendChild(help);
     container.appendChild(actions);
     container.style.display = '';
     return state;
@@ -827,6 +822,7 @@
         return { reason: 'deeper', url: target.pathname + target.search };
       }
     }
+    if (state.service_area_pending_review === true) return { reason: 'area_review', page: 'index.html', extra: { area: 'review' } };
     if (state.service_area_status === 'verified_out_of_area') return { reason: 'area', page: 'index.html', extra: { area: 'out' } };
     if (review.followup && review.followup.current === true) return { reason: 'submitted', page: 'photos-later.html' };
     if (activeCorrection) return { reason: 'correction', page: 'photos-later.html', extra: { correction: '1' } };
@@ -928,7 +924,7 @@
         applyNewJourneyProgress(t, value);
         var state = value && value.quote_walk_v2 || {};
         var path = String(window.location && window.location.pathname || '').replace(/\/index\.html$/, '/');
-        if (state.service_area_status === 'verified_out_of_area' && path !== '/walk-v2/') {
+        if ((state.service_area_status === 'verified_out_of_area' || state.service_area_pending_review === true) && path !== '/walk-v2/') {
           go('index.html', t, { area: 'out' });
         }
         return value;
@@ -1481,7 +1477,7 @@
       var v2 = v.quote_walk_v2 || {};
       var newJourney = isNewJourney(v, t);
       if (isGuidedJourney(v, t)) return routeGuided(t, v, replaceHistory);
-      if (v2.service_area_status === 'verified_out_of_area') {
+      if (v2.service_area_status === 'verified_out_of_area' || v2.service_area_pending_review === true) {
         go('index.html', t, { area: 'out' }, replaceHistory);
         return;
       }
@@ -1500,7 +1496,7 @@
     routeRecoveryFromState: function (t, v) {
       if (isGuidedJourney(v, t)) return routeGuided(t, v, true);
       var state = v && v.quote_walk_v2 || {};
-      if (state.service_area_status === 'verified_out_of_area') {
+      if (state.service_area_status === 'verified_out_of_area' || state.service_area_pending_review === true) {
         go('index.html', t, { area: 'out' });
         return;
       }

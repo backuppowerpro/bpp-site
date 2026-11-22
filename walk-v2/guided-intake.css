@@ -571,3 +571,37 @@
 @media (hover: none) and (pointer: coarse) {
   html:has(> body.guided-walk), body.guided-walk { background: var(--page, #fafbfc); }
 }
+
+/* Shared save action: matches approved compact prompt + share link reference. */
+body .guided-save.save-row-template{display:flex!important;flex-wrap:wrap;align-items:center;justify-content:center;gap:0 8px;margin:18px 0 4px!important;width:100%;text-align:center}
+body .guided-save.save-row-template .save-row-prompt{margin:0!important;font-size:16px!important;line-height:1.5;color:#596372;flex:0 1 auto}
+body .guided-save.save-row-template [data-save-button]{display:inline-flex!important;align-items:center;justify-content:center;gap:8px;margin:0!important;padding:8px 0!important;font-size:16px!important;min-height:44px;white-space:nowrap}
+body .guided-save.save-row-template [data-save-button] svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2}
+body .guided-save.save-row-template [data-save-hint],body .guided-save.save-row-template [data-save-status]{flex-basis:100%;width:100%;text-align:center;margin:4px 0 0!important}
+body .guided-save.save-row-template [data-save-hint]:empty,body .guided-save.save-row-template [data-save-status]:empty{display:none!important}
+
+/* Desktop primary actions: compact, centered; mobile stays full-width. */
+@media(min-width:1024px){
+ body.guided-walk .guided-flow .cta,
+ body.guided-saved .guided-flow .cta{width:100%!important;max-width:440px!important;margin-left:auto!important;margin-right:auto!important}
+}
+/* Keep breathing room after relocating the save action below Continue. */
+.guided-screen[data-screen="connection"] > .choices{margin-top:20px}
+
+/* Expanded questions: inset the content, not the shared outer card or its header. */
+@media(min-width:1024px){
+ body.guided-walk .guided-flow > .guided-screen:is([data-screen="connection"],[data-screen="location"],[data-screen="distance"],[data-screen="help"]){
+  width:100%;max-width:560px;margin-inline:auto;
+ }
+}
+
+/* Use the outlet question's type scale throughout the question flow. */
+body.guided-walk .guided-flow .guided-screen > h2{
+ font-size:28px!important;line-height:1.2!important;font-weight:700;margin-bottom:8px;
+}
+body.guided-walk .guided-flow .guided-screen > .helper{
+ font-size:16px;line-height:1.45;font-weight:400;
+}
+
+/* Preserve hidden recovery actions despite the shared flex layout. */
+body .guided-save.save-row-template[hidden]{display:none!important}

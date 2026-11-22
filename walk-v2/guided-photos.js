@@ -63,15 +63,21 @@
           var receivedTextExpected = receivedPreferences.sms_effective === true && receivedFollowup.current === true
             && ['sent', 'pending', 'unconfirmed'].indexOf(receivedFollowup.status) !== -1;
           ctx.content.replaceChildren(receivedHeading, receivedOwner, element('p', receivedTextExpected ? 'Watch for a text from me asking when you\u2019d like your installation. Just reply there and we\u2019ll take it from here.' : 'I\u2019ll review your panel photo before preparing your firm price.', 'guided-received-next'));
-          var receivedGuideChoice = ctx.guideChoice ? ctx.guideChoice() : undefined;
+          var promotionalChoice = guideView.communication_preferences && guideView.communication_preferences.email_promotions_choice;
+          var promotionsOnly = promotionalChoice && promotionalChoice.version === 'bpp-email-promotions-2026-11-11'
+            && typeof promotionalChoice.promotions === 'boolean' && promotionalChoice.dispatch_enabled === false;
+          var retiredGuide = guideView.quote_walk_v2.power_guide_delivery;
+          var guideRetired = retiredGuide && retiredGuide.contract === 'bpp-power-guide-delivery-v1'
+            && retiredGuide.status === 'unavailable' && retiredGuide.providerAccepted === false && retiredGuide.reason === 'guide_delivery_retired';
+          var receivedGuideChoice = promotionsOnly || guideRetired ? false : ctx.guideChoice ? ctx.guideChoice() : undefined;
           if (window.BPPPowerGuideReceipt && typeof BPPPowerGuideReceipt.renderCompact === 'function') BPPPowerGuideReceipt.renderCompact(ctx.content, guideView, receivedGuideChoice);
           else if (receivedGuideChoice === true) {
             ctx.content.appendChild(element('p', 'Your guide email is not confirmed yet.', 'guided-received-guide'));
-            var pendingGuideLink = element('a', 'View your guide', 'guided-link guided-received-guide-link'); pendingGuideLink.href = '/power-guide/';
+            var pendingGuideLink = element('a', 'View your guide', 'guided-link guided-received-guide-link'); pendingGuideLink.href = '/generator-guide/';
             ctx.content.appendChild(pendingGuideLink);
           }
           else if (receivedGuideChoice === false) {
-            var receivedGuideLink = element('a', 'View your guide', 'guided-link guided-received-guide-link'); receivedGuideLink.href = '/power-guide/';
+            var receivedGuideLink = element('a', 'View your guide', 'guided-link guided-received-guide-link'); receivedGuideLink.href = '/generator-guide/';
             ctx.content.appendChild(receivedGuideLink);
           }
           ctx.focus();
@@ -90,9 +96,14 @@
         }
         if (ctx.inlineEstimate) {
           if (window.BPPPowerGuideReceipt) BPPPowerGuideReceipt.render(ctx.content, guideView, ctx.guideChoice ? ctx.guideChoice() : undefined);
+          else if (guideView.quote_walk_v2.power_guide_delivery && guideView.quote_walk_v2.power_guide_delivery.reason === 'guide_delivery_retired'
+              && window.BPPEstimateTerminal && BPPEstimateTerminal.confirmed(guideView)) {
+            var retiredGuideLink = element('a', 'View your guide', 'guided-link'); retiredGuideLink.href = '/generator-guide/';
+            ctx.content.appendChild(retiredGuideLink);
+          }
           else if (ctx.guideChoice && ctx.guideChoice() === true && window.BPPEstimateTerminal && BPPEstimateTerminal.confirmed(guideView)) {
             var guideFallback = element('p', 'Your guide email is not confirmed yet. ');
-            var guideLink = element('a', 'View your guide', 'guided-link'); guideLink.href = '/power-guide/';
+            var guideLink = element('a', 'View your guide', 'guided-link'); guideLink.href = '/generator-guide/';
             guideFallback.appendChild(guideLink); ctx.content.appendChild(guideFallback);
           }
         }

@@ -25,6 +25,7 @@
       || window.BPPContactDetails.requiredEmailCapture !== true
       || flow.getAttribute('data-sms-submit-reminder-version') === 'bpp-pre-submit-sms-2026-10-16-v1' && BPPContactDetails.preSubmitSmsChoice !== true
       || (flow.querySelector('[data-power-guide-offer][data-consent-version="bpp-guide-consent-2026-10-16"]') || flow.querySelector('[data-power-guide-offer][data-consent-version="bpp-guide-consent-2026-10-19"]')) && BPPContactDetails.versionedConsentCapture !== true
+      || flow.querySelector('[data-email-promotions-offer]') && (BPPContactDetails.emailPromotionsCapture !== true || !window.BPPEmailPromotionsChoice || BPPEmailPromotionsChoice.version !== 1)
       || !flow.querySelector('[data-request-card]') || !flow.querySelector('[data-email-error]')
       || !flow.querySelector('[data-estimate-confirmation]') || !flow.querySelector('[data-terminal-edit-cancel]')
       || !window.BPPEstimateTerminal || BPPEstimateTerminal.version !== 1
@@ -57,6 +58,14 @@
   }
   var entryURL = new URL(location.href);
   entryURL.searchParams.delete('t');
+  var landing = document.querySelector('[data-first-phase-landing] [data-readiness-landing]');
+  // The optional first-phase presentation must not replace the supported
+  // contact-first bridge when that static admission mode is selected.
+  if (landing && flow.dataset.anonymousEntry === 'contact-first-compatible') {
+    landing.hidden = true;
+    document.body.classList.remove('readiness-landing-active');
+    landing = null;
+  }
   var instance = crypto.randomUUID();
   var screens = ['connection', 'location', 'distance', 'contact'];
   var state = { protectedEntry: Boolean(window.__BPP_CAPABILITY_ENTRY), screen: 'connection', outlets: [], room: '', distance: null, token: WALK.token(), view: null, verified: false, pending: '', pendingNotSent: false, pendingUnknown: false, pendingConflict: false, busy: false, editing: false };
@@ -94,8 +103,16 @@
   var requestCard = flow.querySelector('[data-request-card]');
   var terminalCard = flow.querySelector('[data-estimate-confirmation]');
   var guideOffer = flow.querySelector('[data-power-guide-offer]');
+  var promotionsOffer = flow.querySelector('[data-email-promotions-offer]');
   var quoteSmsChoice = flow.querySelector('[data-quote-sms-consent]');
-  if (!state.token && window.BPPPowerGuideChoice) {
+  if (!state.token && promotionsOffer && window.BPPEmailPromotionsChoice) {
+    var promotionsDraft = BPPEmailPromotionsChoice.readForForm(promotionsOffer.getAttribute('data-consent-version'));
+    if (promotionsDraft) {
+      promotionsOffer.checked = promotionsDraft.promotions;
+      if (quoteSmsChoice) quoteSmsChoice.checked = promotionsDraft.smsQuoteService;
+    }
+  }
+  if (!state.token && guideOffer && window.BPPPowerGuideChoice) {
     var renderedConsentVersion = guideOffer && guideOffer.getAttribute('data-consent-version');
     var guideDraft = typeof BPPPowerGuideChoice.readForForm === 'function'
       ? BPPPowerGuideChoice.readForForm(renderedConsentVersion)
@@ -132,6 +149,7 @@
     flow.querySelector('[data-guided-position]').textContent = firstName ? firstName + '’s estimate' : 'Your estimate';
   }
   function inlineShell(view) {
+    if (landing) { landing.hidden = true; document.body.classList.remove('readiness-landing-active'); }
     // A prior accepted receipt keeps its presentation through Back and read-only retry.
     if (entryURL.searchParams.get('estimate') === 'received') {
       history.replaceState({ qwg: instance, screen: 'confirmation' }, '', entryURL.pathname + entryURL.search);
@@ -257,7 +275,7 @@
   var recoveryCopy = flow.querySelector('[data-recovery-copy]');
   var retryButton = flow.querySelector('[data-recovery-retry]');
   var newButton = flow.querySelector('[data-recovery-new]');
-  var callLink = flow.querySelector('[data-recovery-call]');
+  var serviceAreaGuide = flow.querySelector('[data-service-area-guide]');
   var progress = flow.querySelector('[data-guided-progress]');
   var draftNote = flow.querySelector('[data-unsent-draft-note]');
   function updateDraftNote() {
@@ -291,7 +309,7 @@
       fields[key === 'addr' ? 'address' : key] = input ? input.value : '';
     });
     var saved = { schema: CONTRACT, updatedAt: unsentUpdatedAt, outlets: state.outlets.slice(), room: state.room, distance: state.distance,
-      screen: state.screen === 'help' ? 'help' : screens.indexOf(state.screen) !== -1 ? state.screen : 'contact',
+      screen: landing && state.screen === 'landing' ? 'landing' : state.screen === 'help' ? 'help' : screens.indexOf(state.screen) !== -1 ? state.screen : 'contact',
       helpKind: helpKind, helpOrigin: helpOrigin, contact: fields, acceptedRange: acceptedInitialRange || restoredRangeIntent };
     try {
       // No image bytes, capability, tracking ID, URL, consent or request body enter this draft.
@@ -315,7 +333,7 @@
           || !Array.isArray(saved.outlets) || saved.outlets.length > 2 || new Set(saved.outlets).size !== saved.outlets.length || saved.outlets.some(function (value) { return value !== '30' && value !== '50'; })
           || typeof saved.room !== 'string' || saved.room !== '' && Object.values(ROOMS).indexOf(saved.room) === -1
           || saved.distance !== null && Object.values(BANDS).indexOf(saved.distance) === -1
-          || screens.concat('help').indexOf(saved.screen) === -1 || !details
+          || screens.concat(landing ? ['help', 'landing'] : ['help']).indexOf(saved.screen) === -1 || !details
           || ['name', 'phone', 'email', 'address'].some(function (key) { return typeof details[key] !== 'string' || details[key].length > (key === 'address' ? 2048 : 256); })
           || typeof saved.acceptedRange !== 'string' || saved.acceptedRange !== '' && !/^[a-f0-9]{64}:[0-9a-f-]{36}:[0-9]+$/.test(saved.acceptedRange)
           || ['outlet', 'mismatch', 'no-generator', 'panel', 'distance'].indexOf(saved.helpKind) === -1 || screens.indexOf(saved.helpOrigin) === -1) {
@@ -370,7 +388,27 @@
     var unknown = !state.room || state.room === 'not_sure';
     return { schema: CONTRACT, observed_connections: state.outlets.slice().sort(), panel_location: state.room || 'not_sure', panel_inventory_status: multi ? 'multiple_unsure_main' : unknown ? 'incomplete' : 'single_complete', panels: multi || unknown ? [] : [{ stable_key: 'main-panel', label: 'Main panel' }], distance_band: state.distance };
   }
+  // This optional presentation step does not change quote answers or backend contracts.
+  function showLanding(options) {
+    options = options || {};
+    state.screen = 'landing';
+    flow.hidden = true;
+    landing.hidden = false;
+    document.body.dataset.activeScreen = 'landing';
+    document.body.classList.add('readiness-landing-active');
+    document.getElementById('mainPage').dataset.screenLabel = 'Generator connection landing page';
+    if (!options.noHistory) history[options.replace ? 'replaceState' : 'pushState']({ qwg: instance, screen: 'landing' }, '', entryURL.pathname + entryURL.search);
+    if (!options.noFocus) { landing.querySelector('h1').focus({ preventScroll: true }); window.scrollTo({ top: 0, behavior: 'instant' }); }
+  }
+  if (landing) landing.addEventListener('click', function (event) {
+    if (!event.target.closest('[data-first-phase-start]') || state.busy || state.pending || state.token || state.protectedEntry) return;
+    event.preventDefault();
+    if (state.screen === 'landing') show('connection');
+  });
   function show(screen, options) {
+    if (landing && screen === 'landing' && !state.token && !state.pending && !state.protectedEntry) { showLanding(options); return; }
+    if (landing) { landing.hidden = true; document.body.classList.remove('readiness-landing-active'); }
+
     if (window.BPPQuoteWalkEstimateLoading) BPPQuoteWalkEstimateLoading.hide();
     options = options || {};
     if (recoveryPanel.parentElement === requestCard) flow.appendChild(recoveryPanel);
@@ -396,8 +434,8 @@
     activeScreen = flow.querySelector('[data-screen="' + screen + '"]');
     document.body.dataset.activeScreen = screen;
     document.getElementById('mainPage').dataset.screenLabel = screen === 'connection' || contactFirstAnonymous() ? 'Landing page (interactive, mobile)' : 'Quote walk: guided details';
-    progress.hidden = contactFirstAnonymous() || screen === 'connection' || screen === 'recovery' || screen === 'help';
-    flow.querySelector('[data-guided-position]').textContent = { location: 'Panel', distance: 'Distance', contact: inlineEstimate ? 'Your estimate' : state.token ? 'Details' : 'Your estimate' }[screen] || '';
+    progress.hidden = contactFirstAnonymous() || (screen === 'connection' && (!landing || state.token || state.protectedEntry)) || screen === 'recovery' || screen === 'help';
+    flow.querySelector('[data-guided-position]').textContent = { connection: 'Outlets', location: 'Panel', distance: 'Distance', contact: inlineEstimate ? 'Your estimate' : state.token ? 'Details' : 'Your estimate' }[screen] || '';
     refreshChoices(); refreshSaves();
     updateDraftNote();
     if (screen === 'contact' && inlineEstimate && inlineEditing) { activeScreen.setAttribute('aria-label', 'Your estimate and contact details'); contact(); refreshInitialGate(); }
@@ -557,6 +595,9 @@
     }
   });
   function recovery(title, copy, callback, allowNew) {
+    recoveryPanel.removeAttribute('data-service-area-review');
+    if (serviceAreaGuide) serviceAreaGuide.hidden = true;
+    retryButton.removeAttribute('data-service-area-edit');
     recoveryHeading.textContent = title;
     recoveryCopy.textContent = copy || '';
     retry = callback;
@@ -565,13 +606,35 @@
     retryButton.textContent = 'Try again';
     newButton.hidden = !allowNew;
     flow.querySelector('[data-screen="recovery"] [data-save-for-later]').hidden = Boolean(allowNew);
-    callLink.hidden = !allowNew;
     if (inlineEstimate) {
       inlineShell(); recoveryPanel.hidden = false;
       recoveryPanel.querySelector('[data-save-for-later]').hidden = true;
       requestCard.dataset.requestPhase = state.busy ? 'saving' : 'recovery';
       revealHeading(recoveryHeading);
     } else show('recovery', { replace: true });
+  }
+  function serviceAreaReview(view) {
+    // A server receipt is the only authority for the saved-review message.
+    inlineEstimate = false;
+    recovery('Your request is saved for address review.',
+      'Key will review the address and contact details you submitted. Your installation area and quote are not confirmed, and the preliminary range has not been accepted. You do not need to keep trying the same address.',
+      function () {
+        entryURL.searchParams.set('edit', 'details');
+        loadProtected();
+      }, false);
+    recoveryPanel.setAttribute('data-service-area-review', 'pending');
+    retryButton.textContent = 'Edit address'; retryButton.setAttribute('data-service-area-edit', '');
+    if (serviceAreaGuide) serviceAreaGuide.hidden = false;
+    flow.querySelector('[data-screen="recovery"] [data-save-hint]').textContent = 'Save this link to return to your request.';
+  }
+  function outsideServiceArea(view) {
+    inlineEstimate = false;
+    recovery('This home is outside our installation area.',
+      'We serve Greenville, Spartanburg, Pickens, Anderson, Laurens, Cherokee and Union counties in South Carolina. You can still use the free generator guide. If the address is wrong, you can edit it.',
+      function () { contact(); mountedContact.hydrate(view); show('contact', { replace: true }); }, false);
+    retryButton.textContent = 'Edit address'; retryButton.setAttribute('data-service-area-edit', '');
+    if (serviceAreaGuide) serviceAreaGuide.hidden = false;
+    flow.querySelector('[data-screen="recovery"] [data-save-for-later]').hidden = true;
   }
   function clearPending(expectedBody) {
     if (!expectedBody || state.pending === expectedBody) {
@@ -605,7 +668,7 @@
     state.busy = false;
     if (pending && pending.conflict) {
       recovery('Earlier requests need a check.', 'This tab has more than one unfinished request. Use their saved links or contact Backup Power Pro before saving another request.', null, false);
-      callLink.hidden = false; return;
+      return;
     }
     function openEarlierRequest() {
       // Reopen its exact retained body without another saved request's authority.
@@ -615,7 +678,6 @@
       } catch (_) {
         recovery('This tab could not open your earlier request.', 'This browser could not confirm that the other saved link was cleared. Your earlier request is still here. Keep this page open and try again, or call Backup Power Pro for help.', openEarlierRequest, false);
         retryButton.textContent = 'Try clearing the saved link';
-        callLink.hidden = false;
         return;
       }
       location.replace('/walk-v2/');
@@ -705,6 +767,8 @@
     // contact-first requests keep their existing quote/text controls and path.
     var guideOfferLabel = guideOffer && guideOffer.closest('label');
     if (guideOfferLabel) guideOfferLabel.hidden = Boolean(state.token) || contactFirstAnonymous();
+    var promotionsLabel = promotionsOffer && promotionsOffer.closest('label');
+    if (promotionsLabel) promotionsLabel.hidden = Boolean(state.token) || contactFirstAnonymous();
     // The first-photo example belongs to new estimate requests, not saved edits.
     if (panelExample) {
       if (panelExampleImage.complete && panelExampleImage.naturalWidth === 0) panelExample.dataset.unavailable = 'true';
@@ -752,6 +816,14 @@
       }
       // Legacy-compatible capture also owns its temporary SMS choice, without adding guide enrollment.
       BPPPowerGuideChoice.bindRequest(payload.intakeNonce);
+    }
+    if (!payload.existingToken && window.BPPEmailPromotionsChoice && promotionsOffer && quoteSmsChoice) {
+      if (payload.emailPromotionsChoice && typeof payload.emailPromotionsChoice.promotions === 'boolean') {
+        BPPEmailPromotionsChoice.draft(payload.emailPromotionsChoice.promotions, payload.smsConsent === 'true');
+      }
+      // Bind temporary SMS selections even when legacy capture omits promotions.
+      // A new request must not inherit the preceding request's consent choices.
+      BPPEmailPromotionsChoice.bindRequest(payload.intakeNonce);
     }
     state.pendingNotSent = true;
     return retryIntake();
@@ -801,6 +873,17 @@
     var token = String(result.preReadToken || '');
     var original = JSON.parse(body);
     if (response && response.ok && TOKEN.test(token)) {
+      if (original.serviceAreaPolicy === 'bpp-seven-counties-2026-11-11-v1' && result.service_area_policy !== original.serviceAreaPolicy) {
+        recovery('Your request needs a connection check.', 'Your details may already be saved. Keep this page open and try again to check this same request before continuing.', retryIntake, false);
+        return;
+      }
+      if (original.emailPromotionsChoice && (result.emailPromotionsChoiceRecorded !== true
+          || !result.emailPromotionsChoice || result.emailPromotionsChoice.version !== original.emailPromotionsChoice.version
+          || result.emailPromotionsChoice.promotions !== original.emailPromotionsChoice.promotions
+          || result.emailPromotionsChoice.dispatch_enabled !== false)) {
+        recovery('Your request needs a connection check.', 'Your details may already be saved. Keep this page open and try again to check this same request before continuing.', retryIntake, false);
+        return;
+      }
       var expectedPhotos = original.initialPanelPhoto;
       var collectionAcknowledged = !expectedPhotos || expectedPhotos.photoCount === undefined || (
         Array.isArray(result.initialPanelPhotoIds) && Array.isArray(result.initialPanelPhotoMediaIds)
@@ -851,6 +934,13 @@
           else if (meta.eventName === 'Lead') BPPMeta.trackLead(meta.eventId);
         }
       } catch (_) {}
+      if (Number.isSafeInteger(result.quoteWalkV2Version) && result.quoteWalkV2Version > 0 && result.service_area_pending_review === true && result.service_area_policy === 'bpp-seven-counties-2026-11-11-v1' && result.service_area_status === 'unconfirmed') {
+        clearPending(body);
+        state.view = { contact_name: [original.firstName, original.lastName].filter(Boolean).join(' '), phone: original.phone, email: original.email, address: original.address,
+          quote_walk_v2: { version: result.quoteWalkV2Version, intake_contract: result.intakeContract || CONTRACT, service_area_status: 'unconfirmed', service_area_policy: result.service_area_policy, service_area_pending_review: true } };
+        WALK.rememberJourneyState(token, state.view);
+        serviceAreaReview(state.view); return;
+      }
       if (original.estimatePreviewHash && original.walkDraft && !original.existingToken && result.intakeContract === CONTRACT) {
         if (!Number.isSafeInteger(result.quoteWalkV2Version) || result.quoteWalkV2Version < 1 || result.service_area_status === 'verified_out_of_area') {
           clearPending(body); await loadProtected(); return;
@@ -862,7 +952,7 @@
               || acceptance.preview_hash !== original.estimatePreviewHash || !acceptance.snapshot_id
               || acceptance.accepted_range_snapshot_id !== acceptance.snapshot_id
               || acceptance.handoff_recorded !== true) throw new Error('acceptance_not_confirmed');
-          if (window.BPPPowerGuideChoice) BPPPowerGuideChoice.bindReceipt(original.intakeNonce, acceptance.acceptance_id);
+          if (original.powerGuideChoice && window.BPPPowerGuideChoice) BPPPowerGuideChoice.bindReceipt(original.intakeNonce, acceptance.acceptance_id);
           // Tracking follows the validated acceptance and cannot block next steps.
           try {
             var acceptedMeta = acceptance.metaLeadEvent;
@@ -891,7 +981,7 @@
       }
       // The range bootstrap verifies the current server state and all route guards.
       // Server range creation owns readiness, including pending service-area review.
-      if (original.walkDraft && !original.existingToken && result.intakeContract === CONTRACT && Number.isSafeInteger(result.quoteWalkV2Version) && result.quoteWalkV2Version > 0 && ['verified_in_area', 'unconfirmed', 'pending_verification'].indexOf(result.service_area_status) !== -1) {
+      if (original.walkDraft && !original.existingToken && result.intakeContract === CONTRACT && Number.isSafeInteger(result.quoteWalkV2Version) && result.quoteWalkV2Version > 0 && ['verified_in_area', 'unconfirmed'].indexOf(result.service_area_status) !== -1) {
         // Create from the committed intake version before the one fresh range read.
         // Uncertain creation is reconciled by that read and its existing retry path.
         if (Number.isSafeInteger(result.quoteWalkV2Version) && result.quoteWalkV2Version > 0) {
@@ -906,6 +996,12 @@
       await loadProtected();
       return;
     }
+    if (response && response.status === 422 && result.error === 'outside_service_area') {
+      clearPending(body);
+      if (initialPhoto) initialPhoto.lock(false);
+      outsideServiceArea({ contact_name: [original.firstName, original.lastName].filter(Boolean).join(' '), phone: original.phone, email: original.email, address: original.address });
+      return;
+    }
     if (response && (response.status === 400 || response.status === 422) && result.error !== 'intake_replay_payload_mismatch') {
       clearPending(body);
       state.busy = false;
@@ -913,7 +1009,7 @@
       if (original.walkDraft) hydrate({ quote_walk_v2: original.walkDraft });
       if (initialPhoto) initialPhoto.lock(false);
       contact();
-      mountedContact.hydrate({ contact_name: [original.firstName, original.lastName].filter(Boolean).join(' '), phone: original.phone, email: original.email, address: original.address, service_area_status: original.addressUnverified ? 'pending_verification' : 'unconfirmed' });
+      mountedContact.hydrate({ contact_name: [original.firstName, original.lastName].filter(Boolean).join(' '), phone: original.phone, email: original.email, address: original.address, service_area_status: 'unconfirmed' });
       show('contact', { replace: true });
       if (original.initialPanelPhoto && ['initial_photo_required', 'initial_photo_unverified', 'range_preview_changed'].indexOf(result.error) !== -1) {
         acceptedInitialRange = '';
@@ -995,11 +1091,10 @@
         return;
       }
       if ((view.quote_walk_v2 || {}).service_area_status === 'verified_out_of_area' || view.service_area_status === 'verified_out_of_area') {
-        recovery('Please check your address', 'Quote Walk accepts South Carolina addresses. Check your address to continue.', function () { entryURL.searchParams.set('edit', 'details'); if (inlineEstimate) editInlineDetails(); else { contact(); mountedContact.hydrate(view); show('contact'); } }, false);
-        retryButton.textContent = 'Correct my address';
-        flow.querySelector('[data-screen="recovery"] [data-save-for-later]').hidden = true;
+        outsideServiceArea(view);
         return;
       }
+      if ((view.quote_walk_v2 || {}).service_area_pending_review === true) { serviceAreaReview(view); return; }
       if (inlineEstimate && !edit) { await showInlineConfirmation(view); return; }
       if (WALK.isGuidedJourney(view, state.token) && ['connection', 'location', 'distance', 'outlet', 'panel', 'setup'].indexOf(edit) !== -1) {
         state.editing = true;
@@ -1074,8 +1169,6 @@
     var copy = flow.querySelector('[data-help-copy]');
     var examples = flow.querySelector('[data-help-examples]');
     var back = flow.querySelector('[data-help-return]');
-    var call = flow.querySelector('[data-help-call]');
-    if (call) call.hidden = kind !== 'panel' && kind !== 'distance';
     var savedUnknown = flow.querySelector('[data-save-unknown]');
     if (!savedUnknown) {
       savedUnknown = document.createElement('button'); savedUnknown.type = 'button'; savedUnknown.className = 'cta qw-primary-action'; savedUnknown.dataset.saveUnknown = ''; savedUnknown.textContent = 'Save this answer';
@@ -1087,7 +1180,7 @@
       outlet: ['Look at the outlets on the generator.', 'Compare the outlet shape and the markings beside it with these examples.', 'Choose my outlet'],
       mismatch: ['A compatible generator is needed for this service.', 'Use the outlet shape and label together. Save this link and return when you can check a compatible generator.', 'Back to outlet question'],
       'no-generator': ['A compatible generator is needed for this service.', 'Save this link and return when you can check a compatible generator.', 'Back to outlet question'],
-      panel: ['Common places to look', "Check the garage, basement, outside wall, closet or utility area. This illustration is an identification example. Keep your electrical panel closed. Don't open electrical equipment or remove covers. If you can't identify it safely, keep your answer as Not sure.", 'I found it'],
+      panel: ['Common places to look', "Check the garage, basement, outside wall, closet or utility area. This illustration is an identification example. Keep your electrical panel closed. Don't open electrical equipment or remove covers. If you cannot identify it safely, save this link and return when you can confirm the panel. We need its location to prepare your online estimate.", 'Back to panel choices'],
       distance: ["Check the route when you're home.", 'You only need an approximate distance. If you cannot check now, save this link for later.', 'Back to distance question']
     };
     var words = texts[kind] || texts.outlet;
@@ -1142,6 +1235,7 @@
       var index = screens.indexOf(state.screen);
       if (index > 0) show(screens[index - 1]);
       else if (state.token) WALK.routeFromState(state.token, state.view);
+      else if (landing && !state.protectedEntry) show('landing');
     } else if (button.hasAttribute('data-help-return')) {
       show(helpOrigin);
       if (helpTrigger && !helpTrigger.closest('[hidden]')) helpTrigger.focus();
@@ -1154,13 +1248,14 @@
     detailsSetupEditing = false; detailsSetupVersion = null;
     if (initialPhoto) initialPhoto.discardLocal();
     if (window.BPPPowerGuideChoice) BPPPowerGuideChoice.clear();
+    if (window.BPPEmailPromotionsChoice) BPPEmailPromotionsChoice.clear();
     clearUnsent();
     clearPending(); WALK.setToken(''); state.token = ''; state.view = null; state.verified = false;
     updateEstimateHeading();
     entryURL.search = ''; state.outlets = []; state.room = ''; state.distance = null;
     // A failed or ignored storage removal must not import old authority after navigation.
     try {
-      if ([UNSENT_KEY, PENDING_KEY, LEGACY_PENDING_KEY, CONTINUATION_KEY, 'bpp:qwv2:bearer', 'bpp_initial_panel_photo_v1', 'bpp:qwv2:power-guide-choice'].some(function (key) { return Boolean(sessionStorage.getItem(key)); })) throw new Error('earlier_work_retained');
+      if ([UNSENT_KEY, PENDING_KEY, LEGACY_PENDING_KEY, CONTINUATION_KEY, 'bpp:qwv2:bearer', 'bpp_initial_panel_photo_v1', 'bpp:qwv2:power-guide-choice', 'bpp:qwv2:email-promotions-choice'].some(function (key) { return Boolean(sessionStorage.getItem(key)); })) throw new Error('earlier_work_retained');
     } catch (_) {
       state.pendingUnknown = true;
       recovery('Your earlier work could not be cleared.', 'This browser could not confirm a fresh start. Keep this page open and try again, or call Backup Power Pro for help.', null, true);
@@ -1175,6 +1270,8 @@
   flow.addEventListener('change', function (event) {
     if (!state.token && !state.pending && !state.busy && window.BPPPowerGuideChoice && guideOffer && quoteSmsChoice
         && event.target.matches('[data-power-guide-offer], [data-quote-sms-consent]')) BPPPowerGuideChoice.draft(guideOffer.checked, quoteSmsChoice.checked);
+    if (!state.token && !state.pending && !state.busy && window.BPPEmailPromotionsChoice && promotionsOffer && quoteSmsChoice
+        && event.target.matches('[data-email-promotions-offer], [data-quote-sms-consent]')) BPPEmailPromotionsChoice.draft(promotionsOffer.checked, quoteSmsChoice.checked);
   });
   flow.addEventListener('click', function (event) {
     var control = event.target.closest('button');
@@ -1201,7 +1298,7 @@
       help(event.state.helpKind, null, { origin: event.state.helpOrigin, noHistory: true });
     }
     else if (event.state && event.state.qwg === instance && screens.indexOf(event.state.screen) !== -1) show(event.state.screen, { noHistory: true });
-    else if (!state.token) show('connection', { noHistory: true });
+    else if (!state.token) show(landing && !state.protectedEntry ? 'landing' : 'connection', { noHistory: true });
   });
   window.addEventListener('pageshow', function (event) {
     if (!event.persisted) return;
@@ -1238,7 +1335,7 @@
     else if (pending && pending.unavailable) recoverPendingRead();
     else if (pending && pending.expired) { clearPending(); recovery("We couldn't recover this submission.", 'Use a saved Quote Walk link if you have one, or contact Backup Power Pro before starting again.', null, true); }
     else if (pending && pending.body) { state.pending = pending.body; retryIntake(); }
-    else if (!restoreUnsent(readUnsent())) show('connection', { replace: true, noFocus: true });
+    else if (!restoreUnsent(readUnsent())) show(landing && !state.protectedEntry ? 'landing' : 'connection', { replace: true, noFocus: true });
   }
   if (typeof window.BPPQuoteWalkMarkReady === 'function') window.BPPQuoteWalkMarkReady();
   // Startup recovery was routed while the boot overlay still hid its heading.

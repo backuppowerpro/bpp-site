@@ -1034,7 +1034,7 @@ function showClosedProposal(row){
   bindData(row);
   showState(expired?'⏰':'🚫',expired?'This quote has expired':'This proposal is closed',
     expired?'Text or call Key for a refreshed proposal. The current proposal cannot be signed.':'This proposal is no longer active. Reach Key if you have questions.',
-    '<a class="approve-nav" href="tel:+18648637800"><span>Call Key (864) 863-7800</span></a>');
+    '');
 }
 function resetAuthorizationForRevisedContract(row){
   submitting=false;
@@ -1591,7 +1591,7 @@ function showUnpaidDepositNotAccepted(row){
   if(hasCheckoutReturnHint())scrubCheckoutReturnHints(false);
   showState('⚠️','Proposal not accepted',
     'Payment was not confirmed, so this proposal was not accepted. Ask Key for a refreshed proposal, then review it, check each acknowledgment, enter your name, and accept again.',
-    '<a class="approve-nav" href="tel:+18648637800"><span>Call Key</span></a>'
+    ''
     +'<div style="margin-top:14px;font-size:13px;color:var(--text3)">You can also text (864) 863-7800 for a refreshed proposal.</div>');
 }
 // Signed but the card/deposit step was not finished. Offer a one-tap return to checkout.
@@ -1953,7 +1953,7 @@ function bootProposal(row){
     setTimeout(function(){ try{ if(document.body.classList.contains('booting')){ showState('⏳','One moment',"I'm pulling up your proposal. If it doesn't load, refresh or text Key at (864) 863-7800."); } }catch(_){} }, 11000);
     var token=new URLSearchParams(window.location.search).get('token');
     if(!token){ showState('🔗','Proposal link not found','This isn\'t the personal link Key texted you. Text or call Key at (864) 863-7800 and he will send a fresh one.',
-      '<a class="approve-nav" href="tel:+18648637800"><span>Call Key (864) 863-7800</span></a>'
+      ''
       +'<a class="approve-nav" style="margin-top:10px;background:transparent;color:var(--navy);box-shadow:inset 0 0 0 1.5px rgba(11,31,59,.22)" href="sms:+18648637800"><span>Text Key</span></a>'); return; }
     var ctrl=new AbortController();
     var timer=setTimeout(function(){ctrl.abort();},10000);
@@ -1983,10 +1983,10 @@ function bootProposal(row){
           return;
         }
         if(res.status===404||res.status===400) showState('🔗','Proposal not found','This link may be invalid or expired. Reach Key and he will send a fresh one.',
-          '<a class="approve-nav" href="tel:+18648637800"><span>Call Key (864) 863-7800</span></a>'
+          ''
           +'<a class="approve-nav" style="margin-top:10px;background:transparent;color:var(--navy);box-shadow:inset 0 0 0 1.5px rgba(11,31,59,.22)" href="sms:+18648637800"><span>Text Key</span></a>');
         else showState('⚠️','Could not load your proposal','Please refresh, or reach Key if it keeps failing.',
-          '<a class="approve-nav" href="tel:+18648637800"><span>Call Key (864) 863-7800</span></a>');
+          '');
         return;
       }
       P=row; P.token=row.token||token;
@@ -2017,7 +2017,7 @@ function bootProposal(row){
       }
       var st=(row.status||'').toLowerCase();
       if(st==='cancelled'||st==='declined'){ if(hasCheckoutReturnHint())scrubCheckoutReturnHints(false);showState('🚫','This proposal is closed','This proposal has been cancelled. Reach Key with any questions.',
-        '<a class="approve-nav" href="tel:+18648637800"><span>Call Key (864) 863-7800</span></a>'); return; }
+        ''); return; }
       if(row.superseded_by && !row.signed_at){ if(hasCheckoutReturnHint())scrubCheckoutReturnHints(false);showState('📄','This quote was replaced','A newer version of your quote was sent. Please use that link, the price and details may have changed.',
         '<a class="approve-nav" href="sms:+18648637800"><span>Text Key for the current quote</span></a>'); return; }
       if(st==='approved'){ showApproved(row); return; }

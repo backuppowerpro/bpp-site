@@ -796,7 +796,7 @@
   }
 
   function giftTease() {
-    return '<p class="later" style="margin-top:10px;"><b>Finish the taps and the photo</b> and my free storm-prep guide is yours, along with your locked price.</p>';
+    return '<p class="later" style="margin-top:10px;"><a href="/generator-guide/">Read Your Guide to Home Generator Power</a>, free anytime.</p>';
   }
 
   function introScreen() {
@@ -841,7 +841,7 @@
           '<div class="big"><svg viewBox="0 0 28 28"><path d="M5 15l6.5 6.5L23 7"/></svg></div>' +
           '<h2>That\'s everything, ' + firstName() + '.</h2>' +
           '<p>Yours is in tonight\'s stack. Your locked number lands by text from me.</p>' +
-          '<a class="sms-btn" href="/free-guide/" style="text-decoration:none;">Get the free storm-prep guide</a>' +
+          '<a class="sms-btn" href="/generator-guide/" style="text-decoration:none;">Get the free homeowner guide</a>' +
         '</div>' + hatch();
     }
     return mark() +
@@ -849,7 +849,8 @@
         '<div class="big"><svg viewBox="0 0 28 28"><path d="M5 15l6.5 6.5L23 7"/></svg></div>' +
         '<h2>Taps are in, ' + firstName() + '.</h2>' +
       '</div>' +
-      photoAsk({ heading: 'One photo of your panel with the door open finishes it. That\'s what locks your exact number, and my free storm-prep guide comes with it.' }) +
+      photoAsk({ heading: 'One photo of your panel with the door open finishes it. That\'s what locks your exact number.' }) +
+      giftTease() +
       hatch();
   }
 

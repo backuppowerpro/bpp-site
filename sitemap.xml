@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- The canonical public quote entry is the current acquisition destination.
+<!-- The canonical quote entry and public guide download are acquisition destinations.
      Customer documents, saved requests, utility pages and frozen marketing
      routes are not sitemap entries. Omit lastmod until a publication timestamp
      is verified, rather than presenting a private edit as a live update. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://backuppowerpro.com/walk-v2/</loc>
+  </url>
+  <url>
+    <loc>https://backuppowerpro.com/generator-guide/</loc>
   </url>
 </urlset>
