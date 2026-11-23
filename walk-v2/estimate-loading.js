@@ -5,7 +5,8 @@
   var mode = /\/walk-v2\/photos(?:\.html)?\/?$/.test(location.pathname) ? 'photos' : 'estimate';
   var active = /\/walk-v2\/(?:range|photos)(?:\.html)?\/?$/.test(location.pathname);
   var panel;
-  var priorFocus;
+  var priorFocus, focusIntent;
+  var pointer = window.BPPPointerFocus;
   function label() { return mode === 'photos' ? 'Opening your next step...' : mode === 'saving' ? 'Saving your request...' : 'Preparing your estimate...'; }
   function explanation() { return mode === 'photos' ? 'We are opening your next step. Your saved request will appear here.' : mode === 'saving' ? 'We are saving your request. You will see the next step after the save is confirmed.' : 'We are preparing your estimate. The next step will appear here.'; }
   function mount() {
@@ -17,18 +18,19 @@
     heading.textContent = label(); heading.tabIndex = -1;
     panel.querySelector('p').textContent = explanation();
     document.body.appendChild(panel);
-    heading.focus({ preventScroll: true });
+    if (pointer) pointer.focus(heading, { preventScroll: true }, focusIntent);
+    else heading.focus({ preventScroll: true });
   }
-  function show(nextMode) { if (nextMode) mode = ['photos', 'saving'].indexOf(nextMode) !== -1 ? nextMode : 'estimate'; if (!active || !panel) priorFocus = document.activeElement; active = true; root.classList.add('qw-estimate-waiting'); mount(); if (panel) { panel.querySelector('h1').textContent = label(); panel.querySelector('p').textContent = explanation(); } }
+  function show(nextMode, intent) { if (pointer && (intent !== undefined || pointer.capture())) focusIntent = intent === undefined ? pointer.capture() : intent; if (nextMode) mode = ['photos', 'saving'].indexOf(nextMode) !== -1 ? nextMode : 'estimate'; if (!active || !panel) priorFocus = document.activeElement; active = true; root.classList.add('qw-estimate-waiting'); mount(); if (panel) { panel.querySelector('h1').textContent = label(); panel.querySelector('p').textContent = explanation(); } }
   function hide() {
     var restore = panel && (panel.contains(document.activeElement) || document.activeElement === document.body);
     active = false; root.classList.remove('qw-estimate-waiting'); if (panel) panel.remove(); panel = null;
     if (restore && priorFocus && priorFocus.isConnected && !priorFocus.disabled && priorFocus.getClientRects().length && getComputedStyle(priorFocus).visibility === 'visible') priorFocus.focus({ preventScroll: true });
-    priorFocus = null;
+    priorFocus = null; focusIntent = null;
   }
   window.BPPQuoteWalkEstimateLoading = { show: show, hide: hide, isActive: function () { return active; } };
   if (active) {
-    show();
+    show(undefined, pointer ? pointer.arrival() : null);
     if (!document.body) {
       var observer = new MutationObserver(function () { if (document.body) { observer.disconnect(); mount(); } });
       observer.observe(root, { childList: true, subtree: true });

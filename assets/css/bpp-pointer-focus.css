@@ -1,0 +1,15 @@
+/* This is an opt-out for positive physical-pointer evidence on the active target
+   only. Without the helper, keyboard rings, native input focus and visible
+   unknown/programmatic focus all retain the page's existing treatment. */
+:root body [data-bpp-pointer-focus][data-bpp-pointer-focus]:focus {
+  outline-style: none !important;
+}
+/* Programmatically focused headings and status elements may inherit the
+   browser's last pointer heuristic, even when this move has no pointer cause. */
+:where([data-bpp-program-focus]):focus {
+  outline: 3px solid #1464c0;
+  outline-offset: 3px;
+}
+@media (forced-colors: active) {
+  :where([data-bpp-program-focus]):focus { outline-color: Highlight; }
+}

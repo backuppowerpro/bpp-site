@@ -2,6 +2,7 @@
 (function () {
   'use strict';
   function accepted(state) { return Boolean(state.accepted_range_snapshot_id && state.current_range_snapshot && state.accepted_range_snapshot_id === state.current_range_snapshot.snapshot_id); }
+  function capture() { return window.BPPPointerFocus && BPPPointerFocus.capture(); }
   function usable(snapshot) { return window.BPPGuidedEstimate && BPPGuidedEstimate.usable(snapshot); }
   window.BPPGuidedRange = {
     mount: async function (ctx) {
@@ -10,14 +11,15 @@
       function primary(label, callback, parent) { var button = element('button', label, 'cta qw-primary-action'); button.type = 'button'; button.onclick = callback; (parent || ctx.content).appendChild(button); return button; }
       function link(label, callback, parent) { var button = element('button', label, 'guided-link'); button.type = 'button'; button.onclick = callback; (parent || ctx.content).appendChild(button); return button; }
       function save(parent) { var container = element('div'); container.innerHTML = BPPGuidedSaved.saveMarkup; (parent || ctx.content).appendChild(container); ctx.save(container.querySelector('[data-save-for-later]'), parent ? function () { return 'Keep your private link to return here.'; } : undefined); }
-      function failure() {
+      function failure(intent) {
         ctx.content.replaceChildren(element('h1', 'Your details are saved, but your estimate could not load.'));
-        primary('Try again', load); save(); ctx.focus();
+        primary('Try again', load); save(); ctx.focus(intent);
       }
       async function request() {
         if (ctx.busy) return;
-        if (window.BPPQuoteWalkEstimateLoading) BPPQuoteWalkEstimateLoading.show('saving');
-        if (accepted(ctx.state())) { WALK.go('photos-later.html', ctx.token, null, true); return; }
+        var intent = capture();
+        if (window.BPPQuoteWalkEstimateLoading) BPPQuoteWalkEstimateLoading.show('saving', intent);
+        if (accepted(ctx.state())) { WALK.go('photos-later.html', ctx.token, null, true, intent); return; }
         var displayed = ctx.state().current_range_snapshot.snapshot_id;
         ctx.busy = true;
         var button = ctx.content.querySelector('[data-request-proposal]'); button.disabled = true; button.textContent = 'Saving your request...';
@@ -26,31 +28,31 @@
           var receipt = await ctx.action('accept_range', {});
           if (typeof WALK.guidedReceiptMatches === 'function' && WALK.guidedReceiptMatches(receipt, expected)) {
             WALK.ph('walk_v2_range_accepted_lead', { event_schema_version: 1, surface_state: 'range_accepted', entry_path: 'new_intake', result: 'accepted', pricing_basis: String(ctx.state().current_range_snapshot.pricing_basis || '') });
-            WALK.go('photos-later.html', ctx.token, null, true); return;
+            WALK.go('photos-later.html', ctx.token, null, true, intent); return;
           }
           await ctx.load();
           if (accepted(ctx.state()) && ctx.state().accepted_range_snapshot_id === displayed) {
             WALK.ph('walk_v2_range_accepted_lead', { event_schema_version: 1, surface_state: 'range_accepted', entry_path: 'new_intake', result: 'accepted', pricing_basis: String(ctx.state().current_range_snapshot.pricing_basis || '') });
-            WALK.routeFromState(ctx.token, ctx.view, true); return;
+            WALK.routeFromState(ctx.token, ctx.view, true, intent); return;
           }
           throw new Error('acceptance_not_confirmed');
         } catch (_) {
           button.textContent = 'Checking your saved request...';
           try {
             await ctx.load();
-            if (accepted(ctx.state()) && ctx.state().accepted_range_snapshot_id === displayed) { WALK.routeFromState(ctx.token, ctx.view, true); return; }
+            if (accepted(ctx.state()) && ctx.state().accepted_range_snapshot_id === displayed) { WALK.routeFromState(ctx.token, ctx.view, true, intent); return; }
             if (!ctx.guard()) return;
-            render(); ctx.error('Your proposal request was not confirmed. Review your current estimate, then try again.');
+            render(intent); ctx.error('Your proposal request was not confirmed. Review your current estimate, then try again.');
           } catch (_) {
             ctx.content.replaceChildren(element('h1', 'Checking your saved request...'), element('p', 'Your response did not arrive. Check the saved request before trying again.'));
-            primary('Check saved request', load); save(); ctx.focus();
+            primary('Check saved request', load); save(); ctx.focus(intent);
           }
         } finally { ctx.busy = false; }
       }
-      function render() {
+      function render(intent) {
         if (!ctx.guard()) return;
         var state = ctx.state(), snapshot = state.current_range_snapshot;
-        if (!usable(snapshot)) { failure(); return; }
+        if (!usable(snapshot)) { failure(intent); return; }
         ctx.error('');
         var layout = element('div', '', 'guided-range-layout');
         ctx.content.replaceChildren(layout);
@@ -76,19 +78,20 @@
         layout.insertBefore(utilities, scope);
         var key = WALK.rangePresentationKey(ctx.token, snapshot, state.version);
         if (key !== presented) { presented = key; WALK.ph('walk_v2_range_presented', { event_schema_version: 1, surface_state: 'range_available', entry_path: 'new_intake', result: 'presented', pricing_basis: String(snapshot.pricing_basis || '') }); }
-        ctx.focus();
+        ctx.focus(intent);
       }
       async function load(useInitialView) {
         if (ctx.busy) return;
         ctx.busy = true;
-        if (window.BPPQuoteWalkEstimateLoading) BPPQuoteWalkEstimateLoading.show('estimate');
+        var intent = useInitialView === true ? undefined : capture();
+        if (window.BPPQuoteWalkEstimateLoading) BPPQuoteWalkEstimateLoading.show('estimate', intent);
         ctx.content.replaceChildren(element('h1', 'Preparing your estimate...'));
         try {
           if (useInitialView !== true) await ctx.load();
           if (!ctx.guard()) return;
           if (!ctx.state().current_range_snapshot || (ctx.state().current_range_snapshot.status === 'unavailable' && ctx.state().current_range_snapshot.reason === 'not_created')) { await ctx.action('create_range', { revision_reason: 'initial' }); await ctx.load(); }
-          render();
-        } catch (_) { failure(); }
+          render(intent);
+        } catch (_) { failure(intent); }
         finally { ctx.busy = false; }
       }
       ctx.reload = function () { return load(); };

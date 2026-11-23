@@ -64,6 +64,8 @@
   @media (max-width:400px) { .wrap { padding:20px 12px 36px; } .card { padding:28px 20px; } .top { padding:18px 20px; } .row { gap:10px; } }
   @media (max-width:360px) { h1 { font-size:22px; } }
 </style>
+
+<link rel="stylesheet" href="/assets/css/bpp-pointer-focus.css?v=0cea2c5cbadc"><script src="/assets/js/bpp-pointer-focus.js?v=962939026601"></script>
 </head>
 <body>
 
@@ -193,26 +195,32 @@
       return state;
     }finally{clearTimeout(timer);}
   }
+  function moveFocus(target, intent) {
+    if(window.BPPPointerFocus) BPPPointerFocus.focus(target,{preventScroll:true},intent);
+    else target.focus({preventScroll:true});
+  }
   async function load(event) {
+    const focusIntent=window.BPPPointerFocus&&BPPPointerFocus.capture();
     const userInitiated=!!event;
     if(busy)return;
     retry.hidden=true;loaded=false;busy=true;controls();say('Loading your email preferences…',false);
     if((hasToken&&(!token||params.getAll('token').length!==1))||(!hasToken&&!cid)) {
       busy=false;say('Open this page from the link in your BPP email. We could not verify your current email preference.',true);
-      document.getElementById('cold-gate').hidden=false;controls();if(userInitiated)saved.focus({preventScroll:true});return;
+      document.getElementById('cold-gate').hidden=false;controls();if(userInitiated)moveFocus(saved,focusIntent);return;
     }
     const query=hasToken?'?token='+encodeURIComponent(token):'?cid='+encodeURIComponent(cid);
-    try { const state=await request(endpoint+query);busy=false;apply(state);say(stopped?'You are unsubscribed from marketing email. Your guide stays available.':'Uncheck any category you want to stop, then save.',false);if(userInitiated)saved.focus({preventScroll:true}); }
-    catch(error) { busy=false;controls();say(statusError(error.status),true);retry.hidden=error.status===400||error.status===404||error.status===410;if(userInitiated)saved.focus({preventScroll:true}); }
+    try { const state=await request(endpoint+query);busy=false;apply(state);say(stopped?'You are unsubscribed from marketing email. Your guide stays available.':'Uncheck any category you want to stop, then save.',false);if(userInitiated)moveFocus(saved,focusIntent); }
+    catch(error) { busy=false;controls();say(statusError(error.status),true);retry.hidden=error.status===400||error.status===404||error.status===410;if(userInitiated)moveFocus(saved,focusIntent); }
   }
   async function persist(payload) {
+    const focusIntent=window.BPPPointerFocus&&BPPPointerFocus.capture();
     if(!loaded||busy||stopped)return;
     const trigger=payload.optout_all_marketing===true?optout:save;
     busy=true;controls();say('Saving your email preference…',false);
     keys.forEach(key=>{document.getElementById(key).disabled=true;});
     const identity=hasToken?{token:token}:{cid:cid};
-    try { const state=await request(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...identity,...payload})});busy=false;apply(state);say(stopped?'Unsubscribed. Your marketing email preference is saved. Your guide stays available.':'Saved. Previously stopped categories remain off.',false);saved.focus({preventScroll:true}); }
-    catch(error) { busy=false;controls();keys.forEach(key=>{const input=document.getElementById(key);input.disabled=stopped||lastPreferences[key]===false;});say(statusError(error.status),true);if(trigger&&!trigger.disabled&&typeof trigger.focus==='function')trigger.focus({preventScroll:true}); }
+    try { const state=await request(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...identity,...payload})});busy=false;apply(state);say(stopped?'Unsubscribed. Your marketing email preference is saved. Your guide stays available.':'Saved. Previously stopped categories remain off.',false);moveFocus(saved,focusIntent); }
+    catch(error) { busy=false;controls();keys.forEach(key=>{const input=document.getElementById(key);input.disabled=stopped||lastPreferences[key]===false;});say(statusError(error.status),true);if(trigger&&!trigger.disabled&&typeof trigger.focus==='function')moveFocus(trigger,focusIntent); }
   }
   form.addEventListener('submit',function(event){event.preventDefault();const preferences={};keys.forEach(key=>{preferences[key]=document.getElementById(key).checked;});persist({preferences:preferences});});
   optout.addEventListener('click',function(){persist({optout_all_marketing:true});});

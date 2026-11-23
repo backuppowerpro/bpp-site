@@ -131,10 +131,14 @@
   function photoFirstOperation(original) {
     return Boolean(original && original.walkDraft && original.estimatePreviewHash && original.initialPanelPhoto && !original.existingToken);
   }
+  function focusTarget(node, options, intent) {
+    if (window.BPPPointerFocus) BPPPointerFocus.focus(node, options, intent);
+    else node.focus(options);
+  }
   function revealHeading(node) {
     var active = document.activeElement;
     if (active && /^(INPUT|TEXTAREA)$/.test(active.tagName)) active.blur();
-    node.tabIndex = -1; node.focus({ preventScroll: true });
+    node.tabIndex = -1; focusTarget(node, { preventScroll: true });
     node.scrollIntoView({ block: 'nearest', behavior: 'instant' });
   }
   function acceptedFirstName(view) {
@@ -398,13 +402,16 @@
     document.body.classList.add('readiness-landing-active');
     document.getElementById('mainPage').dataset.screenLabel = 'Generator connection landing page';
     if (!options.noHistory) history[options.replace ? 'replaceState' : 'pushState']({ qwg: instance, screen: 'landing' }, '', entryURL.pathname + entryURL.search);
-    if (!options.noFocus) { landing.querySelector('h1').focus({ preventScroll: true }); window.scrollTo({ top: 0, behavior: 'instant' }); }
+    if (!options.noFocus) { focusTarget(landing.querySelector('h1'), { preventScroll: true }); window.scrollTo({ top: 0, behavior: 'instant' }); }
   }
-  if (landing) landing.addEventListener('click', function (event) {
-    if (!event.target.closest('[data-first-phase-start]') || state.busy || state.pending || state.token || state.protectedEntry) return;
-    event.preventDefault();
-    if (state.screen === 'landing') show('connection');
-  });
+  if (landing) {
+    landing.addEventListener('click', function (event) {
+      var trigger = event.target.closest('[data-first-phase-start]');
+      if (!trigger || state.busy || state.pending || state.token || state.protectedEntry) return;
+      event.preventDefault();
+      if (state.screen === 'landing') show('connection');
+    });
+  }
   function show(screen, options) {
     if (landing && screen === 'landing' && !state.token && !state.pending && !state.protectedEntry) { showLanding(options); return; }
     if (landing) { landing.hidden = true; document.body.classList.remove('readiness-landing-active'); }
@@ -439,7 +446,7 @@
     refreshChoices(); refreshSaves();
     updateDraftNote();
     if (screen === 'contact' && inlineEstimate && inlineEditing) { activeScreen.setAttribute('aria-label', 'Your estimate and contact details'); contact(); refreshInitialGate(); }
-    else if (screen === 'contact') { activeScreen.removeAttribute('aria-labelledby'); activeScreen.setAttribute('aria-label', state.token ? 'Your contact details' : 'Your estimate and panel photo'); contact(); refreshInitialGate(); if (!state.token && !contactFirstAnonymous()) loadEstimate(); }
+    else if (screen === 'contact') { activeScreen.removeAttribute('aria-labelledby'); activeScreen.setAttribute('aria-label', state.token ? 'Your contact details' : 'Your estimate and panel photo'); contact(); refreshInitialGate(); if (!state.token && !contactFirstAnonymous()) loadEstimate(false, options.focusIntent); }
     flow.querySelector('[data-terminal-edit-cancel]').hidden = !(inlineEstimate && inlineEditing && screen === 'contact');
     if (!options.noHistory) {
       // Only a logical screen and instance marker enter history, never answers or identity.
@@ -449,12 +456,13 @@
     }
     if (!options.noFocus) {
       var heading = activeScreen.querySelector('h1, h2');
-      if (heading) heading.focus({ preventScroll: true });
+      if (heading) focusTarget(heading, { preventScroll: true }, options.focusIntent);
       window.scrollTo({ top: 0, behavior: 'instant' });
     }
     WALK.ph('walk_v2_screen_view', { screen: screen === 'contact' && !state.token && !contactFirstAnonymous() ? 'guided_estimate_contact' : 'guided_' + screen });
   }
-  async function loadEstimate(force) {
+  async function loadEstimate(force, focusIntent) {
+    if (focusIntent === undefined) focusIntent = window.BPPPointerFocus && BPPPointerFocus.capture();
     var selected = JSON.stringify(draft());
     var screen = flow.querySelector('[data-screen="contact"]');
     var layout = screen.querySelector('[data-estimate-layout]');
@@ -468,7 +476,7 @@
     status.textContent = 'Preparing your estimate...';
     layout.hidden = true;
     mountedContact.refresh();
-    if (window.BPPQuoteWalkEstimateLoading) BPPQuoteWalkEstimateLoading.show('estimate');
+    if (window.BPPQuoteWalkEstimateLoading) BPPQuoteWalkEstimateLoading.show('estimate', focusIntent);
     try {
       var snapshot = await WALK.previewRange(JSON.parse(selected));
       if (request !== previewRequest || selected !== JSON.stringify(draft())) return;
@@ -491,8 +499,8 @@
       if (request === previewRequest && state.screen === 'contact' && !state.pending) {
         if (window.BPPQuoteWalkEstimateLoading) BPPQuoteWalkEstimateLoading.hide();
         var heading = !layout.hidden && layout.querySelector('.guided-estimate-card h1');
-        if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); }
-        else { status.tabIndex = -1; status.focus({ preventScroll: true }); }
+        if (heading) { heading.tabIndex = -1; focusTarget(heading, { preventScroll: true }, focusIntent); }
+        else { status.tabIndex = -1; focusTarget(status, { preventScroll: true }, focusIntent); }
       }
     }
   }
@@ -551,7 +559,7 @@
     flow.querySelector('[data-screen="contact"]').classList.toggle('guided-contact-revealed', anonymous && !contactCard.hidden);
     if (anonymous && !revisingPhoto && contactWasVisible && contactCard.hidden && contactFocusLost && state.screen === 'contact' && !initialPhotoRoot.hidden) {
       var photoHeading = initialPhotoRoot.querySelector('h2, h3');
-      if (photoHeading) { photoHeading.tabIndex = -1; photoHeading.focus({ preventScroll: true }); photoHeading.scrollIntoView({ block: 'nearest', behavior: 'instant' }); }
+      if (photoHeading) { photoHeading.tabIndex = -1; focusTarget(photoHeading, { preventScroll: true }); photoHeading.scrollIntoView({ block: 'nearest', behavior: 'instant' }); }
     }
     if (contactCard.hidden && mountedContact) mountedContact.closeSuggestions();
     initialAccept.disabled = !ready || !initialPhoto.submissionReady() || state.busy || Boolean(state.pending);
@@ -589,7 +597,7 @@
     if (!contactCard.hidden) {
       var contactHeading = contactCard.querySelector('h2');
       contactHeading.tabIndex = -1;
-      contactHeading.focus({ preventScroll: true });
+      focusTarget(contactHeading, { preventScroll: true });
       // Expand this same card naturally; reveal only as much as needed to read its heading.
       contactHeading.scrollIntoView({ block: 'nearest', behavior: 'instant' });
     }
@@ -829,6 +837,7 @@
     return retryIntake();
   }
   async function retryIntake() {
+    var focusIntent = window.BPPPointerFocus && BPPPointerFocus.capture();
     if (!state.pending) return;
     var body = state.pending;
     prepareInlinePending(JSON.parse(body));
@@ -969,11 +978,11 @@
             history.replaceState({ qwg: instance, screen: 'confirmation' }, '', entryURL.pathname + entryURL.search);
             await loadProtected(); return;
           }
-          clearPending(body); WALK.go('photos-later.html', token, null, true); return;
+          clearPending(body); WALK.go('photos-later.html', token, null, true, focusIntent); return;
         } catch (error) {
           if (!currentAttempt(false)) return;
           if (error && error.body && ['range_preview_changed', 'readiness_incomplete', 'stale_journey_version', 'range_not_current'].indexOf(error.body.error) !== -1) {
-            clearPending(body); WALK.go('range.html', token, null, true); return;
+            clearPending(body); WALK.go('range.html', token, null, true, focusIntent); return;
           }
           recovery('Your details are saved.', 'The next step could not open. Try again to continue this same request.', retryIntake, false);
           return;
@@ -991,7 +1000,7 @@
           finally { if (attempt === intakeAttemptGeneration) state.busy = false; }
           if (!currentAttempt(true)) return;
         }
-        WALK.go('range.html', token, null, true); return;
+        WALK.go('range.html', token, null, true, focusIntent); return;
       }
       await loadProtected();
       return;
@@ -1019,7 +1028,7 @@
         else initialPhoto.refresh();
         refreshInitialGate();
         var photoHeading = initialPhotoRoot.querySelector('h2, h3');
-        if (photoHeading) { photoHeading.tabIndex = -1; photoHeading.focus({ preventScroll: true }); }
+        if (photoHeading) { photoHeading.tabIndex = -1; focusTarget(photoHeading, { preventScroll: true }); }
         return;
       }
       mountedContact.showError(result.field === 'email' ? 'Enter an email like you@example.com.' : 'Your details did not save. Please check them and try again.', ['name', 'phone', 'email', 'address'].indexOf(result.field) !== -1 ? result.field : null);
@@ -1044,6 +1053,7 @@
     if (state.distance === 'not_sure') state.distance = null;
   }
   async function loadProtected(options) {
+    var focusIntent = window.BPPPointerFocus && BPPPointerFocus.capture();
     options = options || {};
     if (state.token && !checkProtectedPending()) return;
     if (inlineEstimate) inlineEditing = false;
@@ -1073,7 +1083,7 @@
       }
       if (WALK.isGuidedJourney(view, state.token)) {
         var destination = WALK.guidedDestination(state.token, view);
-        if (destination.reason === 'deeper' || (destination.reason === 'correction' && edit !== 'details')) { WALK.routeFromState(state.token, view, true); return; }
+        if (destination.reason === 'deeper' || (destination.reason === 'correction' && edit !== 'details')) { WALK.routeFromState(state.token, view, true, focusIntent); return; }
       }
       if (detailsDraft) {
         state.outlets = detailsDraft.outlets; state.room = detailsDraft.room; state.distance = detailsDraft.distance;
@@ -1110,7 +1120,7 @@
         WALK.go('connection.html', state.token, { sequence: '1' }, true);
         return;
       }
-      WALK.routeFromState(state.token, view, true);
+      WALK.routeFromState(state.token, view, true, focusIntent);
     } catch (error) {
       if (readGeneration !== protectedReadGeneration || currentToken !== state.token || state.pendingConflict || state.pendingUnknown) return;
       state.verified = false;
@@ -1123,6 +1133,7 @@
     return loadProtected();
   }
   async function saveAnswers() {
+    var focusIntent = window.BPPPointerFocus && BPPPointerFocus.capture();
     if (state.busy || state.pendingConflict || state.pendingUnknown) return;
     if (!state.verified) {
       if (state.token) {
@@ -1146,10 +1157,10 @@
       if (detailsSetupEditing) {
         detailsSetupEditing = false; detailsSetupVersion = null; state.busy = false; state.verified = true;
         hydrate(view); contact(); mountedContact.hydrate(view);
-        show('contact', { replace: true });
+        show('contact', { replace: true, focusIntent: focusIntent });
         return;
       }
-      WALK.routeFromState(state.token, view, true);
+      WALK.routeFromState(state.token, view, true, focusIntent);
     } catch (error) {
       state.busy = false;
       if (readGeneration !== protectedReadGeneration || currentToken !== state.token || state.pendingConflict || state.pendingUnknown) return;
@@ -1238,7 +1249,7 @@
       else if (landing && !state.protectedEntry) show('landing');
     } else if (button.hasAttribute('data-help-return')) {
       show(helpOrigin);
-      if (helpTrigger && !helpTrigger.closest('[hidden]')) helpTrigger.focus();
+      if (helpTrigger && !helpTrigger.closest('[hidden]')) focusTarget(helpTrigger);
     }
   });
   retryButton.addEventListener('click', function () { if (retry && !state.busy) retry(); });

@@ -6,7 +6,7 @@
 <meta name="referrer" content="strict-origin-when-cross-origin">
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-7Rpgb8kVLZHApus96XvpOS56O97vIN739kuGbQpmcx4='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-Q2l4eMJC6uts1CgQ9yV5bTg2hwJhasFOPq2ZkYaTLZI='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'sha256-Wj3nfzRLnN3+2xwOqF83KCedJ0HgYLhbrJw48wzh8Bo='; script-src-attr 'none'; style-src 'self'; style-src-elem 'self' 'sha256-Q2l4eMJC6uts1CgQ9yV5bTg2hwJhasFOPq2ZkYaTLZI='; style-src-attr 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://reowtzedjflwmlptupbk.supabase.co; worker-src 'self' blob:; media-src 'self' blob: data:; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests" />
 <script src="/walk-v2/token-bootstrap.js?v=e257fb84c862"></script>
 <script src="/assets/js/bpp-analytics.js?v=c9db468254dd"></script>
 <script src="/walk-v2/no-js-bootstrap.js?v=3ef9fc17b297"></script>
@@ -434,6 +434,8 @@
 </style>
 <link rel="stylesheet" href="/walk-v2/mobile-canvas.css?v=aac4d845b250" />
 <link rel="stylesheet" href="/walk-v2/no-js-recovery.css?v=3d4e0f8b92ec" />
+
+<link rel="stylesheet" href="/assets/css/bpp-pointer-focus.css?v=0cea2c5cbadc"><script src="/assets/js/bpp-pointer-focus.js?v=962939026601"></script>
 </head>
 <body>
 <div class="qw-no-js-note qw-script-recovery" role="alert">JavaScript is required to continue this Quote Walk. Your saved answers remain on file. Turn it on and reload.</div>
@@ -546,7 +548,7 @@
 
 </div>
 
-<script src="/walk-v2/walk.js?v=8cac69f63ded"></script>
+<script src="/walk-v2/walk.js?v=0596ee54f6d2"></script>
 <script>
 
 (function () {
@@ -570,7 +572,7 @@
   var pageParams = new URLSearchParams(window.location.search);
   var editMode = pageParams.get('edit') === '1';
 
-  function returnToSavedRange(value) {
+  function returnToSavedRange(value, focusIntent) {
     var state = value && value.quote_walk_v2 || {};
     if (!state.current_range_snapshot_id) return false;
     var shorterEditAvailable = editMode && state.range_fit_answer === 'no'
@@ -578,7 +580,7 @@
       && !state.accepted_range_snapshot_id && state.handoff_recorded !== true;
     if (shorterEditAvailable) return false;
     navigated = true;
-    WALK.go('range.html', t, null, true);
+    WALK.go('range.html', t, null, true, focusIntent);
     return true;
   }
 
@@ -652,9 +654,9 @@
     main.querySelector('[data-dist]').focus();
   });
 
-  function persistDistance(answers) {
+  function persistDistance(answers, focusIntent) {
     return WALK.view(t).then(function (latest) {
-      if (returnToSavedRange(latest)) return;
+      if (returnToSavedRange(latest, focusIntent)) return;
       if (!editMode) return WALK.confirm(t, answers);
       var state = latest && latest.quote_walk_v2 || {};
       var currentDistance = state.distance_band || latest.distance_band || null;
@@ -676,6 +678,7 @@
 
   main.querySelector('[data-continue]').addEventListener('click', function () {
     if (!selectedLabel || saving || navigated) return;
+    var focusIntent = window.BPPPointerFocus && BPPPointerFocus.capture();
     saving = true;
     var continueBtn = main.querySelector('[data-continue]');
     continueBtn.disabled = true;
@@ -684,7 +687,7 @@
     if (revisingCurrentRange && answers.distance_band !== priorDistanceBand) {
       answers.revision_reason = 'shorter_distance';
     }
-    persistDistance(answers)
+    persistDistance(answers, focusIntent)
       .then(function () {
         if (navigated) return;
         navigated = true;
@@ -707,7 +710,7 @@
           var next = WALK.afterDistancePage(latest, t);
           var extra = { sequence: '1' };
           if (next === 'range.html') extra.nj = '1';
-          WALK.go(next, t, extra);
+          WALK.go(next, t, extra, false, focusIntent);
         }).catch(function () {
           if (recovery) {
             WALK.go('incomplete.html', t);
@@ -716,14 +719,14 @@
           var toRange = WALK.isNewJourney(null, t) || newJourney;
           var extra = { sequence: '1' };
           if (toRange) extra.nj = '1';
-          WALK.go(toRange ? 'range.html' : 'photos-later.html', t, extra);
+          WALK.go(toRange ? 'range.html' : 'photos-later.html', t, extra, false, focusIntent);
         });
       })
       .catch(function () {
         // Another tab may have created a range after the pre-save read.
         // Reconcile its saved state without retrying an unauthorized change.
         WALK.view(t).then(function (latest) {
-          if (!returnToSavedRange(latest)) showSaveRetry();
+          if (!returnToSavedRange(latest, focusIntent)) showSaveRetry();
         }).catch(showSaveRetry);
       });
   });

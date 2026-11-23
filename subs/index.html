@@ -135,6 +135,8 @@
 <meta name="twitter:description" content="Backup Power Pro sends steady generator inlet and interlock install jobs to licensed, insured electricians in Greenville, Spartanburg, and Pickens counties. Set your own volume, decline any job, fast pay after QC pass.">
 <meta name="twitter:image" content="https://backuppowerpro.com/og-image.png">
 <meta name="twitter:image:alt" content="Backup Power Pro logo with a portable generator, inlet box and electrical panel.">
+
+<link rel="stylesheet" href="/assets/css/bpp-pointer-focus.css?v=0cea2c5cbadc"><script src="/assets/js/bpp-pointer-focus.js?v=962939026601"></script>
 </head>
 <body>
 <main>
@@ -319,7 +321,7 @@ document.querySelectorAll('a[href="#apply"]').forEach(function(a){
   a.addEventListener('click',function(e){
     e.preventDefault();
     var t=document.getElementById('apply');
-    if(t) { t.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'}); var heading=t.querySelector('h2'); if(heading){heading.setAttribute('tabindex','-1');heading.focus({preventScroll:true});} }
+    if(t) { t.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'}); var heading=t.querySelector('h2'); if(heading){heading.setAttribute('tabindex','-1');if(window.BPPPointerFocus) BPPPointerFocus.focus(heading,{preventScroll:true});else heading.focus({preventScroll:true});} }
   });
 });
 
@@ -465,6 +467,11 @@ document.querySelectorAll('a[href="#apply"]').forEach(function(a){
     }
 
     var submitFocus = document.activeElement;
+    var focusIntent = window.BPPPointerFocus && BPPPointerFocus.capture();
+    function moveResultFocus(target) {
+      if (window.BPPPointerFocus) BPPPointerFocus.focus(target, undefined, focusIntent);
+      else target.focus();
+    }
     function mayRestoreFocus(){
       var active = document.activeElement;
       return active === document.body || active === submitFocus || (active && !active.getClientRects().length);
@@ -531,7 +538,7 @@ document.querySelectorAll('a[href="#apply"]').forEach(function(a){
       formWrap.style.display = 'none';
       successEl.style.display = 'block';
       document.getElementById('applicationStatus').textContent = 'Application submitted.';
-      if(mayRestoreFocus()) document.getElementById('applicationSuccess').focus();
+      if(mayRestoreFocus()) moveResultFocus(document.getElementById('applicationSuccess'));
       try { sessionStorage.setItem('bpp_sub_applied', '1'); } catch(e){}
     }
 
@@ -540,7 +547,7 @@ document.querySelectorAll('a[href="#apply"]').forEach(function(a){
       fallback.classList.add('show');
       document.getElementById('applicationStatus').textContent = '';
       if(mayRestoreFocus()){
-        fallback.focus();
+        moveResultFocus(fallback);
         fallback.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'nearest' });
       }
     }

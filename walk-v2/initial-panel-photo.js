@@ -121,7 +121,7 @@
       var prefix = 'initial-photo-' + (++instances);
       var state = { token: '', revision: 0, photo: null, photos: [], images: new Map(), photoLimit: MAX_PHOTOS, attemptsRemaining: 12, batchBusy: false, rejectedPhotoIds: [], expires: '', pending: null, busy: false, locked: false, needsCheck: false, writerPending: false, rejectedPhotoId: '', image: '', imageEvidence: null, message: '', error: '',
         timeRevision: 0, extensionCount: 0, extensionPending: null, extensionBusy: false, holdingExpiry: false, timeCheckHeld: false, clockOffset: 0, timeMessage: '', timeOpen: false };
-      var generation = 0, destroyed = false, expiryTimer = null, warningTimer = null, lastNotice = '', restoreActionFocus = false, actionFocusOrigin = null, feedbackOrigin = null, feedbackNotice = '', warningFrame = null;
+      var generation = 0, destroyed = false, expiryTimer = null, warningTimer = null, lastNotice = '', restoreActionFocus = false, actionFocusOrigin = null, actionFocusIntent = null, feedbackOrigin = null, feedbackNotice = '', warningFrame = null;
       var observedPhotoIds = new Set();
       var previewNodes = new Map(), selectionGeneration = 0, lastServerRevision = -1, lastServerIds = '', removeFocusIndex = -1, batchSize = 0;
       var previewLoads = new Map(), previewRunning = false, previewScheduled = false;
@@ -217,7 +217,7 @@
         if (typeof options.onChange === 'function') options.onChange();
       }
       function ownActionFocus(node) {
-        if (node && (document.activeElement === node || document.activeElement === document.body)) { restoreActionFocus = true; actionFocusOrigin = node; feedbackOrigin = node; }
+        if (node && (document.activeElement === node || document.activeElement === document.body)) { restoreActionFocus = true; actionFocusOrigin = node; actionFocusIntent = window.BPPPointerFocus && BPPPointerFocus.capture(); feedbackOrigin = node; }
       }
       function showInitiatedFeedback() {
         if (!feedbackOrigin || !root.getClientRects().length) return;
@@ -455,7 +455,9 @@
           if (target.disabled || target.hidden) target = heading;
           var active = document.activeElement;
           if (active !== document.body && active !== actionFocusOrigin && active !== chooseInput) restoreActionFocus = false;
-          else if (!target.hidden && !target.disabled && target.getClientRects().length) { target.focus({ preventScroll: true }); feedbackOrigin = target; restoreActionFocus = false; removeFocusIndex = -1; }
+          else if (!target.hidden && !target.disabled && target.getClientRects().length) { if (window.BPPPointerFocus) BPPPointerFocus.focus(target, { preventScroll: true }, actionFocusIntent);
+            else target.focus({ preventScroll: true });
+            feedbackOrigin = target; restoreActionFocus = false; actionFocusIntent = null; removeFocusIndex = -1; }
         }
         persist(); notify();
         queuePrivatePreviews();
@@ -1047,7 +1049,7 @@
           ++generation;
           if (state.pending) delete state.pending.image;
           state.busy = false; state.locked = false; clearExpired(); state.message = ''; state.error = '';
-          restoreActionFocus = false; actionFocusOrigin = null; feedbackOrigin = null;
+          restoreActionFocus = false; actionFocusOrigin = null; actionFocusIntent = null; feedbackOrigin = null;
           lastNotice = '';
           chooseInput.value = ''; render();
         },

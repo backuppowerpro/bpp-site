@@ -23,25 +23,26 @@
     retry.hidden = !options.retry;
     retry.disabled = busy;
     controls.setAttribute('aria-busy', busy ? 'true' : 'false');
-    if (options.focus) heading.focus();
+    if (options.focus) { if (window.BPPPointerFocus) BPPPointerFocus.focus(heading, undefined, options.intent); else heading.focus(); }
   }
-  function invalid(expired, moveFocus) {
+  function invalid(expired, moveFocus, intent) {
     show(expired ? 'This email link has expired.' : 'This email link isn’t valid.',
-      'We can’t confirm your current email preference with this link. Open a recent BPP email for a new link, or call BPP for help.', { focus: moveFocus });
+      'We can’t confirm your current email preference with this link. Open a recent BPP email for a new link, or call BPP for help.', { focus: moveFocus, intent: intent });
     preferences.hidden = true;
   }
-  function saved(already, focus) {
+  function saved(already, focus, intent) {
     completed = true;
     show(already ? 'You’re already unsubscribed.' : 'You’re unsubscribed.',
       already ? 'BPP marketing email is already turned off. You don’t need to do anything else.'
-        : 'BPP tips, promotional offers and guide emails are turned off.', { focus: focus });
+        : 'BPP tips, promotional offers and guide emails are turned off.', { focus: focus, intent: intent });
   }
   async function request(method, moveFocus) {
     if (busy || completed) return;
+    var intent = window.BPPPointerFocus && BPPPointerFocus.capture();
     busy = true;
     retryMethod = method;
     show(method === 'POST' ? 'Saving your choice…' : 'Checking your email link…',
-      method === 'POST' ? 'Please wait while we confirm your preference was saved.' : 'This will only check your current preference.', { focus: moveFocus });
+      method === 'POST' ? 'Please wait while we confirm your preference was saved.' : 'This will only check your current preference.', { focus: moveFocus, intent: intent });
     var controller = typeof AbortController === 'function' ? new AbortController() : null;
     var timer;
     var timeout = new Promise(function (_, reject) {
@@ -55,20 +56,20 @@
       var body = await Promise.race([timeout, response.json()]);
       busy = false;
       if (response.status === 400 || response.status === 404 || response.status === 410) {
-        invalid(response.status === 410 || (body && body.error === 'expired_token'), moveFocus);
+        invalid(response.status === 410 || (body && body.error === 'expired_token'), moveFocus, intent);
         return;
       }
       if (!response.ok || !body || body.ok !== true || typeof body.unsubscribed !== 'boolean'
         || (method === 'POST' && body.unsubscribed !== true)) throw new Error('unconfirmed');
       preferences.hidden = false;
       preferences.href = '/preferences/?token=' + encodeURIComponent(token);
-      if (body.unsubscribed) saved(method === 'GET', moveFocus);
-      else show('Stop BPP marketing emails?', 'Choose Unsubscribe to stop BPP tips, promotional offers and guide emails.', { action: true, focus: moveFocus });
+      if (body.unsubscribed) saved(method === 'GET', moveFocus, intent);
+      else show('Stop BPP marketing emails?', 'Choose Unsubscribe to stop BPP tips, promotional offers and guide emails.', { action: true, focus: moveFocus, intent: intent });
     } catch (_) {
       busy = false;
       show(method === 'POST' ? 'Your choice hasn’t been confirmed.' : 'We couldn’t check this link yet.',
         method === 'POST' ? 'We couldn’t confirm your preference was saved. Try again, or call BPP for help.'
-          : 'Please try again, or call BPP for help.', { retry: true, focus: moveFocus });
+          : 'Please try again, or call BPP for help.', { retry: true, focus: moveFocus, intent: intent });
     } finally {
       clearTimeout(timer);
     }

@@ -245,7 +245,7 @@ html,body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:va
 .ack-row.checked .ack-box{background:var(--green);border-color:var(--green)}
 .ack-text{font-size:14px;color:var(--text);line-height:1.5}
 .ack-text a{color:var(--navy);font-weight:600;text-decoration:underline;display:inline-flex;align-items:center;min-height:44px;padding:0 2px;margin:-11px 0}
-.ack-text a:focus{outline:2px solid var(--blue);outline-offset:2px;border-radius:4px}
+.ack-text a:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:4px}
 .form-label{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:7px;letter-spacing:.03em;display:block}
 .form-label .req{color:var(--red)}
 .name-input{width:100%;padding:12px 14px;border:none;border-radius:8px;font-size:16px;font-family:'Inter',sans-serif;color:var(--text);outline:none;transition:box-shadow .15s;background:#f8f9fb;box-shadow:0 1px 6px rgba(11,31,59,.07)}
@@ -388,6 +388,8 @@ body.preview-mode a.approve-btn[href],body.preview-mode button[onclick^="payDepo
 <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.jpg">
 <script src="assets/js/bpp-financing.js?v=20260907a"></script>
 <link rel="stylesheet" href="assets/css/bpp-financing.css?v=4d6e3e61dba1">
+
+<link rel="stylesheet" href="/assets/css/bpp-pointer-focus.css?v=0cea2c5cbadc"><script src="/assets/js/bpp-pointer-focus.js?v=962939026601"></script>
 </head>
 <body>
 <noscript><div class="preview-bar" data-preview-banner="true">Preview unavailable, JavaScript is off, no customer action can occur</div><div class="preview-watermark" data-preview-watermark="true" aria-hidden="true"><span>Preview unavailable</span></div><div style="max-width:620px;margin:70px auto 24px;padding:18px;border:1px solid #ffba00;border-radius:14px;background:#fff8e6;color:#0b1f3b;text-align:center;font:600 16px/1.55 system-ui,sans-serif;">This proposal did not load. Turn on JavaScript and reload, or call (864) 863-7800.</div></noscript>

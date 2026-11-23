@@ -422,6 +422,44 @@
 /* The combined page reuses the saved estimate/card layout and existing form. */
 .guided-walk[data-active-screen="contact"] .guided-flow.form-card { padding: 0; border-radius: 0; background: transparent; box-shadow: none; }
 .guided-walk[data-active-screen="contact"] .qw-progress { padding-inline: 20px; }
+
+/* Panel is the reference for the shared task header. Keep the outlet body
+ * and controls on their existing rail; only its compact header was tighter. */
+@media (max-width: 1023px) {
+  .guided-walk[data-active-screen="connection"] .guided-flow > [data-guided-progress] {
+    margin-block-start: 4px;
+    margin-inline: 2px;
+  }
+}
+
+/* The actual center rail, not the viewport, governs shared task-title size.
+ * Two 44px side rails reserve the Back hit area and keep the title centered.
+ * Keep natural wrapping for a long personalized title or larger user text. */
+.guided-flow > [data-guided-progress] { container-type: inline-size; }
+.guided-flow > [data-guided-progress] .qw-position {
+  font-size: clamp(1.1875rem, 6vw, 1.75rem);
+}
+@supports (font-size: 1cqi) {
+  .guided-flow > [data-guided-progress] .qw-position {
+    /* 12% of the center rail: 12% of the 88px reserved side space is 10.56px. */
+    font-size: clamp(1.1875rem, calc(12cqi - 10.56px), 1.75rem);
+  }
+}
+
+/* One enclosing rail for the estimate stack, including its price, request
+ * (photo or contact), utilities and included scope. Match Panel's compact
+ * form-card padding; wide layouts already use the shared 28px task gutter.
+ * Scope to estimate presentations, not an unrelated contact-only entry. */
+.guided-walk[data-active-screen="contact"] .guided-flow:has(> [data-screen="contact"].guided-saved:not([hidden])) > [data-guided-progress] {
+  padding-inline: 0;
+}
+@media (max-width: 1023px) {
+  .guided-walk[data-active-screen="contact"] .guided-flow.form-card:has(> [data-screen="contact"].guided-saved:not([hidden])) {
+    padding: 24px 22px 26px;
+    background: var(--card, #fff);
+  }
+}
+
 .guided-walk [data-contact-text-later] { display: flex; justify-content: center; margin: 12px auto 0; text-align: center; }
 .guided-walk [data-contact-text-later]:disabled { color: var(--muted); cursor: default; }
 .guided-walk [data-estimate-status]:not(:empty) { padding: 20px; }
@@ -431,6 +469,7 @@
 /* Gold stays the action accent. Navy gives focus and input boundaries enough
    contrast against the existing light cards, including mobile override rules. */
 .guided-walk :is(button, a, input, textarea, [tabindex="-1"]):focus-visible,
+.guided-walk [data-bpp-program-focus][tabindex="-1"]:focus,
 .guided-walk .field :is(input, textarea):focus-visible,
 .guided-walk .page[data-screen-label] .field[data-addr-field] textarea:focus-visible,
 .qw-save-dialog :is(button, input):focus-visible {
@@ -438,7 +477,8 @@
   outline-offset: 3px;
 }
 .guided-walk .site-head a:focus-visible,
-.guided-walk .guided-estimate-card [tabindex="-1"]:focus-visible {
+.guided-walk .guided-estimate-card [tabindex="-1"]:focus-visible,
+.guided-walk .guided-estimate-card [data-bpp-program-focus][tabindex="-1"]:focus {
   outline-color: var(--gold, #ffba00) !important;
 }
 .guided-walk .page[data-screen-label] .field :is(input, textarea), .qw-save-dialog input {

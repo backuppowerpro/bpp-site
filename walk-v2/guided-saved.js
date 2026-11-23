@@ -15,6 +15,12 @@
     return main;
   }
   var mounted;
+  var pointer = window.BPPPointerFocus;
+  function moveFocus(node, intent, allowScroll) {
+    var options = allowScroll ? undefined : { preventScroll: true };
+    if (pointer) pointer.focus(node, options, intent);
+    else node.focus(options);
+  }
   window.BPPGuidedSaved = {
     saveMarkup: saveMarkup,
     element: element,
@@ -29,7 +35,7 @@
       var token = compatibleCore ? WALK.token() : '';
       var priorGuided = document.body.classList.contains('guided-walk');
       var priorSaved = document.body.classList.contains('guided-saved');
-      var bootBusy = false;
+      var bootBusy = false, bootRecoveryFocusIntent = null;
       var boot = shell(kind);
       var loading = boot.querySelector('[data-saved-content]');
       function prepareBoot() {
@@ -53,9 +59,10 @@
         } else {
           loading.appendChild(element('p', 'This link is no longer available. Start a new Quote Walk to get an estimate.'));
         }
-        var start = element('a', 'Start a new Quote Walk', temporary ? 'guided-link' : 'cta'); start.href = START; start.onclick = function () { WALK.setToken(''); }; loading.appendChild(start); heading.focus({ preventScroll: true });
+        var start = element('a', 'Start a new Quote Walk', temporary ? 'guided-link' : 'cta'); start.href = START; start.onclick = function () { WALK.setToken(''); }; loading.appendChild(start); moveFocus(heading, bootRecoveryFocusIntent);
       }
       async function load() {
+        var focusIntent = pointer && (pointer.capture() || pointer.arrival());
         if (bootBusy) return;
         bootBusy = true;
         var retryButton = loading.querySelector('[data-boot-retry]');
@@ -73,7 +80,7 @@
               reload.disabled = true; reload.textContent = 'Reopen your original saved link'; return;
             }
             location.replace(target.href);
-          }; loading.appendChild(reload); reload.focus();
+          }; loading.appendChild(reload); moveFocus(reload, focusIntent, true);
           bootBusy = false;
           return;
         }
@@ -99,7 +106,12 @@
             review: function () { return ctx.state().photo_review || {}; },
             action: function (action, payload) { return WALK.stateAction(token, action, payload); },
             save: function (root, hint) { return BPPSaveForLater.mount(root, function () { return { mode: 'protected', verified: true, token: token, screen: kind, hint: typeof hint === 'function' ? hint() : hint }; }); },
-            focus: function () { if (window.BPPQuoteWalkEstimateLoading) BPPQuoteWalkEstimateLoading.hide(); var heading = ctx.content.querySelector('h1,h2'); if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); } },
+            focus: function (intent) {
+              if (window.BPPQuoteWalkEstimateLoading) BPPQuoteWalkEstimateLoading.hide();
+              var heading = ctx.content.querySelector('h1,h2');
+              if (heading) { heading.tabIndex = -1; moveFocus(heading, intent === undefined ? focusIntent : intent); }
+              focusIntent = null;
+            },
             guard: function () {
               var destination = WALK.guidedDestination(token, ctx.view);
               if (!WALK.isGuidedJourney(ctx.view, token)) {
@@ -119,7 +131,9 @@
           WALK.ph('walk_v2_screen_view', { screen: 'guided_' + kind });
           window.addEventListener('pageshow', function (event) { if (event.persisted && ctx.reload) ctx.reload(); });
         } catch (error) {
+          bootRecoveryFocusIntent = focusIntent;
           recovery(error);
+          bootRecoveryFocusIntent = null;
         } finally {
           bootBusy = false;
           var retryButton = loading.querySelector('[data-boot-retry]');

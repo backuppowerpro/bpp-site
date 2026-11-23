@@ -62,7 +62,7 @@
   function cancelPendingUploadReconciliations() {
     pendingUploadReconciliationCancels.slice().forEach(function (cancel) { cancel(); });
   }
-  function go(page, t, extra, replaceHistory) {
+  function go(page, t, extra, replaceHistory, focusIntent) {
     cancelPendingUploadReconciliations();
     insideWalkNav = true;
     var retained = setToken(t);
@@ -94,8 +94,11 @@
     var query = params.toString();
     var target = '/walk-v2/' + page + (query ? '?' + query : '');
     if (window.__QW_NAVIGATE__) window.__QW_NAVIGATE__(target);
-    else if (replaceHistory === true) window.location.replace(target);
-    else window.location.href = target;
+    else {
+      if (window.BPPPointerFocus) BPPPointerFocus.beforeNavigation(target, focusIntent);
+      if (replaceHistory === true) window.location.replace(target);
+      else window.location.href = target;
+    }
   }
   /* explicit back-a-step, token preserved everywhere. With no prevPage we send
    * them to the landing WITH the token so the landing's resume guard routes them
@@ -837,7 +840,7 @@
     if (review.submission_current === true && review.latest_submission && !review.newer_photo_draft && review.packet_status === 'submitted') return { reason: 'submitted', page: 'photos-later.html' };
     return { reason: 'submitted', page: 'photos-later.html' };
   }
-  function routeGuided(t, view, replaceHistory) {
+  function routeGuided(t, view, replaceHistory, focusIntent) {
     var destination = guidedDestination(t, view);
     if (destination.url) {
       insideWalkNav = true;
@@ -845,7 +848,7 @@
       else window.location.replace(destination.url);
       return;
     }
-    return go(destination.page, t, destination.extra, replaceHistory);
+    return go(destination.page, t, destination.extra, replaceHistory, focusIntent);
   }
   window.WALK = {
     copyReturnLink: function (t, screen) {
@@ -1473,10 +1476,10 @@
     /* Resume at the first unanswered step. New records always carry a
        connection_status. Amperage remains a legacy fallback for saved walks
        created before the connection step was separated from the lead form. */
-    routeFromState: function (t, v, replaceHistory) {
+    routeFromState: function (t, v, replaceHistory, focusIntent) {
       var v2 = v.quote_walk_v2 || {};
       var newJourney = isNewJourney(v, t);
-      if (isGuidedJourney(v, t)) return routeGuided(t, v, replaceHistory);
+      if (isGuidedJourney(v, t)) return routeGuided(t, v, replaceHistory, focusIntent);
       if (v2.service_area_status === 'verified_out_of_area' || v2.service_area_pending_review === true) {
         go('index.html', t, { area: 'out' }, replaceHistory);
         return;
@@ -1489,7 +1492,7 @@
       )) return go('photos-later.html', t, null, replaceHistory);
       var snapshot = v2.current_range_snapshot || {};
       var acceptedCurrent = snapshot.status === 'available' && snapshot.snapshot_id && v2.accepted_range_snapshot_id === snapshot.snapshot_id;
-      return go(acceptedCurrent ? 'photos-later.html' : 'range.html', t, null, replaceHistory);
+      return go(acceptedCurrent ? 'photos-later.html' : 'range.html', t, null, replaceHistory, focusIntent);
     },
     /* Recovery is task-directed. It re-opens only the first truly unresolved
        requirement, then skips every answer that is already complete. */
