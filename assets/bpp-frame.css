@@ -23,9 +23,50 @@ body.bpp-guide-frame .footer{width:100%;padding-bottom:0}
 #screen-readiness-landing .rl-site-header .rl-rail,body.bpp-guide-frame .nav{display:flex!important;align-items:center!important}
 #screen-readiness-landing .rl-brand,body.bpp-guide-frame .brand,body.guided-walk .site-head .lockup{display:flex!important;align-items:center!important;line-height:0!important;margin:0!important;padding:0!important}
 
-/* Same quiet policy footer as the Quote Walk, without a square fill. */
-body .bpp-policy-footer,#screen-readiness-landing .bpp-policy-footer{display:block!important;width:100%!important;margin:18px auto 0!important;padding:4px 18px 10px!important;background:transparent!important;border:0!important;box-shadow:none!important;color:#68758a!important;text-align:center!important;font:400 12px/1.6 Inter,sans-serif!important}
-body .bpp-policy-footer strong,body .bpp-policy-footer span{display:block!important}body .bpp-policy-footer strong{font-weight:650!important}body .bpp-policy-footer span{margin-top:6px!important}body .bpp-policy-footer nav{display:flex!important;justify-content:center!important;flex-wrap:wrap!important;gap:8px 16px!important;margin-top:6px!important}body .bpp-policy-footer nav a{font:inherit!important;min-height:44px;display:inline-flex;align-items:center;padding:0!important;text-decoration:underline;text-underline-offset:3px}
+/* Reuse the landing footer for the identical policy component in the guide
+   and Quote Walk. Leave the other .foot / .footer templates alone. */
+body .bpp-policy-footer,
+#mainPage > .bpp-policy-footer,
+#screen-readiness-landing .bpp-policy-footer {
+  box-sizing: border-box;
+  width: 100% !important;
+  margin: 18px auto 0 !important;
+  padding: 4px 18px 10px !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  /* A quiet slate with headroom for the shadow above the first line. */
+  color: #616e82 !important;
+  text-align: center !important;
+  font: 400 12px/1.6 Inter, sans-serif !important;
+}
+/* Only the landing template needs a display override. The same page's Quote
+   Walk footer still hides until the flow starts, and the guide stays print-safe. */
+#screen-readiness-landing .bpp-policy-footer { display: block; }
+body .bpp-policy-footer > :is(strong, span) {
+  display: block;
+  font-family: inherit;
+  color: inherit;
+}
+body .bpp-policy-footer > strong { font-weight: 650; }
+body .bpp-policy-footer > span { margin-top: 6px; }
+body .bpp-policy-footer > nav {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 16px !important;
+  margin-top: 6px;
+}
+body .bpp-policy-footer > nav > a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 
 /* Outlet task card aligns with the masthead, as the panel task does. */
 body.guided-walk[data-active-screen="connection"] .guided-flow.form-card{width:100%;max-width:none;margin-inline:0}
